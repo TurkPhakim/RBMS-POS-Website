@@ -1,0 +1,207 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-page-title text-primary">
+      {{ isEditMode() ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่' }}
+    </h1>
+    <p class="text-lg text-surface-sub mt-1">
+      {{ isEditMode() ? 'แก้ไขรายละเอียดเมนู' : 'กรอกข้อมูลเมนูใหม่' }}
+    </p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-20">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading()) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+
+      <!-- Card 1: ข้อมูลเมนู -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-book"></i>
+            ข้อมูลเมนู
+          </h2>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- ชื่อเมนู (ไทย) -->
+            <div>
+              <label for="nameThai" class="block font-semibold text-surface-dark mb-2">
+                ชื่อเมนู (ไทย) <span class="text-danger">*</span>
+              </label>
+              <input id="nameThai" type="text" pInputText formControlName="nameThai"
+                placeholder="กรอกชื่อเมนูภาษาไทย"
+                class="w-full"
+                [class.ng-invalid]="isFieldInvalid('nameThai')"
+                [class.ng-dirty]="isFieldInvalid('nameThai')" />
+              @if (isFieldInvalid('nameThai')) {
+                <small class="text-danger mt-1 block">{{ getErrorMessage('nameThai') }}</small>
+              }
+            </div>
+
+            <!-- ชื่อเมนู (อังกฤษ) -->
+            <div>
+              <label for="nameEnglish" class="block font-semibold text-surface-dark mb-2">
+                ชื่อเมนู (อังกฤษ) <span class="text-danger">*</span>
+              </label>
+              <input id="nameEnglish" type="text" pInputText formControlName="nameEnglish"
+                placeholder="กรอกชื่อเมนูภาษาอังกฤษ"
+                class="w-full"
+                [class.ng-invalid]="isFieldInvalid('nameEnglish')"
+                [class.ng-dirty]="isFieldInvalid('nameEnglish')" />
+              @if (isFieldInvalid('nameEnglish')) {
+                <small class="text-danger mt-1 block">{{ getErrorMessage('nameEnglish') }}</small>
+              }
+            </div>
+          </div>
+
+          <!-- คำอธิบาย -->
+          <div>
+            <label for="description" class="block font-semibold text-surface-dark mb-2">
+              คำอธิบายเมนู
+            </label>
+            <textarea id="description" pTextarea formControlName="description"
+              rows="4"
+              placeholder="กรอกคำอธิบายเมนู"
+              class="w-full resize-none"
+              [class.ng-invalid]="isFieldInvalid('description')"
+              [class.ng-dirty]="isFieldInvalid('description')">
+            </textarea>
+            @if (isFieldInvalid('description')) {
+              <small class="text-danger mt-1 block">{{ getErrorMessage('description') }}</small>
+            }
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- ราคา -->
+            <div>
+              <label for="price" class="block font-semibold text-surface-dark mb-2">
+                ราคา <span class="text-danger">*</span>
+              </label>
+              <p-inputNumber id="price" formControlName="price"
+                mode="currency" currency="THB" locale="th-TH"
+                placeholder="กรอกราคา"
+                [min]="0" [max]="99999999.99"
+                [styleClass]="'w-full'"
+                [inputStyleClass]="isFieldInvalid('price') ? 'ng-invalid ng-dirty w-full' : 'w-full'">
+              </p-inputNumber>
+              @if (isFieldInvalid('price')) {
+                <small class="text-danger mt-1 block">{{ getErrorMessage('price') }}</small>
+              }
+            </div>
+
+            <!-- หมวดหมู่ -->
+            <div>
+              <label for="category" class="block font-semibold text-surface-dark mb-2">
+                หมวดหมู่ <span class="text-danger">*</span>
+              </label>
+              <p-dropdown id="category" formControlName="category"
+                [options]="categoryOptions"
+                optionLabel="label" optionValue="value"
+                placeholder="เลือกหมวดหมู่"
+                [styleClass]="'w-full'">
+              </p-dropdown>
+              @if (isFieldInvalid('category')) {
+                <small class="text-danger mt-1 block">{{ getErrorMessage('category') }}</small>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: รูปภาพเมนู -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-image"></i>
+            รูปภาพเมนู
+          </h2>
+        </div>
+
+        <div class="p-6">
+          @if (!imagePreview()) {
+            <!-- Upload Area -->
+            <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
+            <button type="button" (click)="fileInput.click()"
+              class="w-full px-8 py-12 border-2 border-dashed border-surface-border rounded-xl hover:border-primary transition-all duration-300 flex flex-col items-center justify-center gap-4 bg-surface hover:bg-primary-subtle group">
+              <app-generic-icon name="image-preview" svgClass="w-16 h-16" class="text-surface-sub group-hover:text-primary transition-colors"></app-generic-icon>
+              <div class="text-center">
+                <p class="text-lg font-semibold text-surface-dark group-hover:text-primary transition-colors">
+                  คลิกเพื่ออัปโหลดรูปภาพเมนู
+                </p>
+                <p class="text-surface-sub mt-2">PNG, JPG, GIF ขนาดไม่เกิน 5MB</p>
+              </div>
+            </button>
+          } @else {
+            <!-- Image Preview -->
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+              <div class="relative">
+                <img [src]="imagePreview()" alt="ตัวอย่างรูปเมนู"
+                  class="h-64 w-64 object-cover rounded-xl border border-surface-border shadow-sm" />
+              </div>
+              <div class="flex flex-col gap-3">
+                <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
+                <p-button label="เปลี่ยนรูปภาพ" icon="pi pi-pencil" severity="secondary" [outlined]="true"
+                  (onClick)="fileInput.click()"></p-button>
+                <p-button label="ลบรูปภาพ" icon="pi pi-trash" severity="danger" [outlined]="true"
+                  (onClick)="removeImage()"></p-button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Card 3: สถานะ -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-cog"></i>
+            สถานะ
+          </h2>
+        </div>
+
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- พร้อมขาย -->
+            <div class="flex items-center justify-between p-4 border border-surface-border rounded-xl bg-surface">
+              <div>
+                <label class="block font-semibold text-surface-dark">พร้อมขาย</label>
+                <p class="text-sm text-surface-sub mt-1">เปิด/ปิดสถานะพร้อมขายให้ลูกค้าสั่ง</p>
+              </div>
+              <p-inputSwitch formControlName="isAvailable"></p-inputSwitch>
+            </div>
+
+            <!-- สถานะระบบ -->
+            <div class="flex items-center justify-between p-4 border border-surface-border rounded-xl bg-surface">
+              <div>
+                <label class="block font-semibold text-surface-dark">สถานะระบบ</label>
+                <p class="text-sm text-surface-sub mt-1">เปิด/ปิดการใช้งานเมนูในระบบ</p>
+              </div>
+              <p-inputSwitch formControlName="isActive"></p-inputSwitch>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </form>
+  }
+</div>
+
+<!-- Modals -->
+<app-success-modal
+  [isOpen]="showSuccessModal()"
+  [message]="successMessage()"
+  [autoClose]="true"
+  (closed)="closeSuccessModal()" />
+
+<app-error-modal
+  [isOpen]="showErrorModal()"
+  [message]="errorMessage()!"
+  (closed)="closeErrorModal()" />

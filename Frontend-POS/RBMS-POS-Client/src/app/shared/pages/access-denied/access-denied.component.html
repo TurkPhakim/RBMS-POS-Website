@@ -1,0 +1,21 @@
+<div class="flex items-center justify-center h-screen bg-surface">
+  <div class="max-w-md w-full text-center p-6">
+    <i class="pi pi-lock text-danger text-6xl mb-6"></i>
+
+    <h1 class="text-page-title text-surface-dark mb-2">
+      ไม่มีสิทธิ์เข้าถึง
+    </h1>
+
+    <p class="text-surface-sub mb-8">
+      คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+    </p>
+
+    <button pButton
+            type="button"
+            label="ย้อนกลับ"
+            icon="pi pi-arrow-left"
+            class="p-button-outlined"
+            (click)="goBack()">
+    </button>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+@if (isOpen) {
+<!-- Backdrop -->
+<div
+  class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center animate-modal-fade-in"
+>
+  <!-- Modal Card -->
+  <div
+    class="bg-surface-card rounded-2xl shadow-xl p-8 max-w-sm w-full mx-4 animate-modal-scale-in"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Success Icon -->
+    <div class="flex justify-center mb-5">
+      <div class="w-16 h-16 rounded-full bg-success-bg flex items-center justify-center">
+        <app-generic-icon name="check" svgClass="w-8 h-8" class="text-success"></app-generic-icon>
+      </div>
+    </div>
+
+    <!-- Title & Message -->
+    <div class="text-center space-y-1.5">
+      <h3 class="text-section-title text-success-text">{{ title }}</h3>
+      @if (message) {
+      <p class="text-sm text-surface-sub">{{ message }}</p>
+      }
+    </div>
+
+    <!-- Auto-close: progress bar -->
+    @if (autoClose) {
+    <div
+      class="mt-6 h-1 rounded-full bg-surface-border overflow-hidden"
+    >
+      <div
+        class="h-full rounded-full bg-success animate-modal-progress"
+      ></div>
+    </div>
+    } @else {
+    <!-- Manual close: button -->
+    <button
+      (click)="onClose()"
+      class="mt-6 w-full bg-primary hover:bg-primary-dark text-white
+             text-sm font-semibold px-4 py-2.5 rounded-lg shadow-sm
+             transition-colors duration-200"
+    >
+      {{ closeButtonText }}
+    </button>
+    }
+  </div>
+</div>
+}

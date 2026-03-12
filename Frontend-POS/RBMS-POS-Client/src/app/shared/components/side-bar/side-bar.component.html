@@ -1,0 +1,181 @@
+<div
+  [class]="isCollapsed() ? 'w-20' : 'w-64'"
+  class="h-full bg-surface-sidebar text-white flex flex-col shadow-xl transition-all duration-300 ease-in-out"
+>
+  <!-- Logo -->
+  <div class="p-4 border-b border-white/10">
+    <div class="flex items-center justify-center space-x-2">
+      @if (!isCollapsed()) {
+        <div class="flex items-center space-x-3 overflow-hidden whitespace-nowrap">
+          <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center">
+            <img src="images/logos/RBMS_Logo.png" alt="RBMS Logo" class="w-full h-full object-contain" />
+          </div>
+          <span class="text-xl font-bold text-white">RBMS POS</span>
+        </div>
+      } @else {
+        <div class="w-10 h-10 flex items-center justify-center">
+          <img src="images/logos/RBMS_Logo.png" alt="RBMS Logo" class="w-full h-full object-contain" />
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Menu Navigation -->
+  <nav class="flex-1 p-3 overflow-y-auto">
+    <ul class="space-y-1">
+      @for (item of menuItems(); track item.label) {
+        <li>
+          <!-- Has children → parent toggle -->
+          @if (item.children && item.children.length > 0) {
+            <div>
+              <button
+                (click)="toggleMenu(item.label)"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-white/5 hover:text-white transition-all duration-200 cursor-pointer"
+                [class.justify-center]="isCollapsed()"
+                [ngClass]="{'bg-white/10 border-l-4 border-primary text-white font-bold': isChildActive(item)}"
+                type="button"
+              >
+                <div class="w-7 h-7 flex items-center justify-center flex-shrink-0 text-white/70">
+                  <app-generic-icon [name]="item.icon" svgClass="w-full h-full"></app-generic-icon>
+                </div>
+
+                @if (!isCollapsed()) {
+                  <span class="text-sm font-medium whitespace-nowrap flex-1 text-left">{{ item.label }}</span>
+                  <i class="pi pi-chevron-down text-xs transition-transform duration-200"
+                     [class.rotate-180]="isExpanded(item.label)"></i>
+                }
+              </button>
+
+              <!-- Expanded mode: slide down children with text -->
+              @if (!isCollapsed() && isExpanded(item.label)) {
+                <ul class="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-3">
+                  <ng-container *ngTemplateOutlet="menuChildrenTpl; context: { $implicit: item.children, depth: 1 }"></ng-container>
+                </ul>
+              }
+
+              <!-- Collapsed mode: drop down children as icons -->
+              @if (isCollapsed() && isExpanded(item.label)) {
+                <ul class="mt-1 space-y-0.5">
+                  @for (child of item.children; track child.label) {
+                    <li>
+                      <a
+                        [routerLink]="child.route"
+                        routerLinkActive="bg-white/10 text-white"
+                        class="flex items-center justify-center py-2 rounded-lg text-white/40 hover:bg-white/5 hover:text-white transition-all duration-200 cursor-pointer"
+                        [title]="child.label"
+                      >
+                        <div class="w-5 h-5 flex items-center justify-center">
+                          <app-generic-icon [name]="child.icon" svgClass="w-full h-full"></app-generic-icon>
+                        </div>
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          } @else {
+            <!-- Leaf item → navigate -->
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="bg-white/10 border-l-4 border-primary text-white font-bold"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/60 hover:bg-white/5 hover:text-white transition-all duration-200 cursor-pointer"
+              [class.justify-center]="isCollapsed()"
+            >
+              <div class="w-7 h-7 flex items-center justify-center flex-shrink-0 text-white/70">
+                <app-generic-icon [name]="item.icon" svgClass="w-full h-full"></app-generic-icon>
+              </div>
+
+              @if (!isCollapsed()) {
+                <span class="text-sm font-medium whitespace-nowrap">{{ item.label }}</span>
+
+                @if (item.badge) {
+                  <span class="ml-auto bg-primary text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                    {{ item.badge }}
+                  </span>
+                }
+              }
+            </a>
+          }
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <!-- Footer -->
+  <div class="p-3 border-t border-white/10">
+    @if (!isCollapsed()) {
+      <div class="text-xs text-white/40 space-y-0.5">
+        <div class="font-semibold text-white/60">RBMS POS v1.0.0</div>
+        <div>Point of Sale System</div>
+      </div>
+    } @else {
+      <div class="flex items-center justify-center">
+        <div class="w-7 h-7 flex items-center justify-center">
+          <app-generic-icon name="knife-fork" svgClass="w-full h-full" class="text-white/50"></app-generic-icon>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Recursive template for child menu items (L2, L3, ...) -->
+<ng-template #menuChildrenTpl let-children let-depth="depth">
+  @for (child of children; track child.label) {
+    @if (child.children && child.children.length > 0) {
+      <!-- Sub-parent -->
+      <li>
+        <button
+          (click)="toggleMenu(child.label)"
+          class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-white/50 hover:bg-white/5 hover:text-white transition-all duration-200 cursor-pointer text-sm"
+          [ngClass]="{'bg-white/5': isChildActive(child), 'text-white': isChildActive(child)}"
+          type="button"
+        >
+          @if (child.icon) {
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+              <app-generic-icon [name]="child.icon" svgClass="w-full h-full"></app-generic-icon>
+            </div>
+          } @else {
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+              <i class="pi pi-circle text-[6px] text-white/30"></i>
+            </div>
+          }
+          <span class="flex-1 text-left whitespace-nowrap">{{ child.label }}</span>
+          <i class="pi pi-chevron-down text-xs transition-transform duration-200"
+             [class.rotate-180]="isExpanded(child.label)"></i>
+        </button>
+
+        @if (isExpanded(child.label)) {
+          <ul class="ml-3 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+            <ng-container *ngTemplateOutlet="menuChildrenTpl; context: { $implicit: child.children, depth: depth + 1 }"></ng-container>
+          </ul>
+        }
+      </li>
+    } @else {
+      <!-- Leaf child -->
+      <li>
+        <a
+          [routerLink]="child.route"
+          routerLinkActive="bg-white/10 text-white font-semibold"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-white/50 hover:bg-white/5 hover:text-white transition-all duration-200 cursor-pointer text-sm"
+        >
+          @if (child.icon) {
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+              <app-generic-icon [name]="child.icon" svgClass="w-full h-full"></app-generic-icon>
+            </div>
+          } @else {
+            <div class="w-5 h-5 flex items-center justify-center flex-shrink-0">
+              <i class="pi pi-circle text-[6px] text-white/30"></i>
+            </div>
+          }
+          <span class="whitespace-nowrap">{{ child.label }}</span>
+
+          @if (child.badge) {
+            <span class="ml-auto bg-primary text-white text-xs px-1.5 py-0.5 rounded-full font-semibold">
+              {{ child.badge }}
+            </span>
+          }
+        </a>
+      </li>
+    }
+  }
+</ng-template>

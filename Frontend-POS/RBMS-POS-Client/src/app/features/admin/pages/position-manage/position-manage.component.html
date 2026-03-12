@@ -1,0 +1,164 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-page-title text-surface-dark">
+      {{ isEditMode() ? 'แก้ไขตำแหน่ง' : 'เพิ่มตำแหน่ง' }}
+    </h1>
+    <p class="text-surface-sub mt-1">
+      {{ isEditMode() ? 'แก้ไขข้อมูลตำแหน่งและสิทธิ์การเข้าถึง' : 'สร้างตำแหน่งใหม่และกำหนดสิทธิ์' }}
+    </p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-20">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading()) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+
+      <!-- ข้อมูลตำแหน่ง Card -->
+      <div class="bg-surface-card rounded-xl overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3">
+          <h2 class="text-section-title text-white flex items-center gap-2">
+            <i class="pi pi-id-card"></i>
+            ข้อมูลตำแหน่ง
+          </h2>
+        </div>
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- ชื่อตำแหน่ง -->
+          <div>
+            <label for="positionName" class="block mb-1.5 text-surface-dark font-semibold">
+              ชื่อตำแหน่ง <span class="text-danger">*</span>
+            </label>
+            <input pInputText id="positionName" formControlName="positionName"
+              placeholder="กรอกชื่อตำแหน่ง" class="w-full"
+              [class.ng-invalid]="isFieldInvalid('positionName')"
+              [class.ng-dirty]="isFieldInvalid('positionName')" />
+            @if (isFieldInvalid('positionName')) {
+              <small class="text-danger mt-1 block">{{ getErrorMessage('positionName') }}</small>
+            }
+          </div>
+
+          <!-- คำอธิบาย -->
+          <div>
+            <label for="description" class="block mb-1.5 text-surface-dark font-semibold">
+              คำอธิบาย <span class="text-surface-sub font-normal">(ไม่บังคับ)</span>
+            </label>
+            <input pInputText id="description" formControlName="description"
+              placeholder="กรอกคำอธิบาย" class="w-full" />
+          </div>
+
+          <!-- สถานะ -->
+          <div class="md:col-span-2">
+            <div class="flex items-center justify-between p-4 rounded-lg border border-surface-border bg-surface">
+              <div>
+                <span class="text-surface-dark font-semibold">สถานะการใช้งาน</span>
+                <p class="text-surface-sub text-sm mt-0.5">เปิด/ปิดการใช้งานตำแหน่งนี้ในระบบ</p>
+              </div>
+              <p-inputSwitch formControlName="isActive"></p-inputSwitch>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- สิทธิ์การเข้าใช้งานเมนู Card -->
+      <div class="bg-surface-card rounded-xl overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3">
+          <h2 class="text-section-title text-white flex items-center gap-2">
+            <i class="pi pi-shield"></i>
+            สิทธิ์การเข้าใช้งานเมนู
+          </h2>
+        </div>
+        <div class="p-5 space-y-3">
+          @for (mod of modules(); track mod.moduleId) {
+            <!-- Parent Module -->
+            <div class="rounded-lg overflow-hidden border border-surface-border">
+              <!-- Parent Header -->
+              <div class="bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 flex items-center justify-between cursor-pointer"
+                   (click)="toggleParent(mod.moduleId!)">
+                <span class="text-white font-bold text-sm">{{ mod.moduleName }}</span>
+                <div class="flex items-center gap-3">
+                  <!-- ทั้งหมด checkbox -->
+                  <label class="flex items-center gap-1.5 cursor-pointer" (click)="$event.stopPropagation()">
+                    <input type="checkbox"
+                      class="w-4 h-4 accent-white"
+                      [checked]="getParentAllState(mod) === 'all'"
+                      [indeterminate]="getParentAllState(mod) === 'indeterminate'"
+                      (change)="toggleParentAll(mod)" />
+                    <span class="text-white text-sm font-semibold">ทั้งหมด</span>
+                  </label>
+                  <i class="pi text-white text-xs"
+                     [class.pi-chevron-up]="isParentExpanded(mod.moduleId!)"
+                     [class.pi-chevron-down]="!isParentExpanded(mod.moduleId!)"></i>
+                </div>
+              </div>
+
+              <!-- Parent Content (Children) -->
+              @if (isParentExpanded(mod.moduleId!)) {
+                <div class="bg-surface-card">
+                  @for (child of mod.children; track child.moduleId) {
+                    <!-- Child Module -->
+                    <div class="border-b border-surface-border last:border-b-0">
+                      <!-- Child Header -->
+                      <div class="bg-primary-subtle px-4 py-2 flex items-center justify-between cursor-pointer"
+                           (click)="toggleChild(child.moduleId!)">
+                        <span class="text-primary-text font-semibold text-sm pl-4">{{ child.moduleName }}</span>
+                        <div class="flex items-center gap-3">
+                          <label class="flex items-center gap-1.5 cursor-pointer" (click)="$event.stopPropagation()">
+                            <input type="checkbox"
+                              class="w-4 h-4 accent-primary"
+                              [checked]="getChildAllState(child) === 'all'"
+                              [indeterminate]="getChildAllState(child) === 'indeterminate'"
+                              (change)="toggleChildAll(child)" />
+                            <span class="text-primary-text text-sm font-semibold">ทั้งหมด</span>
+                          </label>
+                          <i class="pi text-primary-text text-xs"
+                             [class.pi-chevron-up]="isChildExpanded(child.moduleId!)"
+                             [class.pi-chevron-down]="!isChildExpanded(child.moduleId!)"></i>
+                        </div>
+                      </div>
+
+                      <!-- Permission Checkboxes -->
+                      @if (isChildExpanded(child.moduleId!)) {
+                        <div class="px-4 py-3 pl-8 flex flex-wrap gap-x-8 gap-y-2">
+                          @for (perm of child.permissions; track perm.authorizeMatrixId) {
+                            <label class="flex items-center gap-2 cursor-pointer">
+                              <input type="checkbox"
+                                class="w-4 h-4 accent-primary"
+                                [checked]="isPermissionChecked(perm.authorizeMatrixId!)"
+                                (change)="togglePermission(perm.authorizeMatrixId!)" />
+                              <span class="text-surface-dark text-sm">{{ perm.permissionName }}</span>
+                            </label>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+    </form>
+  }
+</div>
+
+<!-- Shared Modals -->
+<app-success-modal
+  [isOpen]="showSuccessModal()"
+  [message]="successMessage()"
+  [autoClose]="true"
+  (closed)="closeSuccessModal()"
+/>
+
+<app-error-modal
+  [isOpen]="showErrorModal()"
+  [message]="errorMessage()!"
+  (closed)="closeErrorModal()"
+/>

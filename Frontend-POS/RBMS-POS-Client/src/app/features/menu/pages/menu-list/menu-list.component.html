@@ -1,0 +1,175 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-page-title text-primary">จัดการเมนู</h1>
+    <p class="text-lg text-surface-sub mt-1">จัดการเมนูอาหารและเครื่องดื่มทั้งหมด</p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-20">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (!isLoading()) {
+    <!-- Filter Section -->
+    <div class="bg-surface-card rounded-xl shadow-sm p-4 border border-surface-border">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="text-surface-dark font-semibold">กรองตามหมวดหมู่:</span>
+        <div class="flex gap-2 flex-wrap">
+          <p-button label="ทั้งหมด" icon="pi pi-list"
+            [severity]="isFilterActive('all') ? undefined : 'secondary'"
+            [outlined]="!isFilterActive('all')"
+            size="small"
+            (onClick)="setFilter('all')">
+          </p-button>
+          <p-button label="อาหาร" icon="pi pi-box"
+            [severity]="isFilterActive('food') ? 'info' : 'secondary'"
+            [outlined]="!isFilterActive('food')"
+            size="small"
+            (onClick)="setFilter('food')">
+          </p-button>
+          <p-button label="เครื่องดื่ม" icon="pi pi-glass-martini"
+            [severity]="isFilterActive('beverage') ? 'warn' : 'secondary'"
+            [outlined]="!isFilterActive('beverage')"
+            size="small"
+            (onClick)="setFilter('beverage')">
+          </p-button>
+        </div>
+        <div class="ml-auto">
+          <span class="text-surface-sub">
+            แสดง <span class="font-bold text-primary">{{ menus().length }}</span> รายการ
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-surface-card overflow-hidden border border-surface-border">
+      <p-table [value]="menus()" [stripedRows]="true" [tableStyle]="{'min-width': '70rem'}">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>ID</th>
+            <th>รูปภาพ</th>
+            <th>ชื่อเมนู (ไทย)</th>
+            <th>ชื่อเมนู (อังกฤษ)</th>
+            <th>ราคา</th>
+            <th>หมวดหมู่</th>
+            <th>สถานะขาย</th>
+            <th>สถานะระบบ</th>
+            <th>จัดการ</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr class="border-b border-surface-border hover:bg-primary-subtle transition-colors">
+            <!-- ID -->
+            <td class="font-semibold text-primary">#{{ item.menuId }}</td>
+
+            <!-- Image -->
+            <td>
+              @if (item.imageFileId) {
+                <img [src]="getImageUrl(item.imageFileId)" [alt]="item.nameThai || 'เมนู'"
+                  class="h-16 w-16 rounded-lg object-cover shadow-sm border border-surface-border" />
+              } @else {
+                <div class="h-16 w-16 rounded-lg bg-surface flex items-center justify-center border border-surface-border">
+                  <app-generic-icon name="food" svgClass="w-10 h-10" class="text-surface-sub opacity-50"></app-generic-icon>
+                </div>
+              }
+            </td>
+
+            <!-- Name Thai -->
+            <td>
+              <span class="font-semibold text-surface-dark">{{ item.nameThai }}</span>
+            </td>
+
+            <!-- Name English -->
+            <td>
+              <span class="text-surface-dark">{{ item.nameEnglish || '-' }}</span>
+            </td>
+
+            <!-- Price -->
+            <td class="text-right">
+              <span class="font-bold text-primary text-lg">฿{{ item.price | number: '1.2-2' }}</span>
+            </td>
+
+            <!-- Category -->
+            <td class="text-center">
+              <p-tag [value]="getCategoryLabel(item.category!)" [severity]="getCategorySeverity(item.category!)"></p-tag>
+            </td>
+
+            <!-- Available Status -->
+            <td class="text-center">
+              @if (item.isAvailable) {
+                <p-tag value="พร้อมขาย" severity="success"></p-tag>
+              } @else {
+                <p-tag value="หยุดขาย" severity="secondary"></p-tag>
+              }
+            </td>
+
+            <!-- System Status -->
+            <td class="text-center">
+              @if (item.isActive) {
+                <p-tag value="ใช้งาน" severity="success"></p-tag>
+              } @else {
+                <p-tag value="ปิดใช้งาน" severity="secondary"></p-tag>
+              }
+            </td>
+
+            <!-- Actions -->
+            <td class="text-center">
+              <div class="flex justify-center gap-2">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-primary-subtle hover:bg-primary-light text-primary transition-colors duration-200"
+                  pTooltip="แก้ไข" tooltipPosition="top"
+                  (click)="onEdit(item.menuId!)">
+                  <app-generic-icon name="pen-edit" svgClass="w-4 h-4"></app-generic-icon>
+                </button>
+                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-danger-bg hover:bg-danger text-danger hover:text-white transition-colors duration-200"
+                  pTooltip="ลบ" tooltipPosition="top"
+                  (click)="onDelete(item.menuId!, item.nameThai!)">
+                  <app-generic-icon name="trash" svgClass="w-4 h-4"></app-generic-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="text-center py-12 text-surface-sub">
+              <div class="flex flex-col items-center">
+                <app-generic-icon name="empty-box" svgClass="w-16 h-16" class="opacity-30 mb-3"></app-generic-icon>
+                <p class="text-lg font-semibold">ไม่พบข้อมูลเมนู</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>
+
+<!-- Modals -->
+<app-confirm-modal
+  [isOpen]="showDeleteModal()"
+  title="ยืนยันการลบ"
+  message="คุณต้องการลบเมนู"
+  [itemName]="selectedMenu()?.name"
+  confirmText="ลบ"
+  cancelText="ยกเลิก"
+  type="delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()" />
+
+<app-success-modal
+  [isOpen]="showSuccessModal()"
+  [message]="successMessage()"
+  [autoClose]="true"
+  (closed)="closeSuccessModal()" />
+
+<app-error-modal
+  [isOpen]="showErrorModal()"
+  [message]="errorMessage()!"
+  (closed)="closeErrorModal()" />

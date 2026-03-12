@@ -1,0 +1,63 @@
+<div class="bg-surface-card border-b border-surface-border text-sm px-6 py-3 flex items-center justify-between min-h-[3.5rem]">
+  <!-- Left: Breadcrumb trail -->
+  <div class="flex items-center gap-2">
+    @for (item of menuItems(); track item.label; let last = $last) {
+      @if (!last) {
+        @if (item.route) {
+          <a [routerLink]="item.route"
+             class="text-surface-sub hover:text-primary transition-colors">
+            {{ item.label }}
+          </a>
+        } @else {
+          <span class="text-surface-sub">{{ item.label }}</span>
+        }
+        <span class="text-surface-muted">/</span>
+      } @else {
+        <span class="font-semibold text-surface-dark">{{ item.label }}</span>
+      }
+    }
+  </div>
+
+  <!-- Right: Dynamic Action Buttons -->
+  @if (buttons().length > 0) {
+    <div class="flex items-center gap-2">
+      @for (btn of buttons(); track btn.key) {
+        @if (btn.type === 'button') {
+          <p-button [label]="btn.item.label || ''"
+                    [icon]="btn.item.icon || ''"
+                    [severity]="btn.item.severity || 'primary'"
+                    [size]="btn.item.size || 'small'"
+                    [rounded]="btn.item.rounded || false"
+                    [raised]="btn.item.raised || false"
+                    [outlined]="btn.item.variant === 'outlined'"
+                    [text]="btn.item.variant === 'text'"
+                    [loading]="btn.item.loading || false"
+                    [disabled]="btn.item.disabled || false"
+                    [badge]="btn.item.badge || ''"
+                    (click)="btn.item.callback && btn.item.callback()">
+          </p-button>
+        }
+
+        @if (btn.type === 'buttonTieredMenu') {
+          <div class="relative">
+            <p-button [label]="btn.item.label || ''"
+                      [icon]="btn.item.icon || ''"
+                      [severity]="btn.item.severity || 'primary'"
+                      [size]="btn.item.size || 'small'"
+                      [rounded]="btn.item.rounded || false"
+                      [raised]="btn.item.raised || false"
+                      [loading]="btn.item.loading || false"
+                      [disabled]="btn.item.disabled || false"
+                      [badge]="btn.item.badge || ''"
+                      (click)="menu.toggle($event)">
+            </p-button>
+            <p-tieredMenu #menu
+                          [model]="btn.item.tieredMenu || []"
+                          [popup]="true">
+            </p-tieredMenu>
+          </div>
+        }
+      }
+    </div>
+  }
+</div>

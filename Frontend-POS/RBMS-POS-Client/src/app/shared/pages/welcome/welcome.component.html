@@ -1,0 +1,32 @@
+<div class="flex items-center justify-center h-full p-6">
+  <div class="max-w-lg w-full text-center">
+    <!-- Logo -->
+    <img src="images/logos/RBMS_Logo.png" alt="RBMS Logo"
+         class="h-32 w-32 mx-auto mb-6 object-contain" />
+
+    <!-- Greeting -->
+    <h1 class="text-page-title text-surface-dark mb-2">
+      {{ greeting() }}, {{ currentUser?.username || 'User' }}!
+    </h1>
+    <p class="text-surface-sub mb-6">Welcome to RBMS POS</p>
+
+    <!-- Role badge -->
+    <span class="inline-block px-4 py-1.5 bg-primary-subtle text-primary-text
+                 rounded-full font-semibold text-sm mb-8">
+      {{ currentUser?.positionName || 'User' }}
+    </span>
+
+    <!-- Time -->
+    <div class="bg-surface rounded-xl border border-surface-border p-6">
+      <div class="text-4xl font-bold text-primary font-mono mb-1">
+        {{ currentTime() | date:'HH:mm:ss' }}
+      </div>
+      <div class="text-surface-sub">
+        {{ currentTime() | date:'EEEE, d MMMM y' }}
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="mt-6 text-xs text-surface-sub">RBMS POS v1.0.0</p>
+  </div>
+</div>

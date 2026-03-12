@@ -1,0 +1,23 @@
+@if (isOpen$ | async) {
+  <!-- Backdrop -->
+  <div class="fixed inset-0 z-[998] bg-black/30" (click)="close()"></div>
+
+  <!-- Panel -->
+  <div class="fixed top-0 right-0 z-[999] h-full w-80 bg-surface-card shadow-xl
+              transform transition-transform duration-300 ease-in-out">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-surface-border">
+      <h3 class="text-card-title text-surface-dark">การแจ้งเตือน</h3>
+      <button class="p-1 rounded-md hover:bg-surface transition-colors"
+              (click)="close()">
+        <i class="pi pi-times text-surface-sub"></i>
+      </button>
+    </div>
+
+    <!-- Content (empty state) -->
+    <div class="flex flex-col items-center justify-center h-[calc(100%-56px)] text-center px-6">
+      <i class="pi pi-bell text-surface-muted text-5xl mb-4"></i>
+      <p class="text-surface-sub text-sm">ยังไม่มีการแจ้งเตือน</p>
+    </div>
+  </div>
+}

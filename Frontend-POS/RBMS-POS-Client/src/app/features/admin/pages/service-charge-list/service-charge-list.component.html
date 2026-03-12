@@ -1,0 +1,100 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-page-title text-surface-dark">จัดการ Service Charge</h1>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-20">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!isLoading()) {
+    <div class="bg-surface-card overflow-hidden border border-surface-border">
+      <p-table [value]="serviceCharges()" [stripedRows]="true" [tableStyle]="{'min-width': '50rem'}">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>ID</th>
+            <th>ชื่อ</th>
+            <th>อัตรา (%)</th>
+            <th>รายละเอียด</th>
+            <th>สถานะ</th>
+            <th>จัดการ</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr class="border-b border-surface-border hover:bg-primary-subtle transition-colors">
+            <td class="text-primary font-semibold">#{{ item.serviceChargeId }}</td>
+            <td class="text-surface-dark font-semibold">{{ item.name }}</td>
+            <td class="text-center text-primary font-bold text-lg">{{ item.percentageRate }}%</td>
+            <td class="text-surface-sub">{{ item.description || 'ไม่มี' }}</td>
+            <td class="text-center">
+              @if (item.isActive) {
+                <p-tag value="ใช้งาน" severity="success"></p-tag>
+              } @else {
+                <p-tag value="ปิดใช้งาน" severity="secondary"></p-tag>
+              }
+            </td>
+            <td class="text-center">
+              <div class="flex justify-center gap-2">
+                <button
+                  (click)="onEdit(item.serviceChargeId!)"
+                  class="w-9 h-9 flex items-center justify-center rounded-full bg-primary-subtle hover:bg-primary-light text-primary transition-colors duration-200"
+                  pTooltip="แก้ไข" tooltipPosition="top"
+                >
+                  <app-generic-icon name="pen-edit" svgClass="w-4 h-4"></app-generic-icon>
+                </button>
+                <button
+                  (click)="onDelete(item.serviceChargeId!, item.name!)"
+                  class="w-9 h-9 flex items-center justify-center rounded-full bg-danger-bg hover:bg-danger text-danger hover:text-white transition-colors duration-200"
+                  pTooltip="ลบ" tooltipPosition="top"
+                >
+                  <app-generic-icon name="trash" svgClass="w-4 h-4"></app-generic-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center py-12 text-surface-sub">
+              <div class="flex flex-col items-center">
+                <app-generic-icon name="empty-box" svgClass="w-16 h-16" class="opacity-30 mb-3"></app-generic-icon>
+                <p class="text-lg font-semibold">ไม่พบข้อมูล Service Charge</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>
+
+<!-- Shared Modals -->
+<app-confirm-modal
+  [isOpen]="showDeleteModal()"
+  title="ยืนยันการลบ"
+  message="คุณต้องการลบ"
+  [itemName]="selectedServiceCharge()?.name"
+  confirmText="ลบ"
+  cancelText="ยกเลิก"
+  type="delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()"
+/>
+
+<app-success-modal
+  [isOpen]="showSuccessModal()"
+  [message]="successMessage()"
+  [autoClose]="true"
+  (closed)="closeSuccessModal()"
+/>
+
+<app-error-modal
+  [isOpen]="showErrorModal()"
+  [message]="errorMessage()!"
+  (closed)="closeErrorModal()"
+/>

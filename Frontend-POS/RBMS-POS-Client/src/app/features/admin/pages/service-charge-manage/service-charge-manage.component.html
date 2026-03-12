@@ -1,0 +1,130 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-page-title text-surface-dark">
+      {{ isEditMode() ? 'แก้ไข Service Charge' : 'เพิ่ม Service Charge' }}
+    </h1>
+    <p class="text-surface-sub mt-1">
+      {{ isEditMode() ? 'แก้ไขรายละเอียด Service Charge' : 'สร้าง Service Charge ใหม่' }}
+    </p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-20">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading()) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+      <!-- Basic Information Card -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3">
+          <h2 class="text-section-title text-white flex items-center gap-2">
+            <i class="pi pi-info-circle"></i>
+            ข้อมูลทั่วไป
+          </h2>
+        </div>
+        <div class="p-5 space-y-5">
+          <!-- Name -->
+          <div>
+            <label for="name" class="block mb-1.5 text-surface-dark font-semibold">
+              ชื่อ Service Charge <span class="text-danger">*</span>
+            </label>
+            <input
+              pInputText
+              id="name"
+              formControlName="name"
+              placeholder="กรอกชื่อ Service Charge"
+              class="w-full"
+              [class.ng-invalid]="isFieldInvalid('name')"
+              [class.ng-dirty]="isFieldInvalid('name')"
+            />
+            @if (isFieldInvalid('name')) {
+              <small class="text-danger mt-1 block">{{ getErrorMessage('name') }}</small>
+            }
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label for="description" class="block mb-1.5 text-surface-dark font-semibold">
+              รายละเอียด <span class="text-surface-sub font-normal">(ไม่บังคับ)</span>
+            </label>
+            <textarea
+              pTextarea
+              id="description"
+              formControlName="description"
+              rows="3"
+              placeholder="กรอกรายละเอียด"
+              class="w-full"
+              [autoResize]="true"
+            ></textarea>
+            @if (isFieldInvalid('description')) {
+              <small class="text-danger mt-1 block">{{ getErrorMessage('description') }}</small>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Rate & Status Card -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3">
+          <h2 class="text-section-title text-white flex items-center gap-2">
+            <i class="pi pi-cog"></i>
+            อัตราและสถานะ
+          </h2>
+        </div>
+        <div class="p-5 space-y-5">
+          <!-- Percentage Rate -->
+          <div>
+            <label for="percentageRate" class="block mb-1.5 text-surface-dark font-semibold">
+              อัตรา (%) <span class="text-danger">*</span>
+            </label>
+            <p-inputNumber
+              id="percentageRate"
+              formControlName="percentageRate"
+              mode="decimal"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="2"
+              [min]="0"
+              [max]="100"
+              suffix="%"
+              placeholder="กรอกอัตรา"
+              inputStyleClass="w-full"
+              styleClass="w-full"
+            ></p-inputNumber>
+            @if (isFieldInvalid('percentageRate')) {
+              <small class="text-danger mt-1 block">{{ getErrorMessage('percentageRate') }}</small>
+            }
+          </div>
+
+          <!-- Status -->
+          <div class="flex items-center justify-between p-4 rounded-lg border border-surface-border bg-surface">
+            <div>
+              <span class="text-surface-dark font-semibold">สถานะการใช้งาน</span>
+              <p class="text-surface-sub text-sm mt-0.5">เปิด/ปิดการใช้งาน Service Charge นี้ในระบบ</p>
+            </div>
+            <p-inputSwitch formControlName="isActive"></p-inputSwitch>
+          </div>
+        </div>
+      </div>
+
+    </form>
+  }
+</div>
+
+<!-- Shared Modals -->
+<app-success-modal
+  [isOpen]="showSuccessModal()"
+  [message]="successMessage()"
+  [autoClose]="true"
+  (closed)="closeSuccessModal()"
+/>
+
+<app-error-modal
+  [isOpen]="showErrorModal()"
+  [message]="errorMessage()!"
+  (closed)="closeErrorModal()"
+/>

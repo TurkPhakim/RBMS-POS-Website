@@ -1,0 +1,192 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-page-title text-primary">จัดการพนักงาน</h1>
+    <p class="text-lg text-surface-sub mt-1">จัดการข้อมูลพนักงานทั้งหมด</p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-20">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (!isLoading()) {
+    <!-- Filter Section -->
+    <div class="bg-surface-card rounded-xl shadow-sm p-4 border border-surface-border">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="text-surface-dark font-semibold">กรองตามสถานะ:</span>
+        <div class="flex gap-2 flex-wrap">
+          <p-button label="ทั้งหมด" icon="pi pi-list"
+            [severity]="isFilterActive('all') ? undefined : 'secondary'"
+            [outlined]="!isFilterActive('all')"
+            size="small"
+            (onClick)="setFilter('all')">
+          </p-button>
+          <p-button label="ทำงาน" icon="pi pi-check-circle"
+            [severity]="isFilterActive('active') ? 'success' : 'secondary'"
+            [outlined]="!isFilterActive('active')"
+            size="small"
+            (onClick)="setFilter('active')">
+          </p-button>
+          <p-button label="ไม่ทำงาน" icon="pi pi-minus-circle"
+            [severity]="isFilterActive('inactive') ? 'secondary' : 'secondary'"
+            [outlined]="!isFilterActive('inactive')"
+            size="small"
+            (onClick)="setFilter('inactive')">
+          </p-button>
+          <p-button label="ลาหยุด" icon="pi pi-calendar"
+            [severity]="isFilterActive('onLeave') ? 'warn' : 'secondary'"
+            [outlined]="!isFilterActive('onLeave')"
+            size="small"
+            (onClick)="setFilter('onLeave')">
+          </p-button>
+          <p-button label="สิ้นสุดการจ้าง" icon="pi pi-ban"
+            [severity]="isFilterActive('terminated') ? 'danger' : 'secondary'"
+            [outlined]="!isFilterActive('terminated')"
+            size="small"
+            (onClick)="setFilter('terminated')">
+          </p-button>
+        </div>
+        <div class="ml-auto">
+          <span class="text-surface-sub">
+            แสดง <span class="font-bold text-primary">{{ employees().length }}</span> คน
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-surface-card overflow-hidden border border-surface-border">
+      <p-table [value]="employees()" [stripedRows]="true" [tableStyle]="{'min-width': '70rem'}">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>ID</th>
+            <th>รูปภาพ</th>
+            <th>ชื่อ-นามสกุล</th>
+            <th>ชื่อเล่น</th>
+            <th>ตำแหน่ง</th>
+            <th>เบอร์โทร</th>
+            <th>สถานะพนักงาน</th>
+            <th>สถานะระบบ</th>
+            <th>จัดการ</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr class="border-b border-surface-border hover:bg-primary-subtle transition-colors">
+            <!-- ID -->
+            <td class="font-semibold text-primary">#{{ item.employeeId }}</td>
+
+            <!-- Image -->
+            <td>
+              @if (item.imageFileId) {
+                <img [src]="getImageUrl(item.imageFileId)" [alt]="item.fullNameThai || 'พนักงาน'"
+                  class="h-16 w-16 rounded-lg object-cover shadow-sm border border-surface-border" />
+              } @else {
+                <div class="h-16 w-16 rounded-lg bg-surface flex items-center justify-center border border-surface-border">
+                  <app-generic-icon name="human" svgClass="w-10 h-10" class="text-surface-sub opacity-50"></app-generic-icon>
+                </div>
+              }
+            </td>
+
+            <!-- Name -->
+            <td>
+              <div class="font-semibold text-surface-dark">{{ item.fullNameThai }}</div>
+              <div class="text-sm text-surface-sub mt-0.5">{{ item.fullNameEnglish }}</div>
+            </td>
+
+            <!-- Nickname -->
+            <td>
+              <span class="font-semibold text-surface-dark">{{ item.nickname || '-' }}</span>
+            </td>
+
+            <!-- Position -->
+            <td>
+              <span class="text-surface-dark">{{ item.positionName || '-' }}</span>
+            </td>
+
+            <!-- Phone -->
+            <td>
+              <span class="text-surface-dark">{{ item.phone || '-' }}</span>
+            </td>
+
+            <!-- Employment Status -->
+            <td class="text-center">
+              <p-tag [value]="getStatusLabel(item.employmentStatus!)" [severity]="getStatusSeverity(item.employmentStatus!)"></p-tag>
+            </td>
+
+            <!-- System Status -->
+            <td class="text-center">
+              @if (item.isActive) {
+                <p-tag value="ใช้งาน" severity="success"></p-tag>
+              } @else {
+                <p-tag value="ปิดใช้งาน" severity="secondary"></p-tag>
+              }
+            </td>
+
+            <!-- Actions -->
+            <td class="text-center">
+              <div class="flex justify-center gap-2">
+                @if (!item.userId) {
+                  <button class="w-9 h-9 flex items-center justify-center rounded-full bg-success-bg hover:bg-success text-success hover:text-white transition-colors duration-200"
+                    pTooltip="สร้างผู้ใช้" tooltipPosition="top"
+                    (click)="onCreateUser(item)">
+                    <i class="pi pi-user-plus text-sm"></i>
+                  </button>
+                }
+                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-primary-subtle hover:bg-primary-light text-primary transition-colors duration-200"
+                  pTooltip="แก้ไข" tooltipPosition="top"
+                  (click)="onEdit(item.employeeId!)">
+                  <app-generic-icon name="pen-edit" svgClass="w-4 h-4"></app-generic-icon>
+                </button>
+                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-danger-bg hover:bg-danger text-danger hover:text-white transition-colors duration-200"
+                  pTooltip="ลบ" tooltipPosition="top"
+                  (click)="onDelete(item.employeeId!, item.fullNameThai!)">
+                  <app-generic-icon name="trash" svgClass="w-4 h-4"></app-generic-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="text-center py-12 text-surface-sub">
+              <div class="flex flex-col items-center">
+                <app-generic-icon name="empty-box" svgClass="w-16 h-16" class="opacity-30 mb-3"></app-generic-icon>
+                <p class="text-lg font-semibold">ไม่พบข้อมูลพนักงาน</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>
+
+<!-- Modals -->
+<app-confirm-modal
+  [isOpen]="showDeleteModal()"
+  title="ยืนยันการลบ"
+  message="คุณต้องการลบพนักงาน"
+  [itemName]="selectedEmployee()?.name"
+  confirmText="ลบ"
+  cancelText="ยกเลิก"
+  type="delete"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()" />
+
+<app-success-modal
+  [isOpen]="showSuccessModal()"
+  [message]="successMessage()"
+  [autoClose]="true"
+  (closed)="closeSuccessModal()" />
+
+<app-error-modal
+  [isOpen]="showErrorModal()"
+  [message]="errorMessage()!"
+  (closed)="closeErrorModal()" />
+

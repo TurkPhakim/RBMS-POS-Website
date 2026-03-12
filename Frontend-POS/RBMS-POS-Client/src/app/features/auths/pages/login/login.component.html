@@ -1,0 +1,141 @@
+<div class="min-h-screen flex items-center justify-center bg-surface py-12 px-4">
+  <div class="max-w-md w-full space-y-6">
+    <!-- Logo & Header -->
+    <div class="text-center">
+      <img src="images/logos/RBMS_Logo.png" alt="RBMS Logo"
+           class="h-24 w-24 mx-auto object-contain mb-4" />
+      <h2 class="text-page-title text-surface-dark">RBMS POS</h2>
+      <p class="mt-1 text-surface-sub">Log-In to continue</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-surface-card rounded-xl shadow-lg border border-surface-border overflow-hidden">
+      <div class="px-8 py-8">
+        <!-- Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+          <!-- Username -->
+          <div>
+            <label for="username" class="block text-sm font-semibold text-surface-dark mb-1.5">
+              Username
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-surface-sub">
+                <app-generic-icon name="user" svgClass="w-5 h-5"></app-generic-icon>
+              </div>
+              <input
+                id="username"
+                type="text"
+                formControlName="username"
+                placeholder="Enter your username"
+                autocomplete="username"
+                class="block w-full pl-10 pr-4 py-2.5 border border-surface-border rounded-lg text-sm
+                       placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                       transition-colors"
+                [class.border-danger]="f['username'].invalid && f['username'].touched"
+                [class.focus:ring-danger]="f['username'].invalid && f['username'].touched"
+              />
+            </div>
+            @if (f['username'].invalid && f['username'].touched) {
+              <p class="mt-1 text-xs text-danger">
+                @if (f['username'].errors?.['required']) {
+                  <span>Username is required</span>
+                }
+                @if (f['username'].errors?.['minlength']) {
+                  <span>Username must be at least 4 characters</span>
+                }
+              </p>
+            }
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label for="password" class="block text-sm font-semibold text-surface-dark mb-1.5">
+              Password
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-surface-sub">
+                <app-generic-icon name="lock" svgClass="w-5 h-5"></app-generic-icon>
+              </div>
+              <input
+                id="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                class="password-input block w-full pl-10 pr-10 py-2.5 border border-surface-border rounded-lg text-sm
+                       placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+                       transition-colors"
+                [class.border-danger]="f['password'].invalid && f['password'].touched"
+                [class.focus:ring-danger]="f['password'].invalid && f['password'].touched"
+              />
+              <button
+                type="button"
+                (click)="togglePasswordVisibility()"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-surface-sub hover:text-surface-dark transition-colors"
+              >
+                @if (!showPassword()) {
+                  <app-generic-icon name="eye" svgClass="w-5 h-5"></app-generic-icon>
+                } @else {
+                  <app-generic-icon name="eye-off" svgClass="w-5 h-5"></app-generic-icon>
+                }
+              </button>
+            </div>
+            @if (f['password'].invalid && f['password'].touched) {
+              <p class="mt-1 text-xs text-danger">
+                @if (f['password'].errors?.['required']) {
+                  <span>Password is required</span>
+                }
+                @if (f['password'].errors?.['minlength']) {
+                  <span>Password must be at least 8 characters</span>
+                }
+              </p>
+            }
+          </div>
+
+          <!-- Submit -->
+          <button
+            type="submit"
+            [disabled]="loading()"
+            class="w-full flex justify-center items-center py-2.5 bg-primary hover:bg-primary-dark
+                   text-white font-semibold rounded-lg shadow-sm transition-colors duration-200
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            @if (!loading()) {
+              <app-generic-icon name="login" svgClass="w-5 h-5" class="mr-2"></app-generic-icon>
+              <span>Login</span>
+            } @else {
+              <span>Logging in...</span>
+            }
+          </button>
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-8 py-3 bg-surface border-t border-surface-border">
+        <p class="text-xs text-center text-surface-sub">
+          &copy; 2025 Developed by Phakim Sanguanpat
+        </p>
+      </div>
+    </div>
+
+    <!-- Version -->
+    <p class="text-center text-xs text-surface-sub">RBMS POS v1.0.0</p>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<app-success-modal
+  [isOpen]="showSuccessModal()"
+  title="Login Successful!"
+  [message]="'Welcome back, ' + successUsername"
+  [autoClose]="true"
+  (closed)="onSuccessModalClosed()"
+></app-success-modal>
+
+<!-- Error Modal -->
+<app-error-modal
+  [isOpen]="showErrorModal()"
+  title="Login Failed"
+  [message]="errorMessage()"
+  (closed)="onErrorModalClosed()"
+></app-error-modal>

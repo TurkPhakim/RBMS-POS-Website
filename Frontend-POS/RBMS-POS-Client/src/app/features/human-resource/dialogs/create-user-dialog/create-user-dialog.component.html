@@ -1,0 +1,66 @@
+<div class="space-y-4">
+  <!-- Profile Section -->
+  <div class="flex items-center gap-4">
+    @if (imageUrl) {
+      <img [src]="imageUrl" [alt]="employee.fullNameThai"
+        class="h-16 w-16 rounded-full object-cover border-2 border-surface-border" />
+    } @else {
+      <div class="h-16 w-16 rounded-full bg-surface flex items-center justify-center border-2 border-surface-border">
+        <app-generic-icon name="human" svgClass="w-10 h-10" class="text-surface-sub opacity-50"></app-generic-icon>
+      </div>
+    }
+    <div>
+      <div class="font-semibold text-surface-dark text-lg">{{ employee.fullNameThai }}</div>
+      <div class="text-sm text-surface-sub">{{ employee.fullNameEnglish }}</div>
+    </div>
+  </div>
+
+  <!-- Employee Info -->
+  <div class="bg-surface rounded-lg p-4 space-y-2">
+    <div class="flex justify-between">
+      <span class="text-surface-sub">ชื่อเล่น</span>
+      <span class="text-surface-dark font-medium">{{ employee.nickname || '-' }}</span>
+    </div>
+    <div class="flex justify-between">
+      <span class="text-surface-sub">ตำแหน่ง</span>
+      <span class="text-surface-dark font-medium">{{ employee.positionName || '-' }}</span>
+    </div>
+    <div class="flex justify-between">
+      <span class="text-surface-sub">เพศ</span>
+      <span class="text-surface-dark font-medium">{{ employee.genderName || '-' }}</span>
+    </div>
+    <div class="flex justify-between">
+      <span class="text-surface-sub">อีเมล</span>
+      <span class="text-surface-dark font-medium">{{ employee.email || '-' }}</span>
+    </div>
+    <div class="flex justify-between">
+      <span class="text-surface-sub">เบอร์โทร</span>
+      <span class="text-surface-dark font-medium">{{ employee.phone || '-' }}</span>
+    </div>
+  </div>
+
+  <!-- Info Note -->
+  <div class="bg-primary-subtle rounded-lg p-3 flex items-start gap-2">
+    <i class="pi pi-info-circle text-primary mt-0.5"></i>
+    <p class="text-sm text-surface-dark">
+      ระบบจะสร้างบัญชีผู้ใช้โดยใช้ <span class="font-semibold">อีเมล</span> เป็นชื่อผู้ใช้
+      และสุ่มรหัสผ่านให้อัตโนมัติ พร้อมส่งข้อมูลเข้าสู่ระบบทางอีเมล
+    </p>
+  </div>
+
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="bg-danger-bg rounded-lg p-3 flex items-center gap-2">
+      <i class="pi pi-times-circle text-danger"></i>
+      <span class="text-sm text-danger">{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- Footer -->
+  <div class="flex gap-3 justify-end pt-2">
+    <p-button label="ยกเลิก" severity="secondary" [outlined]="true"
+      [disabled]="isLoading()" (onClick)="onCancel()"></p-button>
+    <p-button label="สร้างผู้ใช้" icon="pi pi-user-plus"
+      [loading]="isLoading()" (onClick)="onConfirm()"></p-button>
+  </div>
+</div>

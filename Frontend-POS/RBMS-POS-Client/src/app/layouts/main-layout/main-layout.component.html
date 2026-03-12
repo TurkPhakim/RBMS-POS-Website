@@ -1,0 +1,21 @@
+<div class="flex h-screen overflow-hidden bg-surface">
+  <aside class="flex-shrink-0 transition-all duration-300 ease-in-out">
+    <app-side-bar></app-side-bar>
+  </aside>
+
+  <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
+    <header class="flex-shrink-0 z-10 shadow-sm">
+      <app-header></app-header>
+    </header>
+
+    <nav class="flex-shrink-0">
+      <app-top-breadcrumb></app-top-breadcrumb>
+    </nav>
+
+    <main class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-surface">
+      <div class="p-6">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+  </div>
+</div>

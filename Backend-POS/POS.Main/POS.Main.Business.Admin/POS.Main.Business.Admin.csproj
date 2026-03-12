@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\POS.Main.Business.Authorization\POS.Main.Business.Authorization.csproj" />
+    <ProjectReference Include="..\POS.Main.Repositories\POS.Main.Repositories.csproj" />
+    <ProjectReference Include="..\POS.Main.Core\POS.Main.Core.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="4.0.18.8" />
+    <PackageReference Include="MailKit" Version="4.15.1" />
+  </ItemGroup>
+
+</Project>

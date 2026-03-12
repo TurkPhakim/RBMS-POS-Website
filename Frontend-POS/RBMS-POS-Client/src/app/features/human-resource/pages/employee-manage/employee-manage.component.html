@@ -1,0 +1,331 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-page-title text-primary">
+      {{ isEditMode() ? 'แก้ไขพนักงาน' : 'เพิ่มพนักงาน' }}
+    </h1>
+    <p class="text-lg text-surface-sub mt-1">
+      {{ isEditMode() ? 'แก้ไขข้อมูลพนักงาน' : 'สร้างข้อมูลพนักงานใหม่' }}
+    </p>
+  </div>
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="flex justify-center py-20">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!isLoading()) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+      <!-- Card 1: ข้อมูลส่วนบุคคล -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-user text-lg"></i>
+            ข้อมูลส่วนบุคคล
+          </h2>
+          <p class="text-primary-lighter text-sm mt-1">ข้อมูลพื้นฐานของพนักงาน</p>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- คำนำหน้าชื่อ -->
+          <div>
+            <label for="title" class="block font-semibold text-surface-dark mb-2">คำนำหน้าชื่อ</label>
+            <input id="title" type="text" pInputText formControlName="title"
+              placeholder="คำนำหน้าชื่อ" class="w-full" />
+          </div>
+
+          <!-- ชื่อเล่น -->
+          <div>
+            <label for="nickname" class="block font-semibold text-surface-dark mb-2">ชื่อเล่น</label>
+            <input id="nickname" type="text" pInputText formControlName="nickname"
+              placeholder="ชื่อเล่น" class="w-full" />
+          </div>
+
+          <!-- ชื่อ (ไทย) -->
+          <div>
+            <label for="firstNameThai" class="block font-semibold text-surface-dark mb-2">
+              ชื่อ (ภาษาไทย) <span class="text-danger">*</span>
+            </label>
+            <input id="firstNameThai" type="text" pInputText formControlName="firstNameThai"
+              placeholder="ชื่อ (ภาษาไทย)" class="w-full"
+              [class.ng-invalid]="isFieldInvalid('firstNameThai')"
+              [class.ng-dirty]="isFieldInvalid('firstNameThai')" />
+            @if (isFieldInvalid('firstNameThai')) {
+              <small class="text-danger">{{ getErrorMessage('firstNameThai') }}</small>
+            }
+          </div>
+
+          <!-- นามสกุล (ไทย) -->
+          <div>
+            <label for="lastNameThai" class="block font-semibold text-surface-dark mb-2">
+              นามสกุล (ภาษาไทย) <span class="text-danger">*</span>
+            </label>
+            <input id="lastNameThai" type="text" pInputText formControlName="lastNameThai"
+              placeholder="นามสกุล (ภาษาไทย)" class="w-full"
+              [class.ng-invalid]="isFieldInvalid('lastNameThai')"
+              [class.ng-dirty]="isFieldInvalid('lastNameThai')" />
+            @if (isFieldInvalid('lastNameThai')) {
+              <small class="text-danger">{{ getErrorMessage('lastNameThai') }}</small>
+            }
+          </div>
+
+          <!-- ชื่อ (อังกฤษ) -->
+          <div>
+            <label for="firstNameEnglish" class="block font-semibold text-surface-dark mb-2">
+              ชื่อ (ภาษาอังกฤษ) <span class="text-danger">*</span>
+            </label>
+            <input id="firstNameEnglish" type="text" pInputText formControlName="firstNameEnglish"
+              placeholder="ชื่อ (ภาษาอังกฤษ)" class="w-full"
+              [class.ng-invalid]="isFieldInvalid('firstNameEnglish')"
+              [class.ng-dirty]="isFieldInvalid('firstNameEnglish')" />
+            @if (isFieldInvalid('firstNameEnglish')) {
+              <small class="text-danger">{{ getErrorMessage('firstNameEnglish') }}</small>
+            }
+          </div>
+
+          <!-- นามสกุล (อังกฤษ) -->
+          <div>
+            <label for="lastNameEnglish" class="block font-semibold text-surface-dark mb-2">
+              นามสกุล (ภาษาอังกฤษ) <span class="text-danger">*</span>
+            </label>
+            <input id="lastNameEnglish" type="text" pInputText formControlName="lastNameEnglish"
+              placeholder="นามสกุล (ภาษาอังกฤษ)" class="w-full"
+              [class.ng-invalid]="isFieldInvalid('lastNameEnglish')"
+              [class.ng-dirty]="isFieldInvalid('lastNameEnglish')" />
+            @if (isFieldInvalid('lastNameEnglish')) {
+              <small class="text-danger">{{ getErrorMessage('lastNameEnglish') }}</small>
+            }
+          </div>
+
+          <!-- เพศ -->
+          <div>
+            <label for="gender" class="block font-semibold text-surface-dark mb-2">
+              เพศ <span class="text-danger">*</span>
+            </label>
+            <p-dropdown inputId="gender" [options]="genderOptions" formControlName="gender"
+              optionLabel="label" optionValue="value" placeholder="เลือกเพศ"
+              styleClass="w-full"></p-dropdown>
+          </div>
+
+          <!-- เลขประจำตัวประชาชน -->
+          <div>
+            <label for="nationalId" class="block font-semibold text-surface-dark mb-2">เลขประจำตัวประชาชน</label>
+            <input id="nationalId" type="text" pInputText formControlName="nationalId"
+              placeholder="เลขประจำตัวประชาชน" maxlength="13" class="w-full" />
+          </div>
+
+          <!-- วันเดือนปีเกิด -->
+          <div>
+            <label for="dateOfBirth" class="block font-semibold text-surface-dark mb-2">วันเดือนปีเกิด</label>
+            <p-datepicker formControlName="dateOfBirth" dateFormat="dd/mm/yy" placeholder="เลือกวันที่" styleClass="w-full" />
+          </div>
+
+          <!-- อายุ -->
+          <div>
+            <label for="age" class="block font-semibold text-surface-dark mb-2">อายุ</label>
+            <input id="age" type="text" pInputText formControlName="age"
+              placeholder="คำนวณอัตโนมัติ" class="w-full" readonly />
+            <small class="text-surface-sub mt-1 flex items-center gap-1">
+              <i class="pi pi-info-circle text-xs"></i>
+              คำนวณอัตโนมัติจากวันเกิด
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: ข้อมูลติดต่อ -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-envelope text-lg"></i>
+            ข้อมูลติดต่อ
+          </h2>
+          <p class="text-primary-lighter text-sm mt-1">อีเมลและเบอร์โทรศัพท์</p>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- อีเมล -->
+          <div>
+            <label for="email" class="block font-semibold text-surface-dark mb-2">อีเมล</label>
+            <input id="email" type="email" pInputText formControlName="email"
+              placeholder="อีเมล" class="w-full"
+              [class.ng-invalid]="isFieldInvalid('email')"
+              [class.ng-dirty]="isFieldInvalid('email')" />
+            @if (isFieldInvalid('email')) {
+              <small class="text-danger">{{ getErrorMessage('email') }}</small>
+            }
+          </div>
+
+          <!-- เบอร์โทรศัพท์ -->
+          <div>
+            <label for="phone" class="block font-semibold text-surface-dark mb-2">เบอร์โทรศัพท์</label>
+            <input id="phone" type="text" pInputText formControlName="phone"
+              placeholder="เบอร์โทรศัพท์" class="w-full" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: ข้อมูลการจ้างงาน -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-briefcase text-lg"></i>
+            ข้อมูลการจ้างงาน
+          </h2>
+          <p class="text-primary-lighter text-sm mt-1">ตำแหน่งงานและเงินเดือน</p>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- ตำแหน่งงาน -->
+          <div>
+            <label class="block font-semibold text-surface-dark mb-2">
+              ตำแหน่งงาน
+            </label>
+            <app-position-dropdown
+              [value]="form.get('positionId')?.value"
+              (valueChange)="form.get('positionId')?.setValue($event)">
+            </app-position-dropdown>
+          </div>
+
+          <!-- สถานะพนักงาน -->
+          <div>
+            <label for="employmentStatus" class="block font-semibold text-surface-dark mb-2">
+              สถานะพนักงาน <span class="text-danger">*</span>
+            </label>
+            <p-dropdown inputId="employmentStatus" [options]="statusOptions" formControlName="employmentStatus"
+              optionLabel="label" optionValue="value" placeholder="เลือกสถานะ"
+              styleClass="w-full"></p-dropdown>
+          </div>
+
+          <!-- วันที่เริ่มทำงาน -->
+          <div>
+            <label for="startDate" class="block font-semibold text-surface-dark mb-2">
+              วันที่เริ่มทำงาน <span class="text-danger">*</span>
+            </label>
+            <p-datepicker formControlName="startDate" dateFormat="dd/mm/yy" placeholder="เลือกวันที่" styleClass="w-full" />
+            @if (isFieldInvalid('startDate')) {
+              <small class="text-danger">{{ getErrorMessage('startDate') }}</small>
+            }
+          </div>
+
+          <!-- วันที่สิ้นสุด -->
+          <div>
+            <label for="endDate" class="block font-semibold text-surface-dark mb-2">วันที่สิ้นสุดการทำงาน</label>
+            <p-datepicker formControlName="endDate" dateFormat="dd/mm/yy" placeholder="เลือกวันที่" styleClass="w-full" />
+          </div>
+
+          <!-- เงินเดือน -->
+          <div class="md:col-span-2">
+            <label for="salary" class="block font-semibold text-surface-dark mb-2">เงินเดือน (บาท/เดือน)</label>
+            <p-inputNumber inputId="salary" formControlName="salary"
+              [min]="0" mode="decimal" prefix="฿ "
+              placeholder="เงินเดือน" styleClass="w-full"></p-inputNumber>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: ข้อมูลธนาคาร -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-wallet text-lg"></i>
+            ข้อมูลธนาคาร
+          </h2>
+          <p class="text-primary-lighter text-sm mt-1">บัญชีธนาคารสำหรับจ่ายเงินเดือน</p>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- ชื่อธนาคาร -->
+          <div>
+            <label for="bankName" class="block font-semibold text-surface-dark mb-2">ชื่อธนาคาร</label>
+            <input id="bankName" type="text" pInputText formControlName="bankName"
+              placeholder="ชื่อธนาคาร" class="w-full" />
+          </div>
+
+          <!-- เลขที่บัญชี -->
+          <div>
+            <label for="bankAccountNumber" class="block font-semibold text-surface-dark mb-2">เลขที่บัญชีธนาคาร</label>
+            <input id="bankAccountNumber" type="text" pInputText formControlName="bankAccountNumber"
+              placeholder="เลขที่บัญชีธนาคาร" maxlength="12" class="w-full" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5: รูปถ่ายพนักงาน -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-image text-lg"></i>
+            รูปถ่ายพนักงาน
+          </h2>
+          <p class="text-primary-lighter text-sm mt-1">อัพโหลดรูปโปรไฟล์พนักงาน</p>
+        </div>
+
+        <div class="p-6">
+          @if (!imagePreview()) {
+            <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
+            <button type="button" (click)="fileInput.click()"
+              class="w-full px-8 py-12 border-2 border-dashed border-surface-border rounded-xl hover:border-primary transition-all duration-200 flex flex-col items-center justify-center gap-4 bg-surface hover:bg-primary-subtle group">
+              <app-generic-icon name="human" svgClass="w-16 h-16" class="text-surface-sub opacity-50 group-hover:text-primary group-hover:opacity-100 transition-all duration-200"></app-generic-icon>
+              <div class="text-center">
+                <p class="text-lg font-semibold text-surface-dark group-hover:text-primary transition">คลิกเพื่ออัพโหลดรูปพนักงาน</p>
+                <p class="text-surface-sub mt-1">PNG, JPG ขนาดไม่เกิน 5MB</p>
+              </div>
+            </button>
+          } @else {
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+              <div>
+                <img [src]="imagePreview()" alt="ตัวอย่างรูปพนักงาน"
+                  class="h-64 w-64 rounded-xl object-cover shadow-sm border border-surface-border" />
+              </div>
+              <div class="flex flex-col gap-3">
+                <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
+                <p-button label="เปลี่ยนรูป" icon="pi pi-pencil" severity="secondary" [outlined]="true"
+                  (onClick)="fileInput.click()"></p-button>
+                <p-button label="ลบรูป" icon="pi pi-trash" severity="danger" [outlined]="true"
+                  (onClick)="removeImage()"></p-button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Card 6: สถานะระบบ -->
+      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="pi pi-cog text-lg"></i>
+            สถานะระบบ
+          </h2>
+          <p class="text-primary-lighter text-sm mt-1">เปิด/ปิดการใช้งานพนักงานในระบบ</p>
+        </div>
+
+        <div class="p-6">
+          <div class="flex items-center justify-between p-4 border border-surface-border rounded-xl">
+            <div>
+              <label for="isActive" class="block text-lg font-semibold text-surface-dark">สถานะการใช้งาน</label>
+              <p class="text-surface-sub mt-1">เปิด/ปิดการใช้งานพนักงานนี้ในระบบ</p>
+            </div>
+            <p-inputSwitch formControlName="isActive" inputId="isActive"></p-inputSwitch>
+          </div>
+        </div>
+      </div>
+
+    </form>
+  }
+</div>
+
+<!-- Modals -->
+<app-success-modal
+  [isOpen]="showSuccessModal()"
+  [message]="successMessage()"
+  [autoClose]="true"
+  (closed)="closeSuccessModal()" />
+
+<app-error-modal
+  [isOpen]="showErrorModal()"
+  [message]="errorMessage()!"
+  (closed)="closeErrorModal()" />

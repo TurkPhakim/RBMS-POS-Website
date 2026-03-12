@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\POS.Main.Core\POS.Main.Core.csproj" />
+    <ProjectReference Include="..\POS.Main.Dal\POS.Main.Dal.csproj" />
+    <ProjectReference Include="..\POS.Main.Repositories\POS.Main.Repositories.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

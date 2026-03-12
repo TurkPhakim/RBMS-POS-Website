@@ -1,0 +1,207 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Resets ──────────────────────────────────────────────────────────── */
+@layer base {
+  html, body {
+    @apply h-full overflow-hidden;
+    font-family: "Sarabun", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-surface text-surface-dark;
+  }
+}
+
+/* ─── Modal Animations ──────────────────────────────────────────────────────── */
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-scale-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+@keyframes modal-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+.animate-modal-fade-in  { animation: modal-fade-in  0.2s ease-out; }
+.animate-modal-scale-in { animation: modal-scale-in 0.25s ease-out; }
+.animate-modal-progress { animation: modal-progress 2s linear forwards; }
+
+/* ─── Custom Scrollbar ────────────────────────────────────────────────────── */
+/* Webkit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-muted);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface-sub);
+}
+
+/* Sidebar — thinner + subtle */
+.bg-surface-sidebar ::-webkit-scrollbar {
+  width: 4px;
+}
+
+.bg-surface-sidebar ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.bg-surface-sidebar ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-muted) transparent;
+}
+
+.bg-surface-sidebar * {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* ─── PrimeNG Toggle Switch ───────────────────────────────────────────────── */
+/* Reset ALL PrimeNG default styles */
+.p-toggleswitch,
+.p-toggleswitch .p-toggleswitch-slider,
+.p-toggleswitch .p-toggleswitch-handle {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Slider track */
+.p-toggleswitch .p-toggleswitch-slider {
+  position: relative !important;
+  width: 3rem !important;
+  height: 1.75rem !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  background: var(--color-danger) !important;
+  transition: background 0.2s !important;
+}
+
+.p-toggleswitch:not(.p-disabled):hover .p-toggleswitch-slider {
+  background: var(--color-danger-dark) !important;
+}
+
+.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: var(--color-success) !important;
+}
+
+.p-toggleswitch.p-toggleswitch-checked:not(.p-disabled):hover .p-toggleswitch-slider {
+  background: var(--color-success-text) !important;
+}
+
+/* Handle (white knob) */
+.p-toggleswitch .p-toggleswitch-handle {
+  position: absolute !important;
+  top: 50% !important;
+  inset-inline-start: 0.25rem !important;
+  transform: translateY(-50%) !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border-radius: 50% !important;
+  border: none !important;
+  background: #ffffff !important;
+  transition: inset-inline-start 0.2s !important;
+}
+
+.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle {
+  inset-inline-start: calc(3rem - 1.25rem - 0.25rem) !important;
+}
+
+/* ─── PrimeNG Table ──────────────────────────────────────────────────────── */
+/* Sharp corners */
+.p-datatable,
+.p-datatable .p-datatable-table {
+  border-radius: 0 !important;
+}
+
+/* Header — dark background + white text */
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--color-surface-muted) !important;
+  color: var(--color-surface-dark) !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  border-bottom: 2px solid var(--color-primary) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th:last-child {
+  border-right: none !important;
+}
+
+/* Body cell dividers */
+.p-datatable .p-datatable-tbody > tr > td {
+  border-right: 1px solid var(--color-surface-border);
+  border-bottom: 1px solid var(--color-surface-border);
+}
+
+.p-datatable .p-datatable-tbody > tr > td:last-child {
+  border-right: none;
+}
+
+/* Striped rows */
+.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+  background: var(--color-surface) !important;
+}
+
+.p-datatable-striped .p-datatable-tbody > tr:nth-child(even):hover {
+  background: var(--color-primary-subtle) !important;
+}
+
+/* ─── PrimeNG Input Focus Ring → orange ──────────────────────────────────── */
+.p-inputtext:enabled:focus,
+.p-inputnumber-input:enabled:focus,
+.p-dropdown:not(.p-disabled).p-focus,
+.p-textarea:enabled:focus,
+.p-select:not(.p-disabled).p-focus,
+.p-multiselect:not(.p-disabled).p-focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 0.2rem var(--color-primary-light) !important;
+  outline: none !important;
+}
+
+/* Dropdown / Select — selected item highlight → orange */
+.p-dropdown-item.p-highlight,
+.p-select-option.p-select-option-selected,
+.p-listbox-option.p-listbox-option-selected {
+  background: var(--color-primary-subtle) !important;
+  color: var(--color-primary-text) !important;
+}
+
+.p-dropdown-item:not(.p-highlight):hover,
+.p-select-option:not(.p-select-option-selected):hover,
+.p-listbox-option:not(.p-listbox-option-selected):hover {
+  background: var(--color-surface) !important;
+}
+
+/* ─── Password Input ──────────────────────────────────────────────────────── */
+.password-input::-ms-reveal,
+.password-input::-ms-clear { display: none; }
+.password-input::-webkit-credentials-auto-fill-button,
+.password-input::-webkit-contacts-auto-fill-button {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}

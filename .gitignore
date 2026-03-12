@@ -1,0 +1,67 @@
+# ──────────────────────────────────────────────────────────────
+# RBMS-POS — .gitignore (ครอบคลุมทั้ง Backend + Frontend)
+# ──────────────────────────────────────────────────────────────
+
+# ─── System files ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── IDE / Editor ─────────────────────────────────────────────
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+.project
+.classpath
+.c9/
+.settings/
+.history/*
+*.launch
+*.sublime-workspace
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ─── AI / Claude ──────────────────────────────────────────────
+.claude/
+
+# ─── Backend (.NET) ───────────────────────────────────────────
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+
+# ─── Frontend (Angular) ──────────────────────────────────────
+**/node_modules/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+npm-debug.log
+yarn-error.log
+**/.angular/cache
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+testem.log
+typings/
+
+# ─── Secrets / Environment ───────────────────────────────────
+**/appsettings.Development.json
+**/appsettings.Production.json
+
+# ─── Generated / Downloaded ──────────────────────────────────
+swagger.json
+swagger-spec.json

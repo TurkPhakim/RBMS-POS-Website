@@ -1,0 +1,99 @@
+<header class="bg-gradient-to-r from-primary to-primary-dark shadow-md z-40">
+  <div class="flex justify-between items-center px-4 py-2.5">
+    <!-- Left: Toggle + Logo -->
+    <div class="flex items-center space-x-3">
+      <button (click)="toggleSidebar()"
+              class="text-white hover:bg-white/10 rounded-lg p-2 transition-colors duration-200"
+              type="button" title="Toggle Sidebar">
+        <app-generic-icon name="hamburger" svgClass="w-6 h-6"></app-generic-icon>
+      </button>
+
+      <a routerLink="/" class="flex items-center space-x-2 cursor-pointer hover:opacity-90 transition-opacity duration-200">
+        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md p-1">
+          <img src="images/logos/RBMS_Logo.png" alt="RBMS Logo" class="w-full h-full object-contain" />
+        </div>
+        <h1 class="text-white font-bold text-xl drop-shadow-md">RBMS POS</h1>
+      </a>
+    </div>
+
+    <!-- Center: Header Buttons -->
+    @if ((headerService.headerButtons$ | async); as buttons) {
+      @if (buttons.length > 0) {
+        <div class="flex items-center gap-2">
+          @for (btn of buttons; track btn.key) {
+            <p-button [label]="btn.label || ''"
+                      [icon]="btn.icon || ''"
+                      [severity]="btn.severity || 'secondary'"
+                      [size]="btn.size || 'small'"
+                      [rounded]="btn.rounded || false"
+                      [raised]="btn.raised || false"
+                      [loading]="btn.loading || false"
+                      [disabled]="btn.disabled || false"
+                      [badge]="btn.badge || ''"
+                      (click)="btn.callback && btn.callback()">
+            </p-button>
+          }
+        </div>
+      }
+    }
+
+    <!-- Right: Notification + Profile -->
+    <div class="flex items-center space-x-2">
+      <!-- Notification Bell -->
+      <button class="relative text-white hover:bg-white/10 rounded-lg p-2 transition-colors duration-200"
+              (click)="toggleNotifications()" type="button" title="การแจ้งเตือน">
+        <i class="pi pi-bell text-lg"></i>
+      </button>
+
+      <!-- Profile Menu -->
+      <div class="relative profile-menu-container">
+        <button (click)="toggleProfileMenu()"
+                class="flex items-center space-x-2 text-white hover:bg-white/10 rounded-lg px-3 py-1.5 transition-colors duration-200"
+                type="button">
+          <!-- Avatar -->
+          @if (currentUser?.profileImage) {
+            <img [src]="currentUser!.profileImage" alt="avatar"
+                 class="w-8 h-8 rounded-full object-cover border-2 border-white/30" />
+          } @else {
+            <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-primary font-bold text-sm">
+              {{ getUserInitial() }}
+            </div>
+          }
+          <span class="text-sm font-semibold whitespace-nowrap">
+            {{ currentUser?.nickname || currentUser?.username || 'User' }}
+          </span>
+          <i class="pi pi-chevron-down text-xs transition-transform duration-200"
+             [class.rotate-180]="showProfileMenu()"></i>
+        </button>
+
+        <!-- Dropdown -->
+        @if (showProfileMenu()) {
+          <div class="absolute right-0 mt-2 w-48 bg-surface-card rounded-lg shadow-xl py-1 z-50 border border-surface-border">
+            <button (click)="navigateToProfile()"
+                    class="w-full text-left flex items-center px-4 py-2 text-surface-dark hover:bg-surface transition-colors text-sm"
+                    type="button">
+              <i class="pi pi-user mr-3 text-surface-sub"></i>
+              <span class="font-medium">โปรไฟล์</span>
+            </button>
+            <button routerLink="/profile" (click)="showProfileMenu.set(false)"
+                    class="w-full text-left flex items-center px-4 py-2 text-surface-dark hover:bg-surface transition-colors text-sm"
+                    type="button">
+              <i class="pi pi-key mr-3 text-surface-sub"></i>
+              <span class="font-medium">เปลี่ยนรหัสผ่าน</span>
+            </button>
+            <hr class="border-surface-border" />
+            <button (click)="logout()"
+                    class="w-full text-left flex items-center px-4 py-2 text-danger hover:bg-danger-bg transition-colors text-sm"
+                    type="button">
+              <i class="pi pi-sign-out mr-3"></i>
+              <span class="font-medium">ออกจากระบบ</span>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Notification Panel -->
+<app-notification-panel></app-notification-panel>

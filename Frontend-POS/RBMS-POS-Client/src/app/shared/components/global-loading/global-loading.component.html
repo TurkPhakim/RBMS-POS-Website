@@ -1,0 +1,19 @@
+@if (loadingService.loading$ | async) {
+  <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
+    <div class="flex flex-col items-center gap-6">
+      <!-- Wave Dots -->
+      <div class="flex items-center gap-2">
+        <span class="h-3.5 w-3.5 rounded-full bg-primary animate-wave-bounce" style="animation-delay: 0s"></span>
+        <span class="h-3.5 w-3.5 rounded-full bg-primary animate-wave-bounce" style="animation-delay: 0.1s"></span>
+        <span class="h-3.5 w-3.5 rounded-full bg-primary animate-wave-bounce" style="animation-delay: 0.2s"></span>
+        <span class="h-3.5 w-3.5 rounded-full bg-primary animate-wave-bounce" style="animation-delay: 0.3s"></span>
+        <span class="h-3.5 w-3.5 rounded-full bg-primary animate-wave-bounce" style="animation-delay: 0.4s"></span>
+      </div>
+
+      <!-- Message -->
+      <p class="text-white text-sm font-medium">
+        {{ loadingService.message$ | async }}
+      </p>
+    </div>
+  </div>
+}
