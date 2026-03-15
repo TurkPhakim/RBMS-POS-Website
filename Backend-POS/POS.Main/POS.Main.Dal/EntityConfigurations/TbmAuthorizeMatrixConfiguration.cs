@@ -99,7 +99,11 @@ public class TbmAuthorizeMatrixConfiguration : IEntityTypeConfiguration<TbmAutho
 
             // Kitchen Display — read + update only
             new TbmAuthorizeMatrix { AuthorizeMatrixId = id++, ModuleId = 17, PermissionId = 1, PermissionPath = "kitchen-order.read", CreatedAt = seedDate },
-            new TbmAuthorizeMatrix { AuthorizeMatrixId = id, ModuleId = 17, PermissionId = 3, PermissionPath = "kitchen-order.update", CreatedAt = seedDate }
+            new TbmAuthorizeMatrix { AuthorizeMatrixId = id++, ModuleId = 17, PermissionId = 3, PermissionPath = "kitchen-order.update", CreatedAt = seedDate },
+
+            // Shop Settings — read + update only
+            new TbmAuthorizeMatrix { AuthorizeMatrixId = id++, ModuleId = 18, PermissionId = 1, PermissionPath = "shop-settings.read", CreatedAt = seedDate },
+            new TbmAuthorizeMatrix { AuthorizeMatrixId = id, ModuleId = 18, PermissionId = 3, PermissionPath = "shop-settings.update", CreatedAt = seedDate }
         );
     }
 }

@@ -1,58 +1,38 @@
-// 1. Angular core
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  OnChanges,
-  OnDestroy,
-  SimpleChanges,
-  ChangeDetectionStrategy,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+
+import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+
+import { DialogData } from '@app/core/services/modal.service';
 
 @Component({
   selector: 'app-success-modal',
   standalone: false,
   templateUrl: './success-modal.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SuccessModalComponent implements OnChanges, OnDestroy {
-  @Input() isOpen = false;
-  @Input() title = 'Success!';
-  @Input() message = '';
-  /** true = auto-close after 2s with progress bar | false = show close button */
-  @Input() autoClose = true;
-  @Input() closeButtonText = 'OK';
-
-  @Output() closed = new EventEmitter<void>();
-
+export class SuccessModalComponent implements OnInit, OnDestroy {
   private timer?: ReturnType<typeof setTimeout>;
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isOpen']) {
-      if (this.isOpen && this.autoClose) {
-        this.clearTimer();
-        this.timer = setTimeout(() => {
-          this.closed.emit();
-        }, 2000);
-      } else if (!this.isOpen) {
-        this.clearTimer();
-      }
+  constructor(
+    readonly ref: DynamicDialogRef,
+    readonly config: DynamicDialogConfig<DialogData>,
+  ) {}
+
+  ngOnInit(): void {
+    if (!this.config.data?.onConfirm) {
+      this.timer = setTimeout(() => this.ref.close(), 2000);
     }
   }
 
   ngOnDestroy(): void {
-    this.clearTimer();
-  }
-
-  onClose(): void {
-    this.closed.emit();
-  }
-
-  private clearTimer(): void {
     if (this.timer !== undefined) {
       clearTimeout(this.timer);
       this.timer = undefined;
     }
+  }
+
+  handleConfirm(): void {
+    const callback = this.config.data?.onConfirm;
+    if (callback) callback();
+    this.ref.close(true);
   }
 }

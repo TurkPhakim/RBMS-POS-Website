@@ -35,4 +35,16 @@ public class CreateServiceChargeRequestModel
     /// </summary>
     /// <example>true</example>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Start date of the service charge effective period
+    /// </summary>
+    /// <example>2026-04-01</example>
+    public DateTime? StartDate { get; set; }
+
+    /// <summary>
+    /// End date of the service charge effective period (null = indefinite)
+    /// </summary>
+    /// <example>2026-12-31</example>
+    public DateTime? EndDate { get; set; }
 }

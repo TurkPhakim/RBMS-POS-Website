@@ -1,10 +1,12 @@
-import { Component, signal, computed, DestroyRef, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, computed, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MenusService } from '@app/core/api/services';
+import { Router } from '@angular/router';
+
 import { ApiConfiguration } from '@app/core/api/api-configuration';
-import { MenuResponseModel, EMenuCategory } from '@app/core/api/models';
+import { EMenuCategory, MenuResponseModel } from '@app/core/api/models';
+import { MenusService } from '@app/core/api/services';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
+import { Icon, ModalService } from '@app/core/services/modal.service';
 
 const KEY_BTN_ADD = 'add-menu';
 
@@ -45,20 +47,13 @@ export class MenuListComponent implements OnDestroy {
     return filtered.sort((a, b) => (a.menuId || 0) - (b.menuId || 0));
   });
 
-  isLoading = signal(false);
-  errorMessage = signal<string | null>(null);
-  showDeleteModal = signal(false);
-  showSuccessModal = signal(false);
-  showErrorModal = signal(false);
-  successMessage = signal('');
-  selectedMenu = signal<{ id: number; name: string } | null>(null);
-
   constructor(
-    private readonly menusService: MenusService,
     private readonly apiConfig: ApiConfiguration,
-    private readonly router: Router,
-    private readonly destroyRef: DestroyRef,
     private readonly breadcrumbService: BreadcrumbService,
+    private readonly destroyRef: DestroyRef,
+    private readonly menusService: MenusService,
+    private readonly modalService: ModalService,
+    private readonly router: Router,
   ) {}
 
   getImageUrl(fileId: number): string {
@@ -81,28 +76,21 @@ export class MenuListComponent implements OnDestroy {
       item: {
         key: KEY_BTN_ADD,
         label: 'เพิ่มเมนู',
-        icon: 'pi pi-plus',
         callback: () => this.onAdd(),
       },
     });
   }
 
   loadMenus(): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.menusService
-      .apiMenuGet()
+      .menusGetAllGet()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           this.allMenus.set(response.results ?? []);
-          this.isLoading.set(false);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูลเมนูได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลเมนูได้' });
         },
       });
   }
@@ -116,52 +104,29 @@ export class MenuListComponent implements OnDestroy {
   }
 
   onAdd(): void {
-    this.router.navigate(['/menu/items/add']);
+    this.router.navigate(['/menu/items/create']);
   }
 
   onEdit(id: number): void {
-    this.router.navigate(['/menu/items/edit', id]);
+    this.router.navigate(['/menu/items/update', id]);
   }
 
   onDelete(id: number, name: string): void {
-    this.selectedMenu.set({ id, name });
-    this.showDeleteModal.set(true);
-  }
-
-  confirmDelete(): void {
-    const menu = this.selectedMenu();
-    if (!menu) return;
-
-    this.menusService
-      .apiMenuMenuIdDelete({ menuId: menu.id! })
+    this.modalService.info({
+      icon: Icon.Question,
+      title: 'ยืนยันการลบ',
+      message: `คุณต้องการลบเมนู "${name}"?`,
+      confirmButtonLabel: 'ลบ',
+      cancelButtonLabel: 'ยกเลิก',
+      onConfirm: () => this.menusService.menusDeleteDelete({ menuId: id }),
+    }).onClose
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.showDeleteModal.set(false);
-          this.successMessage.set(`ลบเมนู "${menu.name}" สำเร็จ`);
-          this.showSuccessModal.set(true);
+      .subscribe((result) => {
+        if (result) {
+          this.modalService.commonSuccess();
           this.loadMenus();
-        },
-        error: () => {
-          this.errorMessage.set('ไม่สามารถลบเมนูได้');
-          this.showErrorModal.set(true);
-          this.showDeleteModal.set(false);
-        },
+        }
       });
-  }
-
-  cancelDelete(): void {
-    this.showDeleteModal.set(false);
-    this.selectedMenu.set(null);
-  }
-
-  closeSuccessModal(): void {
-    this.showSuccessModal.set(false);
-    this.successMessage.set('');
-  }
-
-  closeErrorModal(): void {
-    this.showErrorModal.set(false);
   }
 
   getCategoryLabel(category: EMenuCategory): string {

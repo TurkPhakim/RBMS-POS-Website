@@ -11,8 +11,8 @@ const routes: Routes = [
     data: { breadcrumb: 'เมนู' },
     children: [
       { path: '', component: MenuListComponent },
-      { path: 'add', component: MenuManageComponent, data: { breadcrumb: 'เพิ่ม' } },
-      { path: 'edit/:menuId', component: MenuManageComponent, data: { breadcrumb: 'แก้ไข' } },
+      { path: 'create', component: MenuManageComponent, data: { breadcrumb: 'เพิ่ม' } },
+      { path: 'update/:menuId', component: MenuManageComponent, data: { breadcrumb: 'แก้ไข' } },
     ],
   },
 ];

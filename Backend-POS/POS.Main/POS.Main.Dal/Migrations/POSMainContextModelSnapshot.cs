@@ -114,11 +114,6 @@ namespace POS.Main.Dal.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("EmploymentStatus")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
@@ -137,10 +132,18 @@ namespace POS.Main.Dal.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<decimal?>("HourlyRate")
+                        .HasColumnType("decimal(12,2)");
+
                     b.Property<int?>("ImageFileId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsFullTime")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
@@ -155,9 +158,17 @@ namespace POS.Main.Dal.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("LineId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("NationalId")
                         .HasMaxLength(13)
                         .HasColumnType("nvarchar(13)");
+
+                    b.Property<string>("Nationality")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("Nickname")
                         .HasMaxLength(50)
@@ -169,6 +180,10 @@ namespace POS.Main.Dal.Migrations
 
                     b.Property<int?>("PositionId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Religion")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<decimal?>("Salary")
                         .HasColumnType("decimal(12,2)");
@@ -199,13 +214,13 @@ namespace POS.Main.Dal.Migrations
                     b.HasIndex("Email")
                         .HasDatabaseName("IX_Employees_Email");
 
-                    b.HasIndex("EmploymentStatus")
-                        .HasDatabaseName("IX_Employees_EmploymentStatus");
-
                     b.HasIndex("FirstNameThai")
                         .HasDatabaseName("IX_Employees_FirstNameThai");
 
                     b.HasIndex("ImageFileId");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Employees_IsActive");
 
                     b.HasIndex("LastNameThai")
                         .HasDatabaseName("IX_Employees_LastNameThai");
@@ -227,6 +242,222 @@ namespace POS.Main.Dal.Migrations
                         .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("TbEmployees", (string)null);
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbEmployeeAddress", b =>
+                {
+                    b.Property<int>("AddressId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AddressId"));
+
+                    b.Property<string>("AddressType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Building")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DeleteFlag")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("District")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("HouseNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Moo")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Province")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Road")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Soi")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SubDistrict")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Yaek")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("AddressId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("IX_EmployeeAddresses_EmployeeId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.ToTable("TbEmployeeAddresses", (string)null);
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbEmployeeEducation", b =>
+                {
+                    b.Property<int>("EducationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EducationId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DeleteFlag")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EducationLevel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Gpa")
+                        .HasColumnType("decimal(3,2)");
+
+                    b.Property<int?>("GraduationYear")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Institution")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Major")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("EducationId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("IX_EmployeeEducations_EmployeeId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.ToTable("TbEmployeeEducations", (string)null);
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbEmployeeWorkHistory", b =>
+                {
+                    b.Property<int>("WorkHistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WorkHistoryId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DeleteFlag")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Position")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkPhone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Workplace")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("WorkHistoryId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("IX_EmployeeWorkHistories_EmployeeId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.ToTable("TbEmployeeWorkHistories", (string)null);
                 });
 
             modelBuilder.Entity("POS.Main.Dal.Entities.TbFile", b =>
@@ -442,6 +673,91 @@ namespace POS.Main.Dal.Migrations
                     b.ToTable("TbMenus", (string)null);
                 });
 
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbPasswordHistory", b =>
+                {
+                    b.Property<int>("PasswordHistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PasswordHistoryId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PasswordHistoryId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_PasswordHistory_UserId");
+
+                    b.ToTable("TbPasswordHistory", (string)null);
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbPasswordResetToken", b =>
+                {
+                    b.Property<Guid>("PasswordResetTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("OtpAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("OtpCode")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("nvarchar(6)");
+
+                    b.Property<DateTime>("OtpExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("OtpVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("ResetToken")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<DateTime?>("ResetTokenExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PasswordResetTokenId");
+
+                    b.HasIndex("ResetToken")
+                        .HasDatabaseName("IX_PasswordResetTokens_ResetToken");
+
+                    b.HasIndex("UserId", "IsUsed")
+                        .HasDatabaseName("IX_PasswordResetTokens_UserUsed");
+
+                    b.ToTable("TbPasswordResetTokens", (string)null);
+                });
+
             modelBuilder.Entity("POS.Main.Dal.Entities.TbRefreshToken", b =>
                 {
                     b.Property<Guid>("RefreshTokenId")
@@ -525,6 +841,9 @@ namespace POS.Main.Dal.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -537,6 +856,9 @@ namespace POS.Main.Dal.Migrations
 
                     b.Property<decimal>("PercentageRate")
                         .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -551,15 +873,296 @@ namespace POS.Main.Dal.Migrations
                     b.HasIndex("DeleteFlag")
                         .HasDatabaseName("IX_ServiceCharges_DeleteFlag");
 
+                    b.HasIndex("EndDate")
+                        .HasDatabaseName("IX_ServiceCharges_EndDate");
+
                     b.HasIndex("IsActive")
                         .HasDatabaseName("IX_ServiceCharges_IsActive");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("IX_ServiceCharges_Name");
 
+                    b.HasIndex("StartDate")
+                        .HasDatabaseName("IX_ServiceCharges_StartDate");
+
                     b.HasIndex("UpdatedBy");
 
                     b.ToTable("TbServiceCharges", (string)null);
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbShopOperatingHour", b =>
+                {
+                    b.Property<int>("ShopOperatingHourId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShopOperatingHourId"));
+
+                    b.Property<TimeSpan?>("CloseTime1")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan?>("CloseTime2")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DeleteFlag")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsOpen")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<TimeSpan?>("OpenTime1")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan?>("OpenTime2")
+                        .HasColumnType("time");
+
+                    b.Property<int>("ShopSettingsId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("ShopOperatingHourId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DeleteFlag")
+                        .HasDatabaseName("IX_ShopOperatingHours_DeleteFlag");
+
+                    b.HasIndex("ShopSettingsId")
+                        .HasDatabaseName("IX_ShopOperatingHours_ShopSettingsId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.HasIndex("ShopSettingsId", "DayOfWeek")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ShopOperatingHours_Settings_Day");
+
+                    b.ToTable("TbShopOperatingHours", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            ShopOperatingHourId = 1,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DayOfWeek = 1,
+                            DeleteFlag = false,
+                            IsOpen = false,
+                            ShopSettingsId = 1
+                        },
+                        new
+                        {
+                            ShopOperatingHourId = 2,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DayOfWeek = 2,
+                            DeleteFlag = false,
+                            IsOpen = false,
+                            ShopSettingsId = 1
+                        },
+                        new
+                        {
+                            ShopOperatingHourId = 3,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DayOfWeek = 3,
+                            DeleteFlag = false,
+                            IsOpen = false,
+                            ShopSettingsId = 1
+                        },
+                        new
+                        {
+                            ShopOperatingHourId = 4,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DayOfWeek = 4,
+                            DeleteFlag = false,
+                            IsOpen = false,
+                            ShopSettingsId = 1
+                        },
+                        new
+                        {
+                            ShopOperatingHourId = 5,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DayOfWeek = 5,
+                            DeleteFlag = false,
+                            IsOpen = false,
+                            ShopSettingsId = 1
+                        },
+                        new
+                        {
+                            ShopOperatingHourId = 6,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DayOfWeek = 6,
+                            DeleteFlag = false,
+                            IsOpen = false,
+                            ShopSettingsId = 1
+                        },
+                        new
+                        {
+                            ShopOperatingHourId = 7,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DayOfWeek = 7,
+                            DeleteFlag = false,
+                            IsOpen = false,
+                            ShopSettingsId = 1
+                        });
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbShopSettings", b =>
+                {
+                    b.Property<int>("ShopSettingsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShopSettingsId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("CompanyNameEnglish")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CompanyNameThai")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DeleteFlag")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Facebook")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("FoodType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("HasTwoPeriods")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Instagram")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("LineId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("LogoFileId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PaymentQrCodeFileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ShopEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ShopNameEnglish")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ShopNameThai")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TaxId")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("ShopSettingsId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DeleteFlag")
+                        .HasDatabaseName("IX_ShopSettings_DeleteFlag");
+
+                    b.HasIndex("LogoFileId")
+                        .HasDatabaseName("IX_ShopSettings_LogoFileId");
+
+                    b.HasIndex("PaymentQrCodeFileId")
+                        .HasDatabaseName("IX_ShopSettings_PaymentQrCodeFileId");
+
+                    b.HasIndex("UpdatedBy");
+
+                    b.ToTable("TbShopSettings", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            ShopSettingsId = 1,
+                            Address = "",
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlag = false,
+                            FoodType = "",
+                            HasTwoPeriods = false,
+                            PhoneNumber = "",
+                            ShopNameEnglish = "",
+                            ShopNameThai = "",
+                            TaxId = ""
+                        });
                 });
 
             modelBuilder.Entity("POS.Main.Dal.Entities.TbUser", b =>
@@ -610,6 +1213,11 @@ namespace POS.Main.Dal.Migrations
                     b.Property<DateTime?>("LockedUntil")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("LockoutCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -647,41 +1255,6 @@ namespace POS.Main.Dal.Migrations
                         .HasDatabaseName("IX_Users_Username");
 
                     b.ToTable("TbUsers", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DeleteFlag = false,
-                            Email = "admin@rbms-pos.com",
-                            FailedLoginAttempts = 0,
-                            IsActive = true,
-                            PasswordHash = "$2a$12$jFxdbEzkVa0AKgGMgTUuzOHAjkCd2rB46tqHVxdZ1DIhjFV4hyGqy",
-                            Username = "admin"
-                        },
-                        new
-                        {
-                            UserId = new Guid("00000000-0000-0000-0000-000000000002"),
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DeleteFlag = false,
-                            Email = "manager@rbms-pos.com",
-                            FailedLoginAttempts = 0,
-                            IsActive = true,
-                            PasswordHash = "$2a$12$fpUs6ZgTJQx.zxmSaYjji.rCPW/Mj/cj9j6zYeTOrqZWqIs7sQ4zO",
-                            Username = "manager"
-                        },
-                        new
-                        {
-                            UserId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DeleteFlag = false,
-                            Email = "cashier@rbms-pos.com",
-                            FailedLoginAttempts = 0,
-                            IsActive = true,
-                            PasswordHash = "$2a$12$Oj0MxHU71XQrOq04Q3voJOFC42JliARijrR0wKLNHL1Xa1.CmePuG",
-                            Username = "cashier"
-                        });
                 });
 
             modelBuilder.Entity("POS.Main.Dal.Entities.TbmAuthorizeMatrix", b =>
@@ -1024,6 +1597,24 @@ namespace POS.Main.Dal.Migrations
                             ModuleId = 17,
                             PermissionId = 3,
                             PermissionPath = "kitchen-order.update"
+                        },
+                        new
+                        {
+                            AuthorizeMatrixId = 32,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlag = false,
+                            ModuleId = 18,
+                            PermissionId = 1,
+                            PermissionPath = "shop-settings.read"
+                        },
+                        new
+                        {
+                            AuthorizeMatrixId = 33,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlag = false,
+                            ModuleId = 18,
+                            PermissionId = 3,
+                            PermissionPath = "shop-settings.update"
                         });
                 });
 
@@ -1230,6 +1821,17 @@ namespace POS.Main.Dal.Migrations
                             ModuleName = "จัดการเมนู",
                             ParentModuleId = 4,
                             SortOrder = 1
+                        },
+                        new
+                        {
+                            ModuleId = 18,
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DeleteFlag = false,
+                            IsActive = true,
+                            ModuleCode = "shop-settings",
+                            ModuleName = "ตั้งค่าร้านค้า",
+                            ParentModuleId = 2,
+                            SortOrder = 3
                         },
                         new
                         {
@@ -1535,6 +2137,81 @@ namespace POS.Main.Dal.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbEmployeeAddress", b =>
+                {
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "CreatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "Employee")
+                        .WithMany("Addresses")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "UpdatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByEmployee");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("UpdatedByEmployee");
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbEmployeeEducation", b =>
+                {
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "CreatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "Employee")
+                        .WithMany("Educations")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "UpdatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByEmployee");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("UpdatedByEmployee");
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbEmployeeWorkHistory", b =>
+                {
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "CreatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "Employee")
+                        .WithMany("WorkHistories")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "UpdatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByEmployee");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("UpdatedByEmployee");
+                });
+
             modelBuilder.Entity("POS.Main.Dal.Entities.TbFile", b =>
                 {
                     b.HasOne("POS.Main.Dal.Entities.TbEmployee", "CreatedByEmployee")
@@ -1586,6 +2263,28 @@ namespace POS.Main.Dal.Migrations
                     b.Navigation("UpdatedByEmployee");
                 });
 
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbPasswordHistory", b =>
+                {
+                    b.HasOne("POS.Main.Dal.Entities.TbUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbPasswordResetToken", b =>
+                {
+                    b.HasOne("POS.Main.Dal.Entities.TbUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("POS.Main.Dal.Entities.TbRefreshToken", b =>
                 {
                     b.HasOne("POS.Main.Dal.Entities.TbUser", "User")
@@ -1610,6 +2309,62 @@ namespace POS.Main.Dal.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedByEmployee");
+
+                    b.Navigation("UpdatedByEmployee");
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbShopOperatingHour", b =>
+                {
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "CreatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("POS.Main.Dal.Entities.TbShopSettings", "ShopSettings")
+                        .WithMany("OperatingHours")
+                        .HasForeignKey("ShopSettingsId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "UpdatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByEmployee");
+
+                    b.Navigation("ShopSettings");
+
+                    b.Navigation("UpdatedByEmployee");
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbShopSettings", b =>
+                {
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "CreatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("POS.Main.Dal.Entities.TbFile", "LogoFile")
+                        .WithMany()
+                        .HasForeignKey("LogoFileId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("POS.Main.Dal.Entities.TbFile", "PaymentQrCodeFile")
+                        .WithMany()
+                        .HasForeignKey("PaymentQrCodeFileId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("POS.Main.Dal.Entities.TbEmployee", "UpdatedByEmployee")
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByEmployee");
+
+                    b.Navigation("LogoFile");
+
+                    b.Navigation("PaymentQrCodeFile");
 
                     b.Navigation("UpdatedByEmployee");
                 });
@@ -1720,6 +2475,20 @@ namespace POS.Main.Dal.Migrations
                     b.Navigation("CreatedByEmployee");
 
                     b.Navigation("UpdatedByEmployee");
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbEmployee", b =>
+                {
+                    b.Navigation("Addresses");
+
+                    b.Navigation("Educations");
+
+                    b.Navigation("WorkHistories");
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbShopSettings", b =>
+                {
+                    b.Navigation("OperatingHours");
                 });
 
             modelBuilder.Entity("POS.Main.Dal.Entities.TbUser", b =>

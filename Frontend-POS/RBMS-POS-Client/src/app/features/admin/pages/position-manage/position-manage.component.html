@@ -9,20 +9,12 @@
     </p>
   </div>
 
-  <!-- Loading -->
-  @if (isLoading()) {
-    <div class="flex justify-center py-20">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
-  }
-
   <!-- Form -->
-  @if (!isLoading()) {
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
 
       <!-- ข้อมูลตำแหน่ง Card -->
-      <div class="bg-surface-card rounded-xl overflow-hidden border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3">
+      <div class="bg-surface-card rounded-xl border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3 rounded-t-xl">
           <h2 class="text-section-title text-white flex items-center gap-2">
             <i class="pi pi-id-card"></i>
             ข้อมูลตำแหน่ง
@@ -35,12 +27,8 @@
               ชื่อตำแหน่ง <span class="text-danger">*</span>
             </label>
             <input pInputText id="positionName" formControlName="positionName"
-              placeholder="กรอกชื่อตำแหน่ง" class="w-full"
-              [class.ng-invalid]="isFieldInvalid('positionName')"
-              [class.ng-dirty]="isFieldInvalid('positionName')" />
-            @if (isFieldInvalid('positionName')) {
-              <small class="text-danger mt-1 block">{{ getErrorMessage('positionName') }}</small>
-            }
+              placeholder="กรอกชื่อตำแหน่ง" class="w-full" />
+            <app-field-error [control]="form.get('positionName')" type="text" />
           </div>
 
           <!-- คำอธิบาย -->
@@ -66,8 +54,8 @@
       </div>
 
       <!-- สิทธิ์การเข้าใช้งานเมนู Card -->
-      <div class="bg-surface-card rounded-xl overflow-hidden border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3">
+      <div class="bg-surface-card rounded-xl border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3 rounded-t-xl">
           <h2 class="text-section-title text-white flex items-center gap-2">
             <i class="pi pi-shield"></i>
             สิทธิ์การเข้าใช้งานเมนู
@@ -146,19 +134,4 @@
       </div>
 
     </form>
-  }
 </div>
-
-<!-- Shared Modals -->
-<app-success-modal
-  [isOpen]="showSuccessModal()"
-  [message]="successMessage()"
-  [autoClose]="true"
-  (closed)="closeSuccessModal()"
-/>
-
-<app-error-modal
-  [isOpen]="showErrorModal()"
-  [message]="errorMessage()!"
-  (closed)="closeErrorModal()"
-/>

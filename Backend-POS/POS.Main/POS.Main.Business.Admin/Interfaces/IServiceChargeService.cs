@@ -8,7 +8,7 @@ namespace POS.Main.Business.Admin.Services;
 public interface IServiceChargeService
 {
     /// <summary>
-    /// Get all service charges (excluding soft deleted)
+    /// Get all service charges (excluding deleted)
     /// </summary>
     Task<IEnumerable<ServiceChargeResponseModel>> GetAllServiceChargesAsync(CancellationToken ct = default);
 
@@ -18,7 +18,7 @@ public interface IServiceChargeService
     Task<ServiceChargeResponseModel> GetServiceChargeByIdAsync(int serviceChargeId, CancellationToken ct = default);
 
     /// <summary>
-    /// Get active service charges for dropdown
+    /// Get active service charges within effective date range for dropdown
     /// </summary>
     Task<IEnumerable<ServiceChargeDropdownModel>> GetServiceChargeDropdownListAsync(CancellationToken ct = default);
 
@@ -33,7 +33,7 @@ public interface IServiceChargeService
     Task<ServiceChargeResponseModel> UpdateServiceChargeAsync(int serviceChargeId, UpdateServiceChargeRequestModel request, CancellationToken ct = default);
 
     /// <summary>
-    /// Soft delete service charge
+    /// Permanently delete service charge (hard delete)
     /// </summary>
     Task DeleteServiceChargeAsync(int serviceChargeId, CancellationToken ct = default);
 }

@@ -20,11 +20,15 @@ public class ServiceChargeRepository : GenericRepository<TbServiceCharge>, IServ
             .ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<TbServiceCharge>> GetActiveForDropdownAsync(CancellationToken ct = default)
+    public async Task<IEnumerable<TbServiceCharge>> GetActiveInDateRangeForDropdownAsync(CancellationToken ct = default)
     {
+        var now = DateTime.UtcNow;
+
         return await QueryNoTracking()
             .Where(sc => sc.IsActive)
-            .OrderBy(sc => sc.PercentageRate)
+            .Where(sc => sc.StartDate == null || sc.StartDate <= now)
+            .Where(sc => sc.EndDate == null || sc.EndDate >= now)
+            .OrderBy(sc => sc.Name)
             .ToListAsync(ct);
     }
 

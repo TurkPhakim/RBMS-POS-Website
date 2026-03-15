@@ -1,141 +1,304 @@
-<div class="min-h-screen flex items-center justify-center bg-surface py-12 px-4">
-  <div class="max-w-md w-full space-y-6">
-    <!-- Logo & Header -->
-    <div class="text-center">
-      <img src="images/logos/RBMS_Logo.png" alt="RBMS Logo"
-           class="h-24 w-24 mx-auto object-contain mb-4" />
-      <h2 class="text-page-title text-surface-dark">RBMS POS</h2>
-      <p class="mt-1 text-surface-sub">Log-In to continue</p>
-    </div>
+<div class="min-h-screen flex">
+  <!-- ซ้าย: Branding Panel -->
+  <div
+    class="hidden lg:flex w-1/2 bg-gradient-to-br from-primary to-primary-dark relative overflow-hidden flex-col items-center justify-center p-16"
+  >
+    <!-- Decorative circles -->
+    <div
+      class="absolute -top-16 -right-16 w-72 h-72 rounded-full bg-white/10"
+    ></div>
+    <div
+      class="absolute -bottom-14 -left-14 w-56 h-56 rounded-full bg-white/10"
+    ></div>
+    <div
+      class="absolute top-1/4 -left-10 w-48 h-48 rounded-full bg-white/[0.06]"
+    ></div>
+    <div class="absolute -top-8 left-1 w-40 h-40 rounded-full bg-white/5"></div>
+    <div
+      class="absolute bottom-1/4 -right-8 w-36 h-36 rounded-full bg-white/[0.07]"
+    ></div>
+    <div
+      class="absolute top-[2%] right-[40%] w-44 h-44 rounded-full bg-white/[0.06]"
+    ></div>
+    <div
+      class="absolute bottom-[15%] left-[15%] w-36 h-36 rounded-full bg-white/[0.08]"
+    ></div>
+    <div
+      class="absolute bottom-[35%] right-[5%] w-52 h-52 rounded-full bg-white/[0.04]"
+    ></div>
+    <div
+      class="absolute top-[55%] left-[3%] w-28 h-28 rounded-full bg-white/5"
+    ></div>
+    <div
+      class="absolute bottom-[5%] right-[35%] w-32 h-32 rounded-full bg-white/[0.06]"
+    ></div>
+    <div
+      class="absolute top-[85%] left-[30%] w-24 h-24 rounded-full bg-white/[0.07]"
+    ></div>
+    <div
+      class="absolute top-[10%] left-[15%] w-28 h-28 rounded-full bg-white/[0.06]"
+    ></div>
+    <div
+      class="absolute bottom-[15%] left-[48%] w-44 h-44 rounded-full bg-white/[0.04]"
+    ></div>
+    <div
+      class="absolute top-[30%] right-[6%] w-24 h-24 rounded-full bg-white/[0.06]"
+    ></div>
+    <div
+      class="absolute top-[90%] right-[18%] w-28 h-28 rounded-full bg-white/[0.06]"
+    ></div>
 
-    <!-- Login Card -->
-    <div class="bg-surface-card rounded-xl shadow-lg border border-surface-border overflow-hidden">
-      <div class="px-8 py-8">
-        <!-- Form -->
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
-          <!-- Username -->
-          <div>
-            <label for="username" class="block text-sm font-semibold text-surface-dark mb-1.5">
-              Username
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-surface-sub">
-                <app-generic-icon name="user" svgClass="w-5 h-5"></app-generic-icon>
-              </div>
-              <input
-                id="username"
-                type="text"
-                formControlName="username"
-                placeholder="Enter your username"
-                autocomplete="username"
-                class="block w-full pl-10 pr-4 py-2.5 border border-surface-border rounded-lg text-sm
-                       placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
-                       transition-colors"
-                [class.border-danger]="f['username'].invalid && f['username'].touched"
-                [class.focus:ring-danger]="f['username'].invalid && f['username'].touched"
+    <!-- Content -->
+    <div class="relative z-10 text-center">
+      <div
+        class="w-64 h-64 bg-white rounded-3xl p-2 mx-auto mb-10 flex items-center justify-center border-4 border-white/50 ring-8 ring-white/20"
+      >
+        <img
+          src="/images/RBMS_Logo.png"
+          alt="RBMS Logo"
+          class="w-full h-full object-contain"
+        />
+      </div>
+      <h1 class="text-7xl font-bold text-white mb-5 tracking-wide">RBMS POS</h1>
+      <span
+        class="inline-block mt-2 px-8 py-3 bg-white/20 text-white rounded-full text-2xl font-medium tracking-widest"
+      >
+        Point of Sale System
+      </span>
+    </div>
+  </div>
+
+  <!-- ขวา: Login Form -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center bg-surface p-8">
+    <div class="w-full max-w-lg">
+      <!-- Login Card -->
+      <div
+        class="bg-surface-card rounded-2xl border border-primary-light overflow-hidden"
+      >
+        <!-- Card Header -->
+        <div
+          class="bg-gradient-to-br from-primary to-primary-dark px-10 py-8 relative overflow-hidden"
+        >
+          <div
+            class="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10"
+          ></div>
+          <div
+            class="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/10"
+          ></div>
+          <div
+            class="absolute top-1/2 right-1/3 w-12 h-12 rounded-full bg-white/5"
+          ></div>
+          <div
+            class="absolute -top-4 left-1/2 w-24 h-24 rounded-full bg-white/5"
+          ></div>
+          <div
+            class="absolute -bottom-8 right-1/4 w-32 h-32 rounded-full bg-white/[0.06]"
+          ></div>
+          <div
+            class="absolute top-1/3 -right-4 w-20 h-20 rounded-full bg-white/[0.07]"
+          ></div>
+          <div
+            class="absolute bottom-0 left-1/3 w-16 h-16 rounded-full bg-white/5"
+          ></div>
+          <div class="relative z-10 flex items-center gap-6">
+            <div
+              class="lg:hidden w-24 h-24 bg-white rounded-2xl p-1.5 flex items-center justify-center flex-shrink-0 border-4 border-white/50 ring-8 ring-white/20"
+            >
+              <img
+                src="/images/RBMS_Logo.png"
+                alt="RBMS Logo"
+                class="w-full h-full object-contain"
               />
             </div>
-            @if (f['username'].invalid && f['username'].touched) {
-              <p class="mt-1 text-xs text-danger">
-                @if (f['username'].errors?.['required']) {
-                  <span>Username is required</span>
-                }
-                @if (f['username'].errors?.['minlength']) {
-                  <span>Username must be at least 4 characters</span>
-                }
+            <div>
+              <h2 class="text-4xl font-bold text-white leading-tight">
+                ยินดีต้อนรับ
+              </h2>
+              <p class="text-white/80 text-xl mt-1">
+                เข้าสู่ระบบเพื่อดำเนินการต่อ
               </p>
-            }
+            </div>
           </div>
+        </div>
 
-          <!-- Password -->
-          <div>
-            <label for="password" class="block text-sm font-semibold text-surface-dark mb-1.5">
-              Password
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-surface-sub">
-                <app-generic-icon name="lock" svgClass="w-5 h-5"></app-generic-icon>
-              </div>
-              <input
-                id="password"
-                [type]="showPassword() ? 'text' : 'password'"
-                formControlName="password"
-                placeholder="Enter your password"
-                autocomplete="current-password"
-                class="password-input block w-full pl-10 pr-10 py-2.5 border border-surface-border rounded-lg text-sm
-                       placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
-                       transition-colors"
-                [class.border-danger]="f['password'].invalid && f['password'].touched"
-                [class.focus:ring-danger]="f['password'].invalid && f['password'].touched"
-              />
-              <button
-                type="button"
-                (click)="togglePasswordVisibility()"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-surface-sub hover:text-surface-dark transition-colors"
+        <!-- Form / Lockout Panel -->
+        <div class="p-8">
+          @if (lockoutUntil()) {
+            <!-- Lockout Panel -->
+            <div
+              class="bg-danger-bg rounded-2xl p-6 flex flex-col items-center gap-5 text-center"
+            >
+              <!-- Icon -->
+              <div
+                class="w-40 h-40 rounded-full bg-white flex items-center justify-center"
               >
-                @if (!showPassword()) {
-                  <app-generic-icon name="eye" svgClass="w-5 h-5"></app-generic-icon>
+                <div
+                  class="w-28 h-28 rounded-full bg-danger flex items-center justify-center"
+                >
+                  <app-generic-icon
+                    name="lock-protect"
+                    svgClass="w-16 h-16"
+                    class="text-white"
+                  ></app-generic-icon>
+                </div>
+              </div>
+
+              <!-- Title -->
+              <div>
+                <h3 class="text-3xl font-bold text-danger">
+                  บัญชีถูกล็อคชั่วคราว
+                </h3>
+                <p class="text-lg text-danger/70 mt-3">
+                  รอสักครู่ แล้วลองใหม่ได้อีกครั้ง
+                </p>
+              </div>
+
+              <!-- Countdown -->
+              <div
+                class="bg-surface-card border-2 border-danger/30 rounded-xl px-12 py-4"
+              >
+                <span
+                  class="text-7xl font-bold text-danger font-mono tracking-widest"
+                >
+                  {{ lockoutRemaining() }}
+                </span>
+              </div>
+            </div>
+          } @else {
+            <!-- Login Form -->
+            <form
+              [formGroup]="loginForm"
+              (ngSubmit)="onSubmit()"
+              class="space-y-6"
+            >
+              <!-- Username -->
+              <div>
+                <label
+                  for="username"
+                  class="block text-lg font-semibold text-surface-dark mb-2"
+                >
+                  Username
+                </label>
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-primary"
+                  >
+                    <app-generic-icon
+                      name="user"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </div>
+                  <input
+                    id="username"
+                    type="text"
+                    formControlName="username"
+                    placeholder="๊Username"
+                    autocomplete="username"
+                    class="block w-full pl-11 pr-4 py-3.5 border border-surface-border rounded-lg text-base placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                  />
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div>
+                <label
+                  for="password"
+                  class="block text-lg font-semibold text-surface-dark mb-2"
+                >
+                  Password
+                </label>
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-primary"
+                  >
+                    <app-generic-icon
+                      name="lock"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </div>
+                  <input
+                    id="password"
+                    [type]="showPassword() ? 'text' : 'password'"
+                    formControlName="password"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    class="block w-full pl-11 pr-11 py-3.5 border border-surface-border rounded-lg text-base placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                  />
+                  <button
+                    type="button"
+                    (click)="togglePasswordVisibility()"
+                    class="absolute inset-y-0 right-0 pr-4 flex items-center text-surface-sub hover:text-surface-dark transition-colors"
+                  >
+                    @if (!showPassword()) {
+                      <app-generic-icon
+                        name="eye"
+                        svgClass="w-6 h-6"
+                      ></app-generic-icon>
+                    } @else {
+                      <app-generic-icon
+                        name="eye-off"
+                        svgClass="w-6 h-6"
+                      ></app-generic-icon>
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <!-- Forgot Password -->
+              <div class="text-right -mt-2">
+                <button
+                  type="button"
+                  (click)="onForgotPassword()"
+                  class="text-md text-primary hover:text-primary-dark transition-colors font-medium"
+                >
+                  ลืมรหัสผ่าน?
+                </button>
+              </div>
+
+              <!-- reCAPTCHA — แสดงเมื่อกรอก username + password แล้ว -->
+              @if (showCaptcha()) {
+                <div class="w-full overflow-hidden" style="height: 115px">
+                  <div
+                    style="
+                      transform: scale(1.47);
+                      transform-origin: 0 0;
+                      display: inline-block;
+                    "
+                  >
+                    <re-captcha
+                      #captchaRef
+                      [siteKey]="recaptchaSiteKey"
+                      (resolved)="onCaptchaResolved($event)"
+                    ></re-captcha>
+                  </div>
+                </div>
+              }
+
+              <!-- Submit -->
+              <button
+                type="submit"
+                [disabled]="loading() || !captchaToken()"
+                class="w-full flex justify-center items-center gap-2 py-4 bg-primary hover:bg-primary-dark text-white text-2xl font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                @if (!loading()) {
+                  <app-generic-icon
+                    name="login"
+                    svgClass="w-7 h-7"
+                  ></app-generic-icon>
+                  <span>Login</span>
                 } @else {
-                  <app-generic-icon name="eye-off" svgClass="w-5 h-5"></app-generic-icon>
+                  <i class="pi pi-spin pi-spinner"></i>
+                  <span>Logging in...</span>
                 }
               </button>
-            </div>
-            @if (f['password'].invalid && f['password'].touched) {
-              <p class="mt-1 text-xs text-danger">
-                @if (f['password'].errors?.['required']) {
-                  <span>Password is required</span>
-                }
-                @if (f['password'].errors?.['minlength']) {
-                  <span>Password must be at least 8 characters</span>
-                }
-              </p>
-            }
-          </div>
-
-          <!-- Submit -->
-          <button
-            type="submit"
-            [disabled]="loading()"
-            class="w-full flex justify-center items-center py-2.5 bg-primary hover:bg-primary-dark
-                   text-white font-semibold rounded-lg shadow-sm transition-colors duration-200
-                   disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            @if (!loading()) {
-              <app-generic-icon name="login" svgClass="w-5 h-5" class="mr-2"></app-generic-icon>
-              <span>Login</span>
-            } @else {
-              <span>Logging in...</span>
-            }
-          </button>
-        </form>
+            </form>
+          }
+        </div>
       </div>
 
-      <!-- Footer -->
-      <div class="px-8 py-3 bg-surface border-t border-surface-border">
-        <p class="text-xs text-center text-surface-sub">
-          &copy; 2025 Developed by Phakim Sanguanpat
-        </p>
-      </div>
+      <p class="text-sm text-center text-surface-sub mt-6">
+        © 2026 RBMS Point of Sale System. All rights reserved.
+      </p>
     </div>
-
-    <!-- Version -->
-    <p class="text-center text-xs text-surface-sub">RBMS POS v1.0.0</p>
   </div>
 </div>
-
-<!-- Success Modal -->
-<app-success-modal
-  [isOpen]="showSuccessModal()"
-  title="Login Successful!"
-  [message]="'Welcome back, ' + successUsername"
-  [autoClose]="true"
-  (closed)="onSuccessModalClosed()"
-></app-success-modal>
-
-<!-- Error Modal -->
-<app-error-modal
-  [isOpen]="showErrorModal()"
-  title="Login Failed"
-  [message]="errorMessage()"
-  (closed)="onErrorModalClosed()"
-></app-error-modal>

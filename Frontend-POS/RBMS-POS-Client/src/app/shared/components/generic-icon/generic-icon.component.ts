@@ -1,6 +1,5 @@
-// 1. Angular core
-import { Component, Input, OnInit, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -41,7 +40,7 @@ export class GenericIconComponent implements OnInit, OnChanges {
       return;
     }
 
-    const path = `images/icons/${this.name}.svg`;
+    const path = `icons/${this.name}.svg`;
     this.http.get(path, { responseType: 'text' }).subscribe({
       next: (svgText) => {
         const cleaned = svgText

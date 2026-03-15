@@ -1,56 +1,37 @@
 using POS.Main.Business.HumanResource.Models;
+using POS.Main.Business.HumanResource.Models.EmployeeAddress;
+using POS.Main.Business.HumanResource.Models.EmployeeEducation;
+using POS.Main.Business.HumanResource.Models.EmployeeWorkHistory;
 using POS.Main.Business.HumanResource.Models.UserAccount;
-using POS.Main.Core.Enums;
+using POS.Main.Core.Models;
 
 namespace POS.Main.Business.HumanResource.Interfaces;
 
-/// <summary>
-/// Interface for employee management
-/// </summary>
 public interface IEmployeeService
 {
-    /// <summary>
-    /// Get all active employees (excluding soft deleted)
-    /// </summary>
-    Task<IEnumerable<EmployeeResponseModel>> GetAllActiveEmployeesAsync(CancellationToken ct = default);
-
-    /// <summary>
-    /// Get employee by ID
-    /// </summary>
+    Task<PaginationResult<EmployeeResponseModel>> GetEmployeesAsync(PaginationModel param, bool? isActive = null, int? positionId = null, CancellationToken ct = default);
     Task<EmployeeResponseModel> GetEmployeeByIdAsync(int employeeId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Get employees by employment status
-    /// </summary>
-    Task<IEnumerable<EmployeeResponseModel>> GetEmployeesByStatusAsync(EEmploymentStatus status, CancellationToken ct = default);
-
-    /// <summary>
-    /// Get employee by linked user ID
-    /// </summary>
     Task<EmployeeResponseModel> GetEmployeeByUserIdAsync(Guid userId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Search employees by name, nickname, national ID, or phone
-    /// </summary>
-    Task<IEnumerable<EmployeeResponseModel>> SearchEmployeesAsync(string searchTerm, CancellationToken ct = default);
-
-    /// <summary>
-    /// Create new employee
-    /// </summary>
+    Task<MyProfileResponseModel?> GetMyProfileAsync(int employeeId, CancellationToken ct = default);
     Task<EmployeeResponseModel> CreateEmployeeAsync(CreateEmployeeRequestModel request, int? imageFileId = null, CancellationToken ct = default);
-
-    /// <summary>
-    /// Update existing employee
-    /// </summary>
     Task<EmployeeResponseModel> UpdateEmployeeAsync(int employeeId, UpdateEmployeeRequestModel request, int? newImageFileId = null, CancellationToken ct = default);
-
-    /// <summary>
-    /// Soft delete employee
-    /// </summary>
     Task DeleteEmployeeAsync(int employeeId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Create user account for employee
-    /// </summary>
     Task<CreateUserAccountResponseModel> CreateUserAccountAsync(int employeeId, CancellationToken ct = default);
+
+    Task<bool> CheckDuplicateAsync(string field, string value, int? excludeEmployeeId = null, CancellationToken ct = default);
+
+    // Address
+    Task<EmployeeAddressResponseModel> CreateAddressAsync(int employeeId, CreateEmployeeAddressRequestModel request, CancellationToken ct = default);
+    Task<EmployeeAddressResponseModel> UpdateAddressAsync(int employeeId, int addressId, UpdateEmployeeAddressRequestModel request, CancellationToken ct = default);
+    Task DeleteAddressAsync(int employeeId, int addressId, CancellationToken ct = default);
+
+    // Education
+    Task<EmployeeEducationResponseModel> CreateEducationAsync(int employeeId, CreateEmployeeEducationRequestModel request, CancellationToken ct = default);
+    Task<EmployeeEducationResponseModel> UpdateEducationAsync(int employeeId, int educationId, UpdateEmployeeEducationRequestModel request, CancellationToken ct = default);
+    Task DeleteEducationAsync(int employeeId, int educationId, CancellationToken ct = default);
+
+    // Work History
+    Task<EmployeeWorkHistoryResponseModel> CreateWorkHistoryAsync(int employeeId, CreateEmployeeWorkHistoryRequestModel request, CancellationToken ct = default);
+    Task<EmployeeWorkHistoryResponseModel> UpdateWorkHistoryAsync(int employeeId, int workHistoryId, UpdateEmployeeWorkHistoryRequestModel request, CancellationToken ct = default);
+    Task DeleteWorkHistoryAsync(int employeeId, int workHistoryId, CancellationToken ct = default);
 }

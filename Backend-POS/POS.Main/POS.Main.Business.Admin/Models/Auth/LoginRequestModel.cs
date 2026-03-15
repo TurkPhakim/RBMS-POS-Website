@@ -28,4 +28,10 @@ public class LoginRequestModel
     /// </summary>
     /// <example>false</example>
     public bool RememberMe { get; set; } = false;
+
+    /// <summary>
+    /// reCAPTCHA v2 token from client
+    /// </summary>
+    [Required(ErrorMessage = "CAPTCHA verification is required")]
+    public string CaptchaToken { get; set; } = string.Empty;
 }

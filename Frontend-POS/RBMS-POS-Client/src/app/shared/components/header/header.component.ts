@@ -1,11 +1,21 @@
-import { Component, signal, HostListener } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  HostListener,
+  Signal,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { ApiConfiguration } from '@app/core/api/api-configuration';
+import { UserModel } from '@app/core/api/models';
 import { AuthService } from '@app/core/services/auth.service';
-import { SidebarService } from '@app/core/services/sidebar.service';
 import { HeaderService } from '@app/core/services/header.service';
+import { ShopBrandingService } from '@app/core/services/shop-branding.service';
+import { SidebarService } from '@app/core/services/sidebar.service';
 import * as LayoutActions from '@app/store/layout/layout.actions';
-import { CurrentUser } from '@app/shared/component-interfaces';
 
 @Component({
   selector: 'app-header',
@@ -13,24 +23,32 @@ import { CurrentUser } from '@app/shared/component-interfaces';
   templateUrl: './header.component.html',
 })
 export class HeaderComponent {
-  currentUser: CurrentUser | null = null;
+  currentUser = signal<UserModel | null>(null);
   showProfileMenu = signal(false);
+  isSidebarCollapsed: Signal<boolean>;
+
+  profileImageUrl = computed(() => {
+    const fileId = this.currentUser()?.profileImageFileId;
+    return fileId ? `${this.apiConfig.rootUrl}/api/admin/file/${fileId}` : null;
+  });
 
   constructor(
-    private store: Store,
-    private router: Router,
-    private authService: AuthService,
-    private sidebarService: SidebarService,
-    public headerService: HeaderService
+    private readonly apiConfig: ApiConfiguration,
+    private readonly authService: AuthService,
+    public readonly brandingService: ShopBrandingService,
+    private readonly destroyRef: DestroyRef,
+    public readonly headerService: HeaderService,
+    private readonly router: Router,
+    private readonly sidebarService: SidebarService,
+    private readonly store: Store,
   ) {
-    const userStr = localStorage.getItem('current_user');
-    if (userStr) {
-      try {
-        this.currentUser = JSON.parse(userStr);
-      } catch {
-        // ignore
-      }
-    }
+    this.isSidebarCollapsed = toSignal(this.sidebarService.isCollapsed$, {
+      initialValue: false,
+    });
+    this.brandingService.load();
+    this.authService.currentUser$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((user) => this.currentUser.set(user));
   }
 
   toggleSidebar(): void {
@@ -42,7 +60,7 @@ export class HeaderComponent {
   }
 
   toggleProfileMenu(): void {
-    this.showProfileMenu.update(v => !v);
+    this.showProfileMenu.update((v) => !v);
   }
 
   @HostListener('document:click', ['$event'])
@@ -61,9 +79,5 @@ export class HeaderComponent {
   logout(): void {
     this.authService.clearAndRedirectToLogin();
     this.showProfileMenu.set(false);
-  }
-
-  getUserInitial(): string {
-    return this.currentUser?.username?.charAt(0)?.toUpperCase() || 'U';
   }
 }

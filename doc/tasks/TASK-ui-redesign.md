@@ -17,10 +17,10 @@
 <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4..."/></svg>
 
 <!-- ✅ ทำแบบนี้เสมอ -->
-<img src="images/icons/pen-edit.svg" class="w-5 h-5" alt="">
+<img src="icons/pen-edit.svg" class="w-5 h-5" alt="">
 ```
 
-### 2. ไอคอนทุกตัวต้องอยู่ใน `public/images/icons/`
+### 2. ไอคอนทุกตัวต้องอยู่ใน `public/icons/`
 - ไฟล์ `.svg` ทุกตัวต้องอยู่ในโฟลเดอร์นี้เท่านั้น
 - ห้าม `class="invert"` — SVG ควรออกแบบให้ใช้ได้เลย หรือใช้ CSS filter ที่ถูกต้อง
 
@@ -28,13 +28,13 @@
 AI จะระบุไว้ในโค้ดว่า:
 ```html
 <!-- TODO: replace with [ชื่อไอคอนที่ควรใช้].svg -->
-<img src="images/icons/admin-setting.svg" class="w-5 h-5" alt="">
+<img src="icons/admin-setting.svg" class="w-5 h-5" alt="">
 ```
 
 ### 4. วิธีเปลี่ยนไอคอน (เมื่อผู้ใช้เตรียมไฟล์พร้อมแล้ว)
-1. วางไฟล์ `.svg` ใหม่ใน `public/images/icons/`
+1. วางไฟล์ `.svg` ใหม่ใน `public/icons/`
 2. หา `TODO: replace with [ชื่อ].svg` ใน component นั้น
-3. เปลี่ยน `src="images/icons/admin-setting.svg"` → `src="images/icons/[ชื่อจริง].svg"`
+3. เปลี่ยน `src="icons/admin-setting.svg"` → `src="icons/[ชื่อจริง].svg"`
 4. ลบ comment `TODO:` ออก
 
 ### 5. ใช้ CSS token จาก design system เสมอ
@@ -369,7 +369,7 @@ Employee avatar: human.svg (ใช้อยู่แล้ว — ✅)
 เมื่อต้องการเพิ่มไอคอนที่ยังขาดอยู่:
 
 1. เตรียมไฟล์ `.svg` ที่ต้องการ (ดาวน์โหลดจาก heroicons.com, lucide.dev, etc.)
-2. วางไฟล์ใน `Frontend-POS/RBMS-POS-Client/public/images/icons/`
+2. วางไฟล์ใน `Frontend-POS/RBMS-POS-Client/public/icons/`
 3. ตั้งชื่อให้ตรงกับ TODO comment ในโค้ด
 4. แจ้ง AI ว่า "เพิ่ม [ชื่อไฟล์].svg แล้ว ให้อัปเดต [feature] ให้ใช้ไอคอนจริง"
 

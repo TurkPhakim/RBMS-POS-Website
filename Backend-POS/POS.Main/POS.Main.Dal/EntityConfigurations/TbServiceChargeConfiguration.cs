@@ -31,6 +31,12 @@ public class TbServiceChargeConfiguration : IEntityTypeConfiguration<TbServiceCh
             .IsRequired()
             .HasDefaultValue(true);
 
+        builder.Property(sc => sc.StartDate)
+            .HasColumnType("datetime2");
+
+        builder.Property(sc => sc.EndDate)
+            .HasColumnType("datetime2");
+
         builder.Property(sc => sc.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");
@@ -44,5 +50,11 @@ public class TbServiceChargeConfiguration : IEntityTypeConfiguration<TbServiceCh
 
         builder.HasIndex(sc => sc.Name)
             .HasDatabaseName("IX_ServiceCharges_Name");
+
+        builder.HasIndex(sc => sc.StartDate)
+            .HasDatabaseName("IX_ServiceCharges_StartDate");
+
+        builder.HasIndex(sc => sc.EndDate)
+            .HasDatabaseName("IX_ServiceCharges_EndDate");
     }
 }

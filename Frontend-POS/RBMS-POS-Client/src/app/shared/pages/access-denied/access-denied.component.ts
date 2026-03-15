@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { Location } from '@angular/common';
+import { Component, signal } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-access-denied',
@@ -7,9 +7,15 @@ import { Location } from '@angular/common';
   templateUrl: './access-denied.component.html',
 })
 export class AccessDeniedComponent {
-  constructor(private location: Location) {}
+  isFlipped = signal(false);
 
-  goBack(): void {
-    this.location.back();
+  constructor(private router: Router) {}
+
+  toggleFlip(): void {
+    this.isFlipped.update((v) => !v);
+  }
+
+  goHome(): void {
+    this.router.navigate(['/']);
   }
 }

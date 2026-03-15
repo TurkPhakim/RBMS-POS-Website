@@ -1,12 +1,18 @@
-import { Component, signal, DestroyRef, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { HumanResourceService } from '@app/core/api/services';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { DialogService } from 'primeng/dynamicdialog';
 import { ApiConfiguration } from '@app/core/api/api-configuration';
-import { EGender, EEmploymentStatus } from '@app/core/api/models';
+import { EGender, ETitle } from '@app/core/api/models';
+import { HumanResourceService } from '@app/core/api/services';
+import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
-
+import { Icon, ModalService } from '@app/core/services/modal.service';
+import { linkDateRange, markFormDirty } from '@app/shared/utils';
+import { AddressDialogComponent } from '@app/shared/dialogs/address-dialog/address-dialog.component';
+import { EducationDialogComponent } from '@app/shared/dialogs/education-dialog/education-dialog.component';
+import { WorkHistoryDialogComponent } from '@app/shared/dialogs/work-history-dialog/work-history-dialog.component';
 const KEY_BTN_SAVE = 'save-employee';
 const KEY_BTN_BACK = 'back';
 
@@ -19,36 +25,28 @@ export class EmployeeManageComponent implements OnDestroy {
   form!: FormGroup;
   isEditMode = signal(false);
   employeeId = signal<number | null>(null);
-  isLoading = signal(false);
   isSaving = signal(false);
-  errorMessage = signal<string | null>(null);
-  showSuccessModal = signal(false);
-  showErrorModal = signal(false);
-  successMessage = signal('');
-  imagePreview = signal<string | null>(null);
+  serverImageUrl = signal<string | null>(null);
   selectedFile = signal<File | null>(null);
+  imageRemoved = signal(false);
 
-  genderOptions = [
-    { value: 1 as EGender, label: 'ชาย' },
-    { value: 2 as EGender, label: 'หญิง' },
-    { value: 3 as EGender, label: 'อื่นๆ' },
-  ];
-
-  statusOptions = [
-    { value: 1 as EEmploymentStatus, label: 'ทำงาน' },
-    { value: 2 as EEmploymentStatus, label: 'ไม่ทำงาน' },
-    { value: 3 as EEmploymentStatus, label: 'ลาหยุด' },
-    { value: 4 as EEmploymentStatus, label: 'สิ้นสุดการจ้าง' },
-  ];
+  minEndDate = signal<Date | null>(null);
+  isReadOnly = false;
+  addresses = signal<Record<string, unknown>[]>([]);
+  educations = signal<Record<string, unknown>[]>([]);
+  workHistories = signal<Record<string, unknown>[]>([]);
 
   constructor(
+    private readonly route: ActivatedRoute,
+    private readonly apiConfig: ApiConfiguration,
+    private readonly authService: AuthService,
+    private readonly breadcrumbService: BreadcrumbService,
+    private readonly destroyRef: DestroyRef,
+    private readonly dialogService: DialogService,
     private readonly fb: FormBuilder,
     private readonly humanResourceService: HumanResourceService,
-    private readonly apiConfig: ApiConfiguration,
+    private readonly modalService: ModalService,
     private readonly router: Router,
-    private readonly route: ActivatedRoute,
-    private readonly destroyRef: DestroyRef,
-    private readonly breadcrumbService: BreadcrumbService,
   ) {}
 
   ngOnInit(): void {
@@ -67,24 +65,24 @@ export class EmployeeManageComponent implements OnDestroy {
       type: 'button',
       item: {
         key: KEY_BTN_BACK,
-        label: 'กลับ',
-        icon: 'pi pi-arrow-left',
+        label: 'ย้อนกลับ',
         severity: 'secondary',
         variant: 'outlined',
         callback: () => this.onCancel(),
       },
     });
 
-    this.breadcrumbService.addOrUpdateButton({
-      key: KEY_BTN_SAVE,
-      type: 'button',
-      item: {
+    if (!this.isReadOnly) {
+      this.breadcrumbService.addOrUpdateButton({
         key: KEY_BTN_SAVE,
-        label: this.isEditMode() ? 'บันทึกการแก้ไข' : 'บันทึก',
-        icon: 'pi pi-check',
-        callback: () => this.onSubmit(),
-      },
-    });
+        type: 'button',
+        item: {
+          key: KEY_BTN_SAVE,
+          label: 'บันทึก',
+          callback: () => this.onSubmit(),
+        },
+      });
+    }
   }
 
   initForm(): void {
@@ -93,30 +91,57 @@ export class EmployeeManageComponent implements OnDestroy {
       lastNameThai: ['', [Validators.required, Validators.maxLength(100)]],
       firstNameEnglish: ['', [Validators.required, Validators.maxLength(100)]],
       lastNameEnglish: ['', [Validators.required, Validators.maxLength(100)]],
-      gender: [1 as EGender, [Validators.required]],
-      positionId: [null as number | null],
-      employmentStatus: [1 as EEmploymentStatus, [Validators.required]],
+      gender: [null as EGender | null, [Validators.required]],
+      positionId: [null as number | null, [Validators.required]],
       startDate: [null as Date | null, [Validators.required]],
-      title: ['', [Validators.maxLength(50)]],
-      nickname: ['', [Validators.maxLength(50)]],
-      email: ['', [Validators.email, Validators.maxLength(200)]],
-      phone: ['', [Validators.maxLength(20)]],
-      nationalId: ['', [Validators.maxLength(20)]],
-      dateOfBirth: [null as Date | null],
+      title: [null as ETitle | null, [Validators.required]],
+      nickname: ['', [Validators.required, Validators.maxLength(50)]],
+      email: [
+        '',
+        [Validators.required, Validators.email, Validators.maxLength(100)],
+      ],
+      phone: ['', [Validators.required, Validators.maxLength(10)]],
+      nationalId: ['', [Validators.required, Validators.maxLength(13)]],
+      nationality: [null as number | null, [Validators.required]],
+      religion: [null as number | null, [Validators.required]],
+      lineId: ['', [Validators.required, Validators.maxLength(50)]],
+      dateOfBirth: [null as Date | null, [Validators.required]],
       age: [{ value: '', disabled: true }],
+      isFullTime: [true],
       salary: [null, [Validators.min(0)]],
-      bankName: ['', [Validators.maxLength(200)]],
-      bankAccountNumber: ['', [Validators.maxLength(50)]],
+      hourlyRate: [null, [Validators.min(0)]],
+      bankName: ['', [Validators.maxLength(100)]],
+      bankAccountNumber: ['', [Validators.maxLength(20)]],
       endDate: [null as Date | null],
       imageUrl: [''],
       isActive: [true],
       userId: [''],
     });
 
-    this.form.get('dateOfBirth')?.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.form
+      .get('dateOfBirth')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((dateOfBirth) => {
         this.calculateAge(dateOfBirth);
+      });
+
+    linkDateRange(
+      this.form,
+      'startDate',
+      'endDate',
+      this.minEndDate,
+      this.destroyRef,
+    );
+
+    this.form
+      .get('isFullTime')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((isFullTime) => {
+        if (isFullTime) {
+          this.form.get('hourlyRate')?.setValue(null);
+        } else {
+          this.form.get('salary')?.setValue(null);
+        }
       });
   }
 
@@ -125,20 +150,19 @@ export class EmployeeManageComponent implements OnDestroy {
     if (id) {
       this.isEditMode.set(true);
       this.employeeId.set(+id);
+      this.isReadOnly = !this.authService.hasPermission('employee.update');
       this.loadEmployee(+id);
     }
   }
 
   loadEmployee(id: number): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.humanResourceService
-      .apiHumanresourceEmployeeIdGet({ employeeId: id })
+      .humanResourceGetByIdGet({ employeeId: id })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           if (response.result) {
+            const r = response.result as Record<string, unknown>;
             this.form.patchValue({
               firstNameThai: response.result.firstNameThai,
               lastNameThai: response.result.lastNameThai,
@@ -146,7 +170,6 @@ export class EmployeeManageComponent implements OnDestroy {
               lastNameEnglish: response.result.lastNameEnglish,
               gender: response.result.gender,
               positionId: response.result.positionId,
-              employmentStatus: response.result.employmentStatus,
               startDate: response.result.startDate
                 ? new Date(response.result.startDate)
                 : null,
@@ -155,10 +178,15 @@ export class EmployeeManageComponent implements OnDestroy {
               email: response.result.email,
               phone: response.result.phone,
               nationalId: response.result.nationalId,
+              nationality: r['nationality'],
+              religion: r['religion'],
+              lineId: r['lineId'] ?? '',
               dateOfBirth: response.result.dateOfBirth
                 ? new Date(response.result.dateOfBirth)
                 : null,
+              isFullTime: r['isFullTime'] ?? true,
               salary: response.result.salary,
+              hourlyRate: r['hourlyRate'],
               bankName: response.result.bankName,
               bankAccountNumber: response.result.bankAccountNumber,
               endDate: response.result.endDate
@@ -169,93 +197,91 @@ export class EmployeeManageComponent implements OnDestroy {
             });
 
             if (response.result.imageFileId) {
-              this.imagePreview.set(
-                `${this.apiConfig.rootUrl}/api/admin/file/${response.result.imageFileId}`
+              this.serverImageUrl.set(
+                `${this.apiConfig.rootUrl}/api/admin/file/${response.result.imageFileId}`,
               );
             }
 
             if (response.result.dateOfBirth) {
               this.calculateAge(new Date(response.result.dateOfBirth));
             }
+
+            // Load sub-entity data
+            this.addresses.set(
+              (r['addresses'] as Record<string, unknown>[]) ?? [],
+            );
+            this.educations.set(
+              (r['educations'] as Record<string, unknown>[]) ?? [],
+            );
+            this.workHistories.set(
+              (r['workHistories'] as Record<string, unknown>[]) ?? [],
+            );
+
+            if (this.isReadOnly) {
+              this.form.disable();
+            }
           }
-          this.isLoading.set(false);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูลพนักงานได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถโหลดข้อมูลพนักงานได้',
+          });
         },
       });
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-
-      if (!file.type.startsWith('image/')) {
-        this.errorMessage.set('กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง');
-        this.showErrorModal.set(true);
-        return;
-      }
-
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        this.errorMessage.set('ขนาดรูปภาพต้องไม่เกิน 5MB');
-        this.showErrorModal.set(true);
-        return;
-      }
-
-      this.selectedFile.set(file);
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.imagePreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+  onFileSelected(file: File): void {
+    this.selectedFile.set(file);
+    this.imageRemoved.set(false);
   }
 
   removeImage(): void {
     this.selectedFile.set(null);
-    this.imagePreview.set(null);
+    this.imageRemoved.set(true);
     this.form.patchValue({ imageUrl: '' });
   }
 
   onSubmit(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      markFormDirty(this.form);
       return;
     }
 
     this.isSaving.set(true);
     this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, true);
     this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, true);
-    this.errorMessage.set(null);
 
     const f = this.form.value;
     const body = {
-      Title: f.title as string | undefined,
+      Title: f.title as ETitle | undefined,
       FirstNameThai: f.firstNameThai as string,
       LastNameThai: f.lastNameThai as string,
       FirstNameEnglish: f.firstNameEnglish as string,
       LastNameEnglish: f.lastNameEnglish as string,
       Nickname: f.nickname as string | undefined,
       Gender: f.gender as EGender,
-      DateOfBirth: f.dateOfBirth ? (f.dateOfBirth as Date).toISOString() : undefined,
+      DateOfBirth: f.dateOfBirth
+        ? (f.dateOfBirth as Date).toISOString()
+        : undefined,
       StartDate: (f.startDate as Date).toISOString(),
       EndDate: f.endDate ? (f.endDate as Date).toISOString() : undefined,
       NationalId: f.nationalId as string | undefined,
       BankAccountNumber: f.bankAccountNumber as string | undefined,
       BankName: f.bankName as string | undefined,
-      EmploymentStatus: f.employmentStatus as EEmploymentStatus,
       PositionId: f.positionId as number | undefined,
       Phone: f.phone as string | undefined,
       Email: f.email as string | undefined,
+      Nationality: f.nationality as number | undefined,
+      Religion: f.religion as number | undefined,
+      LineId: f.lineId as string | undefined,
+      IsFullTime: f.isFullTime as boolean,
       Salary: f.salary as number | undefined,
+      HourlyRate: f.hourlyRate as number | undefined,
       IsActive: f.isActive as boolean | undefined,
       UserId: f.userId as string | undefined,
       imageFile: this.selectedFile() as Blob | undefined,
+      RemoveImage: this.imageRemoved(),
     };
 
     if (this.isEditMode()) {
@@ -267,19 +293,19 @@ export class EmployeeManageComponent implements OnDestroy {
 
   private createEmployee(body: Record<string, unknown>): void {
     this.humanResourceService
-      .apiHumanresourcePost({ body: body as any })
+      .humanResourceCreatePost({ body: body as any })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.resetSavingState();
-          this.successMessage.set(
-            `เพิ่มพนักงาน "${this.form.value.firstNameThai} ${this.form.value.lastNameThai}" สำเร็จ`
-          );
-          this.showSuccessModal.set(true);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/human-resource/employees']);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถเพิ่มพนักงานได้');
-          this.showErrorModal.set(true);
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถเพิ่มพนักงานได้',
+          });
           this.resetSavingState();
         },
       });
@@ -289,19 +315,19 @@ export class EmployeeManageComponent implements OnDestroy {
     const employeeId = this.employeeId()!;
 
     this.humanResourceService
-      .apiHumanresourceEmployeeIdPut({ employeeId, body: body as any })
+      .humanResourceUpdatePut({ employeeId, body: body as any })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.resetSavingState();
-          this.successMessage.set(
-            `แก้ไขพนักงาน "${this.form.value.firstNameThai} ${this.form.value.lastNameThai}" สำเร็จ`
-          );
-          this.showSuccessModal.set(true);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/human-resource/employees']);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถแก้ไขข้อมูลพนักงานได้');
-          this.showErrorModal.set(true);
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถแก้ไขข้อมูลพนักงานได้',
+          });
           this.resetSavingState();
         },
       });
@@ -314,16 +340,194 @@ export class EmployeeManageComponent implements OnDestroy {
   }
 
   onCancel(): void {
-    this.router.navigate(['/hr/employees']);
+    this.router.navigate(['/human-resource/employees']);
   }
 
-  closeSuccessModal(): void {
-    this.showSuccessModal.set(false);
-    this.router.navigate(['/hr/employees']);
+  // === Address Dialog ===
+  onAddAddress(): void {
+    const ref = this.dialogService.open(AddressDialogComponent, {
+      header: 'เพิ่มที่อยู่',
+      width: '60vw',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      modal: true,
+      data: {},
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          // API call will be wired after gen-api (Phase 9)
+          this.addresses.update((list) => [...list, result]);
+        }
+      });
   }
 
-  closeErrorModal(): void {
-    this.showErrorModal.set(false);
+  onEditAddress(address: Record<string, unknown>, index: number): void {
+    const ref = this.dialogService.open(AddressDialogComponent, {
+      header: 'แก้ไขที่อยู่',
+      width: '60vw',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      modal: true,
+      data: { address },
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.addresses.update((list) =>
+            list.map((item, i) =>
+              i === index ? { ...item, ...result } : item,
+            ),
+          );
+        }
+      });
+  }
+
+  onDeleteAddress(index: number): void {
+    this.addresses.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  getAddressTypeLabel(type: number): string {
+    switch (type) {
+      case 1:
+        return 'ที่อยู่ตามทะเบียนบ้าน';
+      case 2:
+        return 'ที่อยู่ปัจจุบัน';
+      case 3:
+        return 'ที่อยู่ที่ทำงาน';
+      default:
+        return 'ไม่ระบุ';
+    }
+  }
+
+  // === Education Dialog ===
+  onAddEducation(): void {
+    const ref = this.dialogService.open(EducationDialogComponent, {
+      header: 'เพิ่มประวัติการศึกษา',
+      width: '60vw',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      modal: true,
+      data: {},
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.educations.update((list) => [...list, result]);
+        }
+      });
+  }
+
+  onEditEducation(education: Record<string, unknown>, index: number): void {
+    const ref = this.dialogService.open(EducationDialogComponent, {
+      header: 'แก้ไขประวัติการศึกษา',
+      width: '60vw',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      modal: true,
+      data: { education },
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.educations.update((list) =>
+            list.map((item, i) =>
+              i === index ? { ...item, ...result } : item,
+            ),
+          );
+        }
+      });
+  }
+
+  onDeleteEducation(index: number): void {
+    this.educations.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  // === Work History Dialog ===
+  onAddWorkHistory(): void {
+    const ref = this.dialogService.open(WorkHistoryDialogComponent, {
+      header: 'เพิ่มประวัติการทำงาน',
+      width: '60vw',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      modal: true,
+      data: {},
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.workHistories.update((list) => [...list, result]);
+        }
+      });
+  }
+
+  onEditWorkHistory(workHistory: Record<string, unknown>, index: number): void {
+    const ref = this.dialogService.open(WorkHistoryDialogComponent, {
+      header: 'แก้ไขประวัติการทำงาน',
+      width: '60vw',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      modal: true,
+      data: { workHistory },
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.workHistories.update((list) =>
+            list.map((item, i) =>
+              i === index ? { ...item, ...result } : item,
+            ),
+          );
+        }
+      });
+  }
+
+  onDeleteWorkHistory(index: number): void {
+    this.workHistories.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  checkDuplicate(field: 'nationalId' | 'email'): void {
+    const control = this.form.get(field);
+    if (
+      !control ||
+      !control.value ||
+      control.hasError('email') ||
+      control.hasError('maxlength')
+    )
+      return;
+
+    this.humanResourceService
+      .humanResourceCheckDuplicateGet({
+        field,
+        value: control.value,
+        excludeEmployeeId: this.employeeId() ?? undefined,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          if (res.result) {
+            const msg = field === 'nationalId'
+              ? 'เลขประจำตัวประชาชนนี้มีอยู่ในระบบแล้ว'
+              : 'อีเมลนี้มีอยู่ในระบบแล้ว';
+            control.setErrors({ ...control.errors, duplicate: msg });
+          } else if (control.hasError('duplicate')) {
+            const { duplicate, ...rest } = control.errors!;
+            control.setErrors(Object.keys(rest).length ? rest : null);
+          }
+        },
+      });
   }
 
   calculateAge(dateOfBirth: Date | string | null): void {
@@ -332,7 +536,8 @@ export class EmployeeManageComponent implements OnDestroy {
       return;
     }
 
-    const birthDate = dateOfBirth instanceof Date ? dateOfBirth : new Date(dateOfBirth);
+    const birthDate =
+      dateOfBirth instanceof Date ? dateOfBirth : new Date(dateOfBirth);
     const today = new Date();
 
     let years = today.getFullYear() - birthDate.getFullYear();
@@ -360,25 +565,39 @@ export class EmployeeManageComponent implements OnDestroy {
     if (months > 0) parts.push(`${months} เดือน`);
     if (days > 0) parts.push(`${days} วัน`);
 
-    this.form.get('age')?.setValue(parts.length > 0 ? parts.join(' ') : 'เกิดวันนี้');
+    this.form
+      .get('age')
+      ?.setValue(parts.length > 0 ? parts.join(' ') : 'เกิดวันนี้');
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.form.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
+  getWorkDuration(startDate: unknown, endDate: unknown): string {
+    if (!startDate) return '';
 
-  getErrorMessage(fieldName: string): string {
-    const field = this.form.get(fieldName);
-    if (!field || !field.errors) return '';
+    const start = new Date(startDate as string);
+    const end = endDate ? new Date(endDate as string) : new Date();
 
-    if (field.errors['required']) return 'กรุณากรอกข้อมูล';
-    if (field.errors['maxlength'])
-      return `ห้ามเกิน ${field.errors['maxlength'].requiredLength} ตัวอักษร`;
-    if (field.errors['min'])
-      return `ค่าต้องไม่น้อยกว่า ${field.errors['min'].min}`;
-    if (field.errors['email']) return 'รูปแบบอีเมลไม่ถูกต้อง';
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return '';
 
-    return '';
+    let years = end.getFullYear() - start.getFullYear();
+    let months = end.getMonth() - start.getMonth();
+    let days = end.getDate() - start.getDate();
+
+    if (days < 0) {
+      months--;
+      const previousMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+      days += previousMonth.getDate();
+    }
+
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+
+    const parts: string[] = [];
+    if (years > 0) parts.push(`${years} ปี`);
+    if (months > 0) parts.push(`${months} เดือน`);
+    if (days > 0) parts.push(`${days} วัน`);
+
+    return parts.length > 0 ? parts.join(' ') : 'เริ่มงานวันนี้';
   }
 }

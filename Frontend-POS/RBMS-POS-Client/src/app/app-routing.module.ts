@@ -1,6 +1,3 @@
-// src/app/app-routing.module.ts
-
-// 1. Angular core
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 

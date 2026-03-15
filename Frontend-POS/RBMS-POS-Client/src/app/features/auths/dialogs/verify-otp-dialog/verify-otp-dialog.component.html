@@ -1,0 +1,101 @@
+<app-card-template
+  headerLabel="การยืนยัน OTP"
+  headerLabelClass="text-xl font-semibold text-primary-dark"
+  contentClass="space-y-4"
+>
+  <!-- Email info -->
+  <div
+    class="bg-primary-subtle border border-primary-light rounded-lg px-4 py-3 flex items-center gap-3"
+  >
+    <app-generic-icon
+      class="text-primary shrink-0"
+      name="information"
+      svgClass="w-6 h-6"
+    ></app-generic-icon>
+    <p class="text-sm text-surface-dark">
+      ระบบได้ส่งรหัส OTP 6 หลักไปยังอีเมล
+      <span class="font-semibold text-primary">{{ maskedEmail }}</span>
+      กรุณากรอกรหัสเพื่อยืนยันตัวตน
+    </p>
+  </div>
+
+  <!-- OTP 6-digit Input -->
+  <div>
+    <label
+      class="block text-xl font-semibold text-surface-dark mb-3 text-center"
+    >
+      รหัส OTP
+    </label>
+    <div class="flex justify-center gap-3">
+      @for (i of otpIndexes; track i) {
+        <input
+          #otpInput
+          type="text"
+          inputmode="numeric"
+          maxlength="1"
+          (input)="onDigitInput($event, i)"
+          (keydown)="onDigitKeydown($event, i)"
+          (paste)="onPaste($event)"
+          class="w-12 h-14 text-center text-2xl font-bold border-2 border-surface-border rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition-colors"
+        />
+      }
+    </div>
+    <div class="flex justify-center">
+      <app-field-error
+        [control]="form.get('otpCode')!"
+        label="รหัส OTP"
+      ></app-field-error>
+    </div>
+  </div>
+
+  <!-- Countdown Timer -->
+  <div class="text-center">
+    @if (!canResend()) {
+      <span class="text-surface-dark">
+        หมดอายุใน
+        <span class="font-bold text-primary text-lg">{{
+          countdownDisplay()
+        }}</span>
+      </span>
+    } @else {
+      <span class="text-danger font-semibold">รหัส OTP หมดอายุแล้ว</span>
+    }
+  </div>
+
+  <!-- Resend -->
+  <div class="text-center">
+    @if (canResend()) {
+      <button
+        type="button"
+        [disabled]="isResending()"
+        (click)="onResendOtp()"
+        class="text-primary hover:text-primary-dark font-semibold transition-colors"
+      >
+        @if (isResending()) {
+          <i class="pi pi-spin pi-spinner mr-1"></i>
+        }
+        ส่งรหัส OTP อีกครั้ง
+      </button>
+    } @else {
+      <span class="text-surface-sub text-sm">
+        ส่งรหัส OTP อีกครั้งได้ใน {{ countdownDisplay() }}
+      </span>
+    }
+  </div>
+
+  <p-footer>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="isLoading()"
+      (onClick)="onCancel()"
+    ></p-button>
+    <p-button
+      label="ยืนยัน"
+      [loading]="isLoading()"
+      [disabled]="canResend()"
+      (onClick)="onSubmit()"
+    ></p-button>
+  </p-footer>
+</app-card-template>

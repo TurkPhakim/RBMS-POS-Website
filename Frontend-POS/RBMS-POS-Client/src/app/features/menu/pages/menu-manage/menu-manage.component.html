@@ -9,20 +9,12 @@
     </p>
   </div>
 
-  <!-- Loading -->
-  @if (isLoading()) {
-    <div class="flex justify-center py-20">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
-  }
-
   <!-- Form -->
-  @if (!isLoading()) {
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
 
       <!-- Card 1: ข้อมูลเมนู -->
-      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+      <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4 rounded-t-xl">
           <h2 class="text-xl font-bold text-white flex items-center gap-2">
             <i class="pi pi-book"></i>
             ข้อมูลเมนู
@@ -38,12 +30,8 @@
               </label>
               <input id="nameThai" type="text" pInputText formControlName="nameThai"
                 placeholder="กรอกชื่อเมนูภาษาไทย"
-                class="w-full"
-                [class.ng-invalid]="isFieldInvalid('nameThai')"
-                [class.ng-dirty]="isFieldInvalid('nameThai')" />
-              @if (isFieldInvalid('nameThai')) {
-                <small class="text-danger mt-1 block">{{ getErrorMessage('nameThai') }}</small>
-              }
+                class="w-full" />
+              <app-field-error [control]="form.get('nameThai')" type="text" />
             </div>
 
             <!-- ชื่อเมนู (อังกฤษ) -->
@@ -53,12 +41,8 @@
               </label>
               <input id="nameEnglish" type="text" pInputText formControlName="nameEnglish"
                 placeholder="กรอกชื่อเมนูภาษาอังกฤษ"
-                class="w-full"
-                [class.ng-invalid]="isFieldInvalid('nameEnglish')"
-                [class.ng-dirty]="isFieldInvalid('nameEnglish')" />
-              @if (isFieldInvalid('nameEnglish')) {
-                <small class="text-danger mt-1 block">{{ getErrorMessage('nameEnglish') }}</small>
-              }
+                class="w-full" />
+              <app-field-error [control]="form.get('nameEnglish')" type="text" />
             </div>
           </div>
 
@@ -70,13 +54,9 @@
             <textarea id="description" pTextarea formControlName="description"
               rows="4"
               placeholder="กรอกคำอธิบายเมนู"
-              class="w-full resize-none"
-              [class.ng-invalid]="isFieldInvalid('description')"
-              [class.ng-dirty]="isFieldInvalid('description')">
+              class="w-full resize-none">
             </textarea>
-            @if (isFieldInvalid('description')) {
-              <small class="text-danger mt-1 block">{{ getErrorMessage('description') }}</small>
-            }
+            <app-field-error [control]="form.get('description')" type="text" />
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -90,11 +70,9 @@
                 placeholder="กรอกราคา"
                 [min]="0" [max]="99999999.99"
                 [styleClass]="'w-full'"
-                [inputStyleClass]="isFieldInvalid('price') ? 'ng-invalid ng-dirty w-full' : 'w-full'">
+                [inputStyleClass]="'w-full'">
               </p-inputNumber>
-              @if (isFieldInvalid('price')) {
-                <small class="text-danger mt-1 block">{{ getErrorMessage('price') }}</small>
-              }
+              <app-field-error [control]="form.get('price')" type="text" />
             </div>
 
             <!-- หมวดหมู่ -->
@@ -102,23 +80,16 @@
               <label for="category" class="block font-semibold text-surface-dark mb-2">
                 หมวดหมู่ <span class="text-danger">*</span>
               </label>
-              <p-dropdown id="category" formControlName="category"
-                [options]="categoryOptions"
-                optionLabel="label" optionValue="value"
-                placeholder="เลือกหมวดหมู่"
-                [styleClass]="'w-full'">
-              </p-dropdown>
-              @if (isFieldInvalid('category')) {
-                <small class="text-danger mt-1 block">{{ getErrorMessage('category') }}</small>
-              }
+              <app-menu-category-dropdown formControlName="category"></app-menu-category-dropdown>
+              <app-field-error [control]="form.get('category')" type="select" />
             </div>
           </div>
         </div>
       </div>
 
       <!-- Card 2: รูปภาพเมนู -->
-      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+      <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4 rounded-t-xl">
           <h2 class="text-xl font-bold text-white flex items-center gap-2">
             <i class="pi pi-image"></i>
             รูปภาพเมนู
@@ -159,8 +130,8 @@
       </div>
 
       <!-- Card 3: สถานะ -->
-      <div class="bg-surface-card rounded-xl shadow-sm overflow-hidden border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4">
+      <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border">
+        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4 rounded-t-xl">
           <h2 class="text-xl font-bold text-white flex items-center gap-2">
             <i class="pi pi-cog"></i>
             สถานะ
@@ -191,17 +162,4 @@
       </div>
 
     </form>
-  }
 </div>
-
-<!-- Modals -->
-<app-success-modal
-  [isOpen]="showSuccessModal()"
-  [message]="successMessage()"
-  [autoClose]="true"
-  (closed)="closeSuccessModal()" />
-
-<app-error-modal
-  [isOpen]="showErrorModal()"
-  [message]="errorMessage()!"
-  (closed)="closeErrorModal()" />

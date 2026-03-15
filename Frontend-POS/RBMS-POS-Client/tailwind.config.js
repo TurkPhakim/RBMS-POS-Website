@@ -46,6 +46,13 @@ module.exports = {
           bg:      "var(--color-warning-bg)",       // #fef3c7 — badge background
           dark:    "var(--color-warning-dark)",     // #d97706 — hover
         },
+
+        // ─── Gender Colors ──────────────────────────────────────────────
+        // ใช้: text-gender-male, text-gender-female
+        gender: {
+          male:   "var(--color-gender-male)",        // #60A5FA — น้ำเงิน
+          female: "var(--color-gender-female)",       // #F472B6 — ชมพู
+        },
       },
 
       // ─── Font ──────────────────────────────────────────────────────────
@@ -56,13 +63,29 @@ module.exports = {
 
       // ─── Animation ──────────────────────────────────────────────────────
       keyframes: {
-        'wave-bounce': {
-          '0%, 100%': { transform: 'translateY(0)', opacity: '1' },
-          '50%':      { transform: 'translateY(-12px)', opacity: '0.5' },
+        'glitch': {
+          '0%, 100%': { transform: 'translate(0)' },
+          '20%':      { transform: 'translate(-3px, 3px)' },
+          '40%':      { transform: 'translate(3px, -3px)' },
+          '60%':      { transform: 'translate(-2px, -2px)' },
+          '80%':      { transform: 'translate(2px, 2px)' },
+        },
+        'bell-ring': {
+          '0%':   { transform: 'rotate(0deg)' },
+          '10%':  { transform: 'rotate(14deg)' },
+          '20%':  { transform: 'rotate(-14deg)' },
+          '30%':  { transform: 'rotate(10deg)' },
+          '40%':  { transform: 'rotate(-10deg)' },
+          '50%':  { transform: 'rotate(6deg)' },
+          '60%':  { transform: 'rotate(-4deg)' },
+          '70%':  { transform: 'rotate(2deg)' },
+          '80%':  { transform: 'rotate(-1deg)' },
+          '100%': { transform: 'rotate(0deg)' },
         },
       },
       animation: {
-        'wave-bounce': 'wave-bounce 0.8s ease-in-out infinite',
+        'glitch': 'glitch 0.3s ease-in-out infinite',
+        'bell-ring': 'bell-ring 0.6s ease-in-out',
       },
 
       // ─── Typography Tokens ─────────────────────────────────────────────
@@ -109,6 +132,10 @@ module.exports = {
           "--color-warning":      "#fbbf24",
           "--color-warning-bg":   "#fef3c7",
           "--color-warning-dark": "#d97706",
+
+          // Gender
+          "--color-gender-male":   "#93C5FD",
+          "--color-gender-female": "#F9A8D4",
         },
       });
     }),

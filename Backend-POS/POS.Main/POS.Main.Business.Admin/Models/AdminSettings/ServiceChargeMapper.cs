@@ -10,7 +10,9 @@ public static class ServiceChargeMapper
             Name = request.Name,
             PercentageRate = request.PercentageRate,
             Description = request.Description,
-            IsActive = request.IsActive
+            IsActive = request.IsActive,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate
         };
 
     public static void UpdateEntity(TbServiceCharge entity, UpdateServiceChargeRequestModel request)
@@ -19,6 +21,8 @@ public static class ServiceChargeMapper
         entity.PercentageRate = request.PercentageRate;
         entity.Description = request.Description;
         entity.IsActive = request.IsActive;
+        entity.StartDate = request.StartDate;
+        entity.EndDate = request.EndDate;
     }
 
     public static ServiceChargeResponseModel ToResponse(TbServiceCharge entity)
@@ -29,6 +33,8 @@ public static class ServiceChargeMapper
             PercentageRate = entity.PercentageRate,
             Description = entity.Description,
             IsActive = entity.IsActive,
+            StartDate = entity.StartDate,
+            EndDate = entity.EndDate,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             CreatedBy = entity.CreatedByEmployee?.Nickname ?? entity.CreatedBy?.ToString(),
@@ -39,6 +45,6 @@ public static class ServiceChargeMapper
         => new()
         {
             Value = entity.ServiceChargeId,
-            Label = $"{entity.PercentageRate}%"
+            Label = $"{entity.Name} ({entity.PercentageRate}%)"
         };
 }

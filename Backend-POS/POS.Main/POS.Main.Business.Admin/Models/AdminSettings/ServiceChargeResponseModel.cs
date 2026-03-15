@@ -36,6 +36,16 @@ public class ServiceChargeResponseModel
     public bool IsActive { get; set; }
 
     /// <summary>
+    /// Start date of the service charge effective period
+    /// </summary>
+    public DateTime? StartDate { get; set; }
+
+    /// <summary>
+    /// End date of the service charge effective period (null = indefinite)
+    /// </summary>
+    public DateTime? EndDate { get; set; }
+
+    /// <summary>
     /// Creation timestamp (UTC)
     /// </summary>
     public DateTime CreatedAt { get; set; }

@@ -9,8 +9,8 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { apiAdminFileFileIdGet } from '../fn/file/api-admin-file-file-id-get';
-import { ApiAdminFileFileIdGet$Params } from '../fn/file/api-admin-file-file-id-get';
+import { fileDownloadGet } from '../fn/file/file-download-get';
+import { FileDownloadGet$Params } from '../fn/file/file-download-get';
 
 @Injectable({ providedIn: 'root' })
 export class FileService extends BaseService {
@@ -18,27 +18,27 @@ export class FileService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `apiAdminFileFileIdGet()` */
-  static readonly ApiAdminFileFileIdGetPath = '/api/admin/file/{fileId}';
+  /** Path part for operation `fileDownloadGet()` */
+  static readonly FileDownloadGetPath = '/api/admin/file/{fileId}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminFileFileIdGet()` instead.
+   * To access only the response body, use `fileDownloadGet()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminFileFileIdGet$Response(params: ApiAdminFileFileIdGet$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-    return apiAdminFileFileIdGet(this.http, this.rootUrl, params, context);
+  fileDownloadGet$Response(params: FileDownloadGet$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    return fileDownloadGet(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminFileFileIdGet$Response()` instead.
+   * To access the full response (for headers, for example), `fileDownloadGet$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminFileFileIdGet(params: ApiAdminFileFileIdGet$Params, context?: HttpContext): Observable<void> {
-    return this.apiAdminFileFileIdGet$Response(params, context).pipe(
+  fileDownloadGet(params: FileDownloadGet$Params, context?: HttpContext): Observable<void> {
+    return this.fileDownloadGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<void>): void => r.body)
     );
   }

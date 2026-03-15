@@ -1,10 +1,15 @@
-import { Component, signal, DestroyRef, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+
+import { ChildModuleNode, ModuleNode, PermissionItem } from '@app/core/api/models';
 import { PositionsService } from '@app/core/api/services';
-import { ModuleNode, ChildModuleNode, PermissionItem } from '@app/core/api/models';
+import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
+import { ModalService } from '@app/core/services/modal.service';
+
+import { markFormDirty } from '@app/shared/utils';
 
 const KEY_BTN_SAVE = 'save-position';
 const KEY_BTN_BACK = 'back';
@@ -22,12 +27,7 @@ export class PositionManageComponent implements OnDestroy {
   form!: FormGroup;
   isEditMode = signal(false);
   positionId = signal<number | null>(null);
-  isLoading = signal(false);
   isSaving = signal(false);
-  errorMessage = signal<string | null>(null);
-  showSuccessModal = signal(false);
-  showErrorModal = signal(false);
-  successMessage = signal('');
 
   modules = signal<ModuleNode[]>([]);
   grantedIds = signal<Set<number>>(new Set());
@@ -35,12 +35,14 @@ export class PositionManageComponent implements OnDestroy {
   childExpanded = signal<ExpandState>({});
 
   constructor(
+    private readonly route: ActivatedRoute,
+    private readonly authService: AuthService,
+    private readonly breadcrumbService: BreadcrumbService,
+    private readonly destroyRef: DestroyRef,
     private readonly fb: FormBuilder,
+    private readonly modalService: ModalService,
     private readonly positionsService: PositionsService,
     private readonly router: Router,
-    private readonly route: ActivatedRoute,
-    private readonly destroyRef: DestroyRef,
-    private readonly breadcrumbService: BreadcrumbService,
   ) {}
 
   ngOnInit(): void {
@@ -59,8 +61,7 @@ export class PositionManageComponent implements OnDestroy {
       type: 'button',
       item: {
         key: KEY_BTN_BACK,
-        label: 'กลับ',
-        icon: 'pi pi-arrow-left',
+        label: 'ย้อนกลับ',
         severity: 'secondary',
         variant: 'outlined',
         callback: () => this.onCancel(),
@@ -72,8 +73,7 @@ export class PositionManageComponent implements OnDestroy {
       type: 'button',
       item: {
         key: KEY_BTN_SAVE,
-        label: this.isEditMode() ? 'บันทึกการแก้ไข' : 'บันทึก',
-        icon: 'pi pi-check',
+        label: 'บันทึก',
         callback: () => this.onSubmit(),
       },
     });
@@ -99,11 +99,8 @@ export class PositionManageComponent implements OnDestroy {
   }
 
   loadPosition(id: number): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.positionsService
-      .apiAdminPositionsPositionIdGet({ positionId: id })
+      .positionsGetPositionByIdGet({ positionId: id })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -117,16 +114,14 @@ export class PositionManageComponent implements OnDestroy {
           this.loadPermissions(id);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูลตำแหน่งได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลตำแหน่งได้' });
         },
       });
   }
 
   loadPermissions(positionId: number): void {
     this.positionsService
-      .apiAdminPositionsPositionIdPermissionsGet({ positionId })
+      .positionsGetPositionPermissionsGet({ positionId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -135,21 +130,16 @@ export class PositionManageComponent implements OnDestroy {
             this.grantedIds.set(new Set(response.result.grantedAuthorizeMatrixIds ?? []));
             this.expandAll();
           }
-          this.isLoading.set(false);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูลสิทธิ์ได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลสิทธิ์ได้' });
         },
       });
   }
 
   loadModuleTree(): void {
-    this.isLoading.set(true);
-
     this.positionsService
-      .apiAdminPositionsModulesTreeGet()
+      .positionsGetModuleTreeGet()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -167,12 +157,9 @@ export class PositionManageComponent implements OnDestroy {
             this.grantedIds.set(allIds);
             this.expandAll();
           }
-          this.isLoading.set(false);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูลโมดูลได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลโมดูลได้' });
         },
       });
   }
@@ -280,14 +267,13 @@ export class PositionManageComponent implements OnDestroy {
 
   onSubmit(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      markFormDirty(this.form);
       return;
     }
 
     this.isSaving.set(true);
     this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, true);
     this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, true);
-    this.errorMessage.set(null);
 
     if (this.isEditMode()) {
       this.updatePosition();
@@ -299,7 +285,7 @@ export class PositionManageComponent implements OnDestroy {
   private createPosition(): void {
     const f = this.form.value;
     this.positionsService
-      .apiAdminPositionsPost({
+      .positionsCreatePositionPost({
         body: {
           positionName: f.positionName,
           description: f.description,
@@ -311,16 +297,15 @@ export class PositionManageComponent implements OnDestroy {
         next: (response) => {
           const newId = response.result?.positionId;
           if (newId) {
-            this.savePermissions(newId, `สร้างตำแหน่ง "${f.positionName}" สำเร็จ`);
+            this.savePermissions(newId);
           } else {
             this.resetSavingState();
-            this.successMessage.set(`สร้างตำแหน่ง "${f.positionName}" สำเร็จ`);
-            this.showSuccessModal.set(true);
+            this.modalService.commonSuccess();
+            this.router.navigate(['/admin-setting/positions']);
           }
         },
         error: (error) => {
-          this.errorMessage.set(error.error?.message || 'ไม่สามารถสร้างตำแหน่งได้');
-          this.showErrorModal.set(true);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: error.error?.message || 'ไม่สามารถสร้างตำแหน่งได้' });
           this.resetSavingState();
         },
       });
@@ -331,7 +316,7 @@ export class PositionManageComponent implements OnDestroy {
     const f = this.form.value;
 
     this.positionsService
-      .apiAdminPositionsPositionIdPut({
+      .positionsUpdatePositionPut({
         positionId: id,
         body: {
           positionName: f.positionName,
@@ -342,34 +327,45 @@ export class PositionManageComponent implements OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.savePermissions(id, `แก้ไขตำแหน่ง "${f.positionName}" สำเร็จ`);
+          this.savePermissions(id);
         },
         error: (error) => {
-          this.errorMessage.set(error.error?.message || 'ไม่สามารถแก้ไขตำแหน่งได้');
-          this.showErrorModal.set(true);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: error.error?.message || 'ไม่สามารถแก้ไขตำแหน่งได้' });
           this.resetSavingState();
         },
       });
   }
 
-  private savePermissions(positionId: number, successMsg: string): void {
+  private savePermissions(positionId: number): void {
     const matrixIds = Array.from(this.grantedIds());
     this.positionsService
-      .apiAdminPositionsPositionIdPermissionsPut({
+      .positionsUpdatePositionPermissionsPut({
         positionId,
         body: { authorizeMatrixIds: matrixIds },
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          this.refreshMyPermissions();
           this.resetSavingState();
-          this.successMessage.set(successMsg);
-          this.showSuccessModal.set(true);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/admin-setting/positions']);
         },
         error: () => {
           this.resetSavingState();
-          this.successMessage.set(successMsg);
-          this.showSuccessModal.set(true);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/admin-setting/positions']);
+        },
+      });
+  }
+
+  private refreshMyPermissions(): void {
+    this.positionsService
+      .positionsGetMyPermissionsGet()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.authService.updatePermissions(res.results ?? []);
         },
       });
   }
@@ -384,26 +380,4 @@ export class PositionManageComponent implements OnDestroy {
     this.router.navigate(['/admin-setting/positions']);
   }
 
-  closeSuccessModal(): void {
-    this.showSuccessModal.set(false);
-    this.router.navigate(['/admin-setting/positions']);
-  }
-
-  closeErrorModal(): void {
-    this.showErrorModal.set(false);
-  }
-
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.form.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const field = this.form.get(fieldName);
-    if (!field || !field.errors) return '';
-    if (field.errors['required']) return 'กรุณากรอกข้อมูล';
-    if (field.errors['maxlength'])
-      return `กรอกได้ไม่เกิน ${field.errors['maxlength'].requiredLength} ตัวอักษร`;
-    return '';
-  }
 }

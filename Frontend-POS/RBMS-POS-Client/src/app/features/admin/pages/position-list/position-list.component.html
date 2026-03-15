@@ -4,15 +4,7 @@
     <h1 class="text-page-title text-surface-dark">จัดการตำแหน่ง</h1>
   </div>
 
-  <!-- Loading -->
-  @if (isLoading()) {
-    <div class="flex justify-center py-20">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
-  }
-
   <!-- Table -->
-  @if (!isLoading()) {
     <div class="bg-surface-card overflow-hidden border border-surface-border">
       <p-table [value]="positions()" [stripedRows]="true" [tableStyle]="{'min-width': '50rem'}">
         <ng-template pTemplate="header">
@@ -21,7 +13,7 @@
             <th>ชื่อตำแหน่ง</th>
             <th>คำอธิบาย</th>
             <th class="w-28 text-center">สถานะ</th>
-            <th class="w-28 text-center">จัดการ</th>
+            <th class="w-28 text-center">ตัวเลือก</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-item let-i="rowIndex">
@@ -56,41 +48,13 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="5" class="text-center py-12 text-surface-sub">
-              <div class="flex flex-col items-center">
-                <app-generic-icon name="empty-box" svgClass="w-16 h-16" class="opacity-30 mb-3"></app-generic-icon>
-                <p class="text-lg font-semibold">ไม่พบข้อมูลตำแหน่ง</p>
+            <td colspan="5">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่พบข้อมูลตำแหน่ง" />
               </div>
             </td>
           </tr>
         </ng-template>
       </p-table>
     </div>
-  }
 </div>
-
-<!-- Shared Modals -->
-<app-confirm-modal
-  [isOpen]="showDeleteModal()"
-  title="ยืนยันการลบ"
-  message="คุณต้องการลบตำแหน่ง"
-  [itemName]="selectedPosition()?.name"
-  confirmText="ลบ"
-  cancelText="ยกเลิก"
-  type="delete"
-  (confirmed)="confirmDelete()"
-  (cancelled)="cancelDelete()"
-/>
-
-<app-success-modal
-  [isOpen]="showSuccessModal()"
-  [message]="successMessage()"
-  [autoClose]="true"
-  (closed)="closeSuccessModal()"
-/>
-
-<app-error-modal
-  [isOpen]="showErrorModal()"
-  [message]="errorMessage()!"
-  (closed)="closeErrorModal()"
-/>

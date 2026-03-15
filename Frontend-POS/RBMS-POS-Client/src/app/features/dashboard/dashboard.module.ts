@@ -1,16 +1,9 @@
-// src/app/features/dashboard/dashboard.module.ts
-
-// 1. Angular core
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
 
-// 2. Routing
-import { DashboardRoutingModule } from './dashboard-routing.module';
-
-// 3. Shared
 import { SharedModule } from '@app/shared/shared.module';
 
-// 4. Components
+import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 
 @NgModule({

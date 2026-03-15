@@ -15,25 +15,11 @@
   }
 }
 
-/* ─── Modal Animations ──────────────────────────────────────────────────────── */
-@keyframes modal-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+/* ─── Hide Browser Native Password Reveal Button ───────────────────────── */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
 }
-
-@keyframes modal-scale-in {
-  from { opacity: 0; transform: scale(0.95) translateY(-6px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);    }
-}
-
-@keyframes modal-progress {
-  from { width: 0%; }
-  to   { width: 100%; }
-}
-
-.animate-modal-fade-in  { animation: modal-fade-in  0.2s ease-out; }
-.animate-modal-scale-in { animation: modal-scale-in 0.25s ease-out; }
-.animate-modal-progress { animation: modal-progress 2s linear forwards; }
 
 /* ─── Custom Scrollbar ────────────────────────────────────────────────────── */
 /* Webkit (Chrome, Edge, Safari) */
@@ -76,6 +62,28 @@
 
 .bg-surface-sidebar * {
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* ─── Alert Dialog (ModalService) ─────────────────────────────────────────── */
+.alert-dialog .p-dialog-content {
+  padding: 1.25rem;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alert-dialog .p-dialog-content > div {
+  width: 100%;
+}
+
+.alert-dialog p-button {
+  display: block;
+  flex: 1;
+}
+
+.alert-dialog .p-dialog-header {
+  border-width: 0 !important;
 }
 
 /* ─── PrimeNG Toggle Switch ───────────────────────────────────────────────── */
@@ -128,44 +136,124 @@
   inset-inline-start: calc(3rem - 1.25rem - 0.25rem) !important;
 }
 
-/* ─── PrimeNG Table ──────────────────────────────────────────────────────── */
-/* Sharp corners */
-.p-datatable,
-.p-datatable .p-datatable-table {
-  border-radius: 0 !important;
+/* ─── PrimeNG Table — Clean Style ────────────────────────────────────── */
+.p-datatable-clean .p-datatable-table {
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
 }
 
-/* Header — dark background + white text */
-.p-datatable .p-datatable-thead > tr > th {
-  background: var(--color-surface-muted) !important;
-  color: var(--color-surface-dark) !important;
+.p-datatable-clean .p-datatable-thead > tr > th {
+  background: var(--color-primary-subtle) !important;
+  color: var(--color-primary-text) !important;
   font-weight: 600 !important;
   text-align: center !important;
-  border-bottom: 2px solid var(--color-primary) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border: none !important;
+  border-bottom: 2px solid var(--color-primary-light) !important;
+  border-right: 1px solid var(--color-primary-light) !important;
+  font-size: 0.875rem !important;
 }
 
-.p-datatable .p-datatable-thead > tr > th:last-child {
+.p-datatable-clean .p-datatable-thead > tr > th:last-child {
   border-right: none !important;
 }
 
-/* Body cell dividers */
-.p-datatable .p-datatable-tbody > tr > td {
-  border-right: 1px solid var(--color-surface-border);
-  border-bottom: 1px solid var(--color-surface-border);
+.p-datatable-clean .p-datatable-tbody > tr > td {
+  border: none !important;
+  border-bottom: 1px solid var(--color-surface-border) !important;
+  border-right: 1px solid var(--color-surface-border) !important;
+  vertical-align: middle !important;
 }
 
-.p-datatable .p-datatable-tbody > tr > td:last-child {
-  border-right: none;
+.p-datatable-clean .p-datatable-tbody > tr > td.text-center {
+  text-align: center !important;
+}
+
+.p-datatable-clean .p-datatable-tbody > tr > td:last-child {
+  border-right: none !important;
+}
+
+.p-datatable-clean .p-datatable-tbody > tr:last-child > td {
+  border-bottom: none !important;
 }
 
 /* Striped rows */
-.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+.p-datatable-clean .p-datatable-tbody > tr:nth-child(even) {
   background: var(--color-surface) !important;
 }
 
-.p-datatable-striped .p-datatable-tbody > tr:nth-child(even):hover {
+.p-datatable-clean .p-datatable-tbody > tr:nth-child(even):hover {
   background: var(--color-primary-subtle) !important;
+}
+
+/* ─── PrimeNG Paginator ──────────────────────────────────────────────────── */
+.p-paginator {
+  justify-content: flex-end !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  color: var(--color-surface-dark) !important;
+}
+
+.p-paginator .p-paginator-page,
+.p-paginator .p-paginator-first,
+.p-paginator .p-paginator-prev,
+.p-paginator .p-paginator-next,
+.p-paginator .p-paginator-last {
+  color: var(--color-primary-text) !important;
+}
+
+.p-paginator .p-paginator-page:hover,
+.p-paginator .p-paginator-first:hover,
+.p-paginator .p-paginator-prev:hover,
+.p-paginator .p-paginator-next:hover,
+.p-paginator .p-paginator-last:hover {
+  background: var(--color-primary-subtle) !important;
+}
+
+.p-paginator .p-paginator-page.p-highlight {
+  background: var(--color-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--color-primary) !important;
+}
+
+.p-paginator .p-paginator-page:not(.p-highlight) {
+  background: var(--color-primary-subtle) !important;
+  color: var(--color-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* Rows-per-page dropdown — overlay กว้างเท่า trigger */
+.p-paginator .p-select-overlay {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+/* ─── Form Validation — กรอบแดงเฉพาะตอนกดบันทึก (dirty) ──────────────────── */
+/* Reset: ลบกรอบแดงสำหรับ input ที่ยังไม่ dirty (ป้องกัน PrimeNG + browser default) */
+.p-inputtext.ng-invalid:not(.ng-dirty),
+.p-textarea.ng-invalid:not(.ng-dirty),
+.p-select.ng-invalid:not(.ng-dirty),
+.p-dropdown.ng-invalid:not(.ng-dirty),
+.ng-invalid:not(.ng-dirty) > .p-inputtext,
+.ng-invalid:not(.ng-dirty) > .p-dropdown {
+  border-color: var(--p-inputtext-border-color) !important;
+}
+
+/* Reset: ป้องกัน browser :user-invalid (Chrome 119+) แสดงกรอบแดงตอน blur */
+input:user-invalid,
+textarea:user-invalid {
+  border-color: var(--p-inputtext-border-color) !important;
+  box-shadow: none !important;
+  outline-color: transparent !important;
+}
+
+/* Apply: กรอบแดงเฉพาะเมื่อ dirty + invalid (กดบันทึกแล้ว) */
+.p-inputtext.ng-invalid.ng-dirty,
+.p-textarea.ng-invalid.ng-dirty,
+.p-select.ng-invalid.ng-dirty,
+.p-dropdown.ng-invalid.ng-dirty,
+.ng-invalid.ng-dirty > .p-inputtext,
+.ng-invalid.ng-dirty > .p-dropdown {
+  border-color: var(--color-danger) !important;
 }
 
 /* ─── PrimeNG Input Focus Ring → orange ──────────────────────────────────── */
@@ -192,6 +280,46 @@
 .p-select-option:not(.p-select-option-selected):hover,
 .p-listbox-option:not(.p-listbox-option-selected):hover {
   background: var(--color-surface) !important;
+}
+
+/* ─── Card Dialog (app-card-template) ────────────────────────────────────── */
+/* Reset PrimeNG dialog padding เพื่อให้ card-template ควบคุม layout */
+.card-dialog .p-dialog-content {
+  padding: 0 !important;
+}
+
+app-card-template p-footer {
+  display: contents;
+}
+
+/* ─── PrimeNG DatePicker Overlay ──────────────────────────────────────────── */
+/* ป้องกัน datepicker ถูกทับโดย element อื่น (ไม่สามารถใช้ Tailwind ได้เพราะเป็น dynamic overlay) */
+.p-datepicker-panel {
+  z-index: 9999 !important;
+}
+
+/* ขยับ clear icon ไปซ้ายเมื่อมี custom icon (directive เพิ่ม class .has-clear-icon) */
+p-datepicker.has-clear-icon .p-datepicker-clear-icon {
+  right: 2.25rem;
+}
+
+/* ─── PrimeNG RadioButton ────────────────────────────────────────────────── */
+.p-radiobutton-box {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border-width: 2px !important;
+  border-color: var(--color-surface-border) !important;
+}
+
+.p-radiobutton.p-radiobutton-checked .p-radiobutton-box {
+  border-color: var(--color-primary) !important;
+  background: var(--color-primary) !important;
+}
+
+.p-radiobutton.p-radiobutton-checked .p-radiobutton-icon {
+  background: white !important;
+  width: 0.5rem !important;
+  height: 0.5rem !important;
 }
 
 /* ─── Password Input ──────────────────────────────────────────────────────── */

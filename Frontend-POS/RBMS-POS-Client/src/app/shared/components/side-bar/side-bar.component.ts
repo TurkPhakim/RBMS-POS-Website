@@ -1,8 +1,8 @@
-import { Component, Signal, signal } from '@angular/core';
+import { Component, DestroyRef, Signal, signal } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { SidebarService } from '@app/core/services/sidebar.service';
 import { AuthService } from '@app/core/services/auth.service';
+import { SidebarService } from '@app/core/services/sidebar.service';
 import { MenuItem } from '@app/shared/component-interfaces';
 
 @Component({
@@ -16,40 +16,103 @@ export class SideBarComponent {
   expandedKeys = signal<Set<string>>(new Set());
 
   private readonly allMenuItems: MenuItem[] = [
-    { label: 'Dashboard', icon: 'dashboard', route: '/dashboard', permissions: ['dashboard.view.read'] },
-    { label: 'Order', icon: 'orders', route: '/order', permissions: ['order-manage.read'] },
     {
-      label: 'Menu', icon: 'menu-restaurant', permissions: ['menu-item.read'],
-      children: [
-        { label: 'รายการเมนู', icon: 'food', route: '/menu/items' },
-      ],
-    },
-    { label: 'Table', icon: 'table', route: '/table', permissions: ['table-manage.read'] },
-    { label: 'Payment', icon: 'cashier', route: '/payment', permissions: ['payment-manage.read'] },
-    { label: 'Kitchen Display', icon: 'kitchen', route: '/kitchen-display', permissions: ['kitchen-order.read'] },
-    {
-      label: 'Human Resource', icon: 'human-resource', permissions: ['employee.read'],
-      children: [
-        { label: 'รายการพนักงาน', icon: 'human', route: '/hr/employees' },
-      ],
+      label: 'แดชบอร์ด',
+      icon: 'dashboard',
+      route: '/dashboard',
+      permissions: ['dashboard.view.read'],
     },
     {
-      label: 'Admin Setting', icon: 'admin-setting', permissions: ['service-charge.read', 'position.read'],
+      label: 'ออเดอร์',
+      icon: 'orders',
+      route: '/order',
+      permissions: ['order-manage.read'],
+    },
+    {
+      label: 'เมนู',
+      icon: 'menu-restaurant',
+      permissions: ['menu-item.read'],
+      children: [{ label: 'รายการเมนู', icon: 'food', route: '/menu/items' }],
+    },
+    {
+      label: 'โต๊ะ',
+      icon: 'table',
+      route: '/table',
+      permissions: ['table-manage.read'],
+    },
+    {
+      label: 'ชำระเงิน',
+      icon: 'cashier',
+      route: '/payment',
+      permissions: ['payment-manage.read'],
+    },
+    {
+      label: 'ครัว',
+      icon: 'kitchen',
+      route: '/kitchen-display',
+      permissions: ['kitchen-order.read'],
+    },
+    {
+      label: 'ทรัพยากรบุคคล',
+      icon: 'human-resource',
+      permissions: ['employee.read'],
       children: [
-        { label: 'Service Charges', icon: 'coin', route: '/admin-setting/service-charges', permissions: ['service-charge.read'] },
-        { label: 'จัดการตำแหน่ง', icon: 'human-resource', route: '/admin-setting/positions', permissions: ['position.read'] },
+        {
+          label: 'รายการพนักงาน',
+          icon: 'human',
+          route: '/human-resource/employees',
+        },
+      ],
+    },
+    {
+      label: 'ตั้งค่าระบบ',
+      icon: 'admin-setting',
+      permissions: [
+        'service-charge.read',
+        'position.read',
+        'shop-settings.read',
+      ],
+      children: [
+        {
+          label: 'ค่าบริการ',
+          icon: 'coin',
+          route: '/admin-setting/service-charges',
+          permissions: ['service-charge.read'],
+        },
+        {
+          label: 'จัดการตำแหน่ง',
+          icon: 'human-resource',
+          route: '/admin-setting/positions',
+          permissions: ['position.read'],
+        },
+        {
+          label: 'ตั้งค่าร้านค้า',
+          icon: 'web-setting',
+          route: '/admin-setting/shop-settings',
+          permissions: ['shop-settings.read'],
+        },
       ],
     },
   ];
 
   constructor(
-    private readonly sidebarService: SidebarService,
     private readonly authService: AuthService,
+    private readonly destroyRef: DestroyRef,
     private readonly router: Router,
+    private readonly sidebarService: SidebarService,
   ) {
-    this.isCollapsed = toSignal(this.sidebarService.isCollapsed$, { initialValue: false });
+    this.isCollapsed = toSignal(this.sidebarService.isCollapsed$, {
+      initialValue: false,
+    });
     this.menuItems.set(this.filterByPermissions(this.allMenuItems));
     this.autoExpandActiveParent();
+
+    this.authService.currentUser$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.menuItems.set(this.filterByPermissions(this.allMenuItems));
+        this.autoExpandActiveParent();
+      });
   }
 
   toggleMenu(itemLabel: string): void {
@@ -70,20 +133,28 @@ export class SideBarComponent {
     return this.router.url === route || this.router.url.startsWith(route + '/');
   }
 
+  getHomeRoute(item: MenuItem): string {
+    if (item.route) return item.route;
+    if (item.children && item.children.length > 0)
+      return item.children[0].route || '/';
+    return '/';
+  }
+
   isChildActive(item: MenuItem): boolean {
-    if (!item.children) return false;
-    return item.children.some(child =>
-      (child.route && this.isActive(child.route)) || this.isChildActive(child)
+    return (
+      item.children?.some(
+        (child) => child.route && this.isActive(child.route),
+      ) ?? false
     );
   }
 
   private filterByPermissions(items: MenuItem[]): MenuItem[] {
     return items
-      .filter(item => {
+      .filter((item) => {
         if (!item.permissions || item.permissions.length === 0) return true;
         return this.authService.hasAnyPermission(item.permissions);
       })
-      .map(item => {
+      .map((item) => {
         if (item.children) {
           const filteredChildren = this.filterByPermissions(item.children);
           if (filteredChildren.length === 0) return null;
@@ -96,25 +167,17 @@ export class SideBarComponent {
 
   private autoExpandActiveParent(): void {
     const keys = new Set<string>();
-    this.expandParentsRecursive(this.menuItems(), keys);
+    for (const item of this.menuItems()) {
+      if (
+        item.children?.some(
+          (child) => child.route && this.isActive(child.route),
+        )
+      ) {
+        keys.add(item.label);
+      }
+    }
     if (keys.size > 0) {
       this.expandedKeys.set(keys);
     }
-  }
-
-  private expandParentsRecursive(items: MenuItem[], keys: Set<string>): boolean {
-    for (const item of items) {
-      if (item.route && this.isActive(item.route)) {
-        return true;
-      }
-      if (item.children) {
-        const childActive = this.expandParentsRecursive(item.children, keys);
-        if (childActive) {
-          keys.add(item.label);
-          return true;
-        }
-      }
-    }
-    return false;
   }
 }

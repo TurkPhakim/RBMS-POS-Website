@@ -21,4 +21,12 @@ public interface IAuthService
     /// Refresh access token using refresh token
     /// </summary>
     Task<TokenResponseModel> RefreshTokenAsync(RefreshTokenRequestModel request, string ipAddress, CancellationToken ct = default);
+
+    Task<ForgotPasswordResponseModel> ForgotPasswordAsync(ForgotPasswordRequestModel request, CancellationToken ct = default);
+
+    Task<VerifyOtpResponseModel> VerifyOtpAsync(VerifyOtpRequestModel request, CancellationToken ct = default);
+
+    Task ResetPasswordAsync(ResetPasswordRequestModel request, CancellationToken ct = default);
+
+    Task<bool> VerifyPasswordAsync(Guid userId, string password, CancellationToken ct = default);
 }

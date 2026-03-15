@@ -1,21 +1,31 @@
-<div class="flex items-center justify-center h-screen bg-surface">
-  <div class="max-w-md w-full text-center p-6">
-    <i class="pi pi-lock text-danger text-6xl mb-6"></i>
+<div class="flex items-center justify-center h-screen bg-gradient-to-br from-primary-badge via-primary-light/60 to-warning-bg">
+  <div class="w-full text-center px-8">
+    <!-- 3D Flip Card + Glitch -->
+    <div class="mb-10 cursor-pointer" style="perspective: 1000px;" (click)="toggleFlip()">
+      <div class="relative w-[28rem] h-72 mx-auto transition-transform duration-700"
+           [style.transform]="isFlipped() ? 'rotateY(180deg)' : 'rotateY(0)'"
+           style="transform-style: preserve-3d;">
+        <!-- Front: Ghost with glitch -->
+        <div class="absolute inset-0 flex items-center justify-center" style="backface-visibility: hidden;">
+          <img src="images/Acess-Denied-RBMS.png" alt="Access Denied"
+               class="w-[28rem] drop-shadow-lg animate-glitch hover:animate-none hover:scale-110 transition-transform duration-300" />
+        </div>
+        <!-- Back: Home image -->
+        <div class="absolute inset-0 flex items-center justify-center"
+             style="backface-visibility: hidden; transform: rotateY(180deg);"
+             (click)="goHome()">
+          <img src="images/home-page-image.png" alt="Go Home"
+               class="w-80 drop-shadow-lg hover:scale-110 transition-transform duration-300" />
+        </div>
+      </div>
+    </div>
 
-    <h1 class="text-page-title text-surface-dark mb-2">
-      ไม่มีสิทธิ์เข้าถึง
+    <h1 class="text-8xl font-bold mb-4 whitespace-nowrap bg-gradient-to-r from-primary via-primary-badge to-warning bg-clip-text text-transparent drop-shadow-md animate-glitch">
+      Access Denied
     </h1>
 
-    <p class="text-surface-sub mb-8">
-      คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+    <p class="text-3xl text-white/70">
+      You don't have permission to access this page.
     </p>
-
-    <button pButton
-            type="button"
-            label="ย้อนกลับ"
-            icon="pi pi-arrow-left"
-            class="p-button-outlined"
-            (click)="goBack()">
-    </button>
   </div>
 </div>

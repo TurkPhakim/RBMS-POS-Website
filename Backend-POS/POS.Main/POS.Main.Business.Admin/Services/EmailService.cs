@@ -38,12 +38,11 @@ public class EmailService : IEmailService
             await client.SendAsync(message, ct);
             await client.DisconnectAsync(true, ct);
 
-            _logger.LogInformation("Email sent to {ToEmail}, Subject: {Subject}", toEmail, subject);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to send email to {ToEmail}", toEmail);
+            _logger.LogError(ex, "Send email failed to {ToEmail}", toEmail);
             return false;
         }
     }

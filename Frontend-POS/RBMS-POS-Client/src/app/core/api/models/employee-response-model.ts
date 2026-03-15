@@ -1,17 +1,22 @@
 /* tslint:disable */
 /* eslint-disable */
-import { EEmploymentStatus } from '../models/e-employment-status';
 import { EGender } from '../models/e-gender';
+import { EmployeeAddressResponseModel } from '../models/employee-address-response-model';
+import { EmployeeEducationResponseModel } from '../models/employee-education-response-model';
+import { EmployeeWorkHistoryResponseModel } from '../models/employee-work-history-response-model';
+import { ENationality } from '../models/e-nationality';
+import { EReligion } from '../models/e-religion';
+import { ETitle } from '../models/e-title';
 export interface EmployeeResponseModel {
+  addresses?: Array<EmployeeAddressResponseModel> | null;
   bankAccountNumber?: string | null;
   bankName?: string | null;
   createdAt?: string;
   createdBy?: string | null;
   dateOfBirth?: string | null;
+  educations?: Array<EmployeeEducationResponseModel> | null;
   email?: string | null;
   employeeId?: number;
-  employmentStatus?: EEmploymentStatus;
-  employmentStatusName?: string | null;
   endDate?: string | null;
   firstNameEnglish?: string | null;
   firstNameThai?: string | null;
@@ -19,21 +24,30 @@ export interface EmployeeResponseModel {
   fullNameThai?: string | null;
   gender?: EGender;
   genderName?: string | null;
+  hourlyRate?: number | null;
   imageFileId?: number | null;
   imageFileName?: string | null;
   isActive?: boolean;
+  isFullTime?: boolean;
   lastNameEnglish?: string | null;
   lastNameThai?: string | null;
+  lineId?: string | null;
   nationalId?: string | null;
+  nationality?: ENationality;
+  nationalityName?: string | null;
   nickname?: string | null;
   phone?: string | null;
   positionId?: number | null;
   positionName?: string | null;
+  religion?: EReligion;
+  religionName?: string | null;
   salary?: number | null;
   startDate?: string;
-  title?: string | null;
+  title?: ETitle;
+  titleName?: string | null;
   updatedAt?: string | null;
   updatedBy?: string | null;
   userId?: string | null;
   username?: string | null;
+  workHistories?: Array<EmployeeWorkHistoryResponseModel> | null;
 }

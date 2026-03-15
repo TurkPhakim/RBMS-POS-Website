@@ -1,0 +1,29 @@
+<div class="flex flex-col gap-4 items-center text-center pt-2">
+  <!-- Icon -->
+  <img src="images/cancel-image.png" alt="error" class="w-20 h-20" />
+
+  <!-- Title -->
+  <div class="text-2xl font-semibold">{{ config.data?.title }}</div>
+
+  <!-- Message -->
+  @if (messages.length > 0) {
+    <div class="text-surface-sub">
+      @for (line of messages; track line) {
+        <p>{{ line }}</p>
+      }
+    </div>
+  }
+
+  <!-- Button -->
+  @if (config.data?.isShowConfirmButton ?? true) {
+    <div class="flex justify-center w-full">
+      <p-button
+        class="w-40"
+        [fluid]="true"
+        severity="primary"
+        (onClick)="ref.close()">
+        {{ config.data?.confirmButtonLabel ?? 'ปิด' }}
+      </p-button>
+    </div>
+  }
+</div>

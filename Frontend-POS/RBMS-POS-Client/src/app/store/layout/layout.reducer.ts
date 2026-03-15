@@ -1,6 +1,7 @@
 import { createReducer, on } from '@ngrx/store';
-import { LayoutState, initialLayoutState } from './layout.state';
+
 import * as LayoutActions from './layout.actions';
+import { initialLayoutState, LayoutState } from './layout.state';
 
 function updateButtonInArray<T extends { key: string }>(
   buttons: T[],

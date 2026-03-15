@@ -1,152 +1,203 @@
 <div class="space-y-5">
   <!-- Page Header -->
-  <div>
-    <h1 class="text-page-title text-primary">จัดการพนักงาน</h1>
-    <p class="text-lg text-surface-sub mt-1">จัดการข้อมูลพนักงานทั้งหมด</p>
+  <div class="flex items-center gap-3">
+    <div
+      class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="human-resource"
+        svgClass="w-8 h-8"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-3xl font-extrabold tracking-tight text-primary">
+      รายชื่อพนักงาน
+    </h1>
   </div>
 
-  <!-- Loading -->
-  @if (isLoading()) {
-    <div class="flex justify-center py-20">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
-  }
-
-  <!-- Content -->
-  @if (!isLoading()) {
+  <!-- Content (Search + Table รวมกัน) -->
+  <div class="bg-surface-card rounded-lg">
     <!-- Filter Section -->
-    <div class="bg-surface-card rounded-xl shadow-sm p-4 border border-surface-border">
-      <div class="flex items-center gap-3 flex-wrap">
-        <span class="text-surface-dark font-semibold">กรองตามสถานะ:</span>
-        <div class="flex gap-2 flex-wrap">
-          <p-button label="ทั้งหมด" icon="pi pi-list"
-            [severity]="isFilterActive('all') ? undefined : 'secondary'"
-            [outlined]="!isFilterActive('all')"
-            size="small"
-            (onClick)="setFilter('all')">
-          </p-button>
-          <p-button label="ทำงาน" icon="pi pi-check-circle"
-            [severity]="isFilterActive('active') ? 'success' : 'secondary'"
-            [outlined]="!isFilterActive('active')"
-            size="small"
-            (onClick)="setFilter('active')">
-          </p-button>
-          <p-button label="ไม่ทำงาน" icon="pi pi-minus-circle"
-            [severity]="isFilterActive('inactive') ? 'secondary' : 'secondary'"
-            [outlined]="!isFilterActive('inactive')"
-            size="small"
-            (onClick)="setFilter('inactive')">
-          </p-button>
-          <p-button label="ลาหยุด" icon="pi pi-calendar"
-            [severity]="isFilterActive('onLeave') ? 'warn' : 'secondary'"
-            [outlined]="!isFilterActive('onLeave')"
-            size="small"
-            (onClick)="setFilter('onLeave')">
-          </p-button>
-          <p-button label="สิ้นสุดการจ้าง" icon="pi pi-ban"
-            [severity]="isFilterActive('terminated') ? 'danger' : 'secondary'"
-            [outlined]="!isFilterActive('terminated')"
-            size="small"
-            (onClick)="setFilter('terminated')">
-          </p-button>
+    <div class="p-4">
+      <div class="flex flex-wrap items-end gap-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block font-semibold text-surface-dark mb-2"
+            >ค้นหา</label
+          >
+          <p-iconField>
+            <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+            <input
+              pInputText
+              placeholder="ค้นหาด้วยชื่อ-นามสกุล"
+              class="w-full"
+              (keyup.enter)="onSearch($event)"
+            />
+          </p-iconField>
         </div>
-        <div class="ml-auto">
-          <span class="text-surface-sub">
-            แสดง <span class="font-bold text-primary">{{ employees().length }}</span> คน
-          </span>
+
+        <!-- Position Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold text-surface-dark mb-2"
+            >ตำแหน่ง</label
+          >
+          <app-position-dropdown
+            [ngModel]="positionFilter()"
+            (ngModelChange)="positionFilter.set($event)"
+          >
+          </app-position-dropdown>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold text-surface-dark mb-2"
+            >สถานะ</label
+          >
+          <app-active-status-dropdown
+            [ngModel]="statusFilter()"
+            (ngModelChange)="statusFilter.set($event)"
+          >
+          </app-active-status-dropdown>
         </div>
       </div>
     </div>
 
     <!-- Table -->
-    <div class="bg-surface-card overflow-hidden border border-surface-border">
-      <p-table [value]="employees()" [stripedRows]="true" [tableStyle]="{'min-width': '70rem'}">
+    <div class="px-4 pb-4">
+      <p-table
+        [value]="employees()"
+        [stripedRows]="true"
+        [tableStyle]="{ 'min-width': '70rem' }"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+        styleClass="p-datatable-clean"
+      >
         <ng-template pTemplate="header">
           <tr>
-            <th>ID</th>
+            <th>รหัส</th>
             <th>รูปภาพ</th>
             <th>ชื่อ-นามสกุล</th>
             <th>ชื่อเล่น</th>
             <th>ตำแหน่ง</th>
             <th>เบอร์โทร</th>
-            <th>สถานะพนักงาน</th>
-            <th>สถานะระบบ</th>
-            <th>จัดการ</th>
+            <th>สถานะ</th>
+            <th class="!w-32">ตัวเลือก</th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-item>
-          <tr class="border-b border-surface-border hover:bg-primary-subtle transition-colors">
+          <tr class="hover:bg-primary-subtle transition-colors">
             <!-- ID -->
-            <td class="font-semibold text-primary">#{{ item.employeeId }}</td>
+            <td class="!text-center font-semibold text-surface-dark">
+              {{ item.employeeId }}
+            </td>
 
             <!-- Image -->
-            <td>
-              @if (item.imageFileId) {
-                <img [src]="getImageUrl(item.imageFileId)" [alt]="item.fullNameThai || 'พนักงาน'"
-                  class="h-16 w-16 rounded-lg object-cover shadow-sm border border-surface-border" />
-              } @else {
-                <div class="h-16 w-16 rounded-lg bg-surface flex items-center justify-center border border-surface-border">
-                  <app-generic-icon name="human" svgClass="w-10 h-10" class="text-surface-sub opacity-50"></app-generic-icon>
-                </div>
-              }
+            <td class="!text-center">
+              <div class="flex justify-center">
+                @if (item.imageFileId) {
+                  <img
+                    [src]="getImageUrl(item.imageFileId)"
+                    [alt]="item.fullNameThai || 'พนักงาน'"
+                    class="h-16 w-16 rounded-full object-cover"
+                  />
+                } @else {
+                  <div
+                    class="h-16 w-16 rounded-full bg-surface-border flex items-center justify-center"
+                  >
+                    <app-generic-icon
+                      name="human"
+                      svgClass="w-9 h-9"
+                      class="text-surface-sub opacity-50"
+                    ></app-generic-icon>
+                  </div>
+                }
+              </div>
             </td>
 
             <!-- Name -->
             <td>
-              <div class="font-semibold text-surface-dark">{{ item.fullNameThai }}</div>
-              <div class="text-sm text-surface-sub mt-0.5">{{ item.fullNameEnglish }}</div>
+              <div class="font-semibold text-surface-dark">
+                {{ item.fullNameThai }}
+              </div>
+              <div class="text-sm text-surface-sub mt-0.5">
+                {{ item.fullNameEnglish }}
+              </div>
             </td>
 
             <!-- Nickname -->
-            <td>
-              <span class="font-semibold text-surface-dark">{{ item.nickname || '-' }}</span>
+            <td class="!text-center">
+              <span class="font-semibold text-surface-dark">{{
+                item.nickname || "-"
+              }}</span>
             </td>
 
             <!-- Position -->
             <td>
-              <span class="text-surface-dark">{{ item.positionName || '-' }}</span>
+              <span class="text-surface-dark">{{
+                item.positionName || "-"
+              }}</span>
             </td>
 
             <!-- Phone -->
             <td>
-              <span class="text-surface-dark">{{ item.phone || '-' }}</span>
+              <span class="text-surface-dark">{{
+                item.phone | formatPhone
+              }}</span>
             </td>
 
-            <!-- Employment Status -->
-            <td class="text-center">
-              <p-tag [value]="getStatusLabel(item.employmentStatus!)" [severity]="getStatusSeverity(item.employmentStatus!)"></p-tag>
-            </td>
-
-            <!-- System Status -->
-            <td class="text-center">
+            <!-- Status -->
+            <td class="!text-center">
               @if (item.isActive) {
-                <p-tag value="ใช้งาน" severity="success"></p-tag>
+                <span class="font-bold text-primary">Active</span>
               } @else {
-                <p-tag value="ปิดใช้งาน" severity="secondary"></p-tag>
+                <span class="font-bold text-danger">Inactive</span>
               }
             </td>
 
             <!-- Actions -->
             <td class="text-center">
               <div class="flex justify-center gap-2">
-                @if (!item.userId) {
-                  <button class="w-9 h-9 flex items-center justify-center rounded-full bg-success-bg hover:bg-success text-success hover:text-white transition-colors duration-200"
-                    pTooltip="สร้างผู้ใช้" tooltipPosition="top"
-                    (click)="onCreateUser(item)">
-                    <i class="pi pi-user-plus text-sm"></i>
+                @if (!item.userId && canCreate && item.isActive) {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-success text-white"
+                    pTooltip="สร้างผู้ใช้"
+                    tooltipPosition="top"
+                    (click)="onCreateUser(item)"
+                  >
+                    <app-generic-icon
+                      name="request-user"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
                   </button>
                 }
-                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-primary-subtle hover:bg-primary-light text-primary transition-colors duration-200"
-                  pTooltip="แก้ไข" tooltipPosition="top"
-                  (click)="onEdit(item.employeeId!)">
-                  <app-generic-icon name="pen-edit" svgClass="w-4 h-4"></app-generic-icon>
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                  pTooltip="ดู/แก้ไข"
+                  tooltipPosition="top"
+                  (click)="onEdit(item.employeeId!)"
+                >
+                  <app-generic-icon
+                    name="eye"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
                 </button>
-                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-danger-bg hover:bg-danger text-danger hover:text-white transition-colors duration-200"
-                  pTooltip="ลบ" tooltipPosition="top"
-                  (click)="onDelete(item.employeeId!, item.fullNameThai!)">
-                  <app-generic-icon name="trash" svgClass="w-4 h-4"></app-generic-icon>
-                </button>
+                @if (canDelete) {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                    pTooltip="ลบ"
+                    tooltipPosition="top"
+                    (click)="onDelete(item.employeeId!, item.fullNameThai!)"
+                  >
+                    <app-generic-icon
+                      name="trash"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
               </div>
             </td>
           </tr>
@@ -154,39 +205,14 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="9" class="text-center py-12 text-surface-sub">
-              <div class="flex flex-col items-center">
-                <app-generic-icon name="empty-box" svgClass="w-16 h-16" class="opacity-30 mb-3"></app-generic-icon>
-                <p class="text-lg font-semibold">ไม่พบข้อมูลพนักงาน</p>
+            <td colspan="8">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่พบข้อมูลพนักงาน" />
               </div>
             </td>
           </tr>
         </ng-template>
       </p-table>
     </div>
-  }
+  </div>
 </div>
-
-<!-- Modals -->
-<app-confirm-modal
-  [isOpen]="showDeleteModal()"
-  title="ยืนยันการลบ"
-  message="คุณต้องการลบพนักงาน"
-  [itemName]="selectedEmployee()?.name"
-  confirmText="ลบ"
-  cancelText="ยกเลิก"
-  type="delete"
-  (confirmed)="confirmDelete()"
-  (cancelled)="cancelDelete()" />
-
-<app-success-modal
-  [isOpen]="showSuccessModal()"
-  [message]="successMessage()"
-  [autoClose]="true"
-  (closed)="closeSuccessModal()" />
-
-<app-error-modal
-  [isOpen]="showErrorModal()"
-  [message]="errorMessage()!"
-  (closed)="closeErrorModal()" />
-

@@ -699,7 +699,7 @@ export class ProductFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();  // ✅ แสดง error ทุก field
+      markFormDirty(this.form);  // ✅ แสดง error ทุก field (ใช้ dirty ไม่ใช่ touched)
       return;
     }
 
@@ -1165,7 +1165,7 @@ export class ProductListComponent {
 </svg>
 
 <!-- ❌ DON'T: ใช้ <img> สำหรับ icon -->
-<img src="images/icons/product.svg" alt="" class="w-5 h-5" />
+<img src="icons/product.svg" alt="" class="w-5 h-5" />
 
 <!-- ✅ DO: ใช้ app-generic-icon สำหรับ custom SVG icon -->
 <app-generic-icon name="dashboard" svgClass="w-5 h-5"></app-generic-icon>
@@ -1356,15 +1356,17 @@ export class InventoryModule {}
 
 ```html
 <!-- ✅ DO: ใช้ p-table สำหรับ data table -->
-<p-table [value]="products()" [paginator]="true" [rows]="20"
-         [showCurrentPageReport]="true" [rowsPerPageOptions]="[10, 20, 50]"
-         currentPageReportTemplate="แสดง {first} ถึง {last} จาก {totalRecords} รายการ">
+<!-- Pagination เป็นมาตรฐาน — ทุกตาราง list ต้องมี pagination attributes ครบชุด -->
+<p-table [value]="products()" [stripedRows]="true" [tableStyle]="{'min-width': '50rem'}"
+         [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
+         [showCurrentPageReport]="true" currentPageReportTemplate="{first} - {last} of {totalRecords}"
+         paginatorDropdownAppendTo="body">
   <ng-template pTemplate="header">
     <tr>
-      <th pSortableColumn="name">ชื่อ <p-sortIcon field="name" /></th>
+      <th>ชื่อ</th>
       <th>ราคา</th>
       <th>สถานะ</th>
-      <th>จัดการ</th>
+      <th>ตัวเลือก</th>
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-product>
@@ -1447,7 +1449,7 @@ export class InventoryModule {}
 - [ ] Success/Error แสดงผ่าน Shared Modal — ไม่ใช้ `alert()` หรือ toast อื่น
 - [ ] Search input trigger ด้วย Enter key — ไม่ใช้ debounce
 - [ ] Loading state จัดการครบถ้วน (set false ทั้ง next และ error)
-- [ ] Form: `markAllAsTouched()` ก่อน validate + server errors map กลับ control
+- [ ] Form: `markFormDirty(this.form)` ก่อน validate (ห้ามใช้ `markAllAsTouched()`) + server errors map กลับ control
 - [ ] Template: ใช้ RBMS design tokens เท่านั้น
 - [ ] ไม่มี inline SVG path — ใช้ `<app-generic-icon>` หรือ `pi pi-*` แทน
 - [ ] ใช้ PrimeNG components (p-table, p-dropdown, p-button ฯลฯ) — ไม่เขียนเอง

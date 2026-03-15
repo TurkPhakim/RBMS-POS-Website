@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.rbms-pos.com' // Production API URL
+  apiUrl: 'https://api.rbms-pos.com', // Production API URL
+  recaptchaSiteKey: '' // ใส่ production site key จาก Google reCAPTCHA console
 };

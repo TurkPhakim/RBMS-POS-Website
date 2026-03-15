@@ -1,0 +1,72 @@
+<app-card-template
+  headerLabel="หมดเวลาการใช้งาน"
+  headerLabelClass="text-xl font-semibold text-primary-dark"
+  contentClass="p-4"
+>
+  <div class="flex flex-col items-center gap-6 py-2">
+    <!-- Icon + Message -->
+    <div class="flex items-center gap-3">
+      <div class="text-warning-dark shrink-0">
+        <app-generic-icon
+          name="shield-warning"
+          svgClass="w-28 h-28"
+        ></app-generic-icon>
+      </div>
+      <div class="text-left">
+        <p class="text-danger text-2xl font-bold">หมดเวลาการใช้งานของคุณ</p>
+        <p class="text-surface-sub mt-1 text-lg text-semibold">
+          เพื่อความปลอดภัย ต้องการอยู่ในระบบต่อหรือไม่?
+        </p>
+      </div>
+    </div>
+
+    <!-- Countdown Section -->
+    <div
+      class="w-full bg-surface rounded-2xl p-6 flex flex-col items-center gap-4"
+    >
+      <div class="flex items-center gap-4">
+        <div
+          class="bg-danger-bg border border-danger/20 rounded-2xl px-7 py-4 min-w-[90px] flex flex-col items-center"
+        >
+          <span class="text-5xl font-bold text-danger font-mono">
+            {{ minutes }}
+          </span>
+          <span class="text-danger/70 mt-1">นาที</span>
+        </div>
+
+        <span class="text-5xl font-bold text-danger animate-pulse">:</span>
+
+        <div
+          class="bg-danger-bg border border-danger/20 rounded-2xl px-7 py-4 min-w-[90px] flex flex-col items-center"
+        >
+          <span class="text-5xl font-bold text-danger font-mono">
+            {{ seconds }}
+          </span>
+          <span class="text-danger/70 mt-1">วินาที</span>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="w-full bg-surface-border rounded-full h-2">
+        <div
+          class="bg-danger h-2 rounded-full transition-all duration-1000 ease-linear"
+          [style.width.%]="progressPercent"
+        ></div>
+      </div>
+
+      <p class="text-surface-sub text-md">
+        ระบบจะออกจากระบบอัตโนมัติเมื่อหมดเวลา
+      </p>
+    </div>
+  </div>
+
+  <p-footer>
+    <p-button
+      label="ออกจากระบบ"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="onLogout()"
+    ></p-button>
+    <p-button label="อยู่ต่อ" (onClick)="onExtend()"></p-button>
+  </p-footer>
+</app-card-template>

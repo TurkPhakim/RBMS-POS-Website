@@ -68,4 +68,10 @@ public static class Permissions
         public const string Read = "kitchen-order.read";
         public const string Update = "kitchen-order.update";
     }
+
+    public static class ShopSettings
+    {
+        public const string Read = "shop-settings.read";
+        public const string Update = "shop-settings.update";
+    }
 }

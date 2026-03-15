@@ -6,7 +6,7 @@ public class TbEmployee : BaseEntity
 {
     public int EmployeeId { get; set; }
 
-    public string? Title { get; set; }
+    public ETitle? Title { get; set; }
 
     public string FirstNameThai { get; set; } = string.Empty;
 
@@ -32,7 +32,11 @@ public class TbEmployee : BaseEntity
 
     public string? BankName { get; set; }
 
-    public EEmploymentStatus EmploymentStatus { get; set; }
+    public ENationality? Nationality { get; set; }
+
+    public EReligion? Religion { get; set; }
+
+    public string? LineId { get; set; }
 
     public int? PositionId { get; set; }
 
@@ -40,7 +44,11 @@ public class TbEmployee : BaseEntity
 
     public string? Email { get; set; }
 
+    public bool IsFullTime { get; set; } = true;
+
     public decimal? Salary { get; set; }
+
+    public decimal? HourlyRate { get; set; }
 
     public int? ImageFileId { get; set; }
     public virtual TbFile? ImageFile { get; set; }
@@ -52,4 +60,10 @@ public class TbEmployee : BaseEntity
     public virtual TbUser? User { get; set; }
 
     public virtual TbmPosition? Position { get; set; }
+
+    public virtual ICollection<TbEmployeeAddress> Addresses { get; set; } = new List<TbEmployeeAddress>();
+
+    public virtual ICollection<TbEmployeeEducation> Educations { get; set; } = new List<TbEmployeeEducation>();
+
+    public virtual ICollection<TbEmployeeWorkHistory> WorkHistories { get; set; } = new List<TbEmployeeWorkHistory>();
 }

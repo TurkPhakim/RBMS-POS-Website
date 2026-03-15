@@ -1,21 +1,13 @@
-// src/app/layouts/layout-routing.module.ts
-
-// 1. Angular core
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-// 2. Guards
 import { AuthGuard } from '../core/guards/auth.guard';
 import { GuestGuard } from '../core/guards/guest.guard';
 import { PermissionGuard } from '../core/guards/permission.guard';
-
-// 3. Layouts
-import { MainLayoutComponent } from './main-layout/main-layout.component';
-import { AuthLayoutComponent } from './auth-layout/auth-layout.component';
-
-// 4. Shared pages
-import { WelcomeComponent } from '../shared/pages/welcome/welcome.component';
 import { AccessDeniedComponent } from '../shared/pages/access-denied/access-denied.component';
+import { WelcomeComponent } from '../shared/pages/welcome/welcome.component';
+import { AuthLayoutComponent } from './auth-layout/auth-layout.component';
+import { MainLayoutComponent } from './main-layout/main-layout.component';
 
 const routes: Routes = [
   // Auth routes — AuthLayoutComponent + GuestGuard
@@ -39,7 +31,7 @@ const routes: Routes = [
       },
       {
         path: 'dashboard',
-        data: { breadcrumb: 'Dashboard', permissions: ['dashboard.view.read'] },
+        data: { breadcrumb: 'แดชบอร์ด', permissions: ['dashboard.view.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/dashboard/dashboard.module').then(
@@ -48,13 +40,13 @@ const routes: Routes = [
       },
       {
         path: 'admin-setting',
-        data: { breadcrumb: 'Admin-Setting' },
+        data: { breadcrumb: 'ตั้งค่าระบบ' },
         loadChildren: () =>
           import('../features/admin/admin.module').then((m) => m.AdminModule),
       },
       {
-        path: 'hr',
-        data: { breadcrumb: 'Human-Resource', permissions: ['employee.read'] },
+        path: 'human-resource',
+        data: { breadcrumb: 'ทรัพยากรบุคคล', permissions: ['employee.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/human-resource/human-resource.module').then(
@@ -63,28 +55,28 @@ const routes: Routes = [
       },
       {
         path: 'menu',
-        data: { breadcrumb: 'Menu', permissions: ['menu-item.read'] },
+        data: { breadcrumb: 'เมนูอาหาร', permissions: ['menu-item.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/menu/menu.module').then((m) => m.MenuModule),
       },
       {
         path: 'order',
-        data: { breadcrumb: 'Order', permissions: ['order-manage.read'] },
+        data: { breadcrumb: 'รายการสั่ง', permissions: ['order-manage.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/order/order.module').then((m) => m.OrderModule),
       },
       {
         path: 'table',
-        data: { breadcrumb: 'Table', permissions: ['table-manage.read'] },
+        data: { breadcrumb: 'จัดการโต๊ะ', permissions: ['table-manage.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/table/table.module').then((m) => m.TableModule),
       },
       {
         path: 'payment',
-        data: { breadcrumb: 'Payment', permissions: ['payment-manage.read'] },
+        data: { breadcrumb: 'ชำระเงิน', permissions: ['payment-manage.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/payment/payment.module').then(
@@ -93,7 +85,7 @@ const routes: Routes = [
       },
       {
         path: 'kitchen-display',
-        data: { breadcrumb: 'Kitchen-Display', permissions: ['kitchen-order.read'] },
+        data: { breadcrumb: 'ครัว', permissions: ['kitchen-order.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/kitchen-display/kitchen-display.module').then(
@@ -102,7 +94,7 @@ const routes: Routes = [
       },
       {
         path: 'profile',
-        data: { breadcrumb: 'Profile' },
+        data: { breadcrumb: 'โปรไฟล์' },
         loadChildren: () =>
           import('../features/profile/profile.module').then(
             (m) => m.ProfileModule

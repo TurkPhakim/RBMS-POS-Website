@@ -11,6 +11,7 @@ using POS.Main.Business.HumanResource.Services;
 using POS.Main.Business.Authorization.Interfaces;
 using POS.Main.Business.Authorization.Services;
 using POS.Main.Core.Helpers;
+using POS.Main.Core.Settings;
 using POS.Main.Dal;
 using POS.Main.Repositories.UnitOfWork;
 using System.IO.Compression;
@@ -24,6 +25,16 @@ using POS.Main.Core.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Kestrel — enforce TLS 1.2+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ConfigureHttpsDefaults(httpsOptions =>
+    {
+        httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                                  | System.Security.Authentication.SslProtocols.Tls13;
+    });
+});
 
 // Add services to the container.
 builder.Services.AddControllers(options =>
@@ -73,6 +84,8 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+
+    options.OperationFilter<CustomOperationIdFilter>();
 });
 
 // Compression
@@ -159,6 +172,10 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// ReCaptcha
+builder.Services.Configure<ReCaptchaSettings>(builder.Configuration.GetSection("ReCaptcha"));
+builder.Services.AddHttpClient<IReCaptchaService, ReCaptchaService>();
+
 // Business Services
 builder.Services.AddScoped<IS3StorageService, S3StorageService>();
 builder.Services.AddScoped<IFileService, FileService>();
@@ -169,6 +186,7 @@ builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IPositionService, PositionService>();
+builder.Services.AddScoped<IShopSettingsService, ShopSettingsService>();
 
 // Caching
 builder.Services.AddMemoryCache();
@@ -178,11 +196,37 @@ builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
 builder.Services.AddHttpContextAccessor();
 
+// HSTS Configuration
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+    options.Preload = true;
+});
+
 var app = builder.Build();
 
 // Middleware pipeline
 app.UseResponseCompression();
+
+// HSTS (Production only — dev ใช้ self-signed cert)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
+
+// Security Headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    await next();
+});
+
 app.UseRouting();
 app.UseCors("dev");
 

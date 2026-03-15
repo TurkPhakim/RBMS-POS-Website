@@ -1,9 +1,11 @@
-import { Component, signal, DestroyRef, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { PositionsService } from '@app/core/api/services';
+import { Router } from '@angular/router';
+
 import { PositionResponseModel } from '@app/core/api/models';
+import { PositionsService } from '@app/core/api/services';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
+import { Icon, ModalService } from '@app/core/services/modal.service';
 
 const KEY_BTN_ADD = 'add-position';
 
@@ -14,19 +16,13 @@ const KEY_BTN_ADD = 'add-position';
 })
 export class PositionListComponent implements OnDestroy {
   positions = signal<PositionResponseModel[]>([]);
-  isLoading = signal(false);
-  errorMessage = signal<string | null>(null);
-  showDeleteModal = signal(false);
-  showSuccessModal = signal(false);
-  showErrorModal = signal(false);
-  successMessage = signal('');
-  selectedPosition = signal<{ id: number; name: string } | null>(null);
 
   constructor(
+    private readonly breadcrumbService: BreadcrumbService,
+    private readonly destroyRef: DestroyRef,
+    private readonly modalService: ModalService,
     private readonly positionsService: PositionsService,
     private readonly router: Router,
-    private readonly destroyRef: DestroyRef,
-    private readonly breadcrumbService: BreadcrumbService,
   ) {}
 
   ngOnInit(): void {
@@ -45,78 +41,48 @@ export class PositionListComponent implements OnDestroy {
       item: {
         key: KEY_BTN_ADD,
         label: 'เพิ่มตำแหน่ง',
-        icon: 'pi pi-plus',
         callback: () => this.onAdd(),
       },
     });
   }
 
   loadPositions(): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.positionsService
-      .apiAdminPositionsGet()
+      .positionsGetPositionsGet()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
           this.positions.set(response.results ?? []);
-          this.isLoading.set(false);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูลตำแหน่งได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลตำแหน่งได้' });
         },
       });
   }
 
   onAdd(): void {
-    this.router.navigate(['/admin-setting/positions/add']);
+    this.router.navigate(['/admin-setting/positions/create']);
   }
 
   onEdit(id: number): void {
-    this.router.navigate(['/admin-setting/positions/edit', id]);
+    this.router.navigate(['/admin-setting/positions/update', id]);
   }
 
   onDelete(id: number, name: string): void {
-    this.selectedPosition.set({ id, name });
-    this.showDeleteModal.set(true);
-  }
-
-  confirmDelete(): void {
-    const position = this.selectedPosition();
-    if (!position) return;
-
-    this.positionsService
-      .apiAdminPositionsPositionIdDelete({ positionId: position.id })
+    this.modalService.info({
+      icon: Icon.Question,
+      title: 'ยืนยันการลบ',
+      message: `คุณต้องการลบตำแหน่ง "${name}"?`,
+      confirmButtonLabel: 'ลบ',
+      cancelButtonLabel: 'ยกเลิก',
+      onConfirm: () => this.positionsService.positionsDeletePositionDelete({ positionId: id }),
+    }).onClose
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.showDeleteModal.set(false);
-          this.successMessage.set(`ลบตำแหน่ง "${position.name}" สำเร็จ`);
-          this.showSuccessModal.set(true);
+      .subscribe((result) => {
+        if (result) {
+          this.modalService.commonSuccess();
           this.loadPositions();
-        },
-        error: () => {
-          this.errorMessage.set('ไม่สามารถลบตำแหน่งได้');
-          this.showErrorModal.set(true);
-          this.showDeleteModal.set(false);
-        },
+        }
       });
-  }
-
-  cancelDelete(): void {
-    this.showDeleteModal.set(false);
-    this.selectedPosition.set(null);
-  }
-
-  closeSuccessModal(): void {
-    this.showSuccessModal.set(false);
-    this.successMessage.set('');
-  }
-
-  closeErrorModal(): void {
-    this.showErrorModal.set(false);
   }
 }

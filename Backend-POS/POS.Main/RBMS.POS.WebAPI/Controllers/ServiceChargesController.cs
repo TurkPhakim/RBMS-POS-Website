@@ -72,7 +72,7 @@ public class ServiceChargesController : BaseController
         => Success(await _serviceChargeService.UpdateServiceChargeAsync(serviceChargeId, request, ct));
 
     /// <summary>
-    /// Delete a service charge (soft delete)
+    /// Permanently delete a service charge (hard delete)
     /// </summary>
     [HttpDelete("{serviceChargeId}")]
     [PermissionAuthorize(Permissions.ServiceCharge.Delete)]
@@ -81,6 +81,6 @@ public class ServiceChargesController : BaseController
     public async Task<IActionResult> Delete(int serviceChargeId, CancellationToken ct = default)
     {
         await _serviceChargeService.DeleteServiceChargeAsync(serviceChargeId, ct);
-        return Success("Service charge deleted successfully");
+        return Success("ลบ Service Charge สำเร็จ");
     }
 }

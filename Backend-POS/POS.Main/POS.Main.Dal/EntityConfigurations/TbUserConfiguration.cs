@@ -36,6 +36,10 @@ public class TbUserConfiguration : IEntityTypeConfiguration<TbUser>
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(u => u.LockoutCount)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         builder.Property(u => u.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");
@@ -68,38 +72,5 @@ public class TbUserConfiguration : IEntityTypeConfiguration<TbUser>
             .HasForeignKey(lh => lh.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Seed Data - Default Users
-        builder.HasData(
-            new TbUser
-            {
-                UserId = Guid.Parse("00000000-0000-0000-0000-000000000001"),
-                Username = "admin",
-                Email = "admin@rbms-pos.com",
-                PasswordHash = "$2a$12$jFxdbEzkVa0AKgGMgTUuzOHAjkCd2rB46tqHVxdZ1DIhjFV4hyGqy",
-                IsActive = true,
-                FailedLoginAttempts = 0,
-                CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            },
-            new TbUser
-            {
-                UserId = Guid.Parse("00000000-0000-0000-0000-000000000002"),
-                Username = "manager",
-                Email = "manager@rbms-pos.com",
-                PasswordHash = "$2a$12$fpUs6ZgTJQx.zxmSaYjji.rCPW/Mj/cj9j6zYeTOrqZWqIs7sQ4zO",
-                IsActive = true,
-                FailedLoginAttempts = 0,
-                CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            },
-            new TbUser
-            {
-                UserId = Guid.Parse("00000000-0000-0000-0000-000000000003"),
-                Username = "cashier",
-                Email = "cashier@rbms-pos.com",
-                PasswordHash = "$2a$12$Oj0MxHU71XQrOq04Q3voJOFC42JliARijrR0wKLNHL1Xa1.CmePuG",
-                IsActive = true,
-                FailedLoginAttempts = 0,
-                CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            }
-        );
     }
 }

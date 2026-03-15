@@ -1,11 +1,15 @@
-import { Component, signal, DestroyRef, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MenusService } from '@app/core/api/services';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { EMenuCategory } from '@app/core/api/models';
+import { MenusService } from '@app/core/api/services';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
+import { ModalService } from '@app/core/services/modal.service';
+
+import { markFormDirty } from '@app/shared/utils';
 
 const KEY_BTN_SAVE = 'save-menu';
 const KEY_BTN_BACK = 'back';
@@ -19,28 +23,19 @@ export class MenuManageComponent implements OnDestroy {
   form!: FormGroup;
   isEditMode = signal(false);
   menuId = signal<number | null>(null);
-  isLoading = signal(false);
   isSaving = signal(false);
-  errorMessage = signal<string | null>(null);
-  showSuccessModal = signal(false);
-  showErrorModal = signal(false);
-  successMessage = signal('');
   imagePreview = signal<string | null>(null);
   selectedFile = signal<File | null>(null);
 
-  categoryOptions = [
-    { value: 1 as EMenuCategory, label: 'อาหาร' },
-    { value: 2 as EMenuCategory, label: 'เครื่องดื่ม' },
-  ];
-
   constructor(
+    private readonly route: ActivatedRoute,
+    private readonly apiConfig: ApiConfiguration,
+    private readonly breadcrumbService: BreadcrumbService,
+    private readonly destroyRef: DestroyRef,
     private readonly fb: FormBuilder,
     private readonly menusService: MenusService,
-    private readonly apiConfig: ApiConfiguration,
+    private readonly modalService: ModalService,
     private readonly router: Router,
-    private readonly route: ActivatedRoute,
-    private readonly destroyRef: DestroyRef,
-    private readonly breadcrumbService: BreadcrumbService,
   ) {}
 
   ngOnInit(): void {
@@ -59,8 +54,7 @@ export class MenuManageComponent implements OnDestroy {
       type: 'button',
       item: {
         key: KEY_BTN_BACK,
-        label: 'กลับ',
-        icon: 'pi pi-arrow-left',
+        label: 'ย้อนกลับ',
         severity: 'secondary',
         variant: 'outlined',
         callback: () => this.onCancel(),
@@ -72,8 +66,7 @@ export class MenuManageComponent implements OnDestroy {
       type: 'button',
       item: {
         key: KEY_BTN_SAVE,
-        label: this.isEditMode() ? 'บันทึกการแก้ไข' : 'เพิ่มเมนู',
-        icon: 'pi pi-check',
+        label: 'บันทึก',
         callback: () => this.onSubmit(),
       },
     });
@@ -102,11 +95,8 @@ export class MenuManageComponent implements OnDestroy {
   }
 
   loadMenu(id: number): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.menusService
-      .apiMenuMenuIdGet({ menuId: id })
+      .menusGetByIdGet({ menuId: id })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -127,12 +117,9 @@ export class MenuManageComponent implements OnDestroy {
               );
             }
           }
-          this.isLoading.set(false);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูลเมนูได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลเมนูได้' });
         },
       });
   }
@@ -143,15 +130,13 @@ export class MenuManageComponent implements OnDestroy {
       const file = input.files[0];
 
       if (!file.type.startsWith('image/')) {
-        this.errorMessage.set('กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง');
-        this.showErrorModal.set(true);
+        this.modalService.cancel({ title: 'ผิดพลาด !', message: 'กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง' });
         return;
       }
 
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        this.errorMessage.set('ขนาดรูปภาพต้องไม่เกิน 5MB');
-        this.showErrorModal.set(true);
+        this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ขนาดรูปภาพต้องไม่เกิน 5MB' });
         return;
       }
 
@@ -173,14 +158,13 @@ export class MenuManageComponent implements OnDestroy {
 
   onSubmit(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      markFormDirty(this.form);
       return;
     }
 
     this.isSaving.set(true);
     this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, true);
     this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, true);
-    this.errorMessage.set(null);
 
     const f = this.form.value;
     const body = {
@@ -203,17 +187,16 @@ export class MenuManageComponent implements OnDestroy {
 
   private createMenu(body: Record<string, unknown>): void {
     this.menusService
-      .apiMenuPost({ body: body as any })
+      .menusCreatePost({ body: body as any })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.resetSavingState();
-          this.successMessage.set(`เพิ่มเมนู "${this.form.value.nameThai}" สำเร็จ`);
-          this.showSuccessModal.set(true);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/menu/items']);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถเพิ่มเมนูได้');
-          this.showErrorModal.set(true);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถเพิ่มเมนูได้' });
           this.resetSavingState();
         },
       });
@@ -223,17 +206,16 @@ export class MenuManageComponent implements OnDestroy {
     const menuId = this.menuId()!;
 
     this.menusService
-      .apiMenuMenuIdPut({ menuId, body: body as any })
+      .menusUpdatePut({ menuId, body: body as any })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.resetSavingState();
-          this.successMessage.set(`แก้ไขเมนู "${this.form.value.nameThai}" สำเร็จ`);
-          this.showSuccessModal.set(true);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/menu/items']);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถแก้ไขข้อมูลเมนูได้');
-          this.showErrorModal.set(true);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถแก้ไขข้อมูลเมนูได้' });
           this.resetSavingState();
         },
       });
@@ -249,32 +231,4 @@ export class MenuManageComponent implements OnDestroy {
     this.router.navigate(['/menu/items']);
   }
 
-  closeSuccessModal(): void {
-    this.showSuccessModal.set(false);
-    this.router.navigate(['/menu/items']);
-  }
-
-  closeErrorModal(): void {
-    this.showErrorModal.set(false);
-  }
-
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.form.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const field = this.form.get(fieldName);
-    if (!field || !field.errors) return '';
-
-    if (field.errors['required']) return 'กรุณากรอกข้อมูล';
-    if (field.errors['maxlength'])
-      return `ห้ามเกิน ${field.errors['maxlength'].requiredLength} ตัวอักษร`;
-    if (field.errors['min'])
-      return `ค่าต้องไม่น้อยกว่า ${field.errors['min'].min}`;
-    if (field.errors['max'])
-      return `ค่าต้องไม่เกิน ${field.errors['max'].max}`;
-
-    return '';
-  }
 }

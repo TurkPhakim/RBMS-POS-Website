@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+
+import { PermissionGuard } from '@app/core/guards/permission.guard';
 import { EmployeeListComponent } from './pages/employee-list/employee-list.component';
 import { EmployeeManageComponent } from './pages/employee-manage/employee-manage.component';
 
@@ -18,12 +20,13 @@ const routes: Routes = [
         component: EmployeeListComponent,
       },
       {
-        path: 'add',
+        path: 'create',
         component: EmployeeManageComponent,
-        data: { breadcrumb: 'เพิ่ม' },
+        canActivate: [PermissionGuard],
+        data: { breadcrumb: 'เพิ่ม', permissions: ['employee.create'] },
       },
       {
-        path: 'edit/:employeeId',
+        path: 'update/:employeeId',
         component: EmployeeManageComponent,
         data: { breadcrumb: 'แก้ไข' },
       },

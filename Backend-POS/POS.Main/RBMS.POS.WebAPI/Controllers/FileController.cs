@@ -21,6 +21,7 @@ public class FileController : BaseController
     /// <summary>
     /// Download file by ID
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("{fileId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

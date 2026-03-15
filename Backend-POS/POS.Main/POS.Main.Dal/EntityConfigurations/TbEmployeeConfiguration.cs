@@ -17,6 +17,7 @@ public class TbEmployeeConfiguration : IEntityTypeConfiguration<TbEmployee>
             .ValueGeneratedOnAdd();
 
         builder.Property(e => e.Title)
+            .HasConversion<string>()
             .HasMaxLength(20);
 
         builder.Property(e => e.FirstNameThai)
@@ -55,10 +56,16 @@ public class TbEmployeeConfiguration : IEntityTypeConfiguration<TbEmployee>
         builder.Property(e => e.BankName)
             .HasMaxLength(100);
 
-        builder.Property(e => e.EmploymentStatus)
-            .IsRequired()
+        builder.Property(e => e.Nationality)
             .HasConversion<string>()
-            .HasMaxLength(20);
+            .HasMaxLength(30);
+
+        builder.Property(e => e.Religion)
+            .HasConversion<string>()
+            .HasMaxLength(30);
+
+        builder.Property(e => e.LineId)
+            .HasMaxLength(50);
 
         // Position FK
         builder.HasOne(e => e.Position)
@@ -76,7 +83,14 @@ public class TbEmployeeConfiguration : IEntityTypeConfiguration<TbEmployee>
         builder.Property(e => e.Email)
             .HasMaxLength(100);
 
+        builder.Property(e => e.IsFullTime)
+            .IsRequired()
+            .HasDefaultValue(true);
+
         builder.Property(e => e.Salary)
+            .HasColumnType("decimal(12,2)");
+
+        builder.Property(e => e.HourlyRate)
             .HasColumnType("decimal(12,2)");
 
         builder.HasOne(e => e.ImageFile)
@@ -116,8 +130,8 @@ public class TbEmployeeConfiguration : IEntityTypeConfiguration<TbEmployee>
         builder.HasIndex(e => e.Email)
             .HasDatabaseName("IX_Employees_Email");
 
-        builder.HasIndex(e => e.EmploymentStatus)
-            .HasDatabaseName("IX_Employees_EmploymentStatus");
+        builder.HasIndex(e => e.IsActive)
+            .HasDatabaseName("IX_Employees_IsActive");
 
         builder.HasIndex(e => e.DeleteFlag)
             .HasDatabaseName("IX_Employees_DeleteFlag");

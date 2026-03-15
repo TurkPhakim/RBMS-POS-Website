@@ -216,7 +216,7 @@ Shadow
 | `<i class="pi pi-*">` | icon ทั่วไป (plus, search, chevron) | `<i class="pi pi-plus text-white">` |
 
 - เปลี่ยนสีผ่าน `text-*` class (เช่น `text-danger`, `text-success`, `text-white`)
-- SVG ไฟล์อยู่ที่ `public/images/icons/` ใช้ `currentColor` ทุกไฟล์
+- SVG ไฟล์อยู่ที่ `public/icons/` ใช้ `currentColor` ทุกไฟล์
 - ดูคู่มือเต็มที่ [icon-system.md](icon-system.md)
 
 ---

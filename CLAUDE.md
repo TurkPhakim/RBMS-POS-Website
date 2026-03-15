@@ -35,12 +35,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Typography tokens**: ใช้ `text-page-title`, `text-section-title`, `text-card-title` สำหรับหัวข้อ
 - **Icon: ใช้ `<app-generic-icon name="xxx">` สำหรับ custom icon** — ห้ามใช้ `<img>` สำหรับ icon (ใช้ `<img>` ได้เฉพาะ logo/รูปภาพจริง)
 - **Icon: ใช้ `<i class="pi pi-xxx">` สำหรับ icon ทั่วไป** (plus, search, chevron, close)
-- **ห้าม inline SVG path** ใน HTML — ใช้ไฟล์ SVG แยกใน `public/images/icons/`
+- **ห้าม inline SVG path** ใน HTML — ใช้ไฟล์ SVG แยกใน `public/icons/`
 - **ห้ามใช้ CSS filter เปลี่ยนสี icon** — ใช้ Tailwind `text-*` class แทน (เช่น `text-danger`, `text-white`)
 - **SVG ต้องใช้ `currentColor`** — ห้าม hardcode สีใน SVG (เช่น `fill="#000000"`)
 - **ห้ามใช้ Emoji เด็ดขาด** — ทั้งใน UI, comments ในโค้ด ใช้ `<app-generic-icon>` หรือ `pi pi-*` แทน (ยกเว้น ✅ ❌ ในเอกสาร `.md` สำหรับ DO/DON'T)
 - **ดูคู่มือ icon ฉบับเต็ม**: [doc/architecture/icon-system.md](doc/architecture/icon-system.md)
 - **ห้ามใส่ shadow / glow โดยไม่ได้สั่ง** — ไม่ว่าจะเป็น `shadow-*`, `ring-*`, `glow`, `box-shadow` ห้ามเพิ่มเองถ้าผู้ใช้ไม่ได้ขอ
+
+### หน้า Test สำหรับปรับแต่งสไตล์
+
+- เมื่อผู้ใช้สั่งให้สร้างหน้า Test สำหรับปรับแต่งดีไซน์/สไตล์ของ Dialog หรือ Component → **สร้างเป็น route ระดับ root** (ไม่ใช่ภายใน feature module) เพื่อเข้าถึงง่ายโดยไม่ต้องผ่าน guard/layout
+- เมื่อปรับแต่งเสร็จแล้ว → **ลบหน้า Test ออกทั้งหมด** พร้อมเคลียร์ import, declaration, route ไม่ให้เหลือ dead code
 
 ### ห้าม Over-Engineer เด็ดขาด
 
@@ -176,6 +181,7 @@ RBMS.POS.WebAPI → POS.Main.Business.* → POS.Main.Repositories → POS.Main.D
 - **ห้ามทิ้ง Dead Code** — ถ้าไม่ใช้แล้วให้ลบออกทันที
 - **Route parameter ต้องเจาะจง** — ห้ามใช้ `{id}` เฉยๆ ต้องระบุชื่อให้ชัดเจน เช่น `{menuId}`, `{employeeId}`, `{fileId}` (parameter name ใน method ต้องตรงกับ route template)
 - **Relationship config ใช้ Fluent API เท่านั้น** — ห้ามใช้ `[InverseProperty]` attribute, เมื่อ Entity มี FK หลายตัวชี้ไป parent เดียวกัน ต้อง config ใน EntityConfiguration อย่างชัดเจน
+- **API operationId ใช้ `CustomOperationIdFilter`** — ห้ามตั้ง operationId ด้วยมือ (ห้าม `[SwaggerOperation]` หรือ `Name` property) — `CustomOperationIdFilter` (`RBMS.POS.WebAPI/Filters/`) จะ auto-generate จาก `{ControllerName}_{ActionName}_{HttpMethod}` → ng-openapi-gen แปลงเป็น camelCase method ใน Frontend อัตโนมัติ (เช่น `humanResourceGetEmployeesGet`, `positionsCreatePositionPost`)
 
 **Real-time Architecture (SignalR + Angular Signals):**
 - ใช้ **SignalR Hub** (Backend) broadcast events เมื่อข้อมูลเปลี่ยน (Order, Table, Kitchen)
@@ -220,6 +226,8 @@ RBMS.POS.WebAPI → POS.Main.Business.* → POS.Main.Repositories → POS.Main.D
 | Signal | camelCase | `products`, `isLoading`, `error` |
 | Feature module | `{Name}Module` | `InventoryModule` |
 | Route path | kebab-case | `product-list`, `employee-manage` |
+| Route path (เพิ่ม) | `create` | ห้ามใช้ `add` |
+| Route path (แก้ไข) | `update/:entityId` | ห้ามใช้ `edit` |
 
 ---
 
@@ -278,7 +286,8 @@ isLoading = signal(false);
 - **ห้ามใช้ `any` type** — ใช้ generated models หรือ specific type
 - Cleanup subscriptions ด้วย `takeUntilDestroyed(destroyRef)` หรือ `destroy$`
 - **Search: Enter key trigger เท่านั้น** — `(keyup.enter)` ห้าม debounceTime + distinctUntilChanged
-- **Success/Error feedback** — ต้องใช้ `app-success-modal` / `app-error-modal` / `app-confirm-modal`
+- **Form Validation — แสดง error เฉพาะตอนกดบันทึก** — `<app-field-error>` ใช้ `control.dirty` เท่านั้น (ไม่ใช้ `touched`) → ห้ามใช้ `markAllAsTouched()` เด็ดขาด → ใช้ `markFormDirty(this.form)` จาก `@app/shared/utils` แทน เพื่อให้ error แสดงเฉพาะเมื่อกดปุ่มบันทึก ไม่ใช่ตอน blur ออกจากช่อง — **ห้ามใช้ manual `[class.ng-invalid]`/`[class.ng-dirty]` binding** บน input/textarea ใน template — Angular จัดการ class เหล่านี้ให้อัตโนมัติผ่าน Reactive Forms + CSS ใน `styles.css`
+- **Success/Error/Confirm feedback** — ใช้ `ModalService` (`core/services/modal.service.ts`): `info()` (confirm), `cancel()` (error), `commonSuccess()` (success auto-close) — ห้ามใช้ @Input/@Output modal แบบเก่า
 - ใช้ design tokens เท่านั้น (เช่น `bg-primary`, `text-primary-text`, `bg-surface`, `text-surface-dark`, `bg-success`, `bg-danger`, `bg-warning` ตาม `tailwind.config.js`)
 - **ใช้ PrimeNG components เป็นมาตรฐาน** — Table, Dialog, Dropdown, Button, Toast, InputText ฯลฯ import ผ่าน SharedModule
 - **Icon: ใช้ `<app-generic-icon>`** สำหรับ custom icon, `pi pi-*` สำหรับ icon ทั่วไป — ห้ามใช้ `<img>` สำหรับ icon (ดู [icon-system.md](doc/architecture/icon-system.md))
@@ -289,13 +298,25 @@ isLoading = signal(false);
   - Dialog component รับ data ผ่าน `DynamicDialogConfig` และ return ผลลัพธ์ผ่าน `DynamicDialogRef.close()`
   - เพิ่ม `providers: [DialogService]` ใน component ที่เปิด Dialog
   - วาง Dialog component ไว้ใน `features/{module}/dialogs/{name}/` และ declare ใน feature module
-- **หน้า Manage (เพิ่ม/แก้ไข) — ปุ่ม "กลับ" + "บันทึก" ต้องอยู่ที่ Breadcrumb เท่านั้น** ห้ามวางด้านล่างฟอร์ม
+  - **Dialog ต้องใช้ `<app-card-template>` เป็น Layout มาตรฐาน:**
+    - ใช้ `headerLabel` สำหรับชื่อ Dialog (อ่านจาก `config.header!`)
+    - เนื้อหาใส่ใน default `ng-content`
+    - ปุ่มใส่ใน `<p-footer>` (อยู่ตรงกลางอัตโนมัติ)
+    - เปิด dialog ด้วย `showHeader: false` + `styleClass: 'card-dialog'`
+    - **Dialog width ต้องใช้หน่วย `vw` เสมอ** — ห้ามใช้ `px` (เช่น `width: '60vw'`, `width: '35vw'`)
+- **หน้า Manage (เพิ่ม/แก้ไข) — ปุ่ม "ย้อนกลับ" + "บันทึก" ต้องอยู่ที่ Breadcrumb เท่านั้น** ห้ามวางด้านล่างฟอร์ม
   - ใช้ `BreadcrumbService.addOrUpdateButton()` ลงทะเบียนปุ่มใน `ngOnInit()`
-  - ปุ่ม Back ใช้คำว่า **"กลับ"** (ไม่ใช่ "ยกเลิก"), severity `secondary`, variant `outlined`
-  - ปุ่ม Save ใช้ label ตามบริบท (เช่น "บันทึก", "บันทึกการแก้ไข", "สร้าง", "อัปเดต")
+  - ปุ่ม Back ใช้คำว่า **"ย้อนกลับ"** (ไม่ใช่ "กลับ" หรือ "ยกเลิก"), severity `secondary`, variant `outlined`
+  - **ปุ่ม Breadcrumb ห้ามใส่ icon** — ใช้แค่ label เท่านั้น
+  - **ปุ่ม Save ใช้ label `"บันทึก"` เสมอ** — ห้ามแยก label ตาม create/edit mode (ห้ามใช้ "บันทึกการแก้ไข", "สร้าง", "เพิ่ม" ฯลฯ)
   - **ต้องมี `ngOnDestroy`** เรียก `breadcrumbService.clearButtons()` เสมอ
   - ใช้ `setButtonLoading()` / `setButtonDisabled()` sync state ตอน saving
   - **ประกาศ button key เป็น `const` ด้านบนไฟล์** เช่น `const KEY_BTN_SAVE = 'save-employee';` ห้าม hardcode string
+- **Route path ใช้ `create` / `update`** — ห้ามใช้ `add` / `edit` สำหรับ URL path (เช่น `/employees/create`, `/employees/update/:employeeId`)
+- **Card pattern ห้ามใช้ `overflow-hidden`** — ใช้ `rounded-t-xl` บน gradient header แทน เพื่อป้องกัน popup (datepicker, dropdown) ถูก clip
+- **Dropdown ต้อง extends `DropdownBaseComponent`** — ทุก dropdown อยู่ใน `shared/dropdowns/`, extends base class (ControlValueAccessor), ใช้ `formControlName` binding เสมอ (ห้าม `[value]/(valueChange)`), static options ตั้งใน constructor, API data ใช้ `fetchFn` หรือ load-once ใน `ngOnInit`, `host: { class: 'block' }` เสมอ
+- **ตาราง List ต้องมี Pagination เสมอ** — ทุก `p-table` ในหน้า list ต้องมี attributes ครบชุด: `[paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true" currentPageReportTemplate="{first} - {last} of {totalRecords}" paginatorDropdownAppendTo="body"` — style ของ paginator กำหนดใน `styles.css` (global) ชิดขวา, compact — คอลัมน์สุดท้ายใช้ชื่อ "ตัวเลือก" (ไม่ใช่ "จัดการ")
+- **DatePicker คู่ (วันเริ่มต้น–วันสิ้นสุด) ต้องใช้ `[minDate]` เสมอ** — เมื่อมี startDate + endDate คู่กัน ต้อง: (1) สร้าง `minEndDate = signal<Date | null>(null)` (2) เรียก `linkDateRange(this.form, 'startDate', 'endDate', this.minEndDate, this.destroyRef)` จาก `@app/shared/utils` (3) bind `[minDate]="minEndDate()"` บน endDate datepicker — เพื่อป้องกันผู้ใช้เลือกวันสิ้นสุดก่อนวันเริ่มต้น
 
 ---
 
@@ -353,6 +374,7 @@ Response Models     → {Root}/POS.Main.Core/Models/BaseResponseModel.cs (+ Pagi
 BaseController      → {Root}/RBMS.POS.WebAPI/Controllers/BaseController.cs
 Controller          → {Root}/RBMS.POS.WebAPI/Controllers/{Name}Controller.cs
 ExceptionFilter     → {Root}/RBMS.POS.WebAPI/Filters/GlobalExceptionFilter.cs
+OperationIdFilter   → {Root}/RBMS.POS.WebAPI/Filters/CustomOperationIdFilter.cs
 Program.cs          → {Root}/RBMS.POS.WebAPI/Program.cs
 Enum                → {Root}/POS.Main.Core/Enums/{Name}.cs
 Exception           → {Root}/POS.Main.Core/Exceptions/{Name}Exception.cs
@@ -377,8 +399,10 @@ Feature Module      → src/app/features/{module}/{module}.module.ts
 Feature Routing     → src/app/features/{module}/{module}-routing.module.ts
 Feature Pages       → src/app/features/{module}/pages/{name}/{name}.component.ts
 Shared Components   → src/app/shared/components/{name}/{name}.component.ts
+Shared Dropdowns    → src/app/shared/dropdowns/{name}/{name}.component.ts
 Shared Modals       → src/app/shared/modals/{name}/{name}.component.ts
 Shared Pipes        → src/app/shared/pipes/{name}.pipe.ts
+Shared Utils        → src/app/shared/utils/{name}.ts (barrel: index.ts)
 Shared Pages        → src/app/shared/pages/{name}/{name}.component.ts
 Layout              → src/app/layouts/main-layout/main-layout.component.ts
 Shared Module       → src/app/shared/shared.module.ts
@@ -455,3 +479,4 @@ ng build                      # Production build
 | Task tracking system | [doc/tasks/README.md](doc/tasks/README.md) |
 | Task: UI Redesign | [doc/tasks/TASK-ui-redesign.md](doc/tasks/TASK-ui-redesign.md) |
 | Task: Icon System | [doc/tasks/TASK-icon-system.md](doc/tasks/TASK-icon-system.md) |
+| Task: API Naming Pattern | [doc/tasks/TASK-api-naming.md](doc/tasks/TASK-api-naming.md) |

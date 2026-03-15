@@ -3,21 +3,37 @@
   <div class="fixed inset-0 z-[998] bg-black/30" (click)="close()"></div>
 
   <!-- Panel -->
-  <div class="fixed top-0 right-0 z-[999] h-full w-80 bg-surface-card shadow-xl
-              transform transition-transform duration-300 ease-in-out">
+  <div
+    class="fixed top-0 right-0 z-[999] h-full w-96 bg-surface-card flex flex-col"
+  >
     <!-- Header -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-surface-border">
-      <h3 class="text-card-title text-surface-dark">การแจ้งเตือน</h3>
-      <button class="p-1 rounded-md hover:bg-surface transition-colors"
-              (click)="close()">
-        <i class="pi pi-times text-surface-sub"></i>
+    <div
+      class="bg-gradient-to-r from-primary to-primary-dark px-5 py-4 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <app-generic-icon
+          name="bell"
+          svgClass="w-6 h-6"
+          class="text-white"
+        ></app-generic-icon>
+        <h3 class="text-lg font-bold text-white">การแจ้งเตือน</h3>
+      </div>
+      <button
+        class="text-white/70 hover:text-white rounded-lg p-1 transition-colors"
+        (click)="close()"
+        type="button"
+      >
+        <i class="pi pi-times text-xl"></i>
       </button>
     </div>
 
-    <!-- Content (empty state) -->
-    <div class="flex flex-col items-center justify-center h-[calc(100%-56px)] text-center px-6">
-      <i class="pi pi-bell text-surface-muted text-5xl mb-4"></i>
-      <p class="text-surface-sub text-sm">ยังไม่มีการแจ้งเตือน</p>
+    <!-- Empty State -->
+    <div class="flex-1 flex items-center justify-center">
+      <ng-lottie
+        [options]="lottieOptions"
+        width="180px"
+        height="180px"
+      ></ng-lottie>
     </div>
   </div>
 }

@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { tap, map, catchError } from 'rxjs/operators';
 
-import { AuthService as AuthApiService } from '../api/services/auth.service';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
+
+
 import {
-  LoginRequestModel,
   LoginResponseModel,
-  LoginResponseModelBaseResponseModel,
   RefreshTokenRequestModel,
   UserModel,
 } from '../api/models';
+import { AuthService as AuthApiService } from '../api/services/auth.service';
 
 @Injectable({
   providedIn: 'root',
@@ -45,6 +45,16 @@ export class AuthService {
     this.currentUserSubject.next(user);
   }
 
+  public updatePermissions(permissions: string[]): void {
+    this.storePermissions(permissions);
+    const user = this.getUserFromStorage();
+    if (user) {
+      user.permissions = permissions;
+      this.storeUser(user);
+      this.currentUserSubject.next(user);
+    }
+  }
+
   hasPermission(permission: string): boolean {
     return this.permissions.includes(permission);
   }
@@ -54,24 +64,11 @@ export class AuthService {
     return permissions.some(p => userPermissions.includes(p));
   }
 
-  login(username: string, password: string, rememberMe = false): Observable<LoginResponseModelBaseResponseModel> {
-    const request: LoginRequestModel = { username, password, rememberMe };
-
-    return this.authApi.apiAdminAuthLoginPost({ body: request }).pipe(
-      tap((response) => {
-        if (response.result) {
-          this.handleLoginSuccess(response.result);
-        }
-      }),
-      catchError(this.handleError.bind(this)),
-    );
-  }
-
   logout(): Observable<unknown> {
     const refreshToken = this.getRefreshToken();
     const request: RefreshTokenRequestModel = { refreshToken: refreshToken || '' };
 
-    return this.authApi.apiAdminAuthLogoutPost({ body: request }).pipe(
+    return this.authApi.authLogoutPost({ body: request }).pipe(
       tap(() => {
         this.clearAuthData();
         this.currentUserSubject.next(null);
@@ -94,7 +91,7 @@ export class AuthService {
 
     const request: RefreshTokenRequestModel = { refreshToken };
 
-    return this.authApi.apiAdminAuthRefreshTokenPost({ body: request }).pipe(
+    return this.authApi.authRefreshTokenPost({ body: request }).pipe(
       tap((response) => {
         if (response.result?.accessToken) {
           this.storeAccessToken(response.result.accessToken);
@@ -179,26 +176,8 @@ export class AuthService {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('current_user');
     localStorage.removeItem('permissions');
+    localStorage.removeItem('session_last_activity');
+    localStorage.removeItem('session_state');
   }
 
-  private handleError(error: unknown): Observable<never> {
-    let errorMessage = 'An error occurred';
-    const err = error as { error?: { error?: { message?: string } }; status?: number };
-
-    if (err.error?.error) {
-      errorMessage = err.error.error.message || errorMessage;
-    } else if (err.status === 0) {
-      errorMessage = 'Cannot connect to server. Please check your connection.';
-    } else if (err.status === 401) {
-      errorMessage = 'Invalid username or password';
-    } else if (err.status === 423) {
-      errorMessage = err.error?.error?.message || 'Account is locked';
-    } else if (err.status === 403) {
-      errorMessage = 'Account is disabled. Contact administrator';
-    } else if (err.status && err.status >= 500) {
-      errorMessage = 'Server error. Please try again later.';
-    }
-
-    return throwError(() => new Error(errorMessage));
-  }
 }

@@ -298,7 +298,7 @@ get nameControl() { return this.form.get('name')!; }
 
 onSubmit(): void {
   if (this.form.invalid) {
-    this.form.markAllAsTouched();
+    markFormDirty(this.form);  // จาก @app/shared/utils
     return;
   }
 

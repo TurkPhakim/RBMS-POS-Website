@@ -1,5 +1,6 @@
 import { createAction, props } from '@ngrx/store';
-import { Pbutton, BreadcrumbButton } from '@app/shared/component-interfaces';
+
+import { BreadcrumbButton, Pbutton } from '@app/shared/component-interfaces';
 
 // --- Sidebar ---
 export const toggleSidebar = createAction('[Layout] Toggle Sidebar');

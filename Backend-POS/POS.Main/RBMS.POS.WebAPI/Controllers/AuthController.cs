@@ -60,4 +60,41 @@ public class AuthController : BaseController
         var ipAddress = GetIpAddress();
         return Success(await _authService.RefreshTokenAsync(request, ipAddress, ct));
     }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(BaseResponseModel<ForgotPasswordResponseModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestModel request, CancellationToken ct = default)
+    {
+        return Success(await _authService.ForgotPasswordAsync(request, ct));
+    }
+
+    [HttpPost("verify-otp")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(BaseResponseModel<VerifyOtpResponseModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestModel request, CancellationToken ct = default)
+    {
+        return Success(await _authService.VerifyOtpAsync(request, ct));
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(BaseResponseModel<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestModel request, CancellationToken ct = default)
+    {
+        await _authService.ResetPasswordAsync(request, ct);
+        return Success("รีเซ็ตรหัสผ่านสำเร็จ");
+    }
+
+    [HttpPost("verify-password")]
+    [ProducesResponseType(typeof(BaseResponseModel<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> VerifyPassword([FromBody] VerifyPasswordRequestModel request, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        return Success(await _authService.VerifyPasswordAsync(userId, request.Password, ct));
+    }
 }

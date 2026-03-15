@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
+import { AnimationOptions } from 'ngx-lottie';
 import { Store } from '@ngrx/store';
-import { selectNotificationPanelOpen } from '@app/store/layout/layout.selectors';
 import * as LayoutActions from '@app/store/layout/layout.actions';
+import { selectNotificationPanelOpen } from '@app/store/layout/layout.selectors';
 
 @Component({
   selector: 'app-notification-panel',
@@ -11,7 +12,11 @@ import * as LayoutActions from '@app/store/layout/layout.actions';
 export class NotificationPanelComponent {
   isOpen$;
 
-  constructor(private store: Store) {
+  lottieOptions: AnimationOptions = {
+    path: 'animations/bell-notification.json',
+  };
+
+  constructor(private readonly store: Store) {
     this.isOpen$ = this.store.select(selectNotificationPanelOpen);
   }
 

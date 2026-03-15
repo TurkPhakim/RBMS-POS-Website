@@ -44,6 +44,18 @@ export interface BreadcrumbButton {
   item: Pbutton;
 }
 
+// --- Constants ---
+
+export const DAY_LABELS: Record<number, string> = {
+  1: 'จันทร์',
+  2: 'อังคาร',
+  3: 'พุธ',
+  4: 'พฤหัสบดี',
+  5: 'ศุกร์',
+  6: 'เสาร์',
+  7: 'อาทิตย์',
+};
+
 // --- Dropdown / Filter options ---
 
 /** ตัวเลือกกรองสถานะ Active/Inactive สำหรับ dropdown ในหน้า list */

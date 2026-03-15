@@ -9,32 +9,32 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { apiAdminPositionsDropdownGet } from '../fn/positions/api-admin-positions-dropdown-get';
-import { ApiAdminPositionsDropdownGet$Params } from '../fn/positions/api-admin-positions-dropdown-get';
-import { apiAdminPositionsGet } from '../fn/positions/api-admin-positions-get';
-import { ApiAdminPositionsGet$Params } from '../fn/positions/api-admin-positions-get';
-import { apiAdminPositionsMePermissionsGet } from '../fn/positions/api-admin-positions-me-permissions-get';
-import { ApiAdminPositionsMePermissionsGet$Params } from '../fn/positions/api-admin-positions-me-permissions-get';
-import { apiAdminPositionsModulesTreeGet } from '../fn/positions/api-admin-positions-modules-tree-get';
-import { ApiAdminPositionsModulesTreeGet$Params } from '../fn/positions/api-admin-positions-modules-tree-get';
-import { apiAdminPositionsPositionIdDelete } from '../fn/positions/api-admin-positions-position-id-delete';
-import { ApiAdminPositionsPositionIdDelete$Params } from '../fn/positions/api-admin-positions-position-id-delete';
-import { apiAdminPositionsPositionIdGet } from '../fn/positions/api-admin-positions-position-id-get';
-import { ApiAdminPositionsPositionIdGet$Params } from '../fn/positions/api-admin-positions-position-id-get';
-import { apiAdminPositionsPositionIdPermissionsGet } from '../fn/positions/api-admin-positions-position-id-permissions-get';
-import { ApiAdminPositionsPositionIdPermissionsGet$Params } from '../fn/positions/api-admin-positions-position-id-permissions-get';
-import { apiAdminPositionsPositionIdPermissionsPut } from '../fn/positions/api-admin-positions-position-id-permissions-put';
-import { ApiAdminPositionsPositionIdPermissionsPut$Params } from '../fn/positions/api-admin-positions-position-id-permissions-put';
-import { apiAdminPositionsPositionIdPut } from '../fn/positions/api-admin-positions-position-id-put';
-import { ApiAdminPositionsPositionIdPut$Params } from '../fn/positions/api-admin-positions-position-id-put';
-import { apiAdminPositionsPost } from '../fn/positions/api-admin-positions-post';
-import { ApiAdminPositionsPost$Params } from '../fn/positions/api-admin-positions-post';
 import { ModuleTreeResponseModelBaseResponseModel } from '../models/module-tree-response-model-base-response-model';
 import { ObjectBaseResponseModel } from '../models/object-base-response-model';
 import { PermissionMatrixResponseModelBaseResponseModel } from '../models/permission-matrix-response-model-base-response-model';
 import { PositionDropdownModelListResponseModel } from '../models/position-dropdown-model-list-response-model';
 import { PositionResponseModelBaseResponseModel } from '../models/position-response-model-base-response-model';
 import { PositionResponseModelPaginationResult } from '../models/position-response-model-pagination-result';
+import { positionsCreatePositionPost } from '../fn/positions/positions-create-position-post';
+import { PositionsCreatePositionPost$Params } from '../fn/positions/positions-create-position-post';
+import { positionsDeletePositionDelete } from '../fn/positions/positions-delete-position-delete';
+import { PositionsDeletePositionDelete$Params } from '../fn/positions/positions-delete-position-delete';
+import { positionsGetModuleTreeGet } from '../fn/positions/positions-get-module-tree-get';
+import { PositionsGetModuleTreeGet$Params } from '../fn/positions/positions-get-module-tree-get';
+import { positionsGetMyPermissionsGet } from '../fn/positions/positions-get-my-permissions-get';
+import { PositionsGetMyPermissionsGet$Params } from '../fn/positions/positions-get-my-permissions-get';
+import { positionsGetPositionByIdGet } from '../fn/positions/positions-get-position-by-id-get';
+import { PositionsGetPositionByIdGet$Params } from '../fn/positions/positions-get-position-by-id-get';
+import { positionsGetPositionDropdownGet } from '../fn/positions/positions-get-position-dropdown-get';
+import { PositionsGetPositionDropdownGet$Params } from '../fn/positions/positions-get-position-dropdown-get';
+import { positionsGetPositionPermissionsGet } from '../fn/positions/positions-get-position-permissions-get';
+import { PositionsGetPositionPermissionsGet$Params } from '../fn/positions/positions-get-position-permissions-get';
+import { positionsGetPositionsGet } from '../fn/positions/positions-get-positions-get';
+import { PositionsGetPositionsGet$Params } from '../fn/positions/positions-get-positions-get';
+import { positionsUpdatePositionPermissionsPut } from '../fn/positions/positions-update-position-permissions-put';
+import { PositionsUpdatePositionPermissionsPut$Params } from '../fn/positions/positions-update-position-permissions-put';
+import { positionsUpdatePositionPut } from '../fn/positions/positions-update-position-put';
+import { PositionsUpdatePositionPut$Params } from '../fn/positions/positions-update-position-put';
 import { StringListResponseModel } from '../models/string-list-response-model';
 
 @Injectable({ providedIn: 'root' })
@@ -43,252 +43,252 @@ export class PositionsService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `apiAdminPositionsGet()` */
-  static readonly ApiAdminPositionsGetPath = '/api/admin/positions';
+  /** Path part for operation `positionsGetPositionsGet()` */
+  static readonly PositionsGetPositionsGetPath = '/api/admin/positions';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsGet()` instead.
+   * To access only the response body, use `positionsGetPositionsGet()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsGet$Response(params?: ApiAdminPositionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionResponseModelPaginationResult>> {
-    return apiAdminPositionsGet(this.http, this.rootUrl, params, context);
+  positionsGetPositionsGet$Response(params?: PositionsGetPositionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionResponseModelPaginationResult>> {
+    return positionsGetPositionsGet(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsGet$Response()` instead.
+   * To access the full response (for headers, for example), `positionsGetPositionsGet$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsGet(params?: ApiAdminPositionsGet$Params, context?: HttpContext): Observable<PositionResponseModelPaginationResult> {
-    return this.apiAdminPositionsGet$Response(params, context).pipe(
+  positionsGetPositionsGet(params?: PositionsGetPositionsGet$Params, context?: HttpContext): Observable<PositionResponseModelPaginationResult> {
+    return this.positionsGetPositionsGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<PositionResponseModelPaginationResult>): PositionResponseModelPaginationResult => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsPost()` */
-  static readonly ApiAdminPositionsPostPath = '/api/admin/positions';
+  /** Path part for operation `positionsCreatePositionPost()` */
+  static readonly PositionsCreatePositionPostPath = '/api/admin/positions';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsPost()` instead.
+   * To access only the response body, use `positionsCreatePositionPost()` instead.
    *
    * This method sends `application/*+json` and handles request body of type `application/*+json`.
    */
-  apiAdminPositionsPost$Response(params?: ApiAdminPositionsPost$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionResponseModelBaseResponseModel>> {
-    return apiAdminPositionsPost(this.http, this.rootUrl, params, context);
+  positionsCreatePositionPost$Response(params?: PositionsCreatePositionPost$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionResponseModelBaseResponseModel>> {
+    return positionsCreatePositionPost(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsPost$Response()` instead.
+   * To access the full response (for headers, for example), `positionsCreatePositionPost$Response()` instead.
    *
    * This method sends `application/*+json` and handles request body of type `application/*+json`.
    */
-  apiAdminPositionsPost(params?: ApiAdminPositionsPost$Params, context?: HttpContext): Observable<PositionResponseModelBaseResponseModel> {
-    return this.apiAdminPositionsPost$Response(params, context).pipe(
+  positionsCreatePositionPost(params?: PositionsCreatePositionPost$Params, context?: HttpContext): Observable<PositionResponseModelBaseResponseModel> {
+    return this.positionsCreatePositionPost$Response(params, context).pipe(
       map((r: StrictHttpResponse<PositionResponseModelBaseResponseModel>): PositionResponseModelBaseResponseModel => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsPositionIdGet()` */
-  static readonly ApiAdminPositionsPositionIdGetPath = '/api/admin/positions/{positionId}';
+  /** Path part for operation `positionsGetPositionByIdGet()` */
+  static readonly PositionsGetPositionByIdGetPath = '/api/admin/positions/{positionId}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsPositionIdGet()` instead.
+   * To access only the response body, use `positionsGetPositionByIdGet()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsPositionIdGet$Response(params: ApiAdminPositionsPositionIdGet$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionResponseModelBaseResponseModel>> {
-    return apiAdminPositionsPositionIdGet(this.http, this.rootUrl, params, context);
+  positionsGetPositionByIdGet$Response(params: PositionsGetPositionByIdGet$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionResponseModelBaseResponseModel>> {
+    return positionsGetPositionByIdGet(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsPositionIdGet$Response()` instead.
+   * To access the full response (for headers, for example), `positionsGetPositionByIdGet$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsPositionIdGet(params: ApiAdminPositionsPositionIdGet$Params, context?: HttpContext): Observable<PositionResponseModelBaseResponseModel> {
-    return this.apiAdminPositionsPositionIdGet$Response(params, context).pipe(
+  positionsGetPositionByIdGet(params: PositionsGetPositionByIdGet$Params, context?: HttpContext): Observable<PositionResponseModelBaseResponseModel> {
+    return this.positionsGetPositionByIdGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<PositionResponseModelBaseResponseModel>): PositionResponseModelBaseResponseModel => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsPositionIdPut()` */
-  static readonly ApiAdminPositionsPositionIdPutPath = '/api/admin/positions/{positionId}';
+  /** Path part for operation `positionsUpdatePositionPut()` */
+  static readonly PositionsUpdatePositionPutPath = '/api/admin/positions/{positionId}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsPositionIdPut()` instead.
+   * To access only the response body, use `positionsUpdatePositionPut()` instead.
    *
    * This method sends `application/*+json` and handles request body of type `application/*+json`.
    */
-  apiAdminPositionsPositionIdPut$Response(params: ApiAdminPositionsPositionIdPut$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionResponseModelBaseResponseModel>> {
-    return apiAdminPositionsPositionIdPut(this.http, this.rootUrl, params, context);
+  positionsUpdatePositionPut$Response(params: PositionsUpdatePositionPut$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionResponseModelBaseResponseModel>> {
+    return positionsUpdatePositionPut(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsPositionIdPut$Response()` instead.
+   * To access the full response (for headers, for example), `positionsUpdatePositionPut$Response()` instead.
    *
    * This method sends `application/*+json` and handles request body of type `application/*+json`.
    */
-  apiAdminPositionsPositionIdPut(params: ApiAdminPositionsPositionIdPut$Params, context?: HttpContext): Observable<PositionResponseModelBaseResponseModel> {
-    return this.apiAdminPositionsPositionIdPut$Response(params, context).pipe(
+  positionsUpdatePositionPut(params: PositionsUpdatePositionPut$Params, context?: HttpContext): Observable<PositionResponseModelBaseResponseModel> {
+    return this.positionsUpdatePositionPut$Response(params, context).pipe(
       map((r: StrictHttpResponse<PositionResponseModelBaseResponseModel>): PositionResponseModelBaseResponseModel => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsPositionIdDelete()` */
-  static readonly ApiAdminPositionsPositionIdDeletePath = '/api/admin/positions/{positionId}';
+  /** Path part for operation `positionsDeletePositionDelete()` */
+  static readonly PositionsDeletePositionDeletePath = '/api/admin/positions/{positionId}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsPositionIdDelete()` instead.
+   * To access only the response body, use `positionsDeletePositionDelete()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsPositionIdDelete$Response(params: ApiAdminPositionsPositionIdDelete$Params, context?: HttpContext): Observable<StrictHttpResponse<ObjectBaseResponseModel>> {
-    return apiAdminPositionsPositionIdDelete(this.http, this.rootUrl, params, context);
+  positionsDeletePositionDelete$Response(params: PositionsDeletePositionDelete$Params, context?: HttpContext): Observable<StrictHttpResponse<ObjectBaseResponseModel>> {
+    return positionsDeletePositionDelete(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsPositionIdDelete$Response()` instead.
+   * To access the full response (for headers, for example), `positionsDeletePositionDelete$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsPositionIdDelete(params: ApiAdminPositionsPositionIdDelete$Params, context?: HttpContext): Observable<ObjectBaseResponseModel> {
-    return this.apiAdminPositionsPositionIdDelete$Response(params, context).pipe(
+  positionsDeletePositionDelete(params: PositionsDeletePositionDelete$Params, context?: HttpContext): Observable<ObjectBaseResponseModel> {
+    return this.positionsDeletePositionDelete$Response(params, context).pipe(
       map((r: StrictHttpResponse<ObjectBaseResponseModel>): ObjectBaseResponseModel => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsPositionIdPermissionsGet()` */
-  static readonly ApiAdminPositionsPositionIdPermissionsGetPath = '/api/admin/positions/{positionId}/permissions';
+  /** Path part for operation `positionsGetPositionPermissionsGet()` */
+  static readonly PositionsGetPositionPermissionsGetPath = '/api/admin/positions/{positionId}/permissions';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsPositionIdPermissionsGet()` instead.
+   * To access only the response body, use `positionsGetPositionPermissionsGet()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsPositionIdPermissionsGet$Response(params: ApiAdminPositionsPositionIdPermissionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<PermissionMatrixResponseModelBaseResponseModel>> {
-    return apiAdminPositionsPositionIdPermissionsGet(this.http, this.rootUrl, params, context);
+  positionsGetPositionPermissionsGet$Response(params: PositionsGetPositionPermissionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<PermissionMatrixResponseModelBaseResponseModel>> {
+    return positionsGetPositionPermissionsGet(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsPositionIdPermissionsGet$Response()` instead.
+   * To access the full response (for headers, for example), `positionsGetPositionPermissionsGet$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsPositionIdPermissionsGet(params: ApiAdminPositionsPositionIdPermissionsGet$Params, context?: HttpContext): Observable<PermissionMatrixResponseModelBaseResponseModel> {
-    return this.apiAdminPositionsPositionIdPermissionsGet$Response(params, context).pipe(
+  positionsGetPositionPermissionsGet(params: PositionsGetPositionPermissionsGet$Params, context?: HttpContext): Observable<PermissionMatrixResponseModelBaseResponseModel> {
+    return this.positionsGetPositionPermissionsGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<PermissionMatrixResponseModelBaseResponseModel>): PermissionMatrixResponseModelBaseResponseModel => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsPositionIdPermissionsPut()` */
-  static readonly ApiAdminPositionsPositionIdPermissionsPutPath = '/api/admin/positions/{positionId}/permissions';
+  /** Path part for operation `positionsUpdatePositionPermissionsPut()` */
+  static readonly PositionsUpdatePositionPermissionsPutPath = '/api/admin/positions/{positionId}/permissions';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsPositionIdPermissionsPut()` instead.
+   * To access only the response body, use `positionsUpdatePositionPermissionsPut()` instead.
    *
    * This method sends `application/*+json` and handles request body of type `application/*+json`.
    */
-  apiAdminPositionsPositionIdPermissionsPut$Response(params: ApiAdminPositionsPositionIdPermissionsPut$Params, context?: HttpContext): Observable<StrictHttpResponse<ObjectBaseResponseModel>> {
-    return apiAdminPositionsPositionIdPermissionsPut(this.http, this.rootUrl, params, context);
+  positionsUpdatePositionPermissionsPut$Response(params: PositionsUpdatePositionPermissionsPut$Params, context?: HttpContext): Observable<StrictHttpResponse<ObjectBaseResponseModel>> {
+    return positionsUpdatePositionPermissionsPut(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsPositionIdPermissionsPut$Response()` instead.
+   * To access the full response (for headers, for example), `positionsUpdatePositionPermissionsPut$Response()` instead.
    *
    * This method sends `application/*+json` and handles request body of type `application/*+json`.
    */
-  apiAdminPositionsPositionIdPermissionsPut(params: ApiAdminPositionsPositionIdPermissionsPut$Params, context?: HttpContext): Observable<ObjectBaseResponseModel> {
-    return this.apiAdminPositionsPositionIdPermissionsPut$Response(params, context).pipe(
+  positionsUpdatePositionPermissionsPut(params: PositionsUpdatePositionPermissionsPut$Params, context?: HttpContext): Observable<ObjectBaseResponseModel> {
+    return this.positionsUpdatePositionPermissionsPut$Response(params, context).pipe(
       map((r: StrictHttpResponse<ObjectBaseResponseModel>): ObjectBaseResponseModel => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsDropdownGet()` */
-  static readonly ApiAdminPositionsDropdownGetPath = '/api/admin/positions/dropdown';
+  /** Path part for operation `positionsGetPositionDropdownGet()` */
+  static readonly PositionsGetPositionDropdownGetPath = '/api/admin/positions/dropdown';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsDropdownGet()` instead.
+   * To access only the response body, use `positionsGetPositionDropdownGet()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsDropdownGet$Response(params?: ApiAdminPositionsDropdownGet$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionDropdownModelListResponseModel>> {
-    return apiAdminPositionsDropdownGet(this.http, this.rootUrl, params, context);
+  positionsGetPositionDropdownGet$Response(params?: PositionsGetPositionDropdownGet$Params, context?: HttpContext): Observable<StrictHttpResponse<PositionDropdownModelListResponseModel>> {
+    return positionsGetPositionDropdownGet(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsDropdownGet$Response()` instead.
+   * To access the full response (for headers, for example), `positionsGetPositionDropdownGet$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsDropdownGet(params?: ApiAdminPositionsDropdownGet$Params, context?: HttpContext): Observable<PositionDropdownModelListResponseModel> {
-    return this.apiAdminPositionsDropdownGet$Response(params, context).pipe(
+  positionsGetPositionDropdownGet(params?: PositionsGetPositionDropdownGet$Params, context?: HttpContext): Observable<PositionDropdownModelListResponseModel> {
+    return this.positionsGetPositionDropdownGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<PositionDropdownModelListResponseModel>): PositionDropdownModelListResponseModel => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsModulesTreeGet()` */
-  static readonly ApiAdminPositionsModulesTreeGetPath = '/api/admin/positions/modules/tree';
+  /** Path part for operation `positionsGetModuleTreeGet()` */
+  static readonly PositionsGetModuleTreeGetPath = '/api/admin/positions/modules/tree';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsModulesTreeGet()` instead.
+   * To access only the response body, use `positionsGetModuleTreeGet()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsModulesTreeGet$Response(params?: ApiAdminPositionsModulesTreeGet$Params, context?: HttpContext): Observable<StrictHttpResponse<ModuleTreeResponseModelBaseResponseModel>> {
-    return apiAdminPositionsModulesTreeGet(this.http, this.rootUrl, params, context);
+  positionsGetModuleTreeGet$Response(params?: PositionsGetModuleTreeGet$Params, context?: HttpContext): Observable<StrictHttpResponse<ModuleTreeResponseModelBaseResponseModel>> {
+    return positionsGetModuleTreeGet(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsModulesTreeGet$Response()` instead.
+   * To access the full response (for headers, for example), `positionsGetModuleTreeGet$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsModulesTreeGet(params?: ApiAdminPositionsModulesTreeGet$Params, context?: HttpContext): Observable<ModuleTreeResponseModelBaseResponseModel> {
-    return this.apiAdminPositionsModulesTreeGet$Response(params, context).pipe(
+  positionsGetModuleTreeGet(params?: PositionsGetModuleTreeGet$Params, context?: HttpContext): Observable<ModuleTreeResponseModelBaseResponseModel> {
+    return this.positionsGetModuleTreeGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<ModuleTreeResponseModelBaseResponseModel>): ModuleTreeResponseModelBaseResponseModel => r.body)
     );
   }
 
-  /** Path part for operation `apiAdminPositionsMePermissionsGet()` */
-  static readonly ApiAdminPositionsMePermissionsGetPath = '/api/admin/positions/me/permissions';
+  /** Path part for operation `positionsGetMyPermissionsGet()` */
+  static readonly PositionsGetMyPermissionsGetPath = '/api/admin/positions/me/permissions';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `apiAdminPositionsMePermissionsGet()` instead.
+   * To access only the response body, use `positionsGetMyPermissionsGet()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsMePermissionsGet$Response(params?: ApiAdminPositionsMePermissionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<StringListResponseModel>> {
-    return apiAdminPositionsMePermissionsGet(this.http, this.rootUrl, params, context);
+  positionsGetMyPermissionsGet$Response(params?: PositionsGetMyPermissionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<StringListResponseModel>> {
+    return positionsGetMyPermissionsGet(this.http, this.rootUrl, params, context);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `apiAdminPositionsMePermissionsGet$Response()` instead.
+   * To access the full response (for headers, for example), `positionsGetMyPermissionsGet$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  apiAdminPositionsMePermissionsGet(params?: ApiAdminPositionsMePermissionsGet$Params, context?: HttpContext): Observable<StringListResponseModel> {
-    return this.apiAdminPositionsMePermissionsGet$Response(params, context).pipe(
+  positionsGetMyPermissionsGet(params?: PositionsGetMyPermissionsGet$Params, context?: HttpContext): Observable<StringListResponseModel> {
+    return this.positionsGetMyPermissionsGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<StringListResponseModel>): StringListResponseModel => r.body)
     );
   }

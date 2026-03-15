@@ -34,7 +34,7 @@
 - Static cache ไม่โหลดซ้ำ
 - `standalone: false`, constructor injection
 
-#### 1.2 ปรับ SVG ทุกไฟล์ (`public/images/icons/`)
+#### 1.2 ปรับ SVG ทุกไฟล์ (`public/icons/`)
 
 **ปัญหาปัจจุบัน:**
 - SVG format ไม่สม่ำเสมอ — บางตัว `fill="#000000"` บางตัว `currentColor`
@@ -48,18 +48,18 @@
 
 **เปลี่ยนจาก → เปลี่ยนเป็น:**
 ```
-<img src="images/icons/xxx.svg" class="brightness-0 invert"> → <app-generic-icon name="xxx" class="text-white">
-<img src="images/icons/xxx.svg" class="icon-danger">          → <app-generic-icon name="xxx" class="text-danger">
-<img src="images/icons/xxx.svg" class="icon-success">         → <app-generic-icon name="xxx" class="text-success">
-<img src="images/icons/xxx.svg" class="icon-warning">         → <app-generic-icon name="xxx" class="text-warning">
-<img src="images/icons/xxx.svg" class="opacity-40">           → <app-generic-icon name="xxx" class="text-surface-sub">
+<img src="icons/xxx.svg" class="brightness-0 invert"> → <app-generic-icon name="xxx" class="text-white">
+<img src="icons/xxx.svg" class="icon-danger">          → <app-generic-icon name="xxx" class="text-danger">
+<img src="icons/xxx.svg" class="icon-success">         → <app-generic-icon name="xxx" class="text-success">
+<img src="icons/xxx.svg" class="icon-warning">         → <app-generic-icon name="xxx" class="text-warning">
+<img src="icons/xxx.svg" class="opacity-40">           → <app-generic-icon name="xxx" class="text-surface-sub">
 ```
 
 #### 2.2 MenuItem interface
 
 **เปลี่ยนจาก → เปลี่ยนเป็น:**
 ```
-icon: 'images/icons/dashboard.svg' → icon: 'dashboard'
+icon: 'icons/dashboard.svg' → icon: 'dashboard'
 ```
 
 ### Phase 3 — ลบ CSS filter + cleanup

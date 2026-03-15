@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, ActivationStart, NavigationEnd, NavigationStart, Router } from '@angular/router';
-import { Store } from '@ngrx/store';
+
 import { BehaviorSubject } from 'rxjs';
 import { filter } from 'rxjs/operators';
-import { BreadcrumbButton, BreadcrumbItem, Pbutton } from '@app/shared/component-interfaces';
+
+import { Store } from '@ngrx/store';
+
 import * as LayoutActions from '@app/store/layout/layout.actions';
 import { selectBreadcrumbButtons } from '@app/store/layout/layout.selectors';
+
+import { BreadcrumbButton, BreadcrumbItem, Pbutton } from '@app/shared/component-interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -19,9 +23,9 @@ export class BreadcrumbService {
   private pendingUrl = '';
 
   constructor(
-    private store: Store,
-    private router: Router,
-    private activatedRoute: ActivatedRoute
+    private readonly activatedRoute: ActivatedRoute,
+    private readonly router: Router,
+    private readonly store: Store,
   ) {
     this.breadcrumbButtons$ = this.store.select(selectBreadcrumbButtons);
     this.listenToRouterEvents();
@@ -78,7 +82,7 @@ export class BreadcrumbService {
   }
 
   private buildBreadcrumb(): void {
-    const items: BreadcrumbItem[] = [{ label: 'RBMS-Home', route: '/' }];
+    const items: BreadcrumbItem[] = [];
     let route: ActivatedRoute | null = this.activatedRoute.root;
 
     while (route) {

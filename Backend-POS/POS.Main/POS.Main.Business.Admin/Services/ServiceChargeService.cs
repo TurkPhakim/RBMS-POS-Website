@@ -34,7 +34,7 @@ public class ServiceChargeService : IServiceChargeService
 
     public async Task<IEnumerable<ServiceChargeDropdownModel>> GetServiceChargeDropdownListAsync(CancellationToken ct = default)
     {
-        var serviceCharges = await _unitOfWork.ServiceCharges.GetActiveForDropdownAsync(ct);
+        var serviceCharges = await _unitOfWork.ServiceCharges.GetActiveInDateRangeForDropdownAsync(ct);
         return serviceCharges.Select(ServiceChargeMapper.ToDropdown);
     }
 
@@ -43,6 +43,8 @@ public class ServiceChargeService : IServiceChargeService
         var nameExists = await _unitOfWork.ServiceCharges.IsNameExistsAsync(request.Name, ct: ct);
         if (nameExists)
             throw new ValidationException($"Service charge with name '{request.Name}' already exists");
+
+        ValidateDateRange(request.StartDate, request.EndDate);
 
         var serviceCharge = ServiceChargeMapper.ToEntity(request);
 
@@ -65,6 +67,8 @@ public class ServiceChargeService : IServiceChargeService
         if (nameExists)
             throw new ValidationException($"Service charge with name '{request.Name}' already exists");
 
+        ValidateDateRange(request.StartDate, request.EndDate);
+
         ServiceChargeMapper.UpdateEntity(serviceCharge, request);
 
         _unitOfWork.ServiceCharges.Update(serviceCharge);
@@ -80,9 +84,15 @@ public class ServiceChargeService : IServiceChargeService
         var serviceCharge = await _unitOfWork.ServiceCharges.GetByIdAsync(serviceChargeId, ct)
             ?? throw new EntityNotFoundException("ServiceCharge", serviceChargeId);
 
-        serviceCharge.DeleteFlag = true;
+        _unitOfWork.ServiceCharges.Delete(serviceCharge);
         await _unitOfWork.CommitAsync(ct);
 
-        _logger.LogInformation("ServiceCharge deleted: {ServiceChargeId}", serviceChargeId);
+        _logger.LogInformation("ServiceCharge permanently deleted: {ServiceChargeId}", serviceChargeId);
+    }
+
+    private static void ValidateDateRange(DateTime? startDate, DateTime? endDate)
+    {
+        if (startDate.HasValue && endDate.HasValue && endDate.Value < startDate.Value)
+            throw new ValidationException("วันที่สิ้นสุดต้องมากกว่าหรือเท่ากับวันที่เริ่มต้น");
     }
 }

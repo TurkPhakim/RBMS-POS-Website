@@ -10,6 +10,7 @@ import { HumanResourceService } from './services/human-resource.service';
 import { MenusService } from './services/menus.service';
 import { PositionsService } from './services/positions.service';
 import { ServiceChargesService } from './services/service-charges.service';
+import { ShopSettingsService } from './services/shop-settings.service';
 
 /**
  * Module that provides all services and configuration.
@@ -25,6 +26,7 @@ import { ServiceChargesService } from './services/service-charges.service';
     MenusService,
     PositionsService,
     ServiceChargesService,
+    ShopSettingsService,
     ApiConfiguration
   ],
 })

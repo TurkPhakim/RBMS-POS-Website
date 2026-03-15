@@ -1,0 +1,90 @@
+<app-card-template
+  [headerLabel]="config.header!"
+  headerLabelClass="text-xl font-semibold text-primary-dark"
+>
+  <form [formGroup]="form" class="grid grid-cols-3 gap-x-4 gap-y-3">
+    <!-- ระดับการศึกษา -->
+    <div>
+      <label class="block font-semibold text-surface-dark mb-1"
+        >ระดับการศึกษา <span class="text-danger">*</span></label
+      >
+      <input
+        pInputText
+        formControlName="educationLevel"
+        class="w-full"
+        placeholder="ระดับการศึกษา"
+      />
+      <app-field-error [control]="form.get('educationLevel')"></app-field-error>
+    </div>
+
+    <!-- สถานศึกษา -->
+    <div>
+      <label class="block font-semibold text-surface-dark mb-1"
+        >สถานศึกษา <span class="text-danger">*</span></label
+      >
+      <input
+        pInputText
+        formControlName="institution"
+        class="w-full"
+        placeholder="สถานศึกษา"
+      />
+      <app-field-error [control]="form.get('institution')"></app-field-error>
+    </div>
+
+    <!-- สาขาวิชา -->
+    <div>
+      <label class="block font-semibold text-surface-dark mb-1"
+        >สาขาวิชา <span class="text-danger">*</span></label
+      >
+      <input
+        pInputText
+        formControlName="major"
+        class="w-full"
+        placeholder="สาขาวิชา"
+      />
+      <app-field-error [control]="form.get('major')"></app-field-error>
+    </div>
+
+    <!-- เกรดเฉลี่ย -->
+    <div>
+      <label class="block font-semibold text-surface-dark mb-1"
+        >เกรดเฉลี่ย</label
+      >
+      <p-inputNumber
+        formControlName="gpa"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+        [min]="0"
+        [max]="4"
+        placeholder="เกรดเฉลี่ย"
+        class="w-full"
+        inputStyleClass="w-full"
+      ></p-inputNumber>
+    </div>
+
+    <!-- ปี พ.ศ. ที่จบการศึกษา -->
+    <div>
+      <label class="block font-semibold text-surface-dark mb-1"
+        >ปี พ.ศ. ที่จบการศึกษา</label
+      >
+      <p-inputNumber
+        formControlName="graduationYear"
+        [useGrouping]="false"
+        placeholder="ปี พ.ศ. ที่จบการศึกษา"
+        class="w-full"
+        inputStyleClass="w-full"
+      ></p-inputNumber>
+    </div>
+  </form>
+
+  <p-footer>
+    <p-button
+      label="ปิด"
+      severity="secondary"
+      [outlined]="true"
+      [style]="{ 'min-width': '100px' }"
+      (onClick)="onCancel()"
+    ></p-button>
+    <p-button label="ตกลง" [style]="{ 'min-width': '100px' }" (onClick)="onSave()"></p-button>
+  </p-footer>
+</app-card-template>

@@ -14,6 +14,8 @@ public class TbUser : BaseEntity
 
     public int FailedLoginAttempts { get; set; } = 0;
 
+    public int LockoutCount { get; set; } = 0;
+
     public DateTime? LockedUntil { get; set; }
 
     public DateTime? LastLoginDate { get; set; }

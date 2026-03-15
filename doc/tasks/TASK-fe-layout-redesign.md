@@ -19,7 +19,7 @@
 | ห้าม OnPush | `changeDetection: OnPush` | ลบออก (ใช้ Signals แทน) |
 | Modern control flow | `*ngIf`, `*ngFor` | `@if`, `@for` |
 | Design tokens | raw colors (`bg-gray-200`, `text-orange-500`) | tokens (`bg-surface`, `text-primary`) |
-| ห้าม inline SVG | `<svg><path d="..."/></svg>` | `<img src="images/icons/xxx.svg">` |
+| ห้าม inline SVG | `<svg><path d="..."/></svg>` | `<img src="icons/xxx.svg">` |
 | ห้าม `any` type | `currentUser: any` | ใช้ generated model หรือ specific type |
 | ห้าม CSS file ที่ไม่จำเป็น | `.component.css` ที่มีแค่ `:host` | ลบ `styleUrls` + ลบไฟล์ CSS |
 | ห้าม `console.log` | `console.log(...)` | ลบออก |
@@ -31,7 +31,7 @@
 <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
 
 <!-- ✅ ทำแบบนี้เสมอ -->
-<img src="images/icons/hamburger.svg" class="w-7 h-7" alt="">
+<img src="icons/hamburger.svg" class="w-7 h-7" alt="">
 ```
 
 ### 3. ใช้ CSS token เสมอ

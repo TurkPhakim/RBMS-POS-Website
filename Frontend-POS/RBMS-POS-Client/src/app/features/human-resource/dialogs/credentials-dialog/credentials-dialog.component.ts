@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
+
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({
@@ -7,11 +8,12 @@ import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
   templateUrl: './credentials-dialog.component.html',
 })
 export class CredentialsDialogComponent {
-  credentials: { username: string; password: string; emailSent: boolean };
+  credentials: { username: string; password: string };
+  showPassword = signal(false);
 
   constructor(
     private readonly ref: DynamicDialogRef,
-    private readonly config: DynamicDialogConfig,
+    readonly config: DynamicDialogConfig,
   ) {
     this.credentials = this.config.data.credentials;
   }

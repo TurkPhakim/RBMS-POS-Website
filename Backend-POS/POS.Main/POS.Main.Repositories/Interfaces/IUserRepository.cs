@@ -5,4 +5,6 @@ namespace POS.Main.Repositories.Interfaces;
 public interface IUserRepository : IGenericRepository<TbUser>
 {
     Task<TbUser?> GetByUsernameAsync(string username, CancellationToken ct = default);
+
+    Task<TbUser?> GetByUsernameOrEmailAsync(string usernameOrEmail, CancellationToken ct = default);
 }

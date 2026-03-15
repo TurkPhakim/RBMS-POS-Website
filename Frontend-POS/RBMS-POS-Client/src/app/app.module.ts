@@ -1,16 +1,22 @@
-// 1. Angular core
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
-// 2. Angular router
-import { AppRoutingModule } from './app-routing.module';
-
-// 3. PrimeNG
-import { providePrimeNG } from 'primeng/config';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { definePreset } from '@primeng/themes';
 import Lara from '@primeng/themes/lara';
+import { providePrimeNG } from 'primeng/config';
+
+import { AppComponent } from './app.component';
+import { AppRoutingModule } from './app-routing.module';
+import { apiConfigurationProvider } from './core/api/api-config.provider';
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
+import { SharedModule } from './shared/shared.module';
+import { layoutReducer } from './store/layout/layout.reducer';
 
 const AppPreset = definePreset(Lara, {
   semantic: {
@@ -29,24 +35,6 @@ const AppPreset = definePreset(Lara, {
     },
   },
 });
-
-// 4. NgRx
-import { StoreModule } from '@ngrx/store';
-import { EffectsModule } from '@ngrx/effects';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import { layoutReducer } from './store/layout/layout.reducer';
-
-// 5. Shared & Interfaces
-import { SharedModule } from './shared/shared.module';
-
-// 5. Components
-import { AppComponent } from './app.component';
-
-// 6. Interceptors
-import { AuthInterceptor } from './core/interceptors/auth.interceptor';
-
-// 7. API Configuration
-import { apiConfigurationProvider } from './core/api/api-config.provider';
 
 @NgModule({
   declarations: [
@@ -92,6 +80,11 @@ import { apiConfigurationProvider } from './core/api/api-config.provider';
       },
     }),
     // HTTP Interceptors
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoadingInterceptor,
+      multi: true,
+    },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,

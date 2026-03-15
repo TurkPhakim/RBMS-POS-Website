@@ -1,7 +1,10 @@
 import { Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
-import { BreadcrumbButton, BreadcrumbItem } from '@app/shared/component-interfaces';
+import {
+  BreadcrumbButton,
+  BreadcrumbItem,
+} from '@app/shared/component-interfaces';
 
 @Component({
   selector: 'app-top-breadcrumb',
@@ -18,10 +21,10 @@ export class TopBreadcrumbComponent {
   ) {
     this.breadcrumbService.breadcrumbItems$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(items => this.menuItems.set(items));
+      .subscribe((items) => this.menuItems.set(items));
 
     this.breadcrumbService.breadcrumbButtons$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(buttons => this.buttons.set(buttons));
+      .subscribe((buttons) => this.buttons.set(buttons));
   }
 }

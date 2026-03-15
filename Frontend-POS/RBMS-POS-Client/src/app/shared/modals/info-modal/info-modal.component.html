@@ -1,0 +1,47 @@
+<div class="flex flex-col gap-4 items-center text-center pt-2">
+  <!-- Icon -->
+  @switch (config.data?.icon) {
+    @case (Icon.Question) {
+      <img src="images/question-image.png" alt="question" class="w-20 h-20" />
+    }
+    @case (Icon.Info) {
+      <img src="images/question-image.png" alt="info" class="w-20 h-20" />
+    }
+    @case (Icon.Warning) {
+      <img src="images/warning-image.png" alt="warning" class="w-20 h-20" />
+    }
+    @default {
+      <img src="images/warning-image.png" alt="warning" class="w-20 h-20" />
+    }
+  }
+
+  <!-- Title -->
+  <div class="text-2xl font-semibold whitespace-pre-line">
+    {{ config.data?.title }}
+  </div>
+
+  <!-- Message -->
+  @if (messageText) {
+    <p class="text-surface-sub whitespace-pre-line">{{ messageText }}</p>
+  }
+
+  <!-- Buttons -->
+  <div class="flex w-full gap-3">
+    <p-button
+      class="flex-1"
+      [fluid]="true"
+      [severity]="'secondary'"
+      [outlined]="true"
+      (onClick)="handleCancel()">
+      {{ config.data?.cancelButtonLabel ?? 'ยกเลิก' }}
+    </p-button>
+    <p-button
+      class="flex-1"
+      [fluid]="true"
+      severity="primary"
+      [loading]="confirmLoading"
+      (onClick)="handleConfirm()">
+      {{ config.data?.confirmButtonLabel ?? 'ยืนยัน' }}
+    </p-button>
+  </div>
+</div>

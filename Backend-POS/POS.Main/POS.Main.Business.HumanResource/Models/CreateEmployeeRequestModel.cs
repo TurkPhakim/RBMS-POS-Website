@@ -9,11 +9,11 @@ namespace POS.Main.Business.HumanResource.Models;
 public class CreateEmployeeRequestModel
 {
     /// <summary>
-    /// Employee title (optional)
+    /// Employee title
     /// </summary>
-    /// <example>Mr.</example>
-    [StringLength(20, ErrorMessage = "Title cannot exceed 20 characters")]
-    public string? Title { get; set; }
+    /// <example>Mr</example>
+    [Required(ErrorMessage = "Title is required")]
+    public ETitle? Title { get; set; }
 
     /// <summary>
     /// First name in Thai
@@ -48,11 +48,12 @@ public class CreateEmployeeRequestModel
     public string LastNameEnglish { get; set; } = string.Empty;
 
     /// <summary>
-    /// Nickname (optional)
+    /// Nickname
     /// </summary>
     /// <example>Som</example>
+    [Required(ErrorMessage = "Nickname is required")]
     [StringLength(50, ErrorMessage = "Nickname cannot exceed 50 characters")]
-    public string? Nickname { get; set; }
+    public string Nickname { get; set; } = string.Empty;
 
     /// <summary>
     /// Gender
@@ -62,9 +63,10 @@ public class CreateEmployeeRequestModel
     public EGender Gender { get; set; }
 
     /// <summary>
-    /// Date of birth (optional)
+    /// Date of birth
     /// </summary>
     /// <example>1990-01-15</example>
+    [Required(ErrorMessage = "Date of birth is required")]
     public DateTime? DateOfBirth { get; set; }
 
     /// <summary>
@@ -81,11 +83,12 @@ public class CreateEmployeeRequestModel
     public DateTime? EndDate { get; set; }
 
     /// <summary>
-    /// National ID (optional)
+    /// National ID
     /// </summary>
     /// <example>1234567890123</example>
+    [Required(ErrorMessage = "National ID is required")]
     [StringLength(13, ErrorMessage = "National ID must be 13 characters")]
-    public string? NationalId { get; set; }
+    public string NationalId { get; set; } = string.Empty;
 
     /// <summary>
     /// Bank account number (optional)
@@ -101,39 +104,55 @@ public class CreateEmployeeRequestModel
     [StringLength(100, ErrorMessage = "Bank name cannot exceed 100 characters")]
     public string? BankName { get; set; }
 
-    /// <summary>
-    /// Employment status
-    /// </summary>
-    /// <example>Active</example>
-    [Required(ErrorMessage = "Employment status is required")]
-    public EEmploymentStatus EmploymentStatus { get; set; }
+    [Required(ErrorMessage = "Nationality is required")]
+    public ENationality? Nationality { get; set; }
 
-    /// <summary>
-    /// Position ID (FK to TbmPosition, optional)
-    /// </summary>
+    [Required(ErrorMessage = "Religion is required")]
+    public EReligion? Religion { get; set; }
+
+    [Required(ErrorMessage = "Line ID is required")]
+    [StringLength(50, ErrorMessage = "Line ID cannot exceed 50 characters")]
+    public string LineId { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Position is required")]
     public int? PositionId { get; set; }
 
     /// <summary>
-    /// Phone number (optional)
+    /// Phone number
     /// </summary>
     /// <example>0812345678</example>
+    [Required(ErrorMessage = "Phone number is required")]
     [StringLength(20, ErrorMessage = "Phone number cannot exceed 20 characters")]
-    public string? Phone { get; set; }
+    public string Phone { get; set; } = string.Empty;
 
     /// <summary>
-    /// Email address (optional)
+    /// Email address
     /// </summary>
     /// <example>somchai@example.com</example>
+    [Required(ErrorMessage = "Email is required")]
     [StringLength(100, ErrorMessage = "Email cannot exceed 100 characters")]
     [EmailAddress(ErrorMessage = "Invalid email format")]
-    public string? Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Salary (optional)
+    /// Full-time or Part-time employee
+    /// </summary>
+    /// <example>true</example>
+    public bool IsFullTime { get; set; } = true;
+
+    /// <summary>
+    /// Monthly salary (for full-time employees)
     /// </summary>
     /// <example>15000.00</example>
     [Range(0, 9999999999.99, ErrorMessage = "Salary must be between 0 and 9,999,999,999.99")]
     public decimal? Salary { get; set; }
+
+    /// <summary>
+    /// Hourly rate (for part-time employees)
+    /// </summary>
+    /// <example>100.00</example>
+    [Range(0, 9999999999.99, ErrorMessage = "Hourly rate must be between 0 and 9,999,999,999.99")]
+    public decimal? HourlyRate { get; set; }
 
     /// <summary>
     /// Indicates if the employee is active in the system

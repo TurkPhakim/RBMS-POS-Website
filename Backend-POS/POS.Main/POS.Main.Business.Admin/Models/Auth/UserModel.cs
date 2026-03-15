@@ -13,6 +13,10 @@ public class UserModel
 
     public int? EmployeeId { get; set; }
 
+    public string? Nickname { get; set; }
+
+    public int? ProfileImageFileId { get; set; }
+
     public int? PositionId { get; set; }
 
     public string? PositionName { get; set; }

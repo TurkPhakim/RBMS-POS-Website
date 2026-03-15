@@ -112,6 +112,7 @@ WebAPI → Business.* (Services) → Repositories → Dal (EF Core) → Core
 | [icon-system.md](doc/architecture/icon-system.md) | ระบบจัดการ Icon — GenericIconComponent + PrimeIcons, คู่มือเพิ่ม icon ใหม่ |
 | [file-management.md](doc/architecture/file-management.md) | สถาปัตยกรรมการจัดการไฟล์ — TbFile Entity, S3 Storage, Upload/Download Flow |
 | [database-api-reference.md](doc/architecture/database-api-reference.md) | อ้างอิงฐานข้อมูลและ API — ตารางทั้งหมด, Endpoints, ความสัมพันธ์, Enum |
+| [https-security.md](doc/architecture/https-security.md) | สถาปัตยกรรม HTTPS Security — TLS, HSTS, Security Headers, FR-SECURITY-003 |
 
 ---
 
@@ -119,7 +120,7 @@ WebAPI → Business.* (Services) → Repositories → Dal (EF Core) → Core
 
 | เอกสาร | รายละเอียด |
 |--------|------------|
-| [quick-start.md](doc/development/quick-start.md) | รันโปรเจคครั้งแรก — ขั้นตอนตั้งแต่ต้น: database → backend → frontend |
+| [quick-start.md](doc/development/quick-start.md) | รันโปรเจคครั้งแรก — database → backend → frontend + Docker setup (SQL Server, MinIO) |
 | [module-development-workflow.md](doc/development/module-development-workflow.md) | End-to-End Workflow 16 ขั้นตอน — Backend → Frontend พร้อม checklist |
 | [backend-guide.md](doc/development/backend-guide.md) | คู่มือ Backend — Architecture, Patterns ทุก Layer, 10-Step Workflow, Common Errors |
 | [backend-coding-standards.md](doc/development/backend-coding-standards.md) | มาตรฐานโค้ด Backend — DO/DON'T: naming, entity, repo, service, controller, DTO, query |

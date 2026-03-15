@@ -11,7 +11,7 @@
 ## กฎที่ต้องยึดถือ
 
 - ใช้ design tokens เท่านั้น (ห้าม raw colors)
-- ห้าม inline SVG → ใช้ `<img src="images/icons/xxx.svg">`
+- ห้าม inline SVG → ใช้ `<img src="icons/xxx.svg">`
 - `@if` แทน `*ngIf`
 - constructor injection แทน `inject()`
 - ใช้ signals สำหรับ component state
@@ -29,7 +29,7 @@
 | `login.component.css` | **ลบ** (ย้าย password-input ไป global) |
 | `auths.module.ts` | เพิ่ม SharedModule |
 | `src/styles.css` | เพิ่ม .password-input hide rules |
-| `public/images/icons/` | สร้าง: user.svg, lock.svg, eye.svg, eye-off.svg |
+| `public/icons/` | สร้าง: user.svg, lock.svg, eye.svg, eye-off.svg |
 
 ---
 
@@ -45,7 +45,7 @@
 - ลบ `styleUrls`
 
 ### login.component.html
-- ลบ inline SVG ทั้ง 8 จุด → `<img src="images/icons/xxx.svg">`
+- ลบ inline SVG ทั้ง 8 จุด → `<img src="icons/xxx.svg">`
 - `bg-orange-gradient` → `bg-surface`
 - ลบ responsive classes (`sm:px-6 lg:px-8`)
 - ลบ undefined classes (`animate-fade-in`, `animate-slide-up`)

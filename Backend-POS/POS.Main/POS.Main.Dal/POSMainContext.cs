@@ -20,15 +20,22 @@ public class POSMainContext : DbContext
     public DbSet<TbUser> Users => Set<TbUser>();
     public DbSet<TbRefreshToken> RefreshTokens => Set<TbRefreshToken>();
     public DbSet<TbLoginHistory> LoginHistory => Set<TbLoginHistory>();
+    public DbSet<TbPasswordResetToken> PasswordResetTokens => Set<TbPasswordResetToken>();
+    public DbSet<TbPasswordHistory> PasswordHistory => Set<TbPasswordHistory>();
 
     // Admin Settings DbSets
     public DbSet<TbServiceCharge> ServiceCharges => Set<TbServiceCharge>();
+    public DbSet<TbShopSettings> ShopSettings => Set<TbShopSettings>();
+    public DbSet<TbShopOperatingHour> ShopOperatingHours => Set<TbShopOperatingHour>();
 
     // Menu DbSets
     public DbSet<TbMenu> Menus => Set<TbMenu>();
 
     // Human Resource DbSets
     public DbSet<TbEmployee> Employees => Set<TbEmployee>();
+    public DbSet<TbEmployeeAddress> EmployeeAddresses => Set<TbEmployeeAddress>();
+    public DbSet<TbEmployeeEducation> EmployeeEducations => Set<TbEmployeeEducation>();
+    public DbSet<TbEmployeeWorkHistory> EmployeeWorkHistories => Set<TbEmployeeWorkHistory>();
 
     // File Management DbSets
     public DbSet<TbFile> Files => Set<TbFile>();
@@ -48,9 +55,16 @@ public class POSMainContext : DbContext
         modelBuilder.ApplyConfiguration(new TbUserConfiguration());
         modelBuilder.ApplyConfiguration(new TbRefreshTokenConfiguration());
         modelBuilder.ApplyConfiguration(new TbLoginHistoryConfiguration());
+        modelBuilder.ApplyConfiguration(new TbPasswordResetTokenConfiguration());
+        modelBuilder.ApplyConfiguration(new TbPasswordHistoryConfiguration());
         modelBuilder.ApplyConfiguration(new TbServiceChargeConfiguration());
+        modelBuilder.ApplyConfiguration(new TbShopSettingsConfiguration());
+        modelBuilder.ApplyConfiguration(new TbShopOperatingHourConfiguration());
         modelBuilder.ApplyConfiguration(new TbMenuConfiguration());
         modelBuilder.ApplyConfiguration(new TbEmployeeConfiguration());
+        modelBuilder.ApplyConfiguration(new TbEmployeeAddressConfiguration());
+        modelBuilder.ApplyConfiguration(new TbEmployeeEducationConfiguration());
+        modelBuilder.ApplyConfiguration(new TbEmployeeWorkHistoryConfiguration());
         modelBuilder.ApplyConfiguration(new TbFileConfiguration());
         modelBuilder.ApplyConfiguration(new TbmPositionConfiguration());
         modelBuilder.ApplyConfiguration(new TbmPermissionConfiguration());

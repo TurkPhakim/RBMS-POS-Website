@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
+
 import { Store } from '@ngrx/store';
-import { Pbutton } from '@app/shared/component-interfaces';
+
 import * as LayoutActions from '@app/store/layout/layout.actions';
 import { selectHeaderButtons } from '@app/store/layout/layout.selectors';
+
+import { Pbutton } from '@app/shared/component-interfaces';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +13,7 @@ import { selectHeaderButtons } from '@app/store/layout/layout.selectors';
 export class HeaderService {
   headerButtons$;
 
-  constructor(private store: Store) {
+  constructor(private readonly store: Store) {
     this.headerButtons$ = this.store.select(selectHeaderButtons);
   }
 

@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
-import { Store } from '@ngrx/store';
+
 import { Observable } from 'rxjs';
+
+import { Store } from '@ngrx/store';
+
 import * as LayoutActions from '@app/store/layout/layout.actions';
 import { selectSidebarCollapsed } from '@app/store/layout/layout.selectors';
 
@@ -10,7 +13,7 @@ import { selectSidebarCollapsed } from '@app/store/layout/layout.selectors';
 export class SidebarService {
   isCollapsed$: Observable<boolean>;
 
-  constructor(private store: Store) {
+  constructor(private readonly store: Store) {
     this.isCollapsed$ = this.store.select(selectSidebarCollapsed);
   }
 

@@ -1,16 +1,15 @@
-// 1. Angular core
-import { Component, signal, DestroyRef, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
-// 2. Services & Models
+import { CreateServiceChargeRequestModel, UpdateServiceChargeRequestModel } from '@app/core/api/models';
 import { ServiceChargesService } from '@app/core/api/services';
-import {
-  CreateServiceChargeRequestModel,
-  UpdateServiceChargeRequestModel,
-} from '@app/core/api/models';
+import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
+import { ModalService } from '@app/core/services/modal.service';
+
+import { linkDateRange, markFormDirty } from '@app/shared/utils';
 
 const KEY_BTN_SAVE = 'save-service-charge';
 const KEY_BTN_BACK = 'back';
@@ -24,26 +23,26 @@ export class ServiceChargeManageComponent implements OnDestroy {
   form!: FormGroup;
   isEditMode = signal(false);
   serviceChargeId = signal<number | null>(null);
-  isLoading = signal(false);
   isSaving = signal(false);
-  errorMessage = signal<string | null>(null);
-  showSuccessModal = signal(false);
-  showErrorModal = signal(false);
-  successMessage = signal('');
+  isReadOnly = signal(false);
+  minEndDate = signal<Date | null>(null);
 
   constructor(
-    private readonly fb: FormBuilder,
-    private readonly serviceChargesService: ServiceChargesService,
-    private readonly router: Router,
+    private readonly authService: AuthService,
     private readonly route: ActivatedRoute,
-    private readonly destroyRef: DestroyRef,
     private readonly breadcrumbService: BreadcrumbService,
+    private readonly destroyRef: DestroyRef,
+    private readonly fb: FormBuilder,
+    private readonly modalService: ModalService,
+    private readonly router: Router,
+    private readonly serviceChargesService: ServiceChargesService,
   ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.checkEditMode();
     this.setupBreadcrumbButtons();
+    linkDateRange(this.form, 'startDate', 'endDate', this.minEndDate, this.destroyRef);
   }
 
   ngOnDestroy(): void {
@@ -56,24 +55,24 @@ export class ServiceChargeManageComponent implements OnDestroy {
       type: 'button',
       item: {
         key: KEY_BTN_BACK,
-        label: 'กลับ',
-        icon: 'pi pi-arrow-left',
+        label: 'ย้อนกลับ',
         severity: 'secondary',
         variant: 'outlined',
         callback: () => this.onCancel(),
       },
     });
 
-    this.breadcrumbService.addOrUpdateButton({
-      key: KEY_BTN_SAVE,
-      type: 'button',
-      item: {
+    if (!this.isReadOnly()) {
+      this.breadcrumbService.addOrUpdateButton({
         key: KEY_BTN_SAVE,
-        label: this.isEditMode() ? 'อัปเดต' : 'สร้าง',
-        icon: 'pi pi-check',
-        callback: () => this.onSubmit(),
-      },
-    });
+        type: 'button',
+        item: {
+          key: KEY_BTN_SAVE,
+          label: 'บันทึก',
+          callback: () => this.onSubmit(),
+        },
+      });
+    }
   }
 
   initForm(): void {
@@ -82,6 +81,8 @@ export class ServiceChargeManageComponent implements OnDestroy {
       percentageRate: [null, [Validators.required, Validators.min(0), Validators.max(100)]],
       description: ['', [Validators.maxLength(500)]],
       isActive: [true],
+      startDate: [null],
+      endDate: [null],
     });
   }
 
@@ -90,16 +91,19 @@ export class ServiceChargeManageComponent implements OnDestroy {
     if (id) {
       this.isEditMode.set(true);
       this.serviceChargeId.set(+id);
+
+      const canUpdate = this.authService.hasPermission('service-charge.update');
+      if (!canUpdate) {
+        this.isReadOnly.set(true);
+      }
+
       this.loadServiceCharge(+id);
     }
   }
 
   loadServiceCharge(id: number): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.serviceChargesService
-      .apiAdminServicechargesServiceChargeIdGet({ serviceChargeId: id })
+      .serviceChargesGetByIdGet({ serviceChargeId: id })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
@@ -109,51 +113,57 @@ export class ServiceChargeManageComponent implements OnDestroy {
               percentageRate: response.result.percentageRate,
               description: response.result.description,
               isActive: response.result.isActive,
+              startDate: response.result.startDate ? new Date(response.result.startDate) : null,
+              endDate: response.result.endDate ? new Date(response.result.endDate) : null,
             });
+
+            if (this.isReadOnly()) {
+              this.form.disable();
+            }
           }
-          this.isLoading.set(false);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูล Service Charge ได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูล Service Charge ได้' });
         },
       });
   }
 
   onSubmit(): void {
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      markFormDirty(this.form);
       return;
     }
 
     this.isSaving.set(true);
     this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, true);
     this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, true);
-    this.errorMessage.set(null);
 
     const formValue = this.form.value;
+    const data = {
+      ...formValue,
+      startDate: formValue.startDate ? new Date(formValue.startDate).toISOString() : null,
+      endDate: formValue.endDate ? new Date(formValue.endDate).toISOString() : null,
+    };
 
     if (this.isEditMode()) {
-      this.updateServiceCharge(formValue);
+      this.updateServiceCharge(data);
     } else {
-      this.createServiceCharge(formValue);
+      this.createServiceCharge(data);
     }
   }
 
   createServiceCharge(data: CreateServiceChargeRequestModel): void {
     this.serviceChargesService
-      .apiAdminServicechargesPost({ body: data })
+      .serviceChargesCreatePost({ body: data })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.resetSavingState();
-          this.successMessage.set(`สร้าง Service Charge "${data.name}" สำเร็จ`);
-          this.showSuccessModal.set(true);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/admin-setting/service-charges']);
         },
         error: (error) => {
-          this.errorMessage.set(error.error?.message || 'ไม่สามารถสร้าง Service Charge ได้');
-          this.showErrorModal.set(true);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: error.error?.message || 'ไม่สามารถสร้าง Service Charge ได้' });
           this.resetSavingState();
         },
       });
@@ -163,17 +173,16 @@ export class ServiceChargeManageComponent implements OnDestroy {
     const id = this.serviceChargeId()!;
 
     this.serviceChargesService
-      .apiAdminServicechargesServiceChargeIdPut({ serviceChargeId: id, body: data })
+      .serviceChargesUpdatePut({ serviceChargeId: id, body: data })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.resetSavingState();
-          this.successMessage.set(`อัปเดต Service Charge "${data.name}" สำเร็จ`);
-          this.showSuccessModal.set(true);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/admin-setting/service-charges']);
         },
         error: (error) => {
-          this.errorMessage.set(error.error?.message || 'ไม่สามารถอัปเดต Service Charge ได้');
-          this.showErrorModal.set(true);
+          this.modalService.cancel({ title: 'ผิดพลาด !', message: error.error?.message || 'ไม่สามารถอัปเดต Service Charge ได้' });
           this.resetSavingState();
         },
       });
@@ -187,36 +196,5 @@ export class ServiceChargeManageComponent implements OnDestroy {
 
   onCancel(): void {
     this.router.navigate(['/admin-setting/service-charges']);
-  }
-
-  closeSuccessModal(): void {
-    this.showSuccessModal.set(false);
-    this.router.navigate(['/admin-setting/service-charges']);
-  }
-
-  closeErrorModal(): void {
-    this.showErrorModal.set(false);
-  }
-
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.form.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const field = this.form.get(fieldName);
-    if (!field || !field.errors) return '';
-
-    if (field.errors['required']) return 'กรุณากรอกข้อมูล';
-    if (field.errors['minlength'])
-      return `กรุณากรอกอย่างน้อย ${field.errors['minlength'].requiredLength} ตัวอักษร`;
-    if (field.errors['maxlength'])
-      return `กรอกได้ไม่เกิน ${field.errors['maxlength'].requiredLength} ตัวอักษร`;
-    if (field.errors['min'])
-      return `ค่าต้องไม่ต่ำกว่า ${field.errors['min'].min}`;
-    if (field.errors['max'])
-      return `ค่าต้องไม่เกิน ${field.errors['max'].max}`;
-
-    return '';
   }
 }

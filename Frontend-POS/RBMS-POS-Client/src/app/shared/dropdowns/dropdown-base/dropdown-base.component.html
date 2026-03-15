@@ -1,0 +1,20 @@
+<p-dropdown
+  #dropdownRef
+  [(ngModel)]="selectedValue"
+  [options]="effectiveOptions"
+  [optionLabel]="optionLabel"
+  [optionValue]="optionValue"
+  [placeholder]="placeholder"
+  [showClear]="showClear"
+  [filter]="filter"
+  [filterBy]="filterBy"
+  [disabled]="isDisabled || disabled"
+  [loading]="isLoading"
+  [virtualScroll]="virtualScroll"
+  [virtualScrollItemSize]="virtualScrollItemSize"
+  [virtualScrollOptions]="virtualScrollOptions"
+  [styleClass]="styleClass"
+  [class]="invalid ? 'ng-invalid ng-dirty' : ''"
+  (ngModelChange)="onValueChange($event)"
+  (onFilter)="onFilterChange($event)">
+</p-dropdown>

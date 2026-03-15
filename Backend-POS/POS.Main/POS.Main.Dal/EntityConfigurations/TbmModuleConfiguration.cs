@@ -70,6 +70,7 @@ public class TbmModuleConfiguration : IEntityTypeConfiguration<TbmModule>
             new TbmModule { ModuleId = 11, ModuleName = "จัดการตำแหน่ง", ModuleCode = "position", ParentModuleId = 2, SortOrder = 2, IsActive = true, CreatedAt = seedDate },
             new TbmModule { ModuleId = 12, ModuleName = "จัดการพนักงาน", ModuleCode = "employee", ParentModuleId = 3, SortOrder = 1, IsActive = true, CreatedAt = seedDate },
             new TbmModule { ModuleId = 13, ModuleName = "จัดการเมนู", ModuleCode = "menu-item", ParentModuleId = 4, SortOrder = 1, IsActive = true, CreatedAt = seedDate },
+            new TbmModule { ModuleId = 18, ModuleName = "ตั้งค่าร้านค้า", ModuleCode = "shop-settings", ParentModuleId = 2, SortOrder = 3, IsActive = true, CreatedAt = seedDate },
             new TbmModule { ModuleId = 14, ModuleName = "จัดการออเดอร์", ModuleCode = "order-manage", ParentModuleId = 5, SortOrder = 1, IsActive = true, CreatedAt = seedDate },
             new TbmModule { ModuleId = 15, ModuleName = "จัดการโต๊ะ", ModuleCode = "table-manage", ParentModuleId = 6, SortOrder = 1, IsActive = true, CreatedAt = seedDate },
             new TbmModule { ModuleId = 16, ModuleName = "ชำระเงิน", ModuleCode = "payment-manage", ParentModuleId = 7, SortOrder = 1, IsActive = true, CreatedAt = seedDate },

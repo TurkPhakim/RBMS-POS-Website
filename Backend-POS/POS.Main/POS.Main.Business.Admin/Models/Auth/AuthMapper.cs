@@ -12,6 +12,8 @@ public static class AuthMapper
             Username = user.Username,
             Email = user.Email,
             EmployeeId = employee?.EmployeeId,
+            Nickname = employee?.Nickname,
+            ProfileImageFileId = employee?.ImageFileId,
             PositionId = employee?.PositionId,
             PositionName = employee?.Position?.PositionName,
             Permissions = permissions ?? new()

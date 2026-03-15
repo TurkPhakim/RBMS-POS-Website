@@ -1,9 +1,18 @@
-import { Component, signal, DestroyRef, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  OnDestroy,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ServiceChargesService } from '@app/core/api/services';
+import { Router } from '@angular/router';
+
 import { ServiceChargeResponseModel } from '@app/core/api/models';
+import { ServiceChargesService } from '@app/core/api/services';
+import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
+import { Icon, ModalService } from '@app/core/services/modal.service';
 
 const KEY_BTN_ADD = 'add-service-charge';
 
@@ -13,21 +22,45 @@ const KEY_BTN_ADD = 'add-service-charge';
   templateUrl: './service-charge-list.component.html',
 })
 export class ServiceChargeListComponent implements OnDestroy {
-  serviceCharges = signal<ServiceChargeResponseModel[]>([]);
-  isLoading = signal(false);
-  errorMessage = signal<string | null>(null);
-  showDeleteModal = signal(false);
-  showSuccessModal = signal(false);
-  showErrorModal = signal(false);
-  successMessage = signal('');
-  selectedServiceCharge = signal<{ id: number; name: string } | null>(null);
+  private allServiceCharges = signal<ServiceChargeResponseModel[]>([]);
+  statusFilter = signal<string | null>(null);
+  startDateFilter = signal<Date | null>(null);
+
+  canCreate: boolean;
+  canDelete: boolean;
+
+  serviceCharges = computed(() => {
+    const status = this.statusFilter();
+    const startDate = this.startDateFilter();
+    let filtered = this.allServiceCharges();
+
+    if (status === 'active') {
+      filtered = filtered.filter((sc) => sc.isActive === true);
+    } else if (status === 'inactive') {
+      filtered = filtered.filter((sc) => sc.isActive === false);
+    }
+
+    if (startDate) {
+      filtered = filtered.filter((sc) => {
+        if (!sc.startDate) return true;
+        return new Date(sc.startDate) >= startDate;
+      });
+    }
+
+    return filtered;
+  });
 
   constructor(
-    private readonly serviceChargesService: ServiceChargesService,
-    private readonly router: Router,
-    private readonly destroyRef: DestroyRef,
+    private readonly authService: AuthService,
     private readonly breadcrumbService: BreadcrumbService,
-  ) {}
+    private readonly destroyRef: DestroyRef,
+    private readonly modalService: ModalService,
+    private readonly router: Router,
+    private readonly serviceChargesService: ServiceChargesService,
+  ) {
+    this.canCreate = this.authService.hasPermission('service-charge.create');
+    this.canDelete = this.authService.hasPermission('service-charge.delete');
+  }
 
   ngOnInit(): void {
     this.loadServiceCharges();
@@ -39,84 +72,63 @@ export class ServiceChargeListComponent implements OnDestroy {
   }
 
   private setupBreadcrumbButtons(): void {
-    this.breadcrumbService.addOrUpdateButton({
-      key: KEY_BTN_ADD,
-      type: 'button',
-      item: {
+    if (this.canCreate) {
+      this.breadcrumbService.addOrUpdateButton({
         key: KEY_BTN_ADD,
-        label: 'เพิ่ม Service Charge',
-        icon: 'pi pi-plus',
-        callback: () => this.onAdd(),
-      },
-    });
+        type: 'button',
+        item: {
+          key: KEY_BTN_ADD,
+          label: 'เพิ่ม Service Charge',
+          callback: () => this.onAdd(),
+        },
+      });
+    }
   }
 
   loadServiceCharges(): void {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
     this.serviceChargesService
-      .apiAdminServicechargesGet()
+      .serviceChargesGetAllGet()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          this.serviceCharges.set(response.results ?? []);
-          this.isLoading.set(false);
+          this.allServiceCharges.set(response.results ?? []);
         },
         error: () => {
-          this.errorMessage.set('ไม่สามารถโหลดข้อมูล Service Charge ได้');
-          this.showErrorModal.set(true);
-          this.isLoading.set(false);
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถโหลดข้อมูล Service Charge ได้',
+          });
         },
       });
   }
 
   onAdd(): void {
-    this.router.navigate(['/admin-setting/service-charges/add']);
+    this.router.navigate(['/admin-setting/service-charges/create']);
   }
 
   onEdit(id: number): void {
-    this.router.navigate(['/admin-setting/service-charges/edit', id]);
+    this.router.navigate(['/admin-setting/service-charges/update', id]);
   }
 
   onDelete(id: number, name: string): void {
-    this.selectedServiceCharge.set({ id, name });
-    this.showDeleteModal.set(true);
-  }
-
-  confirmDelete(): void {
-    const serviceCharge = this.selectedServiceCharge();
-    if (!serviceCharge) return;
-
-    this.serviceChargesService
-      .apiAdminServicechargesServiceChargeIdDelete({ serviceChargeId: serviceCharge.id! })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.showDeleteModal.set(false);
-          this.successMessage.set(`ลบ "${serviceCharge.name}" สำเร็จ`);
-          this.showSuccessModal.set(true);
+    this.modalService
+      .info({
+        icon: Icon.Question,
+        title: 'ยืนยันการลบ',
+        message: `คุณต้องการลบ Service Charge "${name}" ?`,
+        confirmButtonLabel: 'ลบ',
+        cancelButtonLabel: 'ยกเลิก',
+        onConfirm: () =>
+          this.serviceChargesService.serviceChargesDeleteDelete({
+            serviceChargeId: id,
+          }),
+      })
+      .onClose.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
+          this.modalService.commonSuccess();
           this.loadServiceCharges();
-        },
-        error: () => {
-          this.errorMessage.set('ไม่สามารถลบ Service Charge ได้');
-          this.showErrorModal.set(true);
-          this.showDeleteModal.set(false);
-        },
+        }
       });
-  }
-
-  cancelDelete(): void {
-    this.showDeleteModal.set(false);
-    this.selectedServiceCharge.set(null);
-  }
-
-  closeSuccessModal(): void {
-    this.showSuccessModal.set(false);
-    this.successMessage.set('');
-  }
-
-  closeErrorModal(): void {
-    this.showErrorModal.set(false);
   }
 }

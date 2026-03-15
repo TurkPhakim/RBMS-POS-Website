@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using POS.Main.Core.Enums;
 using POS.Main.Dal;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.Interfaces;
@@ -23,74 +22,56 @@ public class EmployeeRepository : GenericRepository<TbEmployee>, IEmployeeReposi
             .FirstOrDefaultAsync(e => e.EmployeeId == employeeId, ct);
     }
 
-    public async Task<IEnumerable<TbEmployee>> GetAllActiveAsync(CancellationToken ct = default)
+    public async Task<TbEmployee?> GetByIdWithDetailsAsync(int employeeId, CancellationToken ct = default)
     {
-        return await QueryNoTracking()
+        return await _dbSet
             .Include(e => e.ImageFile)
             .Include(e => e.User)
             .Include(e => e.Position)
+            .Include(e => e.Addresses)
+            .Include(e => e.Educations)
+            .Include(e => e.WorkHistories)
             .Include(e => e.CreatedByEmployee)
             .Include(e => e.UpdatedByEmployee)
-            .OrderBy(e => e.FirstNameThai)
-            .ThenBy(e => e.LastNameThai)
-            .ToListAsync(ct);
+            .FirstOrDefaultAsync(e => e.EmployeeId == employeeId, ct);
     }
 
-    public async Task<IEnumerable<TbEmployee>> GetByEmploymentStatusAsync(EEmploymentStatus status, CancellationToken ct = default)
+    public IQueryable<TbEmployee> GetEmployeesQuery(string? search, bool? isActive, int? positionId)
     {
-        return await QueryNoTracking()
+        IQueryable<TbEmployee> query = QueryNoTracking()
             .Include(e => e.ImageFile)
             .Include(e => e.User)
-            .Include(e => e.Position)
-            .Include(e => e.CreatedByEmployee)
-            .Include(e => e.UpdatedByEmployee)
-            .Where(e => e.EmploymentStatus == status)
-            .OrderBy(e => e.FirstNameThai)
-            .ThenBy(e => e.LastNameThai)
-            .ToListAsync(ct);
-    }
+            .Include(e => e.Position);
 
-    public async Task<IEnumerable<TbEmployee>> SearchAsync(string searchTerm, CancellationToken ct = default)
-    {
-        if (string.IsNullOrWhiteSpace(searchTerm))
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            return await GetAllActiveAsync(ct);
-        }
-
-        var term = searchTerm.Trim().ToLower();
-
-        return await QueryNoTracking()
-            .Include(e => e.ImageFile)
-            .Include(e => e.User)
-            .Include(e => e.Position)
-            .Include(e => e.CreatedByEmployee)
-            .Include(e => e.UpdatedByEmployee)
-            .Where(e =>
+            var term = search.Trim().ToLower();
+            query = query.Where(e =>
                 e.FirstNameThai.ToLower().Contains(term) ||
                 e.LastNameThai.ToLower().Contains(term) ||
                 e.FirstNameEnglish.ToLower().Contains(term) ||
-                e.LastNameEnglish.ToLower().Contains(term) ||
-                (e.Nickname != null && e.Nickname.ToLower().Contains(term)) ||
-                (e.NationalId != null && e.NationalId.Contains(term)) ||
-                (e.Phone != null && e.Phone.Contains(term)))
-            .OrderBy(e => e.FirstNameThai)
-            .ThenBy(e => e.LastNameThai)
-            .ToListAsync(ct);
+                e.LastNameEnglish.ToLower().Contains(term));
+        }
+
+        if (isActive.HasValue)
+            query = query.Where(e => e.IsActive == isActive.Value);
+
+        if (positionId.HasValue)
+            query = query.Where(e => e.PositionId == positionId.Value);
+
+        return query.OrderBy(e => e.FirstNameThai).ThenBy(e => e.LastNameThai);
     }
 
     public async Task<bool> IsNationalIdExistsAsync(string nationalId, int? excludeId = null, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(nationalId))
-        {
             return false;
-        }
 
-        var query = _dbSet.Where(e => e.NationalId == nationalId);
+        var query = _context.Set<TbEmployee>().IgnoreQueryFilters()
+            .Where(e => e.NationalId == nationalId);
 
         if (excludeId.HasValue)
-        {
             query = query.Where(e => e.EmployeeId != excludeId.Value);
-        }
 
         return await query.AnyAsync(ct);
     }
@@ -98,16 +79,13 @@ public class EmployeeRepository : GenericRepository<TbEmployee>, IEmployeeReposi
     public async Task<bool> IsEmailExistsAsync(string email, int? excludeId = null, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(email))
-        {
             return false;
-        }
 
-        var query = _dbSet.Where(e => e.Email == email);
+        var query = _context.Set<TbEmployee>().IgnoreQueryFilters()
+            .Where(e => e.Email == email);
 
         if (excludeId.HasValue)
-        {
             query = query.Where(e => e.EmployeeId != excludeId.Value);
-        }
 
         return await query.AnyAsync(ct);
     }

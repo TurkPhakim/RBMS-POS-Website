@@ -5,15 +5,7 @@
     <p class="text-lg text-surface-sub mt-1">จัดการเมนูอาหารและเครื่องดื่มทั้งหมด</p>
   </div>
 
-  <!-- Loading -->
-  @if (isLoading()) {
-    <div class="flex justify-center py-20">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
-  }
-
   <!-- Content -->
-  @if (!isLoading()) {
     <!-- Filter Section -->
     <div class="bg-surface-card rounded-xl shadow-sm p-4 border border-surface-border">
       <div class="flex items-center gap-3 flex-wrap">
@@ -51,7 +43,7 @@
       <p-table [value]="menus()" [stripedRows]="true" [tableStyle]="{'min-width': '70rem'}">
         <ng-template pTemplate="header">
           <tr>
-            <th>ID</th>
+            <th>รหัส</th>
             <th>รูปภาพ</th>
             <th>ชื่อเมนู (ไทย)</th>
             <th>ชื่อเมนู (อังกฤษ)</th>
@@ -59,7 +51,7 @@
             <th>หมวดหมู่</th>
             <th>สถานะขาย</th>
             <th>สถานะระบบ</th>
-            <th>จัดการ</th>
+            <th>ตัวเลือก</th>
           </tr>
         </ng-template>
 
@@ -92,7 +84,7 @@
 
             <!-- Price -->
             <td class="text-right">
-              <span class="font-bold text-primary text-lg">฿{{ item.price | number: '1.2-2' }}</span>
+              <span class="font-bold text-primary text-lg">{{ item.price | number: '1.2-2' }}</span>
             </td>
 
             <!-- Category -->
@@ -138,38 +130,13 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="9" class="text-center py-12 text-surface-sub">
-              <div class="flex flex-col items-center">
-                <app-generic-icon name="empty-box" svgClass="w-16 h-16" class="opacity-30 mb-3"></app-generic-icon>
-                <p class="text-lg font-semibold">ไม่พบข้อมูลเมนู</p>
+            <td colspan="9">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่พบข้อมูลเมนู" />
               </div>
             </td>
           </tr>
         </ng-template>
       </p-table>
     </div>
-  }
 </div>
-
-<!-- Modals -->
-<app-confirm-modal
-  [isOpen]="showDeleteModal()"
-  title="ยืนยันการลบ"
-  message="คุณต้องการลบเมนู"
-  [itemName]="selectedMenu()?.name"
-  confirmText="ลบ"
-  cancelText="ยกเลิก"
-  type="delete"
-  (confirmed)="confirmDelete()"
-  (cancelled)="cancelDelete()" />
-
-<app-success-modal
-  [isOpen]="showSuccessModal()"
-  [message]="successMessage()"
-  [autoClose]="true"
-  (closed)="closeSuccessModal()" />
-
-<app-error-modal
-  [isOpen]="showErrorModal()"
-  [message]="errorMessage()!"
-  (closed)="closeErrorModal()" />

@@ -1,6 +1,6 @@
 # Quick Start — RBMS-POS
 
-> อ้างอิงจาก config จริงในโปรเจค — อัปเดตล่าสุด 2026-03-10
+> อ้างอิงจาก config จริงในโปรเจค — อัปเดตล่าสุด 2026-03-15
 
 ---
 
@@ -13,6 +13,95 @@
 | Angular CLI | 19+            | `ng version`                 |
 | SQL Server  | Express ขึ้นไป | Services.msc → SQL Server    |
 | SSMS        | ล่าสุด         | (optional — ดู/แก้ database) |
+
+---
+
+## ทางเลือก: ใช้ Docker สำหรับ Dependencies
+
+> ถ้าไม่ต้องการติดตั้ง SQL Server และ MinIO บนเครื่อง สามารถใช้ Docker แทนได้
+
+### สิ่งที่ต้องติดตั้งเพิ่ม
+
+| เครื่องมือ | เวอร์ชัน | ตรวจสอบ |
+|------------|----------|---------|
+| Docker Desktop | ล่าสุด | `docker --version` |
+
+### ขั้นตอน
+
+1. **Copy `.env` จาก template**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   แก้ไข `SA_PASSWORD` ใน `.env` ตามต้องการ (ต้องมีตัวพิมพ์ใหญ่-เล็ก + ตัวเลข + อักขระพิเศษ อย่างน้อย 8 ตัว)
+
+2. **เริ่ม services**
+
+   ```bash
+   docker compose up -d
+   ```
+
+   รอจนทุก container healthy:
+
+   ```bash
+   docker compose ps
+   ```
+
+   ควรเห็น `sqlserver` = healthy, `minio` = healthy, `minio-init` = exited (0)
+
+3. **อัพเดต Connection String**
+
+   เปิดไฟล์ `Backend-POS/POS.Main/RBMS.POS.WebAPI/appsettings.Development.json`
+
+   เปลี่ยน `ConnectionStrings.DefaultConnection` เป็น:
+
+   ```
+   Server=localhost,1433;Database=RBMS_POS;User Id=sa;Password=<SA_PASSWORD ที่ตั้งใน .env>;MultipleActiveResultSets=true;TrustServerCertificate=True
+   ```
+
+4. **รัน Migrations** ตามปกติ (ดูขั้นตอนที่ 1.2)
+
+5. **เชื่อมต่อ SSMS** — ดูวิธีละเอียดที่หัวข้อ [เชื่อมต่อ SSMS กับ Docker SQL Server](#เชื่อมต่อ-ssms-กับ-docker-sql-server)
+
+6. **MinIO Console** — เปิดที่ `http://localhost:9001` (login: `minioadmin` / `minioadmin`)
+
+### คำสั่ง Docker ที่ใช้บ่อย
+
+| คำสั่ง | ผลลัพธ์ |
+|--------|---------|
+| `docker compose up -d` | เริ่ม services (background) |
+| `docker compose down` | หยุด services (data ยังอยู่) |
+| `docker compose down -v` | หยุด + ลบ data ทั้งหมด |
+| `docker compose logs sqlserver` | ดู log ของ SQL Server |
+| `docker compose logs minio` | ดู log ของ MinIO |
+| `docker compose ps` | ดูสถานะ containers |
+
+> หลังจาก setup Docker แล้ว ให้ข้ามไปขั้นตอนที่ 1.2 (รัน Migrations) ได้เลย
+
+### เชื่อมต่อ SSMS กับ Docker SQL Server
+
+เปิด SQL Server Management Studio (SSMS) แล้วกรอกข้อมูลตามนี้:
+
+| ช่อง | ค่า |
+|------|-----|
+| Server type | `Database Engine` |
+| Server name | `localhost,1433` (พิมพ์เอง — ใช้คอมม่า `,` ไม่ใช่ colon `:`) |
+| Authentication | `SQL Server Authentication` |
+| Login | `sa` |
+| Password | ค่า `SA_PASSWORD` จากไฟล์ `.env` (ค่าเริ่มต้น: `YourStr0ng!Pass`) |
+
+**แก้ปัญหา SSL Certificate Error:**
+
+ถ้าเจอ error `"The certificate chain was issued by an authority that is not trusted"`:
+
+1. กด **OK** ปิด error
+2. คลิกแท็บ **Connection Properties** (ด้านบนหน้าต่าง Connect to Server)
+3. เปลี่ยน **Encryption** จาก `Mandatory` → `Optional`
+4. ติ๊กถูก **Trust server certificate**
+5. กลับไปแท็บ **Login** แล้วกด **Connect**
+
+> สาเหตุ: Docker SQL Server ใช้ self-signed certificate — SSMS เวอร์ชันใหม่บังคับ encryption เป็น Mandatory โดย default จึงปฏิเสธ certificate ที่ไม่ได้มาจาก CA จริง
 
 ---
 
@@ -112,22 +201,97 @@ ng serve
 ## ขั้นตอนที่ 4 — ทดสอบระบบ
 
 1. เปิด `http://localhost:4300`
-2. Login ด้วย `admin` / `Admin@123`
+2. Login ด้วย `admin` / `P@ssw0rd`
 3. ตรวจสอบแต่ละเมนูใน Sidebar
 
 ---
 
 ## Workflow ประจำวัน (หลัง Setup ครั้งแรก)
 
-```bash
-# Terminal 1 — Backend
-cd Backend-POS/POS.Main/RBMS.POS.WebAPI
-dotnet watch run --launch-profile https
+> ทำตามลำดับทุกครั้งที่ต้องการรันระบบ
 
-# Terminal 2 — Frontend
-cd Frontend-POS/RBMS-POS-Client
-ng serve
+### Step 1 — เริ่ม Docker (SQL Server + MinIO)
+
+```bash
+# ตรวจสอบว่า Docker Desktop รันอยู่ก่อน
+docker info
+
+# ปิดแล้วเปิดใหม่เสมอ (เพื่อล้าง state เก่า)
+docker compose down && docker compose up -d
 ```
+
+ตรวจสอบสถานะ:
+
+```bash
+docker compose ps
+```
+
+ควรเห็น: `sqlserver` = healthy, `minio` = healthy, `minio-init` = exited (0)
+
+---
+
+### Step 2 — ตรวจสอบ Port ก่อนรัน
+
+```bash
+netstat -ano | grep -E ':(5300|4300)' | grep LISTENING
+```
+
+ถ้า port ยังถูกใช้อยู่ (มีผลลัพธ์ออกมา) ให้ kill process ก่อน:
+
+```bash
+# ดู PID จากผลลัพธ์ netstat แล้วใช้คำสั่งนี้ (แทน <PID> ด้วยเลขจริง)
+taskkill /PID <PID> /F
+```
+
+---
+
+### Step 3 — รัน Backend
+
+**Terminal 1:**
+
+```bash
+cd Backend-POS/POS.Main/RBMS.POS.WebAPI
+dotnet run
+```
+
+รอจนเห็น:
+
+```
+Now listening on: https://localhost:5300
+Now listening on: http://localhost:5301
+```
+
+ทดสอบ Swagger ที่ `https://localhost:5300/swagger`
+
+> **Hot reload (แนะนำระหว่างพัฒนา):** `dotnet watch run`
+
+---
+
+### Step 4 — รัน Frontend
+
+**Terminal 2:**
+
+```bash
+cd Frontend-POS/RBMS-POS-Client
+npx ng serve
+```
+
+รอจนเห็น:
+
+```
+Application bundle generation complete.
+Local: http://localhost:4300/
+```
+
+---
+
+### Step 5 — เปิดแอป
+
+เปิดเบราว์เซอร์ที่ `http://localhost:4300`
+
+Login: `admin` / `P@ssw0rd`
+
+---
 
 ### เมื่อ Backend API เปลี่ยน
 

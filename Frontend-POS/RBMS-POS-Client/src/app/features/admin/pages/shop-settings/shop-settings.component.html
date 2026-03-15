@@ -1,0 +1,466 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div
+      class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="admin-setting"
+        svgClass="w-8 h-8"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-3xl font-extrabold tracking-tight text-primary">
+      ตั้งค่าร้านค้า
+    </h1>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="form" class="flex flex-col gap-4">
+    <!-- Card 1: โลโก้ร้านค้า -->
+    <app-image-upload-card
+      label="โลโก้ร้านค้า"
+      placeholderIcon="image-preview"
+      [imageUrl]="serverLogoUrl()"
+      [allowedTypes]="['image/png']"
+      (fileSelected)="selectedLogoFile.set($event)"
+      (imageRemoved)="onLogoRemoved()"
+    />
+
+    <!-- Card 2: ข้อมูลร้านค้า -->
+    <app-section-card
+      headerLabel="ข้อมูลร้านค้า"
+      headerIcon="restaurant"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <!-- ชื่อร้าน (ไทย) -->
+      <div>
+        <label
+          for="shopNameThai"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          ชื่อร้านค้า (ภาษาไทย) <span class="text-danger">*</span>
+        </label>
+        <input
+          id="shopNameThai"
+          type="text"
+          pInputText
+          formControlName="shopNameThai"
+          placeholder="ชื่อร้านค้า (ภาษาไทย)"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('shopNameThai')" type="text" />
+      </div>
+
+      <!-- ชื่อร้านค้า (ภาษาอังกฤษ) -->
+      <div>
+        <label
+          for="shopNameEnglish"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          ชื่อร้านค้า (ภาษาอังกฤษ) <span class="text-danger">*</span>
+        </label>
+        <input
+          id="shopNameEnglish"
+          type="text"
+          pInputText
+          formControlName="shopNameEnglish"
+          placeholder="ชื่อร้านค้า (ภาษาอังกฤษ)"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('shopNameEnglish')" type="text" />
+      </div>
+
+      <!-- ชื่อบริษัท (ภาษาไทย) -->
+      <div>
+        <label
+          for="companyNameThai"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          ชื่อบริษัท (ภาษาไทย)
+        </label>
+        <input
+          id="companyNameThai"
+          type="text"
+          pInputText
+          formControlName="companyNameThai"
+          placeholder="ชื่อบริษัท (ภาษาไทย)"
+          class="w-full"
+        />
+      </div>
+
+      <!-- ชื่อบริษัท (ภาษาอังกฤษ) -->
+      <div>
+        <label
+          for="companyNameEnglish"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          ชื่อบริษัท (ภาษาอังกฤษ)
+        </label>
+        <input
+          id="companyNameEnglish"
+          type="text"
+          pInputText
+          formControlName="companyNameEnglish"
+          placeholder="ชื่อบริษัท (ภาษาอังกฤษ)"
+          class="w-full"
+        />
+      </div>
+
+      <!-- เลขประจำตัวผู้เสียภาษี -->
+      <div>
+        <label for="taxId" class="block font-semibold text-surface-dark mb-2">
+          เลขประจำตัวผู้เสียภาษี <span class="text-danger">*</span>
+        </label>
+        <input
+          id="taxId"
+          type="text"
+          pInputText
+          formControlName="taxId"
+          placeholder="เลขประจำตัวผู้เสียภาษี"
+          class="w-full"
+          maxlength="13"
+        />
+        <app-field-error [control]="form.get('taxId')" type="text" />
+      </div>
+
+      <!-- ประเภทอาหาร -->
+      <div>
+        <label
+          for="foodType"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          ประเภทอาหาร <span class="text-danger">*</span>
+        </label>
+        <input
+          id="foodType"
+          type="text"
+          pInputText
+          formControlName="foodType"
+          placeholder="ประเภทอาหาร"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('foodType')" type="text" />
+      </div>
+
+      <!-- รายละเอียดร้านค้า -->
+      <div class="md:col-span-2">
+        <label
+          for="description"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          รายละเอียดร้านค้า
+        </label>
+        <textarea
+          id="description"
+          pTextarea
+          formControlName="description"
+          rows="3"
+          placeholder="รายละเอียดร้านค้า"
+          class="w-full"
+          [autoResize]="true"
+        ></textarea>
+      </div>
+    </app-section-card>
+
+    <!-- Card 3: เวลาทำการ -->
+    <app-section-card
+      headerLabel="เวลาทำการ"
+      headerIcon="work-time"
+      contentClass="p-6"
+    >
+      <!-- Toggle ใน Header ทางขวา -->
+      <div
+        sectionActions
+        class="flex items-center gap-4 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full px-6 py-3"
+      >
+        <p-inputSwitch formControlName="hasTwoPeriods"></p-inputSwitch>
+        <span class="font-bold text-white text-md tracking-wide mb-1">
+          {{
+            form.get("hasTwoPeriods")?.value
+              ? "เปิด 2 ช่วงเวลา"
+              : "เปิดช่วงเวลาเดียว"
+          }}
+        </span>
+      </div>
+
+      <!-- Operating Hours Table -->
+      <div class="overflow-x-auto rounded-xl border border-surface-border">
+        <table class="w-full">
+          <thead>
+            <tr
+              class="bg-gradient-to-r from-primary to-primary-dark text-white"
+            >
+              <th
+                class="px-5 py-2.5 text-left text-md font-semibold w-28 border-r border-white/20"
+                rowspan="2"
+              >
+                วัน
+              </th>
+              <th
+                class="px-4 py-2.5 text-center text-md font-semibold w-24 border-r border-white/20"
+                rowspan="2"
+              >
+                สถานะ
+              </th>
+              <th
+                class="px-4 py-2 text-center text-md font-semibold border-b border-white/20"
+                colspan="2"
+              >
+                ช่วงที่ 1
+              </th>
+              @if (form.get("hasTwoPeriods")?.value) {
+                <th
+                  class="px-4 py-2 text-center text-md font-semibold border-l border-b border-white/20"
+                  colspan="2"
+                >
+                  ช่วงที่ 2
+                </th>
+              }
+            </tr>
+            <tr class="bg-primary-dark text-white">
+              <th
+                class="px-3 py-2 text-center font-semibold border-r border-white/20"
+              >
+                ช่วงเปิด
+              </th>
+              <th class="px-3 py-2 text-center font-semibold">ช่วงปิด</th>
+              @if (form.get("hasTwoPeriods")?.value) {
+                <th
+                  class="px-3 py-2 text-center font-semibold border-l border-r border-white/20"
+                >
+                  ช่วงเปิด
+                </th>
+                <th class="px-3 py-2 text-center font-semibold">ช่วงปิด</th>
+              }
+            </tr>
+          </thead>
+          <tbody formArrayName="operatingHours">
+            @for (
+              oh of operatingHours.controls;
+              track oh.get("dayOfWeek")?.value;
+              let i = $index;
+              let even = $even
+            ) {
+              <tr
+                [formGroupName]="i"
+                class="border-b border-surface-border last:border-0"
+                [class.bg-white]="even"
+                [class.bg-surface-ground]="!even"
+              >
+                <td class="px-5 py-3">
+                  <span
+                    class="text-base font-extrabold"
+                    [class.text-primary]="oh.get('isOpen')?.value"
+                    [class.text-surface-sub]="!oh.get('isOpen')?.value"
+                  >
+                    {{ dayLabels[oh.get("dayOfWeek")?.value] }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <p-inputSwitch formControlName="isOpen"></p-inputSwitch>
+                </td>
+                <td class="px-3 py-3">
+                  <p-datepicker
+                    formControlName="openTime1"
+                    [timeOnly]="true"
+                    [hourFormat]="'24'"
+                    [showClear]="true"
+                    [disabled]="!oh.get('isOpen')?.value"
+                    styleClass="w-full"
+                    placeholder="เปิด"
+                  />
+                </td>
+                <td class="px-3 py-3">
+                  <p-datepicker
+                    formControlName="closeTime1"
+                    [timeOnly]="true"
+                    [hourFormat]="'24'"
+                    [showClear]="true"
+                    [disabled]="!oh.get('isOpen')?.value"
+                    styleClass="w-full"
+                    placeholder="ปิด"
+                  />
+                </td>
+                @if (form.get("hasTwoPeriods")?.value) {
+                  <td class="px-3 py-3">
+                    <p-datepicker
+                      formControlName="openTime2"
+                      [timeOnly]="true"
+                      [hourFormat]="'24'"
+                      [showClear]="true"
+                      [disabled]="!oh.get('isOpen')?.value"
+                      styleClass="w-full"
+                      placeholder="เปิด"
+                    />
+                  </td>
+                  <td class="px-3 py-3">
+                    <p-datepicker
+                      formControlName="closeTime2"
+                      [timeOnly]="true"
+                      [hourFormat]="'24'"
+                      [showClear]="true"
+                      [disabled]="!oh.get('isOpen')?.value"
+                      styleClass="w-full"
+                      placeholder="ปิด"
+                    />
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-section-card>
+
+    <!-- Card 4: ที่อยู่และช่องทางติดต่อ -->
+    <app-section-card
+      headerLabel="ที่อยู่และช่องทางติดต่อ"
+      headerIcon="telephone"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <!-- ที่อยู่ (full width) -->
+      <div class="md:col-span-2">
+        <label for="address" class="block font-semibold text-surface-dark mb-2">
+          ที่อยู่ร้าน (สำหรับท้ายใบเสร็จ) <span class="text-danger">*</span>
+        </label>
+        <textarea
+          id="address"
+          pTextarea
+          formControlName="address"
+          rows="3"
+          placeholder="ที่อยู่ร้าน (สำหรับท้ายใบเสร็จ)"
+          class="w-full"
+          [autoResize]="true"
+        ></textarea>
+        <app-field-error [control]="form.get('address')" type="text" />
+      </div>
+
+      <!-- เบอร์โทรศัพท์ -->
+      <div>
+        <label
+          for="phoneNumber"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          เบอร์โทรศัพท์ <span class="text-danger">*</span>
+        </label>
+        <input
+          id="phoneNumber"
+          type="text"
+          pInputText
+          formControlName="phoneNumber"
+          placeholder="เบอร์โทรศัพท์"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('phoneNumber')" type="text" />
+      </div>
+
+      <!-- อีเมลร้านค้า -->
+      <div>
+        <label
+          for="shopEmail"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          อีเมลร้านค้า
+        </label>
+        <input
+          id="shopEmail"
+          type="email"
+          pInputText
+          formControlName="shopEmail"
+          placeholder="อีเมลร้านค้า"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('shopEmail')" type="text" />
+      </div>
+
+      <!-- Facebook -->
+      <div>
+        <label
+          for="facebook"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          Facebook
+        </label>
+        <input
+          id="facebook"
+          type="text"
+          pInputText
+          formControlName="facebook"
+          placeholder="Facebook"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Instagram -->
+      <div>
+        <label
+          for="instagram"
+          class="block font-semibold text-surface-dark mb-2"
+        >
+          Instagram
+        </label>
+        <input
+          id="instagram"
+          type="text"
+          pInputText
+          formControlName="instagram"
+          placeholder="Instagram"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Website URL -->
+      <div>
+        <label for="website" class="block font-semibold text-surface-dark mb-2">
+          Website URL
+        </label>
+        <input
+          id="website"
+          type="text"
+          pInputText
+          formControlName="website"
+          placeholder="Website URL"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Line ID -->
+      <div>
+        <label for="lineId" class="block font-semibold text-surface-dark mb-2">
+          Line ID
+        </label>
+        <input
+          id="lineId"
+          type="text"
+          pInputText
+          formControlName="lineId"
+          placeholder="Line ID"
+          class="w-full"
+        />
+      </div>
+    </app-section-card>
+
+    <!-- Card 5: QR Code ชำระเงิน -->
+    <app-image-upload-card
+      variant="square"
+      label="คลิกเพื่ออัปโหลด QR Code ชำระเงิน"
+      uploadedLabel="QR Code ชำระเงิน"
+      placeholderIcon="image-preview"
+      [imageUrl]="qrCodePreview()"
+      [allowedTypes]="['image/png']"
+      (fileSelected)="selectedQrCodeFile.set($event)"
+      (imageRemoved)="onQrCodeRemoved()"
+    />
+
+    <!-- Footer: Audit Info -->
+    @if (settings()) {
+      <app-audit-footer
+        [createdByName]="settings()!.createdByName"
+        [createdAt]="settings()!.createdAt"
+        [updatedByName]="settings()!.updatedByName"
+        [updatedAt]="settings()!.updatedAt"
+      />
+    }
+  </form>
+</div>

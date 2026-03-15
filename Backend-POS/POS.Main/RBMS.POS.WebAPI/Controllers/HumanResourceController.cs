@@ -2,18 +2,17 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using POS.Main.Business.Admin.Interfaces;
 using POS.Main.Business.HumanResource.Models;
+using POS.Main.Business.HumanResource.Models.EmployeeAddress;
+using POS.Main.Business.HumanResource.Models.EmployeeEducation;
+using POS.Main.Business.HumanResource.Models.EmployeeWorkHistory;
 using POS.Main.Business.HumanResource.Models.UserAccount;
 using POS.Main.Business.HumanResource.Interfaces;
 using POS.Main.Core.Constants;
-using POS.Main.Core.Enums;
 using POS.Main.Core.Models;
 using RBMS.POS.WebAPI.Filters;
 
 namespace RBMS.POS.WebAPI.Controllers;
 
-/// <summary>
-/// Employee management endpoints
-/// </summary>
 [Authorize]
 [Route("api/humanresource")]
 public class HumanResourceController : BaseController
@@ -28,17 +27,29 @@ public class HumanResourceController : BaseController
     }
 
     /// <summary>
-    /// Get all active employees
+    /// ดึงข้อมูลโปรไฟล์ตัวเอง — ทุกคนที่ login ดูได้ (ไม่ต้อง permission)
     /// </summary>
+    [HttpGet("me")]
+    [ProducesResponseType(typeof(BaseResponseModel<MyProfileResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyProfile(CancellationToken ct = default)
+    {
+        var employeeIdClaim = User.FindFirst("employee_id")?.Value;
+        if (string.IsNullOrEmpty(employeeIdClaim) || !int.TryParse(employeeIdClaim, out var employeeId))
+            return Success<MyProfileResponseModel?>(null);
+
+        return Success(await _employeeService.GetMyProfileAsync(employeeId, ct));
+    }
+
     [HttpGet]
     [PermissionAuthorize(Permissions.Employee.Read)]
-    [ProducesResponseType(typeof(ListResponseModel<EmployeeResponseModel>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAllActive(CancellationToken ct = default)
-        => ListSuccess(await _employeeService.GetAllActiveEmployeesAsync(ct));
+    [ProducesResponseType(typeof(PaginationResult<EmployeeResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetEmployees(
+        [FromQuery] PaginationModel param,
+        [FromQuery] bool? isActive,
+        [FromQuery] int? positionId,
+        CancellationToken ct = default)
+        => PagedSuccess(await _employeeService.GetEmployeesAsync(param, isActive, positionId, ct));
 
-    /// <summary>
-    /// Get employee by ID
-    /// </summary>
     [HttpGet("{employeeId}")]
     [PermissionAuthorize(Permissions.Employee.Read)]
     [ProducesResponseType(typeof(BaseResponseModel<EmployeeResponseModel>), StatusCodes.Status200OK)]
@@ -46,18 +57,6 @@ public class HumanResourceController : BaseController
     public async Task<IActionResult> GetById(int employeeId, CancellationToken ct = default)
         => Success(await _employeeService.GetEmployeeByIdAsync(employeeId, ct));
 
-    /// <summary>
-    /// Get employees by employment status
-    /// </summary>
-    [HttpGet("status/{status}")]
-    [PermissionAuthorize(Permissions.Employee.Read)]
-    [ProducesResponseType(typeof(ListResponseModel<EmployeeResponseModel>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetByStatus(EEmploymentStatus status, CancellationToken ct = default)
-        => ListSuccess(await _employeeService.GetEmployeesByStatusAsync(status, ct));
-
-    /// <summary>
-    /// Get employee by linked user ID
-    /// </summary>
     [HttpGet("user/{userId}")]
     [PermissionAuthorize(Permissions.Employee.Read)]
     [ProducesResponseType(typeof(BaseResponseModel<EmployeeResponseModel>), StatusCodes.Status200OK)]
@@ -66,17 +65,18 @@ public class HumanResourceController : BaseController
         => Success(await _employeeService.GetEmployeeByUserIdAsync(userId, ct));
 
     /// <summary>
-    /// Search employees by name, national ID, or phone
+    /// ตรวจสอบข้อมูลซ้ำ (เลขบัตรประชาชน / อีเมล) — รวม soft-deleted records
     /// </summary>
-    [HttpGet("search")]
+    [HttpGet("check-duplicate")]
     [PermissionAuthorize(Permissions.Employee.Read)]
-    [ProducesResponseType(typeof(ListResponseModel<EmployeeResponseModel>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Search([FromQuery] string searchTerm, CancellationToken ct = default)
-        => ListSuccess(await _employeeService.SearchEmployeesAsync(searchTerm, ct));
+    [ProducesResponseType(typeof(BaseResponseModel<bool>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CheckDuplicate(
+        [FromQuery] string field,
+        [FromQuery] string value,
+        [FromQuery] int? excludeEmployeeId,
+        CancellationToken ct = default)
+        => Success(await _employeeService.CheckDuplicateAsync(field, value, excludeEmployeeId, ct));
 
-    /// <summary>
-    /// Create a new employee
-    /// </summary>
     [HttpPost]
     [PermissionAuthorize(Permissions.Employee.Create)]
     [RequestSizeLimit(10_485_760)]
@@ -95,9 +95,6 @@ public class HumanResourceController : BaseController
         return Success(result);
     }
 
-    /// <summary>
-    /// Update an existing employee
-    /// </summary>
     [HttpPut("{employeeId}")]
     [PermissionAuthorize(Permissions.Employee.Update)]
     [RequestSizeLimit(10_485_760)]
@@ -117,9 +114,6 @@ public class HumanResourceController : BaseController
         return Success(result);
     }
 
-    /// <summary>
-    /// Delete an employee (soft delete)
-    /// </summary>
     [HttpDelete("{employeeId}")]
     [PermissionAuthorize(Permissions.Employee.Delete)]
     [ProducesResponseType(typeof(BaseResponseModel<object>), StatusCodes.Status200OK)]
@@ -130,9 +124,6 @@ public class HumanResourceController : BaseController
         return Success("Employee deleted successfully");
     }
 
-    /// <summary>
-    /// Create user account for employee
-    /// </summary>
     [HttpPost("{employeeId}/create-user")]
     [PermissionAuthorize(Permissions.Employee.Create)]
     [ProducesResponseType(typeof(BaseResponseModel<CreateUserAccountResponseModel>), StatusCodes.Status200OK)]
@@ -141,4 +132,70 @@ public class HumanResourceController : BaseController
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> CreateUserAccount(int employeeId, CancellationToken ct = default)
         => Success(await _employeeService.CreateUserAccountAsync(employeeId, ct));
+
+    // === Address Endpoints ===
+    [HttpPost("{employeeId}/addresses")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<EmployeeAddressResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateAddress(int employeeId, [FromBody] CreateEmployeeAddressRequestModel request, CancellationToken ct = default)
+        => Success(await _employeeService.CreateAddressAsync(employeeId, request, ct));
+
+    [HttpPut("{employeeId}/addresses/{addressId}")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<EmployeeAddressResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateAddress(int employeeId, int addressId, [FromBody] UpdateEmployeeAddressRequestModel request, CancellationToken ct = default)
+        => Success(await _employeeService.UpdateAddressAsync(employeeId, addressId, request, ct));
+
+    [HttpDelete("{employeeId}/addresses/{addressId}")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteAddress(int employeeId, int addressId, CancellationToken ct = default)
+    {
+        await _employeeService.DeleteAddressAsync(employeeId, addressId, ct);
+        return Success("Address deleted successfully");
+    }
+
+    // === Education Endpoints ===
+    [HttpPost("{employeeId}/educations")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<EmployeeEducationResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateEducation(int employeeId, [FromBody] CreateEmployeeEducationRequestModel request, CancellationToken ct = default)
+        => Success(await _employeeService.CreateEducationAsync(employeeId, request, ct));
+
+    [HttpPut("{employeeId}/educations/{educationId}")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<EmployeeEducationResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateEducation(int employeeId, int educationId, [FromBody] UpdateEmployeeEducationRequestModel request, CancellationToken ct = default)
+        => Success(await _employeeService.UpdateEducationAsync(employeeId, educationId, request, ct));
+
+    [HttpDelete("{employeeId}/educations/{educationId}")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteEducation(int employeeId, int educationId, CancellationToken ct = default)
+    {
+        await _employeeService.DeleteEducationAsync(employeeId, educationId, ct);
+        return Success("Education deleted successfully");
+    }
+
+    // === Work History Endpoints ===
+    [HttpPost("{employeeId}/work-histories")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<EmployeeWorkHistoryResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateWorkHistory(int employeeId, [FromBody] CreateEmployeeWorkHistoryRequestModel request, CancellationToken ct = default)
+        => Success(await _employeeService.CreateWorkHistoryAsync(employeeId, request, ct));
+
+    [HttpPut("{employeeId}/work-histories/{workHistoryId}")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<EmployeeWorkHistoryResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateWorkHistory(int employeeId, int workHistoryId, [FromBody] UpdateEmployeeWorkHistoryRequestModel request, CancellationToken ct = default)
+        => Success(await _employeeService.UpdateWorkHistoryAsync(employeeId, workHistoryId, request, ct));
+
+    [HttpDelete("{employeeId}/work-histories/{workHistoryId}")]
+    [PermissionAuthorize(Permissions.Employee.Update)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteWorkHistory(int employeeId, int workHistoryId, CancellationToken ct = default)
+    {
+        await _employeeService.DeleteWorkHistoryAsync(employeeId, workHistoryId, ct);
+        return Success("Work history deleted successfully");
+    }
 }

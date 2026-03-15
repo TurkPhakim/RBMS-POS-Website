@@ -48,6 +48,12 @@ public class GlobalExceptionFilter : IExceptionFilter
             response.Errors = validationEx.Errors;
         }
 
+        if (context.Exception is AccountLockedException lockedEx && lockedEx.LockedUntil.HasValue)
+        {
+            var utc = DateTime.SpecifyKind(lockedEx.LockedUntil.Value, DateTimeKind.Utc);
+            response.Result = new { lockedUntil = utc.ToString("O") };
+        }
+
         context.Result = new ObjectResult(response)
         {
             StatusCode = statusCode

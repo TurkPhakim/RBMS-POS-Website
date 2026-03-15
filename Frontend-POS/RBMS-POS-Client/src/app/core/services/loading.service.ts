@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
@@ -6,13 +7,10 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class LoadingService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
-  private messageSubject = new BehaviorSubject<string>('กำลังดำเนินการ...');
 
   loading$ = this.loadingSubject.asObservable();
-  message$ = this.messageSubject.asObservable();
 
-  show(message: string = 'กำลังดำเนินการ...'): void {
-    this.messageSubject.next(message);
+  show(): void {
     this.loadingSubject.next(true);
   }
 

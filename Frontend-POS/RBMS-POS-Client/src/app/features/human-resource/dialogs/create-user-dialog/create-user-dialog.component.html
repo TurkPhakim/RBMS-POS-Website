@@ -1,66 +1,149 @@
-<div class="space-y-4">
-  <!-- Profile Section -->
-  <div class="flex items-center gap-4">
+<app-card-template
+  [headerLabel]="config.header!"
+  headerLabelClass="text-xl font-semibold text-primary-dark"
+  contentClass="space-y-4"
+>
+  <!-- Profile Header -->
+  <div
+    class="bg-gradient-to-r from-primary-dark to-primary rounded-xl p-5 flex items-center gap-5 relative overflow-hidden"
+  >
+    <!-- Decorative Circles -->
+    <div
+      class="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/10"
+    ></div>
+    <div
+      class="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/10"
+    ></div>
+    <div
+      class="absolute top-1/2 right-1/3 w-10 h-10 rounded-full bg-white/5"
+    ></div>
+    <div
+      class="absolute top-2 left-1/3 w-14 h-14 rounded-full bg-white/5"
+    ></div>
+    <div
+      class="absolute -bottom-2 right-1/4 w-16 h-16 rounded-full bg-white/10"
+    ></div>
+
+    <!-- Gender Icon (top-right) -->
+    <div class="absolute top-5 right-5 z-10">
+      @switch (employee.gender) {
+        @case (1) {
+          <app-generic-icon
+            name="man-symbol"
+            svgClass="w-12 h-12"
+            class="text-gender-male"
+          ></app-generic-icon>
+        }
+        @case (2) {
+          <app-generic-icon
+            name="woman-symbol"
+            svgClass="w-12 h-12"
+            class="text-gender-female"
+          ></app-generic-icon>
+        }
+        @default {
+          <app-generic-icon
+            name="lgbtq-symbol-rainbow"
+            svgClass="w-12 h-12"
+          ></app-generic-icon>
+        }
+      }
+    </div>
+
     @if (imageUrl) {
-      <img [src]="imageUrl" [alt]="employee.fullNameThai"
-        class="h-16 w-16 rounded-full object-cover border-2 border-surface-border" />
+      <img
+        [src]="imageUrl"
+        [alt]="employee.fullNameThai"
+        class="h-24 w-24 rounded-full object-cover border-2 border-white/50 ring-4 ring-white/20"
+      />
     } @else {
-      <div class="h-16 w-16 rounded-full bg-surface flex items-center justify-center border-2 border-surface-border">
-        <app-generic-icon name="human" svgClass="w-10 h-10" class="text-surface-sub opacity-50"></app-generic-icon>
+      <div
+        class="h-24 w-24 rounded-full bg-white/20 flex items-center justify-center ring-4 ring-white/20"
+      >
+        <app-generic-icon
+          name="human"
+          svgClass="w-14 h-14"
+          class="text-white"
+        ></app-generic-icon>
       </div>
     }
     <div>
-      <div class="font-semibold text-surface-dark text-lg">{{ employee.fullNameThai }}</div>
-      <div class="text-sm text-surface-sub">{{ employee.fullNameEnglish }}</div>
+      <div class="font-bold text-white text-4xl">
+        {{ employee.fullNameThai }}
+      </div>
+      <div class="text-white/80 text-2xl">{{ employee.fullNameEnglish }}</div>
     </div>
   </div>
 
   <!-- Employee Info -->
-  <div class="bg-surface rounded-lg p-4 space-y-2">
-    <div class="flex justify-between">
-      <span class="text-surface-sub">ชื่อเล่น</span>
-      <span class="text-surface-dark font-medium">{{ employee.nickname || '-' }}</span>
-    </div>
-    <div class="flex justify-between">
-      <span class="text-surface-sub">ตำแหน่ง</span>
-      <span class="text-surface-dark font-medium">{{ employee.positionName || '-' }}</span>
-    </div>
-    <div class="flex justify-between">
-      <span class="text-surface-sub">เพศ</span>
-      <span class="text-surface-dark font-medium">{{ employee.genderName || '-' }}</span>
-    </div>
-    <div class="flex justify-between">
-      <span class="text-surface-sub">อีเมล</span>
-      <span class="text-surface-dark font-medium">{{ employee.email || '-' }}</span>
-    </div>
-    <div class="flex justify-between">
-      <span class="text-surface-sub">เบอร์โทร</span>
-      <span class="text-surface-dark font-medium">{{ employee.phone || '-' }}</span>
+  <div
+    class="border border-surface-border rounded-lg border-l-[6px] border-l-primary"
+  >
+    <div class="divide-y divide-surface-border">
+      <div class="grid grid-cols-2 divide-x divide-surface-border">
+        <div class="px-5 py-4">
+          <div class="text-surface-sub text-lg">ชื่อเล่น</div>
+          <div class="text-surface-dark font-semibold text-xl mt-1">
+            {{ employee.nickname }}
+          </div>
+        </div>
+        <div class="px-5 py-4">
+          <div class="text-surface-sub text-lg">ตำแหน่ง</div>
+          <div class="mt-1">
+            <span
+              class="px-4 py-1 rounded-full bg-primary text-white font-semibold text-lg"
+              >{{ employee.positionName }}</span
+            >
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 divide-x divide-surface-border">
+        <div class="px-5 py-4">
+          <div class="text-surface-sub text-lg">อีเมล</div>
+          <div class="text-primary font-semibold text-xl mt-1">
+            {{ employee.email }}
+          </div>
+        </div>
+        <div class="px-5 py-4">
+          <div class="text-surface-sub text-lg">เบอร์โทร</div>
+          <div class="text-surface-dark font-semibold text-xl mt-1">
+            {{ employee.phone | formatPhone }}
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Info Note -->
-  <div class="bg-primary-subtle rounded-lg p-3 flex items-start gap-2">
-    <i class="pi pi-info-circle text-primary mt-0.5"></i>
-    <p class="text-sm text-surface-dark">
-      ระบบจะสร้างบัญชีผู้ใช้โดยใช้ <span class="font-semibold">อีเมล</span> เป็นชื่อผู้ใช้
-      และสุ่มรหัสผ่านให้อัตโนมัติ พร้อมส่งข้อมูลเข้าสู่ระบบทางอีเมล
+  <div class="bg-primary-subtle rounded-lg p-4 flex items-start gap-3">
+    <div
+      class="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0 mt-0.5"
+    >
+      <app-generic-icon
+        name="information"
+        svgClass="w-5 h-5"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <p class="text-base text-surface-dark">
+      ระบบจะสร้างบัญชีผู้ใช้โดยใช้
+      <span class="font-bold text-primary">อีเมล</span> เป็น Username และสุ่ม
+      Password ให้อัตโนมัติ พร้อมส่งข้อมูลเข้าสู่ระบบทางอีเมลพนักงาน
     </p>
   </div>
 
-  <!-- Error Message -->
-  @if (errorMessage()) {
-    <div class="bg-danger-bg rounded-lg p-3 flex items-center gap-2">
-      <i class="pi pi-times-circle text-danger"></i>
-      <span class="text-sm text-danger">{{ errorMessage() }}</span>
-    </div>
-  }
-
-  <!-- Footer -->
-  <div class="flex gap-3 justify-end pt-2">
-    <p-button label="ยกเลิก" severity="secondary" [outlined]="true"
-      [disabled]="isLoading()" (onClick)="onCancel()"></p-button>
-    <p-button label="สร้างผู้ใช้" icon="pi pi-user-plus"
-      [loading]="isLoading()" (onClick)="onConfirm()"></p-button>
-  </div>
-</div>
+  <p-footer>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      [disabled]="isLoading()"
+      (onClick)="onCancel()"
+    ></p-button>
+    <p-button
+      label="สร้างผู้ใช้"
+      [loading]="isLoading()"
+      (onClick)="onConfirm()"
+    ></p-button>
+  </p-footer>
+</app-card-template>

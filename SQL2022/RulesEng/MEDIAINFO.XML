@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MediaInfo>
+  <Properties xmlns="">
+    <Property Id="MediaLayout" Value="None" />
+    <Property Id="BaselineVersion" Value="16.0.1000.6" />
+    <Property Id="SupportSku" Value="" />
+    <Property Id="ReleaseTrain" Value="BASELINE" />
+  </Properties>
+</MediaInfo>
