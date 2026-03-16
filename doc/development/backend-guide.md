@@ -1,6 +1,6 @@
 # คู่มือพัฒนา Backend — RBMS-POS
 
-> อัพเดตล่าสุด: 2026-03-10
+> อัพเดตล่าสุด: 2026-03-16
 >
 > **เอกสารที่เกี่ยวข้อง:**
 > - [backend-coding-standards.md](backend-coding-standards.md) — DO/DON'T ละเอียดทุก layer
@@ -29,7 +29,7 @@
 
 **กฎ Dependency (ห้าม Circular Reference):**
 ```
-WebAPI → Business.* (Admin / Menu / HumanResource) → Repositories → Dal → Core
+WebAPI → Business.* (Admin / Authorization / Menu / HumanResource) → Repositories → Dal → Core
 ```
 
 **Data Flow:**
@@ -48,9 +48,10 @@ Backend-POS/POS.Main/
 ├── RBMS.POS.WebAPI/
 │   └── Controllers/{Name}Controller.cs
 │
-├── POS.Main.Business.Admin/          ← Auth, AdminSettings (ServiceCharge)
+├── POS.Main.Business.Admin/          ← Auth, ServiceCharge, ShopSettings, File, S3, JWT
+├── POS.Main.Business.Authorization/  ← Position, Permission (RBAC)
 ├── POS.Main.Business.Menu/           ← Menu management
-├── POS.Main.Business.HumanResource/  ← Employee management
+├── POS.Main.Business.HumanResource/  ← Employee + sub-entities (Address, Education, WorkHistory)
 │   └── {SubFolder}/
 │       ├── Interfaces/
 │       │   └── I{Name}Service.cs
@@ -360,23 +361,20 @@ public class ProductsController : BaseController
 
     /// <summary>Create a new product</summary>
     [HttpPost]
-    [ProducesResponseType(typeof(ProductResponseModel), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(BaseResponseModel<ProductResponseModel>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateProduct(
         [FromBody] CreateProductRequestModel request, CancellationToken ct = default)
-    {
-        var result = await _productService.CreateProductAsync(request, ct);
-        return CreatedAtAction(nameof(GetProduct), new { id = result.ProductId }, result);
-    }
+        => Success(await _productService.CreateProductAsync(request, ct));
 
     /// <summary>Delete product (soft delete)</summary>
-    [HttpDelete("{id}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [HttpDelete("{productId}")]
+    [ProducesResponseType(typeof(BaseResponseModel<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteProduct(int id, CancellationToken ct = default)
+    public async Task<IActionResult> DeleteProduct(int productId, CancellationToken ct = default)
     {
-        await _productService.DeleteProductAsync(id, ct);
-        return NoContent();
+        await _productService.DeleteProductAsync(productId, ct);
+        return Success("ลบสำเร็จ");
     }
 }
 ```
@@ -390,7 +388,9 @@ public class ProductsController : BaseController
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
-// register ทีละตัว
+builder.Services.AddScoped<IPositionService, PositionService>();
+builder.Services.AddScoped<IShopSettingsService, ShopSettingsService>();
+// ... register ทีละตัว
 ```
 
 > ใช้ manual DI registration — register Service/Repository ทีละตัวใน `Program.cs` เพื่อความชัดเจนและควบคุมได้
@@ -1225,7 +1225,7 @@ System.InvalidOperationException: A circular dependency was detected
 
 **วิธีแก้:** ตรวจสอบ Project References ต้องเป็น one-way เท่านั้น:
 ```
-WebAPI → Business.* (Admin / Menu / HumanResource) → Repositories → Dal → Core
+WebAPI → Business.* (Admin / Authorization / Menu / HumanResource) → Repositories → Dal → Core
 ```
 ห้าม Dal reference Repositories หรือ Business.Admin reference WebAPI
 

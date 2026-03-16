@@ -54,26 +54,17 @@ public class AuthService : IAuthService
         var user = await _unitOfWork.Users.GetByUsernameAsync(request.Username, ct);
 
         if (user == null)
-        {
-            await RecordFailedLoginAsync(request.Username, "Invalid username", ipAddress, ct);
             throw new InvalidCredentialsException("Invalid username or password");
-        }
 
         if (user.LockedUntil.HasValue && user.LockedUntil > DateTime.UtcNow)
-        {
-            await RecordFailedLoginAsync(user.Username, "Account locked", ipAddress, ct);
             throw new AccountLockedException(user.LockedUntil.Value);
-        }
 
         if (!user.IsActive)
-        {
-            await RecordFailedLoginAsync(user.Username, "Account disabled", ipAddress, ct);
             throw new AccountDisabledException();
-        }
 
         if (!_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
-            await HandleFailedLoginAsync(user, ipAddress, ct);
+            await HandleFailedLoginAsync(user, ct);
             if (user.LockedUntil.HasValue && user.LockedUntil > DateTime.UtcNow)
                 throw new AccountLockedException(user.LockedUntil.Value);
             throw new InvalidCredentialsException("Invalid username or password");
@@ -82,6 +73,7 @@ public class AuthService : IAuthService
         user.FailedLoginAttempts = 0;
         user.LockoutCount = 0;
         user.LockedUntil = null;
+        user.LastLoginDate = DateTime.UtcNow;
 
         var employee = await _unitOfWork.Employees.GetByUserIdAsync(user.UserId, ct);
 
@@ -99,7 +91,6 @@ public class AuthService : IAuthService
             user.UserId, refreshToken, DateTime.UtcNow.AddDays(request.RememberMe ? 30 : 7), ipAddress);
 
         await _unitOfWork.RefreshTokens.AddAsync(refreshTokenEntity, ct);
-        await RecordSuccessfulLoginAsync(user.UserId, user.Username, ipAddress, ct);
         await _unitOfWork.CommitAsync(ct);
 
         _logger.LogInformation("User logged in: {UserId} - {Username}, IP: {IpAddress}", user.UserId, user.Username, ipAddress);
@@ -152,8 +143,7 @@ public class AuthService : IAuthService
         return AuthMapper.ToTokenResponse(newAccessToken, newRefreshToken, 3600);
     }
 
-    // user update (FailedLoginAttempts, LockedUntil) จะ commit พร้อม login history ใน RecordFailedLoginAsync เพราะอยู่ใน DbContext เดียวกัน
-    private async Task HandleFailedLoginAsync(TbUser user, string ipAddress, CancellationToken ct = default)
+    private async Task HandleFailedLoginAsync(TbUser user, CancellationToken ct = default)
     {
         user.FailedLoginAttempts++;
 
@@ -167,19 +157,6 @@ public class AuthService : IAuthService
             user.LockedUntil = DateTime.UtcNow.AddMinutes(2 * user.LockoutCount - 1);
         }
 
-        await RecordFailedLoginAsync(user.Username, "Invalid password", ipAddress, ct);
-    }
-
-    private async Task RecordSuccessfulLoginAsync(Guid userId, string username, string ipAddress, CancellationToken ct = default)
-    {
-        var loginHistory = AuthMapper.ToLoginHistoryEntity(userId, username, true, ipAddress);
-        await _unitOfWork.LoginHistory.AddAsync(loginHistory, ct);
-    }
-
-    private async Task RecordFailedLoginAsync(string username, string failureReason, string ipAddress, CancellationToken ct = default)
-    {
-        var loginHistory = AuthMapper.ToLoginHistoryEntity(null, username, false, ipAddress, failureReason);
-        await _unitOfWork.LoginHistory.AddAsync(loginHistory, ct);
         await _unitOfWork.CommitAsync(ct);
     }
 

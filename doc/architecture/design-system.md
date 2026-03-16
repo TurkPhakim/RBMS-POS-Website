@@ -2,7 +2,7 @@
 
 > ทิศทาง: **Modern & Professional** — สะอาด, อ่านง่าย, เหมาะทุก role (Cashier / Manager / Admin)
 > Font: **Sarabun** — Thai+English, นิยมใช้ใน food app ไทย (Wongnai, LINE MAN, Grab Food TH)
-> อัปเดตล่าสุด 2026-03-10
+> อัปเดตล่าสุด 2026-03-16
 
 ---
 
@@ -124,46 +124,55 @@ Shadow
 </div>
 ```
 
-### Button Classes
+### Button Pattern (PrimeNG `p-button`)
 
 ```html
+<!-- ✅ ใช้ PrimeNG p-button เป็นมาตรฐาน -->
 <!-- Primary -->
-<button class="flex items-center gap-2 bg-primary hover:bg-primary-dark
-               text-white text-sm font-semibold px-4 py-2.5 rounded-lg
-               shadow-sm transition-colors duration-200">
+<p-button label="เพิ่มรายการ" icon="pi pi-plus" (onClick)="onCreate()" />
 
 <!-- Danger -->
-<button class="flex items-center gap-2 bg-danger hover:bg-danger-dark
-               text-white text-sm font-semibold px-4 py-2.5 rounded-lg
-               shadow-sm transition-colors duration-200">
+<p-button label="ลบ" severity="danger" (onClick)="onDelete()" />
 
 <!-- Secondary (outline) -->
-<button class="flex items-center gap-2 border border-surface-border hover:bg-surface
-               text-surface-dark text-sm font-semibold px-4 py-2.5 rounded-lg
-               transition-colors duration-200">
+<p-button label="ย้อนกลับ" severity="secondary" [outlined]="true" (onClick)="onBack()" />
 
-<!-- Icon button (circular) -->
-<button class="w-9 h-9 flex items-center justify-center rounded-full
-               bg-primary-subtle hover:bg-primary-light text-primary
-               transition-colors duration-200">
+<!-- Loading state -->
+<p-button label="บันทึก" [loading]="isSaving()" (onClick)="onSave()" />
 ```
 
-### Table Pattern
+> Button styling กำหนดผ่าน PrimeNG theme + Tailwind tokens ใน `styles.css` (global)
+
+### Table Pattern (PrimeNG `p-table`)
 
 ```html
-<table class="w-full text-sm">
-  <thead>
-    <tr class="bg-gradient-to-r from-primary to-primary-dark text-white">
-      <th class="px-4 py-3 text-left font-semibold">คอลัมน์</th>
+<!-- ✅ ใช้ PrimeNG p-table เป็นมาตรฐาน — ห้ามใช้ raw <table> -->
+<p-table [value]="items()" [paginator]="true" [rows]="10"
+         [rowsPerPageOptions]="[10, 25, 50]"
+         [showCurrentPageReport]="true"
+         currentPageReportTemplate="{first} - {last} of {totalRecords}"
+         paginatorDropdownAppendTo="body">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>คอลัมน์</th>
+      <th class="w-24 text-center">ตัวเลือก</th>
     </tr>
-  </thead>
-  <tbody>
-    <tr class="border-b border-surface-border hover:bg-primary-subtle transition-colors">
-      <td class="px-4 py-3 text-surface-dark">ข้อมูล</td>
+  </ng-template>
+  <ng-template pTemplate="body" let-item>
+    <tr>
+      <td>{{ item.name }}</td>
+      <td class="text-center">
+        <div class="flex items-center justify-center gap-2">
+          <app-generic-icon name="pen-edit" class="text-primary cursor-pointer" />
+          <app-generic-icon name="trash" class="text-danger cursor-pointer" />
+        </div>
+      </td>
     </tr>
-  </tbody>
-</table>
+  </ng-template>
+</p-table>
 ```
+
+> Table header gradient styling กำหนดใน `styles.css` (global) — ไม่ต้อง inline class
 
 ### Status Badge Pattern
 
@@ -229,7 +238,7 @@ Shadow
 |---------|-------|
 | **PrimeNG** | Data table, Dropdown, Dialog, Button, Tag, Badge, Toast, InputText, InputNumber, FileUpload, TabView ฯลฯ |
 | **Tailwind CSS** | Layout (flex, grid, spacing), typography tokens, color tokens, backgrounds, borders, responsive |
-| **Custom Components** | confirm-modal, success-modal (เฉพาะ RBMS-POS UX) |
+| **Custom Components** | info-modal, cancel-modal, success-modal (ผ่าน ModalService) |
 
 ```html
 <!-- ✅ PrimeNG component + Tailwind layout -->

@@ -19,8 +19,7 @@ public class POSMainContext : DbContext
     // Authentication DbSets
     public DbSet<TbUser> Users => Set<TbUser>();
     public DbSet<TbRefreshToken> RefreshTokens => Set<TbRefreshToken>();
-    public DbSet<TbLoginHistory> LoginHistory => Set<TbLoginHistory>();
-    public DbSet<TbPasswordResetToken> PasswordResetTokens => Set<TbPasswordResetToken>();
+public DbSet<TbPasswordResetToken> PasswordResetTokens => Set<TbPasswordResetToken>();
     public DbSet<TbPasswordHistory> PasswordHistory => Set<TbPasswordHistory>();
 
     // Admin Settings DbSets
@@ -54,8 +53,7 @@ public class POSMainContext : DbContext
         // Apply Entity Configurations
         modelBuilder.ApplyConfiguration(new TbUserConfiguration());
         modelBuilder.ApplyConfiguration(new TbRefreshTokenConfiguration());
-        modelBuilder.ApplyConfiguration(new TbLoginHistoryConfiguration());
-        modelBuilder.ApplyConfiguration(new TbPasswordResetTokenConfiguration());
+modelBuilder.ApplyConfiguration(new TbPasswordResetTokenConfiguration());
         modelBuilder.ApplyConfiguration(new TbPasswordHistoryConfiguration());
         modelBuilder.ApplyConfiguration(new TbServiceChargeConfiguration());
         modelBuilder.ApplyConfiguration(new TbShopSettingsConfiguration());

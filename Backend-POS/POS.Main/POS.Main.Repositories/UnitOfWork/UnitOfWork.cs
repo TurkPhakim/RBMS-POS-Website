@@ -11,8 +11,7 @@ public class UnitOfWork : IUnitOfWork
 
     private IUserRepository? _users;
     private IRefreshTokenRepository? _refreshTokens;
-    private ILoginHistoryRepository? _loginHistory;
-    private IServiceChargeRepository? _serviceCharges;
+private IServiceChargeRepository? _serviceCharges;
     private IMenuRepository? _menus;
     private IEmployeeRepository? _employees;
     private IEmployeeAddressRepository? _employeeAddresses;
@@ -34,8 +33,7 @@ public class UnitOfWork : IUnitOfWork
 
     public IUserRepository Users => _users ??= new UserRepository(_context);
     public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(_context);
-    public ILoginHistoryRepository LoginHistory => _loginHistory ??= new LoginHistoryRepository(_context);
-    public IServiceChargeRepository ServiceCharges => _serviceCharges ??= new ServiceChargeRepository(_context);
+public IServiceChargeRepository ServiceCharges => _serviceCharges ??= new ServiceChargeRepository(_context);
     public IMenuRepository Menus => _menus ??= new MenuRepository(_context);
     public IEmployeeRepository Employees => _employees ??= new EmployeeRepository(_context);
     public IEmployeeAddressRepository EmployeeAddresses => _employeeAddresses ??= new EmployeeAddressRepository(_context);

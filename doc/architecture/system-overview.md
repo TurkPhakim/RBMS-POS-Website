@@ -1,6 +1,6 @@
 # ภาพรวมสถาปัตยกรรมระบบ RBMS-POS
 
-**Last Updated: 2026-03-11**
+**Last Updated: 2026-03-16**
 
 > **เอกสารที่เกี่ยวข้อง:**
 > - [backend-guide.md](../development/backend-guide.md) — คู่มือพัฒนา Backend + 10-Step Workflow + Database Conventions
@@ -21,17 +21,20 @@
 ## สถาปัตยกรรม Backend (N-Tier)
 
 ```
-RBMS.POS.WebAPI          → Controllers, Middleware, Program.cs
-POS.Main.Business.Admin  → Services, DTOs, Manual Mappers
-POS.Main.Repositories    → Repository interfaces + UnitOfWork
-POS.Main.Dal             → Entities, DbContext, Migrations, Configurations
-POS.Main.Core            → Enums, Constants, Custom Exceptions, Helpers
+RBMS.POS.WebAPI                    → Controllers, Filters, Hubs, Program.cs
+POS.Main.Business.Admin            → Auth, ServiceCharge, ShopSettings, File, S3, JWT, ReCaptcha, Email
+POS.Main.Business.Authorization    → Position, Permission (RBAC)
+POS.Main.Business.Menu             → Menu
+POS.Main.Business.HumanResource    → Employee + sub-entities (Address, Education, WorkHistory)
+POS.Main.Repositories             → Repository interfaces + implementations, UnitOfWork
+POS.Main.Dal                      → Entities, DbContext, Migrations, Entity Configurations
+POS.Main.Core                     → Enums, Constants, Custom Exceptions, Helpers
 ```
 
 **ทิศทาง Dependency (ห้าม Circular Reference):**
 
 ```
-WebAPI → Business.Admin → Repositories → Dal → Core
+WebAPI → Business.* (Admin / Authorization / Menu / HumanResource) → Repositories → Dal → Core
 ```
 
 **Data Flow:**
@@ -50,13 +53,14 @@ Response ← DTO Mapping ← Entity ← EF Core
 Backend-POS/POS.Main/
 ├── RBMS.POS.WebAPI/
 │   ├── Controllers/BaseController.cs + {Name}Controller.cs
-│   ├── Filters/GlobalExceptionFilter.cs
+│   ├── Filters/GlobalExceptionFilter.cs + CustomOperationIdFilter.cs + PermissionAuthorizeAttribute.cs
 │   ├── Hubs/OrderHub.cs              ← SignalR Hub (stub — รอ Order Module)
 │   └── Program.cs
 │
-├── POS.Main.Business.Admin/              ← Auth, ServiceCharge, File
+├── POS.Main.Business.Admin/              ← Auth, ServiceCharge, ShopSettings, File, S3, JWT
+├── POS.Main.Business.Authorization/      ← Position, Permission (RBAC)
 ├── POS.Main.Business.Menu/               ← Menu
-├── POS.Main.Business.HumanResource/      ← Employee
+├── POS.Main.Business.HumanResource/      ← Employee + sub-entities
 │   └── {SubFolder}/
 │       ├── Interfaces/I{Name}Service.cs
 │       ├── Services/{Name}Service.cs
@@ -91,9 +95,15 @@ src/app/
 │   └── interceptors/
 │
 ├── shared/
-│   ├── components/            ← header, side-bar, generic-icon ฯลฯ
-│   ├── modals/                ← confirm-modal, success-modal, error-modal
+│   ├── components/            ← header, side-bar, generic-icon, global-loading, notification-panel
+│   ├── cards/                 ← card-template, section-card, empty-view, image-upload-card, field-error, audit-footer
+│   ├── dialogs/               ← address-dialog, education-dialog, work-history-dialog, session-timeout, verify-password
+│   ├── modals/                ← info-modal, cancel-modal, success-modal
+│   ├── dropdowns/             ← dropdown-base + 9 specific dropdowns (active, gender, title, position ฯลฯ)
 │   ├── pipes/
+│   ├── directives/
+│   ├── utils/                 ← markFormDirty, linkDateRange
+│   ├── pages/                 ← welcome, access-denied
 │   ├── component-interfaces.ts
 │   └── shared.module.ts
 │
@@ -183,12 +193,15 @@ public async Task<IActionResult> GetProduct(int id, CancellationToken ct = defau
 
 | โมดูล | หน้าที่ | สถานะ |
 |-------|---------|-------|
-| **Authentication** | Login, JWT, Role-based access | ✅ เสร็จ |
-| **Menu** | จัดการเมนูอาหาร, หมวดหมู่, รูปภาพ | ✅ เสร็จ |
-| **Human Resource** | จัดการพนักงาน, สถานะการจ้าง | ✅ เสร็จ |
+| **Authentication** | Login, JWT, Forgot/Reset Password, Position-based RBAC | ✅ เสร็จ |
+| **Menu** | จัดการเมนูอาหาร, หมวดหมู่, รูปภาพ (S3) | ✅ เสร็จ |
+| **Human Resource** | จัดการพนักงาน + ที่อยู่/การศึกษา/ประวัติงาน + สร้างบัญชีผู้ใช้ | ✅ เสร็จ |
 | **Admin Settings** | ค่าบริการ (Service Charge) | ✅ เสร็จ |
-| **File Management** | จัดการไฟล์กลาง (รูปภาพ/เอกสาร) ผ่าน S3 — [ดูเอกสาร](file-management.md) | วางแผนแล้ว |
-| **Sales / Order** | ขายสินค้า, ออกใบเสร็จ | ยังไม่เริ่ม |
+| **Position / Authorization** | จัดการตำแหน่ง + Permission Matrix (RBAC) | ✅ เสร็จ |
+| **Shop Settings** | ข้อมูลร้านค้า, เวลาทำการ, โลโก้/QR Code | ✅ เสร็จ |
+| **File Management** | จัดการไฟล์กลาง (S3) — ใช้ผ่าน Menu/Employee/ShopSettings | ✅ เสร็จ |
+| **Order / Table / Payment** | POS transactions | ⚠️ ยังไม่เริ่ม (มี Frontend stub) |
+| **Kitchen Display** | SignalR real-time | ⚠️ ยังไม่เริ่ม (Hub stub) |
 | **Reports** | รายงานยอดขาย | ยังไม่เริ่ม |
 
 ---
@@ -222,7 +235,7 @@ npm run gen-api                # Generate TypeScript client จาก Swagger
 - [ ] สร้าง Migration + ตรวจสอบ + Apply
 - [ ] Repository Interface + Implementation
 - [ ] เพิ่ม Repository ใน UnitOfWork (lazy init)
-- [ ] DTOs + Manual Mapper ใน `POS.Main.Business.Admin/{Module}/Models/`
+- [ ] DTOs + Manual Mapper ใน `POS.Main.Business.{Module}/Models/`
 - [ ] Service Interface + Implementation
 - [ ] Controller extends `BaseController` — ไม่มี try-catch
 - [ ] ทดสอบทุก endpoint ใน Swagger

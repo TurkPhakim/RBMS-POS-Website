@@ -27,5 +27,4 @@ public class TbUser : BaseEntity
 
     public virtual ICollection<TbRefreshToken> RefreshTokens { get; set; } = new List<TbRefreshToken>();
 
-    public virtual ICollection<TbLoginHistory> LoginHistory { get; set; } = new List<TbLoginHistory>();
 }

@@ -1,6 +1,6 @@
 # Backend Expert Agent — RBMS-POS
 
-Last Updated: 2026-03-11
+Last Updated: 2026-03-16
 
 คุณเป็น ASP.NET Core 9.0 backend expert สำหรับโปรเจค **RBMS-POS** ระบบ Point of Sale
 
@@ -16,9 +16,10 @@ Last Updated: 2026-03-11
 
 ```
 RBMS.POS.WebAPI                    → Controllers, Filters, Hubs, Program.cs
-POS.Main.Business.Admin            → Auth, ServiceCharge, File (Services, DTOs, Mappers)
+POS.Main.Business.Admin            → Auth, ServiceCharge, ShopSettings, File, S3, JWT, ReCaptcha, Email
+POS.Main.Business.Authorization    → Position, Permission (RBAC)
 POS.Main.Business.Menu             → Menu (Services, DTOs, Mappers)
-POS.Main.Business.HumanResource    → Employee (Services, DTOs, Mappers)
+POS.Main.Business.HumanResource    → Employee + sub-entities (Address, Education, WorkHistory)
 POS.Main.Repositories             → Repository interfaces + implementations, UnitOfWork
 POS.Main.Dal                      → Entities, DbContext, Migrations, Entity Configurations
 POS.Main.Core                     → Enums, Constants, Custom Exceptions, Helpers
@@ -107,51 +108,40 @@ public class ProductService : IProductService
         CreateProductRequest request,
         CancellationToken ct = default)
     {
-        // 1. Guard clauses / validation
+        // 1. Guard clauses / validation — throw specific exceptions ตรงๆ
         if (string.IsNullOrWhiteSpace(request.Name))
             throw new ValidationException("กรุณาระบุชื่อสินค้า");
 
-        try
+        // 2. Business rules — เรียก Repository method (ห้าม LINQ โดยตรง)
+        var nameExists = await _unitOfWork.Products
+            .IsNameExistsAsync(request.Name, ct);
+
+        if (nameExists)
+            throw new ValidationException($"สินค้าชื่อ '{request.Name}' มีอยู่แล้ว");
+
+        // 3. Create entity — manual mapping (ห้ามใช้ AutoMapper)
+        var product = new TbProduct
         {
-            // 2. Business rules — เรียก Repository method (ห้าม LINQ โดยตรง)
-            var nameExists = await _unitOfWork.Products
-                .IsNameExistsAsync(request.Name, ct);
+            Name = request.Name,
+            Price = request.Price,
+            CategoryId = request.CategoryId,
+        };
 
-            if (nameExists)
-                throw new ValidationException($"สินค้าชื่อ '{request.Name}' มีอยู่แล้ว");
+        // 4. Save — Commit ครั้งเดียวต่อ transaction
+        await _unitOfWork.Products.InsertAsync(product, ct);
+        await _unitOfWork.CommitAsync(ct);
 
-            // 3. Create entity — manual mapping (ห้ามใช้ AutoMapper)
-            var product = new TbProduct
-            {
-                Name = request.Name,
-                Price = request.Price,
-                CategoryId = request.CategoryId,
-            };
+        _logger.LogInformation("Product {ProductId} '{Name}' created",
+            product.ProductId, product.Name);
 
-            // 4. Save — Commit ครั้งเดียวต่อ transaction
-            await _unitOfWork.Products.InsertAsync(product, ct);
-            await _unitOfWork.CommitAsync(ct);
-
-            _logger.LogInformation("Product {ProductId} '{Name}' created",
-                product.ProductId, product.Name);
-
-            // 5. Return — manual mapping (ห้ามใช้ AutoMapper)
-            return new ProductResponse
-            {
-                ProductId = product.ProductId,
-                Name = product.Name,
-                Price = product.Price,
-                CategoryId = product.CategoryId,
-            };
-        }
-        catch (ValidationException) { throw; }
-        catch (EntityNotFoundException) { throw; }
-        catch (BusinessException) { throw; }
-        catch (Exception ex)
+        // 5. Return — manual mapping (ห้ามใช้ AutoMapper)
+        return new ProductResponse
         {
-            _logger.LogError(ex, "Error creating product '{Name}'", request.Name);
-            throw new BusinessException("เกิดข้อผิดพลาดในการสร้างสินค้า");
-        }
+            ProductId = product.ProductId,
+            Name = product.Name,
+            Price = product.Price,
+            CategoryId = product.CategoryId,
+        };
     }
 }
 ```
@@ -159,7 +149,7 @@ public class ProductService : IProductService
 **Service Rules:**
 
 - Implement `IXxxService`
-- **try-catch อยู่ในชั้น Service เท่านั้น** — re-throw business exceptions, wrap unexpected exception เป็น `BusinessException`
+- **ไม่ต้องมี try-catch ใน Service** — throw specific exceptions ตรงๆ (ยกเว้น transaction operations ที่ใช้ `BeginTransactionAsync`) — `GlobalExceptionFilter` จัดการ unhandled exceptions
 - **ห้ามใช้ AutoMapper เด็ดขาด** — ใช้ object initializer (manual mapping) เสมอ
 - **เรียก Repository methods เท่านั้น** — ห้ามเขียน LINQ โดยตรงใน Service
 - Throw specific exceptions (ห้าม throw generic `Exception`):
@@ -234,24 +224,15 @@ foreach (var item in items)
 ### 4. Async/Await Rules
 
 ```csharp
-// ✅ ถูกต้อง — ส่งต่อ CancellationToken + เรียก Repository method
+// ✅ ถูกต้อง — ส่งต่อ CancellationToken + เรียก Repository method + throw ตรงๆ
 public async Task<ProductResponse> GetProductAsync(int id, CancellationToken ct = default)
 {
-    try
-    {
-        var product = await _unitOfWork.Products.GetDetailByIdAsync(id, ct);
+    var product = await _unitOfWork.Products.GetDetailByIdAsync(id, ct);
 
-        if (product == null)
-            throw new EntityNotFoundException("Product", id);
+    if (product == null)
+        throw new EntityNotFoundException("Product", id);
 
-        return product;
-    }
-    catch (EntityNotFoundException) { throw; }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error getting product {ProductId}", id);
-        throw new BusinessException("เกิดข้อผิดพลาดในการดึงข้อมูลสินค้า");
-    }
+    return product;
 }
 
 // ❌ ผิด — .Result blocks thread (deadlock risk)
@@ -353,31 +334,21 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 ```csharp
 public async Task DeleteProductAsync(int id, CancellationToken ct = default)
 {
-    try
-    {
-        // เรียก Repository method — ห้ามเขียน LINQ ใน Service
-        var product = await _unitOfWork.Products.GetByIdAsync(id, ct);
+    // เรียก Repository method — ห้ามเขียน LINQ ใน Service
+    var product = await _unitOfWork.Products.GetByIdAsync(id, ct);
 
-        if (product == null)
-            throw new EntityNotFoundException("Product", id);
+    if (product == null)
+        throw new EntityNotFoundException("Product", id);
 
-        if (product.DeleteFlag)
-            throw new BusinessException("สินค้านี้ถูกลบไปแล้ว");
+    if (product.DeleteFlag)
+        throw new BusinessException("สินค้านี้ถูกลบไปแล้ว");
 
-        // Soft delete — DbContext auto-stamp DeletedAt/DeletedBy
-        product.DeleteFlag = true;
+    // Soft delete — DbContext auto-stamp DeletedAt/DeletedBy
+    product.DeleteFlag = true;
 
-        await _unitOfWork.CommitAsync(ct);
+    await _unitOfWork.CommitAsync(ct);
 
-        _logger.LogInformation("Product {ProductId} soft-deleted", id);
-    }
-    catch (EntityNotFoundException) { throw; }
-    catch (BusinessException) { throw; }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error deleting product {ProductId}", id);
-        throw new BusinessException("เกิดข้อผิดพลาดในการลบสินค้า");
-    }
+    _logger.LogInformation("Product {ProductId} soft-deleted", id);
 }
 ```
 

@@ -1,6 +1,6 @@
 # Frontend Guidelines — RBMS-POS
 
-> อัพเดตล่าสุด: 2026-03-11
+> อัพเดตล่าสุด: 2026-03-16
 >
 > **Related agents:** [frontend-expert.md](../agents/frontend-expert.md)
 > **Related docs:** [design-system.md](../architecture/design-system.md) | [icon-system.md](../architecture/icon-system.md) | [frontend-coding-standards.md](frontend-coding-standards.md)
@@ -12,31 +12,40 @@
 ```
 src/app/
 ├── core/                    # Singleton services, กลาง app
-│   ├── api/                 # Generated clients (ng-openapi-gen) — ใช้เสมอ
-│   ├── constants/           # Route names, enums, permissions
-│   ├── guards/              # auth.guard, unsaved-change.guard
-│   ├── helpers/             # Utility functions
-│   ├── interceptors/        # auth, loading, error
-│   ├── resolvers/           # Route data preloading
-│   ├── services/            # Global: modal, breadcrumb, loading
-│   ├── state/               # Central state management
-│   └── validators/          # Custom validators
+│   ├── api/                 # Generated clients (ng-openapi-gen) — ห้ามแก้ด้วยมือ
+│   │   ├── services/        # 7 API services: auth, human-resource, menus, service-charges, positions, shop-settings, file
+│   │   ├── models/          # Generated TypeScript interfaces
+│   │   └── api-config.provider.ts  # MANUAL: rootUrl จาก environment
+│   ├── guards/              # auth.guard, guest.guard, permission.guard
+│   ├── interceptors/        # auth.interceptor, loading.interceptor
+│   ├── models/              # auth.models.ts
+│   └── services/            # auth, breadcrumb, modal, loading, session-timeout, shop-branding, header, sidebar
+│
+├── store/layout/            # NgRx Store: sidebar, notification, header/breadcrumb buttons
+│
 ├── shared/                  # ใช้ร่วมกันทุก module
-│   ├── components/          # header, side-bar, generic-icon ฯลฯ
-│   ├── modals/              # confirm-modal, success-modal, error-modal
-│   ├── directives/
-│   ├── pipes/
+│   ├── components/          # header, side-bar, top-breadcrumb, generic-icon, global-loading, notification-panel
+│   ├── cards/               # card-template, section-card, empty-view, image-upload-card, field-error, audit-footer
+│   ├── dialogs/             # address-dialog, education-dialog, work-history-dialog, session-timeout, verify-password
+│   ├── modals/              # info-modal, cancel-modal, success-modal (ModalService)
+│   ├── dropdowns/           # dropdown-base + 9 specific (active, gender, title, nationality, religion, address-type, position, menu-category, service-charge)
+│   ├── directives/          # datepicker-icon.directive
+│   ├── pipes/               # date-format, mask-phone, national-id-mask
+│   ├── pages/               # welcome, access-denied
+│   ├── utils/               # markFormDirty, linkDateRange
 │   ├── component-interfaces.ts
 │   └── shared.module.ts
+│
 ├── features/                # Feature modules (lazy-loaded)
 │   └── {module}/
-│       ├── pages/           # Smart components
-│       ├── components/      # Presentational components
+│       ├── pages/           # Smart components (list, manage)
+│       ├── dialogs/         # Feature-specific dialogs
 │       ├── {module}.module.ts
 │       └── {module}-routing.module.ts
+│
 └── layouts/
-    ├── main-layout/
-    └── auth-layout/
+    ├── main-layout/         # Header + Sidebar + Router outlet
+    └── auth-layout/         # Login/Reset password layout
 ```
 
 ---

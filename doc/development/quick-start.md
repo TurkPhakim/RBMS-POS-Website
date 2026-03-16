@@ -140,7 +140,7 @@ Backend-POS/SQL_Scripts/03_CreateTestUsers.sql
 
 | Username | Password    | Role  |
 | -------- | ----------- | ----- |
-| `admin`  | `Admin@123` | Admin |
+| `admin`  | `P@ssw0rd`  | Admin |
 
 ---
 
@@ -356,31 +356,32 @@ public class PaginationResult<T>
 // POS.Main.Core/Exceptions/ValidationException.cs
 public class ValidationException : Exception
 {
-    public string ErrorCode { get; }
     public Dictionary<string, string[]>? Errors { get; }
 
-    public ValidationException(string message, string errorCode = "ERR-VAL-001")
-        : base(message) { ErrorCode = errorCode; }
-
+    public ValidationException(string message) : base(message) { }
     public ValidationException(string message, Dictionary<string, string[]> errors)
-        : base(message) { ErrorCode = "ERR-VAL-001"; Errors = errors; }
+        : base(message) { Errors = errors; }
 }
 
 // POS.Main.Core/Exceptions/EntityNotFoundException.cs
 public class EntityNotFoundException : Exception
 {
-    public string ErrorCode { get; }
     public EntityNotFoundException(string entityName, object id)
-        : base($"{entityName} (id={id}) ไม่พบ") { ErrorCode = "ERR-NOT-FOUND"; }
+        : base($"{entityName} (id={id}) ไม่พบ") { }
 }
 
 // POS.Main.Core/Exceptions/BusinessException.cs
 public class BusinessException : Exception
 {
-    public string ErrorCode { get; }
-    public BusinessException(string message, string errorCode = "ERR-BIZ-001")
-        : base(message) { ErrorCode = errorCode; }
+    public BusinessException(string message) : base(message) { }
 }
+
+// Auth-specific Exceptions:
+// AuthenticationException (base) → 401
+// InvalidCredentialsException → 401
+// InvalidRefreshTokenException → 401
+// AccountDisabledException → 403
+// AccountLockedException → 423 (มี LockedUntil property)
 ```
 
 ### GlobalExceptionFilter
@@ -402,13 +403,18 @@ public class GlobalExceptionFilter : IExceptionFilter
     {
         var (statusCode, message, errors) = context.Exception switch
         {
-            ValidationException ex   => (400, ex.Message, ex.Errors),
-            EntityNotFoundException ex => (404, ex.Message, (Dictionary<string, string[]>?)null),
-            BusinessException ex     => (422, ex.Message, null),
-            UnauthorizedAccessException => (401, "Unauthorized", null),
-            _                        => (500, _env.IsDevelopment()
-                                            ? context.Exception.Message
-                                            : "เกิดข้อผิดพลาดภายในระบบ", null)
+            ValidationException ex          => (400, ex.Message, ex.Errors),
+            InvalidCredentialsException ex  => (401, ex.Message, (Dictionary<string, string[]>?)null),
+            InvalidRefreshTokenException ex => (401, ex.Message, null),
+            AuthenticationException ex      => (401, ex.Message, null),
+            AccountDisabledException ex     => (403, ex.Message, null),
+            EntityNotFoundException ex      => (404, ex.Message, null),
+            BusinessException ex            => (422, ex.Message, null),
+            AccountLockedException ex       => (423, ex.Message, null),
+            UnauthorizedAccessException     => (401, "Unauthorized", null),
+            _                               => (500, _env.IsDevelopment()
+                                                ? context.Exception.Message
+                                                : "เกิดข้อผิดพลาดภายในระบบ", null)
         };
 
         _logger.LogError(context.Exception, "Error {StatusCode}: {Message}", statusCode, message);
@@ -437,19 +443,30 @@ builder.Services.AddControllers(options =>
 ```csharp
 // RBMS.POS.WebAPI/Controllers/BaseController.cs
 [ApiController]
+[Produces("application/json")]
 public abstract class BaseController : ControllerBase
 {
-    protected IActionResult Success<T>(T result, string message = "สำเร็จ")
-        => Ok(new BaseResponseModel<T> { Status = "success", Message = message, Result = result });
+    // Single item response
+    protected IActionResult Success<T>(T data, string? message = null)
+        => Ok(new BaseResponseModel<T> { Status = constResultType.Success, Result = data, Message = message });
 
-    protected IActionResult ToActionResult<T>(PaginationResult<T> result)
-        => Ok(result);
+    // No-data success response
+    protected IActionResult Success(string? message = null)
+        => Ok(new BaseResponseModel<object> { Status = constResultType.Success, Message = message });
 
-    protected int? GetCurrentUserId()
-    {
-        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return int.TryParse(claim, out var id) ? id : null;
-    }
+    // List response (ไม่แบ่งหน้า)
+    protected IActionResult ListSuccess<T>(IEnumerable<T> data, string? message = null)
+        => Ok(new ListResponseModel<T> { Status = constResultType.Success, Results = data.ToList(), Message = message });
+
+    // Paginated response
+    protected IActionResult PagedSuccess<T>(PaginationResult<T> result)
+    { result.Status = constResultType.Success; return Ok(result); }
+
+    // IP address จาก request (รองรับ proxy)
+    protected string GetIpAddress() { ... }
+
+    // UserId (Guid) จาก JWT claim
+    protected Guid GetUserId() { ... }
 }
 ```
 

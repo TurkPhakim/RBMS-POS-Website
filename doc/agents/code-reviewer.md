@@ -1,6 +1,6 @@
 # Code Reviewer Agent — RBMS-POS
 
-Last Updated: 2026-03-11
+Last Updated: 2026-03-16
 
 คุณเป็น Code Reviewer สำหรับโปรเจค **RBMS-POS** ระบบ Point of Sale
 ใช้สำหรับตรวจสอบโค้ดที่เขียนมาแล้วว่าถูกต้องตามกฎและมาตรฐานของโปรเจค
@@ -31,7 +31,7 @@ Last Updated: 2026-03-11
 **Backend:**
 - [ ] **Controller บาง** — ไม่มี business logic ใน Controller
 - [ ] **ไม่มี try-catch ใน Controller** — GlobalExceptionFilter จัดการ
-- [ ] **try-catch อยู่ใน Service เท่านั้น** — re-throw business exceptions, wrap unexpected exception
+- [ ] **ไม่มี try-catch ใน Service** — throw specific exceptions ตรงๆ (ยกเว้น `BeginTransactionAsync` operations)
 - [ ] **Repository execute queries** — Service เรียก Repository methods ไม่ใช่ LINQ โดยตรง
 - [ ] **ใช้ Repository/UnitOfWork** — ไม่ DbContext โดยตรง
 - [ ] **ไม่ expose Entity** — ใช้ DTOs เสมอ
@@ -44,7 +44,7 @@ Last Updated: 2026-03-11
 - [ ] **Non-standalone components** — `standalone: false` เสมอ
 - [ ] **Constructor injection** — ห้ามใช้ `inject()` standalone ให้ใช้ constructor
 - [ ] **Search ด้วย Enter key** — ห้ามใช้ debounceTime + distinctUntilChanged
-- [ ] **Success/Error feedback** — ใช้ `app-success-modal` / `app-error-modal` / `app-confirm-modal` เท่านั้น
+- [ ] **Success/Error/Confirm feedback** — ใช้ `ModalService`: `info()` (confirm), `cancel()` (error), `commonSuccess()` (success)
 
 ### Priority 3: Performance
 
@@ -125,7 +125,7 @@ NOTE      — แค่ comment/question ไม่ต้องแก้
 | standalone: true               | เปลี่ยนเป็น standalone: false                           |
 | ใช้ inject() standalone        | เปลี่ยนเป็น constructor injection                       |
 | Search ด้วย debounce           | เปลี่ยนเป็น `(keyup.enter)` trigger                    |
-| alert() / toast                | ใช้ `app-success-modal` / `app-error-modal` / `app-confirm-modal` |
+| alert() / toast                | ใช้ `ModalService`: `info()`, `cancel()`, `commonSuccess()`      |
 
 ---
 

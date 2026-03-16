@@ -1,6 +1,6 @@
 # สถาปัตยกรรมการจัดการไฟล์ — RBMS-POS
 
-> อัพเดตล่าสุด: 2026-03-10
+> อัพเดตล่าสุด: 2026-03-16
 
 ---
 
@@ -14,8 +14,7 @@
 - **Soft Delete** เป็น default (ตาม BaseEntity) — ไฟล์ใน S3 ยังอยู่
 - Entity อื่นเชื่อมไป TbFile ผ่าน FK (`ImageFileId`, `DocumentFileId` ฯลฯ)
 
-**เหตุผลที่เปลี่ยน:**
-ปัจจุบัน `TbMenu.ImageUrl` และ `TbEmployee.ImageUrl` เก็บ Base64 string ใน NVARCHAR(MAX) → ทำให้ query ช้า, JSON response ใหญ่, ไม่ cache ได้
+**สถานะ:** ✅ Implement เสร็จแล้ว — TbFile + S3StorageService + FileService + FileController ใช้งานได้จริง
 
 ---
 
@@ -96,6 +95,8 @@ public class TbFileConfiguration : IEntityTypeConfiguration<TbFile>
 TbFile (ตารางกลาง)
   ├── 1:N ←── TbMenu.ImageFileId (FK, optional)
   ├── 1:N ←── TbEmployee.ImageFileId (FK, optional)
+  ├── 1:N ←── TbShopSettings.LogoFileId (FK, optional)
+  ├── 1:N ←── TbShopSettings.PaymentQrCodeFileId (FK, optional)
   └── (อนาคต) 1:N ←── TbOrder.ReceiptFileId, TbProduct.ImageFileId ฯลฯ
 ```
 
@@ -159,9 +160,9 @@ builder.HasIndex(x => x.ImageFileId);
 
 ---
 
-## ไฟล์ที่ต้องสร้าง/แก้ไข
+## ไฟล์ที่เกี่ยวข้อง
 
-### ไฟล์ใหม่
+### ไฟล์หลัก
 
 | # | ไฟล์ | หน้าที่ |
 |---|------|--------|
@@ -177,25 +178,14 @@ builder.HasIndex(x => x.ImageFileId);
 | 10 | `POS.Main.Business.Admin/Models/Files/FileMapper.cs` | Manual mapper |
 | 11 | `RBMS.POS.WebAPI/Controllers/FileController.cs` | Download endpoint |
 
-### ไฟล์ที่ต้องแก้ไข
+### Entity ที่ใช้ TbFile (FK)
 
-| # | ไฟล์ | เปลี่ยนแปลง |
-|---|------|------------|
-| 1 | `TbMenu.cs` | `ImageUrl` → `ImageFileId` + navigation |
-| 2 | `TbEmployee.cs` | `ImageUrl` → `ImageFileId` + navigation |
-| 3 | `TbMenuConfiguration.cs` | เพิ่ม FK relationship |
-| 4 | `TbEmployeeConfiguration.cs` | เพิ่ม FK relationship |
-| 5 | `POSMainContext.cs` | เพิ่ม `DbSet<TbFile>` + `ApplyConfiguration` |
-| 6 | `IUnitOfWork.cs` | เพิ่ม `IFileRepository Files` |
-| 7 | `UnitOfWork.cs` | Lazy init FileRepository |
-| 8 | `MenuMapper.cs` | แก้ ImageUrl mapping → ใช้ FileId |
-| 9 | `EmployeeMapper.cs` | แก้ ImageUrl mapping → ใช้ FileId |
-| 10 | `MenuService.cs` | เรียก FileService สำหรับ upload/delete รูป |
-| 11 | `EmployeeService.cs` | เรียก FileService สำหรับ upload/delete รูป |
-| 12 | `MenusController.cs` | เปลี่ยนรับ `[FromForm]` แทน `[FromBody]` |
-| 13 | `HumanResourceController.cs` | เปลี่ยนรับ `[FromForm]` แทน `[FromBody]` |
-| 14 | `Program.cs` | Register S3 client + FileService DI |
-| 15 | `appsettings.json` | เพิ่ม S3 config |
+| Entity | FK Column | หน้าที่ |
+|--------|-----------|--------|
+| `TbMenu` | `ImageFileId` | รูปเมนูอาหาร |
+| `TbEmployee` | `ImageFileId` | รูปพนักงาน |
+| `TbShopSettings` | `LogoFileId` | โลโก้ร้าน |
+| `TbShopSettings` | `PaymentQrCodeFileId` | QR Code ชำระเงิน |
 
 ### NuGet Package
 
@@ -344,7 +334,7 @@ public async Task<IActionResult> CreateMenu(
     CancellationToken ct = default)
 {
     var result = await _menuService.CreateMenuAsync(request, imageFile, ct);
-    return CreatedAtAction(nameof(GetMenu), new { id = result.MenuId }, result);
+    return Success(result);
 }
 ```
 
@@ -494,16 +484,12 @@ builder.Services.AddScoped<IFileService, FileService>();
 
 ---
 
-## Migration Strategy
+## Migration History
 
-เนื่องจากผู้ใช้อนุมัติให้ลบข้อมูลเก่าใน DB ได้ → ทำ migration ตรง:
+Migration ที่เกี่ยวข้องกับระบบไฟล์ (apply แล้วทั้งหมด):
 
-1. สร้าง `TbFiles` table
-2. ลบ column `ImageUrl` จาก `TbMenus` + `TbEmployees`
-3. เพิ่ม column `ImageFileId` (FK → TbFiles) ทั้ง 2 ตาราง
-4. `dotnet ef database update`
-
-ไม่ต้อง data migration (ลบข้อมูลเก่าในฐานข้อมูลแล้วเริ่มใหม่)
+1. **AddFileManagement** — สร้าง `TbFiles` table, ลบ `ImageUrl` จาก TbMenus + TbEmployees, เพิ่ม `ImageFileId` FK
+2. **AddShopSettingsTables** — เพิ่ม `LogoFileId` + `PaymentQrCodeFileId` FK ใน TbShopSettings
 
 ---
 

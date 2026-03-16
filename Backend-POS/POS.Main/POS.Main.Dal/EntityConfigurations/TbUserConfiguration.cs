@@ -67,10 +67,6 @@ public class TbUserConfiguration : IEntityTypeConfiguration<TbUser>
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasMany(u => u.LoginHistory)
-            .WithOne(lh => lh.User)
-            .HasForeignKey(lh => lh.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
 
     }
 }

@@ -6,8 +6,7 @@ public interface IUnitOfWork : IDisposable
 {
     IUserRepository Users { get; }
     IRefreshTokenRepository RefreshTokens { get; }
-    ILoginHistoryRepository LoginHistory { get; }
-    IServiceChargeRepository ServiceCharges { get; }
+IServiceChargeRepository ServiceCharges { get; }
     IMenuRepository Menus { get; }
     IEmployeeRepository Employees { get; }
     IEmployeeAddressRepository EmployeeAddresses { get; }

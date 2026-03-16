@@ -1,6 +1,6 @@
 # Frontend Expert Agent — RBMS-POS
 
-Last Updated: 2026-03-11
+Last Updated: 2026-03-16
 
 คุณเป็น Angular 19.1 frontend expert สำหรับโปรเจค **RBMS-POS** ระบบ Point of Sale
 
@@ -26,24 +26,29 @@ Last Updated: 2026-03-11
 src/app/
 ├── core/
 │   ├── api/              # Generated API clients (ng-openapi-gen) — ใช้เสมอ
-│   ├── constants/        # Route names, permissions, enums
-│   ├── guards/           # auth.guard, unsaved-change.guard
-│   ├── helpers/          # format, date, string utilities
-│   ├── interceptors/     # auth, loading, error interceptors
-│   ├── resolvers/        # Data preloading
-│   ├── services/         # Global: modal, breadcrumb, loading
-│   ├── state/            # NgRx / Signals state
-│   └── validators/       # Custom validators
+│   │   ├── services/     # Generated API services (7 ตัว)
+│   │   └── models/       # Generated TypeScript models
+│   ├── guards/           # auth.guard, permission.guard, guest.guard
+│   ├── interceptors/     # auth, loading interceptors
+│   └── services/         # Global: modal, breadcrumb, loading, session-timeout, shop-branding, header
 ├── shared/
-│   ├── components/       # Reusable UI components (header, side-bar, generic-icon ฯลฯ)
-│   ├── modals/           # confirm-modal, success-modal, error-modal
-│   ├── directives/
-│   ├── pipes/
+│   ├── components/       # Reusable UI (header, side-bar, generic-icon, global-loading, notification-panel)
+│   ├── cards/            # card-template, section-card, empty-view, image-upload-card, field-error, audit-footer
+│   ├── dialogs/          # address-dialog, education-dialog, work-history-dialog, session-timeout, verify-password
+│   ├── modals/           # info-modal, cancel-modal, success-modal (ใช้ผ่าน ModalService)
+│   ├── dropdowns/        # dropdown-base + 9 specific dropdowns (active, gender, title, position ฯลฯ)
+│   ├── directives/       # datepicker-icon
+│   ├── pipes/            # date-format, mask-phone
+│   ├── pages/            # welcome, access-denied
+│   ├── utils/            # markFormDirty, linkDateRange
 │   ├── component-interfaces.ts  # UI interfaces (CurrentUser, MenuItem, BreadcrumbItem ฯลฯ)
 │   └── shared.module.ts
+├── store/
+│   └── layout/           # NgRx layout state (reducer, actions, selectors)
 ├── features/
 │   └── {module}/
 │       ├── pages/        # Smart components (containers)
+│       ├── dialogs/      # Feature-specific dialogs (DynamicDialog)
 │       ├── components/   # Presentational components
 │       ├── {module}.module.ts
 │       └── {module}-routing.module.ts
@@ -115,7 +120,7 @@ export class ProductListComponent implements OnInit {
 ```typescript
 // ✅ Pattern 1: takeUntilDestroyed (แนะนำสำหรับ Angular 19)
 export class ProductListComponent {
-  private destroyRef = inject(DestroyRef);
+  constructor(private readonly destroyRef: DestroyRef) {}
 
   ngOnInit(): void {
     this.service.getProducts()
@@ -252,40 +257,37 @@ interface ProductItem { id: number; name: string; }  // ใช้ ProductRespons
 
 ---
 
-### 6. Shared Modals
+### 6. ModalService — Programmatic Dialogs
 
 ```typescript
-// confirm-modal — ใช้สำหรับ delete/warning
-// @Input: isOpen, title, message, itemName, confirmText, cancelText, type
-// @Output: confirmed, cancelled
+// ใช้ ModalService (core/services/modal.service.ts) แทน @Input/@Output modal แบบเก่า
+// ModalService ครอบ PrimeNG DynamicDialog — เรียก method call ได้เลย
 
-// ตัวอย่างใน component
-showDeleteConfirm = signal(false);
-productToDelete = signal<ProductResponse | null>(null);
+constructor(
+  private readonly modalService: ModalService,
+) {}
 
+// ✅ Confirm dialog (info)
 onDeleteClick(product: ProductResponse): void {
-  this.productToDelete.set(product);
-  this.showDeleteConfirm.set(true);
+  this.modalService.info({
+    title: 'ยืนยันการลบ',
+    message: `คุณต้องการลบสินค้า "${product.name}" ใช่หรือไม่?`,
+    onConfirm: () => this.deleteProduct(product.productId),
+  });
 }
 
-onDeleteConfirmed(): void {
-  const product = this.productToDelete();
-  if (!product) return;
-  // call delete API
-  this.showDeleteConfirm.set(false);
+// ✅ Error dialog (cancel)
+onError(message: string): void {
+  this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message });
 }
-```
 
-```html
-<!-- Template -->
-<app-confirm-modal
-  [isOpen]="showDeleteConfirm()"
-  title="ยืนยันการลบ"
-  message="คุณต้องการลบสินค้านี้ใช่หรือไม่?"
-  [itemName]="productToDelete()?.name"
-  type="danger"
-  (confirmed)="onDeleteConfirmed()"
-  (cancelled)="showDeleteConfirm.set(false)" />
+// ✅ Success feedback (auto-close 2s)
+onSaveSuccess(): void {
+  this.modalService.commonSuccess();
+}
+
+// ❌ ผิด — ห้ามใช้ @Input/@Output modal แบบเก่า
+// <app-confirm-modal [isOpen]="..." (confirmed)="..." />
 ```
 
 ---
@@ -346,7 +348,7 @@ function processData(data: unknown) { }
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    SharedModule,            // PrimeNG + confirm-modal, success-modal, etc.
+    SharedModule,            // PrimeNG + ModalService, shared components, etc.
     ProductRoutingModule,
   ],
 })
@@ -362,7 +364,7 @@ export class ProductModule {}
 const routes: Routes = [
   { path: '', component: ProductListComponent },
   { path: 'create', component: ProductManageComponent },
-  { path: ':id/edit', component: ProductManageComponent },
+  { path: 'update/:productId', component: ProductManageComponent },
 ];
 
 // app-routing.module.ts (lazy loading)
@@ -514,8 +516,8 @@ Frontend Expert สามารถทำหน้าที่ออกแบบ 
 | Responsive | `grid-cols-1 md:grid-cols-2` สำหรับ form fields |
 | Loading state | ทุกหน้าต้องมี skeleton/spinner ขณะโหลด |
 | Empty state | `text-surface-400` + icon เมื่อไม่มีข้อมูล |
-| Error feedback | ผ่าน `app-error-modal` หรือ error signal |
-| Success feedback | ผ่าน `app-success-modal` เท่านั้น |
+| Error feedback | ผ่าน `ModalService.cancel()` หรือ error signal |
+| Success feedback | ผ่าน `ModalService.commonSuccess()` เท่านั้น |
 
 ### กระบวนการออกแบบ (SA → Frontend Expert)
 

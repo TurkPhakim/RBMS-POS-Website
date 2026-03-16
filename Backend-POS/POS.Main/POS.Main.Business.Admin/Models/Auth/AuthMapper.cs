@@ -54,16 +54,4 @@ public static class AuthMapper
         };
     }
 
-    public static TbLoginHistory ToLoginHistoryEntity(Guid? userId, string username, bool success, string ipAddress, string? failureReason = null)
-    {
-        return new TbLoginHistory
-        {
-            UserId = userId,
-            Username = username,
-            Success = success,
-            FailureReason = failureReason,
-            IpAddress = ipAddress,
-            LoginDate = DateTime.UtcNow
-        };
-    }
 }

@@ -1,6 +1,6 @@
 # ระบบจัดการ Icon
 
-> อัปเดตล่าสุด: 2026-03-11
+> อัปเดตล่าสุด: 2026-03-16
 
 ---
 
@@ -114,31 +114,32 @@ public/icons/                      ← SVG ไฟล์ทั้งหมด (34
 |------|--------|
 | `admin-setting` | Sidebar — Admin Setting |
 | `arrow` | Admin Setting — navigation |
+| `bell` | Header — notification icon |
 | `cashier` | Sidebar — Payment |
-| `champagne` | (สำรอง) |
+| `champagne` | (สำรอง — ยังไม่ใช้) |
 | `check` | Success Modal |
 | `chevron-down` | Header — dropdown |
-| `close` | (สำรอง) |
+| `close` | (สำรอง — ยังไม่ใช้) |
 | `coin` | Admin Setting — Service Charge |
 | `dashboard` | Sidebar — Dashboard |
 | `empty-box` | Empty state ทุกหน้า |
-| `error` | Error Modal |
+| `error` | Error/Cancel Modal |
 | `eye` / `eye-off` | Login — toggle password |
-| `food` | (สำรอง) |
+| `food` | Menu List — placeholder รูปเมนู |
 | `hamburger` | Header — toggle sidebar |
-| `home` | (สำรอง) |
+| `home` | (สำรอง — ยังไม่ใช้) |
 | `human` | Employee — empty state |
 | `human-resource` | Sidebar — HR |
-| `image-preview` | (สำรอง) |
+| `image-preview` | Menu Manage, Shop Settings — image upload placeholder |
 | `kitchen` | Sidebar — Kitchen Display |
 | `knife-fork` | Sidebar — collapsed logo |
 | `lock` | Login — password field |
 | `login` | Login — submit button, Header — login option |
 | `logout` | Header — logout |
 | `menu-restaurant` | Sidebar — Menu |
-| `notification-bell` | (สำรอง) |
+| `notification-bell` | (สำรอง — ใช้ `bell` แทน) |
 | `orders` | Sidebar — Order |
-| `pen-edit` | (สำรอง) |
+| `pen-edit` | Table action — แก้ไข (position-list, menu-list, employee, image-upload-card) |
 | `profile` | Header — profile menu |
 | `table` | Sidebar — Table |
 | `trash` | Confirm Modal — delete |
