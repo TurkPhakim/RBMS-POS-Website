@@ -10,6 +10,15 @@ using POS.Main.Business.HumanResource.Interfaces;
 using POS.Main.Business.HumanResource.Services;
 using POS.Main.Business.Authorization.Interfaces;
 using POS.Main.Business.Authorization.Services;
+using POS.Main.Business.Table.Interfaces;
+using POS.Main.Business.Table.Services;
+using POS.Main.Business.Order.Interfaces;
+using POS.Main.Business.Order.Services;
+using POS.Main.Business.Notification.Interfaces;
+using POS.Main.Business.Notification.Services;
+using POS.Main.Business.Payment.Interfaces;
+using POS.Main.Business.Payment.Services;
+using RBMS.POS.WebAPI.Services;
 using POS.Main.Core.Helpers;
 using POS.Main.Core.Settings;
 using POS.Main.Dal;
@@ -146,6 +155,21 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };
+
+    // SignalR — ส่ง JWT token ผ่าน query string
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
@@ -182,11 +206,32 @@ builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IServiceChargeService, ServiceChargeService>();
+builder.Services.AddScoped<IMenuSubCategoryService, MenuSubCategoryService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddScoped<IOptionGroupService, OptionGroupService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IPositionService, PositionService>();
 builder.Services.AddScoped<IShopSettingsService, ShopSettingsService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<IZoneService, ZoneService>();
+builder.Services.AddScoped<ITableService, TableService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IFloorObjectService, FloorObjectService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IKitchenService, KitchenService>();
+builder.Services.AddScoped<IOrderNotificationService, OrderNotificationService>();
+builder.Services.AddScoped<ICashierSessionService, CashierSessionService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<ISelfOrderService, SelfOrderService>();
+builder.Services.AddScoped<ISlipOcrService, SlipOcrService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<INotificationBroadcaster, NotificationBroadcaster>();
+
+// Background Services
+builder.Services.AddHostedService<ReservationReminderService>();
+builder.Services.AddHostedService<CleanupBackgroundService>();
 
 // Caching
 builder.Services.AddMemoryCache();
@@ -298,5 +343,6 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 app.MapHealthChecks("/health");
 app.MapHub<OrderHub>("/hubs/order");
+app.MapHub<NotificationHub>("/hubs/notification");
 
 app.Run();

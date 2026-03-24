@@ -17,13 +17,11 @@
   <!-- Button -->
   @if (config.data?.isShowConfirmButton ?? true) {
     <div class="flex justify-center w-full">
-      <p-button
-        class="w-40"
-        [fluid]="true"
-        severity="primary"
-        (onClick)="ref.close()">
-        {{ config.data?.confirmButtonLabel ?? 'ปิด' }}
-      </p-button>
+      <div class="w-[120px]">
+        <p-button [fluid]="true" severity="primary" (onClick)="ref.close()">
+          {{ config.data?.confirmButtonLabel ?? "ปิด" }}
+        </p-button>
+      </div>
     </div>
   }
 </div>

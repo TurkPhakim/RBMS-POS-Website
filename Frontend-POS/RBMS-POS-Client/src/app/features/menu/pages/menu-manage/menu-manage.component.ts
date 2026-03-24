@@ -1,51 +1,330 @@
-import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { merge } from 'rxjs';
+import { DialogService } from 'primeng/dynamicdialog';
+import { MenuItemsService } from '@app/core/api/services/menu-items.service';
+import { ShopSettingsService } from '@app/core/api/services/shop-settings.service';
+import { MenuResponseModel } from '@app/core/api/models/menu-response-model';
+import { MenuOptionGroupResponseModel } from '@app/core/api/models/menu-option-group-response-model';
+import { OptionGroupResponseModel } from '@app/core/api/models/option-group-response-model';
 import { ApiConfiguration } from '@app/core/api/api-configuration';
-import { EMenuCategory } from '@app/core/api/models';
-import { MenusService } from '@app/core/api/services';
+import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
-
 import { markFormDirty } from '@app/shared/utils';
+import { SelectOptionGroupDialogComponent } from '../../dialogs/select-option-group-dialog/select-option-group-dialog.component';
 
+const KEY_BTN_BACK = 'back-menu';
 const KEY_BTN_SAVE = 'save-menu';
-const KEY_BTN_BACK = 'back';
+
+const CATEGORY_CONFIG: Record<number, { title: string; icon: string; basePath: string; permissionPrefix: string }> = {
+  1: { title: 'เมนูอาหาร', icon: 'food', basePath: '/menu/food', permissionPrefix: 'menu-food' },
+  2: { title: 'เมนูเครื่องดื่ม', icon: 'drinks-glass', basePath: '/menu/beverage', permissionPrefix: 'menu-beverage' },
+  3: { title: 'เมนูของหวาน', icon: 'dessert', basePath: '/menu/dessert', permissionPrefix: 'menu-dessert' },
+};
 
 @Component({
   selector: 'app-menu-manage',
   standalone: false,
   templateUrl: './menu-manage.component.html',
+  providers: [DialogService],
 })
-export class MenuManageComponent implements OnDestroy {
+export class MenuManageComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   isEditMode = signal(false);
   menuId = signal<number | null>(null);
-  isSaving = signal(false);
-  imagePreview = signal<string | null>(null);
+  menuData = signal<MenuResponseModel | null>(null);
+  categoryType = 1;
+  config = CATEGORY_CONFIG[1];
+
+  serverImageUrl = signal<string | null>(null);
   selectedFile = signal<File | null>(null);
+  imageRemoved = signal(false);
+
+  hasTwoPeriods = signal(false);
+  linkedOptionGroups = signal<MenuOptionGroupResponseModel[]>([]);
+
+  tagRecommended = signal(false);
+  tagSeasonal = signal(false);
+  tagSlow = signal(false);
+
+  canUpdate: boolean;
 
   constructor(
-    private readonly route: ActivatedRoute,
-    private readonly apiConfig: ApiConfiguration,
-    private readonly breadcrumbService: BreadcrumbService,
-    private readonly destroyRef: DestroyRef,
     private readonly fb: FormBuilder,
-    private readonly menusService: MenusService,
-    private readonly modalService: ModalService,
+    private readonly route: ActivatedRoute,
     private readonly router: Router,
-  ) {}
+    private readonly menuItemsService: MenuItemsService,
+    private readonly shopSettingsService: ShopSettingsService,
+    private readonly authService: AuthService,
+    private readonly breadcrumbService: BreadcrumbService,
+    private readonly modalService: ModalService,
+    private readonly dialogService: DialogService,
+    private readonly apiConfig: ApiConfiguration,
+    private readonly destroyRef: DestroyRef,
+  ) {
+    // Permission จะ resolve ใน ngOnInit หลังได้ categoryType
+    this.canUpdate = false;
+  }
 
   ngOnInit(): void {
+    this.categoryType = this.route.parent?.snapshot.data['categoryType'] ?? 1;
+    this.config = CATEGORY_CONFIG[this.categoryType] ?? CATEGORY_CONFIG[1];
+    this.canUpdate = this.authService.hasPermission(`${this.config.permissionPrefix}.update`);
     this.initForm();
+    this.setupPeriodAutoClose();
+    this.loadShopSettings();
     this.checkEditMode();
     this.setupBreadcrumbButtons();
   }
 
   ngOnDestroy(): void {
     this.breadcrumbService.clearButtons();
+  }
+
+  onSubmit(): void {
+    if (this.form.invalid) {
+      markFormDirty(this.form);
+      return;
+    }
+
+    this.setSavingState(true);
+
+    if (this.isEditMode()) {
+      this.updateMenu();
+    } else {
+      this.createMenu();
+    }
+  }
+
+  onFileSelected(file: File): void {
+    this.selectedFile.set(file);
+    this.imageRemoved.set(false);
+  }
+
+  removeImage(): void {
+    this.selectedFile.set(null);
+    this.imageRemoved.set(true);
+  }
+
+  onTagToggle(tag: 'recommended' | 'seasonal' | 'slow'): void {
+    if (tag === 'recommended') this.tagRecommended.update((v) => !v);
+    if (tag === 'seasonal') this.tagSeasonal.update((v) => !v);
+    if (tag === 'slow') this.tagSlow.update((v) => !v);
+  }
+
+  openSelectOptionGroupDialog(): void {
+    const excludeIds = this.linkedOptionGroups().map((g) => g.optionGroupId!);
+    const ref = this.dialogService.open(SelectOptionGroupDialogComponent, {
+      header: 'เลือกตัวเลือกเสริม',
+      width: '50vw',
+      styleClass: 'card-dialog',
+      showHeader: false,
+      modal: true,
+      data: {
+        categoryType: this.categoryType,
+        excludeIds,
+      },
+    });
+
+    ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (selected: OptionGroupResponseModel[] | undefined) => {
+        if (!selected?.length) return;
+        const current = [...this.linkedOptionGroups()];
+        for (const group of selected) {
+          current.push({
+            optionGroupId: group.optionGroupId,
+            name: group.name,
+            isRequired: group.isRequired,
+            minSelect: group.minSelect,
+            maxSelect: group.maxSelect,
+            optionItems: (group.optionItems ?? []).map((oi) => ({
+              name: oi.name,
+              additionalPrice: oi.additionalPrice,
+            })),
+          });
+        }
+        this.linkedOptionGroups.set(current);
+      },
+    });
+  }
+
+  onOptionGroupDrop(event: CdkDragDrop<MenuOptionGroupResponseModel[]>): void {
+    const items = [...this.linkedOptionGroups()];
+    moveItemInArray(items, event.previousIndex, event.currentIndex);
+    this.linkedOptionGroups.set(items);
+  }
+
+  removeOptionGroup(index: number): void {
+    const items = [...this.linkedOptionGroups()];
+    items.splice(index, 1);
+    this.linkedOptionGroups.set(items);
+  }
+
+  private initForm(): void {
+    this.form = this.fb.group({
+      nameThai: ['', Validators.required],
+      nameEnglish: ['', Validators.required],
+      description: [''],
+      subCategoryId: [null, Validators.required],
+      price: [0, [Validators.required, Validators.min(0)]],
+      costPrice: [null],
+      isAvailablePeriod1: [true],
+      isAvailablePeriod2: [true],
+      allergens: [''],
+      caloriesPerServing: [null],
+      isAvailable: [true],
+      isPinned: [false],
+    });
+  }
+
+  private setupPeriodAutoClose(): void {
+    merge(
+      this.form.get('isAvailablePeriod1')!.valueChanges,
+      this.form.get('isAvailablePeriod2')!.valueChanges,
+    )
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (!this.hasTwoPeriods()) return;
+        const p1 = this.form.get('isAvailablePeriod1')!.value;
+        const p2 = this.form.get('isAvailablePeriod2')!.value;
+        if (!p1 && !p2) {
+          this.form.get('isAvailable')!.setValue(false);
+        }
+      });
+  }
+
+  private loadShopSettings(): void {
+    this.shopSettingsService
+      .shopSettingsGetGet()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.hasTwoPeriods.set(res.result?.hasTwoPeriods ?? false);
+        },
+      });
+  }
+
+  private checkEditMode(): void {
+    const id = this.route.snapshot.paramMap.get('menuId');
+    if (id) {
+      this.isEditMode.set(true);
+      this.menuId.set(+id);
+      this.loadMenu(+id);
+    }
+  }
+
+  private loadMenu(id: number): void {
+    this.menuItemsService
+      .menuItemsGetMenuGet({ menuId: id })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const data = res.result!;
+          this.menuData.set(data);
+          this.linkedOptionGroups.set(data.optionGroups ?? []);
+
+          if (data.imageFileId) {
+            this.serverImageUrl.set(
+              `${this.apiConfig.rootUrl}/api/admin/file/${data.imageFileId}`,
+            );
+          }
+
+          const tags = data.tags ?? 0;
+          this.tagRecommended.set(!!(tags & 1));
+          this.tagSeasonal.set(!!(tags & 2));
+          this.tagSlow.set(!!(tags & 4));
+
+          this.form.patchValue({
+            nameThai: data.nameThai,
+            nameEnglish: data.nameEnglish,
+            description: data.description,
+            subCategoryId: data.subCategoryId,
+            price: data.price,
+            costPrice: data.costPrice,
+            isAvailablePeriod1: data.isAvailablePeriod1,
+            isAvailablePeriod2: data.isAvailablePeriod2,
+            allergens: data.allergens,
+            caloriesPerServing: data.caloriesPerServing,
+            isAvailable: data.isAvailable,
+            isPinned: data.isPinned,
+          });
+
+          if (!this.canUpdate) this.form.disable();
+        },
+        error: () => {
+          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถโหลดข้อมูลได้' });
+          this.router.navigate([this.config.basePath]);
+        },
+      });
+  }
+
+  private buildTags(): number {
+    return (this.tagRecommended() ? 1 : 0) | (this.tagSeasonal() ? 2 : 0) | (this.tagSlow() ? 4 : 0);
+  }
+
+  private buildBody(): Record<string, unknown> {
+    const f = this.form.getRawValue();
+    return {
+      NameThai: f.nameThai,
+      NameEnglish: f.nameEnglish,
+      Description: f.description || undefined,
+      SubCategoryId: f.subCategoryId,
+      Price: f.price,
+      CostPrice: f.costPrice ?? undefined,
+      IsAvailablePeriod1: f.isAvailablePeriod1,
+      IsAvailablePeriod2: f.isAvailablePeriod2,
+      Tags: this.buildTags(),
+      Allergens: f.allergens || undefined,
+      CaloriesPerServing: f.caloriesPerServing ?? undefined,
+      IsAvailable: f.isAvailable,
+      IsPinned: f.isPinned,
+      OptionGroupIds: this.linkedOptionGroups().map((g) => g.optionGroupId!),
+      imageFile: this.selectedFile() as Blob | undefined,
+    };
+  }
+
+  private createMenu(): void {
+    this.menuItemsService
+      .menuItemsCreateMenuPost({
+        body: this.buildBody() as any,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.modalService.commonSuccess();
+          this.router.navigate([this.config.basePath]);
+        },
+        error: () => {
+          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถสร้างเมนูได้' });
+          this.resetSavingState();
+        },
+      });
+  }
+
+  private updateMenu(): void {
+    const body = this.buildBody() as any;
+    body.RemoveImage = this.imageRemoved();
+
+    this.menuItemsService
+      .menuItemsUpdateMenuPut({
+        menuId: this.menuId()!,
+        body,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.modalService.commonSuccess();
+          this.router.navigate([this.config.basePath]);
+        },
+        error: () => {
+          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถบันทึกข้อมูลได้' });
+          this.resetSavingState();
+        },
+      });
   }
 
   private setupBreadcrumbButtons(): void {
@@ -57,178 +336,31 @@ export class MenuManageComponent implements OnDestroy {
         label: 'ย้อนกลับ',
         severity: 'secondary',
         variant: 'outlined',
-        callback: () => this.onCancel(),
+        callback: () => this.router.navigate([this.config.basePath]),
       },
     });
 
-    this.breadcrumbService.addOrUpdateButton({
-      key: KEY_BTN_SAVE,
-      type: 'button',
-      item: {
+    const showSave = this.isEditMode() ? this.canUpdate : true;
+    if (showSave) {
+      this.breadcrumbService.addOrUpdateButton({
         key: KEY_BTN_SAVE,
-        label: 'บันทึก',
-        callback: () => this.onSubmit(),
-      },
-    });
-  }
-
-  initForm(): void {
-    this.form = this.fb.group({
-      nameThai: ['', [Validators.required, Validators.maxLength(200)]],
-      nameEnglish: ['', [Validators.required, Validators.maxLength(200)]],
-      description: ['', [Validators.maxLength(1000)]],
-      imageUrl: [''],
-      price: [null, [Validators.required, Validators.min(0), Validators.max(99999999.99)]],
-      category: [1 as EMenuCategory, [Validators.required]],
-      isActive: [true],
-      isAvailable: [true],
-    });
-  }
-
-  checkEditMode(): void {
-    const menuId = this.route.snapshot.paramMap.get('menuId');
-    if (menuId) {
-      this.isEditMode.set(true);
-      this.menuId.set(+menuId);
-      this.loadMenu(+menuId);
-    }
-  }
-
-  loadMenu(id: number): void {
-    this.menusService
-      .menusGetByIdGet({ menuId: id })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          if (response.result) {
-            this.form.patchValue({
-              nameThai: response.result.nameThai,
-              nameEnglish: response.result.nameEnglish,
-              description: response.result.description,
-              price: response.result.price,
-              category: response.result.category,
-              isActive: response.result.isActive,
-              isAvailable: response.result.isAvailable,
-            });
-
-            if (response.result.imageFileId) {
-              this.imagePreview.set(
-                `${this.apiConfig.rootUrl}/api/admin/file/${response.result.imageFileId}`
-              );
-            }
-          }
-        },
-        error: () => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลเมนูได้' });
+        type: 'button',
+        item: {
+          key: KEY_BTN_SAVE,
+          label: 'บันทึก',
+          severity: 'primary',
+          callback: () => this.onSubmit(),
         },
       });
-  }
-
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-
-      if (!file.type.startsWith('image/')) {
-        this.modalService.cancel({ title: 'ผิดพลาด !', message: 'กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง' });
-        return;
-      }
-
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ขนาดรูปภาพต้องไม่เกิน 5MB' });
-        return;
-      }
-
-      this.selectedFile.set(file);
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.imagePreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
     }
   }
 
-  removeImage(): void {
-    this.selectedFile.set(null);
-    this.imagePreview.set(null);
-    this.form.patchValue({ imageUrl: '' });
-  }
-
-  onSubmit(): void {
-    if (this.form.invalid) {
-      markFormDirty(this.form);
-      return;
-    }
-
-    this.isSaving.set(true);
-    this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, true);
-    this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, true);
-
-    const f = this.form.value;
-    const body = {
-      NameThai: f.nameThai as string,
-      NameEnglish: f.nameEnglish as string,
-      Description: f.description as string | undefined,
-      Price: f.price as number,
-      Category: f.category as EMenuCategory,
-      IsActive: f.isActive as boolean | undefined,
-      IsAvailable: f.isAvailable as boolean | undefined,
-      imageFile: this.selectedFile() as Blob | undefined,
-    };
-
-    if (this.isEditMode()) {
-      this.updateMenu(body);
-    } else {
-      this.createMenu(body);
-    }
-  }
-
-  private createMenu(body: Record<string, unknown>): void {
-    this.menusService
-      .menusCreatePost({ body: body as any })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.resetSavingState();
-          this.modalService.commonSuccess();
-          this.router.navigate(['/menu/items']);
-        },
-        error: () => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถเพิ่มเมนูได้' });
-          this.resetSavingState();
-        },
-      });
-  }
-
-  private updateMenu(body: Record<string, unknown>): void {
-    const menuId = this.menuId()!;
-
-    this.menusService
-      .menusUpdatePut({ menuId, body: body as any })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.resetSavingState();
-          this.modalService.commonSuccess();
-          this.router.navigate(['/menu/items']);
-        },
-        error: () => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถแก้ไขข้อมูลเมนูได้' });
-          this.resetSavingState();
-        },
-      });
+  private setSavingState(saving: boolean): void {
+    this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, saving);
+    this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, saving);
   }
 
   private resetSavingState(): void {
-    this.isSaving.set(false);
-    this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, false);
-    this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, false);
+    this.setSavingState(false);
   }
-
-  onCancel(): void {
-    this.router.navigate(['/menu/items']);
-  }
-
 }

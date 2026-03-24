@@ -1,8 +1,13 @@
-import { Component, computed, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
 import { forkJoin } from 'rxjs';
-
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import {
   EDayOfWeek,
@@ -40,17 +45,26 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   displayName = computed(() => {
     const profile = this.myProfile();
-    return profile?.nickname || this.currentUser()?.nickname || this.currentUser()?.username || 'User';
+    return (
+      profile?.nickname ||
+      this.currentUser()?.nickname ||
+      this.currentUser()?.username ||
+      'User'
+    );
   });
 
   fullNameThai = computed(() => this.myProfile()?.fullNameThai || '');
 
-  positionName = computed(() =>
-    this.myProfile()?.positionName || this.currentUser()?.positionName || 'User',
+  positionName = computed(
+    () =>
+      this.myProfile()?.positionName ||
+      this.currentUser()?.positionName ||
+      'User',
   );
 
   profileImageUrl = computed(() => {
-    const fileId = this.myProfile()?.imageFileId || this.currentUser()?.profileImageFileId;
+    const fileId =
+      this.myProfile()?.imageFileId || this.currentUser()?.profileImageFileId;
     return fileId ? `${this.apiConfig.rootUrl}/api/admin/file/${fileId}` : null;
   });
 
@@ -64,7 +78,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
   ) {
     this.authService.currentUser$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(user => this.currentUser.set(user));
+      .subscribe((user) => this.currentUser.set(user));
   }
 
   ngOnInit(): void {
@@ -87,8 +101,14 @@ export class WelcomeComponent implements OnInit, OnDestroy {
 
   getTimeRange(hour: OperatingHourModel): string {
     if (!hour.isOpen) return '-';
-    const p1 = hour.openTime1 && hour.closeTime1 ? `${hour.openTime1} - ${hour.closeTime1}` : '';
-    const p2 = hour.openTime2 && hour.closeTime2 ? `${hour.openTime2} - ${hour.closeTime2}` : '';
+    const p1 =
+      hour.openTime1 && hour.closeTime1
+        ? `${hour.openTime1} - ${hour.closeTime1}`
+        : '';
+    const p2 =
+      hour.openTime2 && hour.closeTime2
+        ? `${hour.openTime2} - ${hour.closeTime2}`
+        : '';
     return p2 ? `${p1}, ${p2}` : p1 || '-';
   }
 

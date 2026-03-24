@@ -31,12 +31,44 @@ public static class Permissions
         public const string Delete = "employee.delete";
     }
 
-    public static class Menu
+    public static class MenuFood
     {
-        public const string Read = "menu-item.read";
-        public const string Create = "menu-item.create";
-        public const string Update = "menu-item.update";
-        public const string Delete = "menu-item.delete";
+        public const string Read = "menu-food.read";
+        public const string Create = "menu-food.create";
+        public const string Update = "menu-food.update";
+        public const string Delete = "menu-food.delete";
+    }
+
+    public static class MenuBeverage
+    {
+        public const string Read = "menu-beverage.read";
+        public const string Create = "menu-beverage.create";
+        public const string Update = "menu-beverage.update";
+        public const string Delete = "menu-beverage.delete";
+    }
+
+    public static class MenuDessert
+    {
+        public const string Read = "menu-dessert.read";
+        public const string Create = "menu-dessert.create";
+        public const string Update = "menu-dessert.update";
+        public const string Delete = "menu-dessert.delete";
+    }
+
+    public static class MenuCategory
+    {
+        public const string Read = "menu-category.read";
+        public const string Create = "menu-category.create";
+        public const string Update = "menu-category.update";
+        public const string Delete = "menu-category.delete";
+    }
+
+    public static class MenuOption
+    {
+        public const string Read = "menu-option.read";
+        public const string Create = "menu-option.create";
+        public const string Update = "menu-option.update";
+        public const string Delete = "menu-option.delete";
     }
 
     public static class Order
@@ -63,15 +95,56 @@ public static class Permissions
         public const string Delete = "payment-manage.delete";
     }
 
-    public static class KitchenDisplay
+    public static class KitchenFood
     {
-        public const string Read = "kitchen-order.read";
-        public const string Update = "kitchen-order.update";
+        public const string Read = "kitchen-food.read";
+        public const string Update = "kitchen-food.update";
+    }
+
+    public static class KitchenBeverage
+    {
+        public const string Read = "kitchen-beverage.read";
+        public const string Update = "kitchen-beverage.update";
+    }
+
+    public static class KitchenDessert
+    {
+        public const string Read = "kitchen-dessert.read";
+        public const string Update = "kitchen-dessert.update";
     }
 
     public static class ShopSettings
     {
         public const string Read = "shop-settings.read";
         public const string Update = "shop-settings.update";
+    }
+
+    public static class FloorPlan
+    {
+        public const string Read = "floor-plan.read";
+        public const string Create = "floor-plan.create";
+        public const string Update = "floor-plan.update";
+        public const string Delete = "floor-plan.delete";
+    }
+
+    public static class Reservation
+    {
+        public const string Read = "reservation.read";
+        public const string Create = "reservation.create";
+        public const string Update = "reservation.update";
+        public const string Delete = "reservation.delete";
+    }
+
+    public static class UserManagement
+    {
+        public const string Read = "user-management.read";
+        public const string Update = "user-management.update";
+    }
+
+    public static class CashierSession
+    {
+        public const string Read = "cashier-session.read";
+        public const string Create = "cashier-session.create";
+        public const string Update = "cashier-session.update";
     }
 }

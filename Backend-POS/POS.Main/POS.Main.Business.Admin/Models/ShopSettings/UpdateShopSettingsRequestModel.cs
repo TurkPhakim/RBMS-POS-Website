@@ -56,6 +56,27 @@ public class UpdateShopSettingsRequestModel
     [StringLength(100)]
     public string? LineId { get; set; }
 
+    [StringLength(1000)]
+    public string? ReceiptHeaderText { get; set; }
+
+    [StringLength(1000)]
+    public string? ReceiptFooterText { get; set; }
+
+    [StringLength(200)]
+    public string? BankName { get; set; }
+
+    [StringLength(50)]
+    public string? AccountNumber { get; set; }
+
+    [StringLength(200)]
+    public string? AccountName { get; set; }
+
+    [StringLength(100)]
+    public string? WifiSsid { get; set; }
+
+    [StringLength(200)]
+    public string? WifiPassword { get; set; }
+
     public List<OperatingHourModel> OperatingHours { get; set; } = new();
 
     public bool RemoveLogo { get; set; }

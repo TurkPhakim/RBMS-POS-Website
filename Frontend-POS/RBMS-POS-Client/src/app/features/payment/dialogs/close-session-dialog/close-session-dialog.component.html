@@ -1,0 +1,58 @@
+<app-card-template [headerLabel]="config.header!">
+  <div class="space-y-4">
+    <!-- Session Summary -->
+    <div class="bg-surface rounded-lg p-4 space-y-2">
+      <div class="flex justify-between">
+        <span class="text-surface-sub">เงินเปิดรอบ</span>
+        <span class="font-semibold">{{ session.openingCash | number: '1.2-2' }} บาท</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-surface-sub">ยอดขายเงินสด</span>
+        <span class="font-semibold text-success">{{ session.totalCashSales | number: '1.2-2' }} บาท</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-surface-sub">ยอดขาย QR</span>
+        <span class="font-semibold text-info">{{ session.totalQrSales | number: '1.2-2' }} บาท</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-surface-sub">จำนวนบิล</span>
+        <span class="font-semibold">{{ session.billCount }} รายการ</span>
+      </div>
+    </div>
+
+    <form [formGroup]="form">
+      <!-- Actual Cash -->
+      <div>
+        <label class="block font-semibold mb-2">จำนวนเงินจริงในลิ้นชัก (บาท)</label>
+        <p-inputNumber
+          formControlName="actualCash"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          [min]="0"
+          mode="decimal"
+          styleClass="w-full"
+          placeholder="0.00"
+        ></p-inputNumber>
+        <app-field-error [control]="form.controls['actualCash']" label="จำนวนเงินจริง"></app-field-error>
+      </div>
+
+    </form>
+  </div>
+
+  <p-footer>
+    <button
+      pButton
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      (click)="onCancel()"
+    ></button>
+    <button
+      pButton
+      label="ปิดรอบ"
+      severity="danger"
+      [loading]="isSaving()"
+      (click)="onSave()"
+    ></button>
+  </p-footer>
+</app-card-template>

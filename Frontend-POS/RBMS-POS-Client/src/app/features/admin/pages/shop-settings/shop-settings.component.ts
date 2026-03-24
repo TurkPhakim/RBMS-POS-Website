@@ -1,20 +1,17 @@
 import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { ShopSettingsResponseModel } from '@app/core/api/models';
 import { ShopSettingsService } from '@app/core/api/services';
+import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { ShopBrandingService } from '@app/core/services/shop-branding.service';
-
 import { DAY_LABELS } from '@app/shared/component-interfaces';
 import { markFormDirty } from '@app/shared/utils';
-
 const KEY_BTN_SAVE = 'save-shop-settings';
-const KEY_BTN_BACK = 'back';
 
 @Component({
   selector: 'app-shop-settings',
@@ -33,20 +30,24 @@ export class ShopSettingsComponent implements OnDestroy {
   settings = signal<ShopSettingsResponseModel | null>(null);
 
   readonly dayLabels = DAY_LABELS;
+  canUpdate: boolean;
 
   constructor(
     private readonly apiConfig: ApiConfiguration,
+    private readonly authService: AuthService,
     private readonly brandingService: ShopBrandingService,
     private readonly breadcrumbService: BreadcrumbService,
     private readonly destroyRef: DestroyRef,
     private readonly fb: FormBuilder,
     private readonly modalService: ModalService,
-    private readonly router: Router,
     private readonly shopSettingsService: ShopSettingsService,
-  ) {}
+  ) {
+    this.canUpdate = this.authService.hasPermission('shop-settings.update');
+  }
 
   ngOnInit(): void {
     this.initForm();
+    this.setupOperatingHoursToggle();
     this.setupBreadcrumbButtons();
     this.loadSettings();
   }
@@ -69,6 +70,8 @@ export class ShopSettingsComponent implements OnDestroy {
       foodType: ['', [Validators.required, Validators.maxLength(200)]],
       description: ['', [Validators.maxLength(2000)]],
       hasTwoPeriods: [false],
+      receiptHeaderText: ['', [Validators.maxLength(1000)]],
+      receiptFooterText: ['', [Validators.maxLength(1000)]],
       address: ['', [Validators.required, Validators.maxLength(2000)]],
       phoneNumber: ['', [Validators.required, Validators.maxLength(50)]],
       shopEmail: ['', [Validators.maxLength(200), Validators.email]],
@@ -76,10 +79,21 @@ export class ShopSettingsComponent implements OnDestroy {
       instagram: ['', [Validators.maxLength(200)]],
       website: ['', [Validators.maxLength(500)]],
       lineId: ['', [Validators.maxLength(100)]],
+      bankName: ['', [Validators.maxLength(200)]],
+      accountNumber: ['', [Validators.maxLength(50)]],
+      accountName: ['', [Validators.maxLength(200)]],
+      wifiSsid: ['', [Validators.maxLength(100)]],
+      wifiPassword: ['', [Validators.maxLength(200)]],
       operatingHours: this.fb.array(
-        Array.from({ length: 7 }, (_, i) => this.createOperatingHourGroup(i + 1))
+        Array.from({ length: 7 }, (_, i) =>
+          this.createOperatingHourGroup(i + 1),
+        ),
       ),
     });
+
+    if (!this.canUpdate) {
+      this.form.disable();
+    }
   }
 
   private createOperatingHourGroup(dayOfWeek: number): FormGroup {
@@ -94,28 +108,36 @@ export class ShopSettingsComponent implements OnDestroy {
     });
   }
 
-  private setupBreadcrumbButtons(): void {
-    this.breadcrumbService.addOrUpdateButton({
-      key: KEY_BTN_BACK,
-      type: 'button',
-      item: {
-        key: KEY_BTN_BACK,
-        label: 'ย้อนกลับ',
-        severity: 'secondary',
-        variant: 'outlined',
-        callback: () => this.onBack(),
-      },
+  private setupOperatingHoursToggle(): void {
+    if (!this.canUpdate) return; // form disabled แล้ว ไม่ต้อง toggle
+    const timeFields = ['openTime1', 'closeTime1', 'openTime2', 'closeTime2'];
+    this.operatingHours.controls.forEach((group) => {
+      const isOpen = group.get('isOpen')!;
+      const toggle = (open: boolean) => {
+        timeFields.forEach((f) => {
+          const ctrl = group.get(f)!;
+          open ? ctrl.enable() : ctrl.disable();
+        });
+      };
+      toggle(isOpen.value);
+      isOpen.valueChanges
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(toggle);
     });
+  }
 
-    this.breadcrumbService.addOrUpdateButton({
-      key: KEY_BTN_SAVE,
-      type: 'button',
-      item: {
+  private setupBreadcrumbButtons(): void {
+    if (this.canUpdate) {
+      this.breadcrumbService.addOrUpdateButton({
         key: KEY_BTN_SAVE,
-        label: 'บันทึก',
-        callback: () => this.onSubmit(),
-      },
-    });
+        type: 'button',
+        item: {
+          key: KEY_BTN_SAVE,
+          label: 'บันทึก',
+          callback: () => this.onSubmit(),
+        },
+      });
+    }
   }
 
   private loadSettings(): void {
@@ -130,7 +152,10 @@ export class ShopSettingsComponent implements OnDestroy {
           }
         },
         error: () => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลตั้งค่าร้านค้าได้' });
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถโหลดข้อมูลตั้งค่าร้านค้าได้',
+          });
         },
       });
   }
@@ -145,6 +170,8 @@ export class ShopSettingsComponent implements OnDestroy {
       foodType: data.foodType ?? '',
       description: data.description ?? '',
       hasTwoPeriods: data.hasTwoPeriods ?? false,
+      receiptHeaderText: data.receiptHeaderText ?? '',
+      receiptFooterText: data.receiptFooterText ?? '',
       address: data.address ?? '',
       phoneNumber: data.phoneNumber ?? '',
       shopEmail: data.shopEmail ?? '',
@@ -152,6 +179,11 @@ export class ShopSettingsComponent implements OnDestroy {
       instagram: data.instagram ?? '',
       website: data.website ?? '',
       lineId: data.lineId ?? '',
+      bankName: data.bankName ?? '',
+      accountNumber: data.accountNumber ?? '',
+      accountName: data.accountName ?? '',
+      wifiSsid: data.wifiSsid ?? '',
+      wifiPassword: data.wifiPassword ?? '',
     });
 
     if (data.operatingHours) {
@@ -171,11 +203,15 @@ export class ShopSettingsComponent implements OnDestroy {
     }
 
     if (data.logoFileId) {
-      this.serverLogoUrl.set(`${this.apiConfig.rootUrl}/api/admin/file/${data.logoFileId}`);
+      this.serverLogoUrl.set(
+        `${this.apiConfig.rootUrl}/api/admin/file/${data.logoFileId}`,
+      );
     }
 
     if (data.paymentQrCodeFileId) {
-      this.qrCodePreview.set(`${this.apiConfig.rootUrl}/api/admin/file/${data.paymentQrCodeFileId}`);
+      this.qrCodePreview.set(
+        `${this.apiConfig.rootUrl}/api/admin/file/${data.paymentQrCodeFileId}`,
+      );
     }
   }
 
@@ -197,12 +233,12 @@ export class ShopSettingsComponent implements OnDestroy {
 
     this.isSaving.set(true);
     this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, true);
-    this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, true);
-
     const f = this.form.value;
 
-    // Build body with flattened OperatingHours for [FromForm] array binding
-    const body: Record<string, any> = {
+    // ใช้ flattened format (OperatingHours[i].Prop) เพราะ RequestBuilder serialize
+    // array of objects เป็น JSON Blob ซึ่ง ASP.NET Core [FromForm] binding ไม่รองรับ
+    // จึงต้องใช้ as any เพราะ body shape ไม่ตรงกับ generated type
+    const body: Record<string, unknown> = {
       ShopNameThai: f.shopNameThai,
       ShopNameEnglish: f.shopNameEnglish,
       TaxId: f.taxId,
@@ -215,20 +251,35 @@ export class ShopSettingsComponent implements OnDestroy {
     if (f.companyNameThai) body['CompanyNameThai'] = f.companyNameThai;
     if (f.companyNameEnglish) body['CompanyNameEnglish'] = f.companyNameEnglish;
     if (f.description) body['Description'] = f.description;
+    if (f.receiptHeaderText) body['ReceiptHeaderText'] = f.receiptHeaderText;
+    if (f.receiptFooterText) body['ReceiptFooterText'] = f.receiptFooterText;
     if (f.shopEmail) body['ShopEmail'] = f.shopEmail;
     if (f.facebook) body['Facebook'] = f.facebook;
     if (f.instagram) body['Instagram'] = f.instagram;
     if (f.website) body['Website'] = f.website;
     if (f.lineId) body['LineId'] = f.lineId;
+    if (f.bankName) body['BankName'] = f.bankName;
+    if (f.accountNumber) body['AccountNumber'] = f.accountNumber;
+    if (f.accountName) body['AccountName'] = f.accountName;
+    if (f.wifiSsid) body['WifiSsid'] = f.wifiSsid;
+    if (f.wifiPassword) body['WifiPassword'] = f.wifiPassword;
 
-    const hours = f.operatingHours as Array<Record<string, any>>;
+    const hours = f.operatingHours as Array<Record<string, unknown>>;
     hours.forEach((h, i) => {
       body[`OperatingHours[${i}].DayOfWeek`] = h['dayOfWeek'];
       body[`OperatingHours[${i}].IsOpen`] = h['isOpen'];
-      const open1 = this.dateToTimeString(h['openTime1']);
-      const close1 = this.dateToTimeString(h['closeTime1']);
-      const open2 = this.dateToTimeString(h['openTime2']);
-      const close2 = this.dateToTimeString(h['closeTime2']);
+      const open1 = this.dateToTimeString(
+        h['openTime1'] as Date | string | null,
+      );
+      const close1 = this.dateToTimeString(
+        h['closeTime1'] as Date | string | null,
+      );
+      const open2 = this.dateToTimeString(
+        h['openTime2'] as Date | string | null,
+      );
+      const close2 = this.dateToTimeString(
+        h['closeTime2'] as Date | string | null,
+      );
       if (open1) body[`OperatingHours[${i}].OpenTime1`] = open1;
       if (close1) body[`OperatingHours[${i}].CloseTime1`] = close1;
       if (open2) body[`OperatingHours[${i}].OpenTime2`] = open2;
@@ -236,7 +287,8 @@ export class ShopSettingsComponent implements OnDestroy {
     });
 
     if (this.selectedLogoFile()) body['logoFile'] = this.selectedLogoFile();
-    if (this.selectedQrCodeFile()) body['paymentQrCodeFile'] = this.selectedQrCodeFile();
+    if (this.selectedQrCodeFile())
+      body['paymentQrCodeFile'] = this.selectedQrCodeFile();
     if (this.logoRemoved()) body['RemoveLogo'] = true;
     if (this.qrCodeRemoved()) body['RemoveQrCode'] = true;
 
@@ -266,11 +318,6 @@ export class ShopSettingsComponent implements OnDestroy {
   private resetSavingState(): void {
     this.isSaving.set(false);
     this.breadcrumbService.setButtonLoading(KEY_BTN_SAVE, false);
-    this.breadcrumbService.setButtonDisabled(KEY_BTN_BACK, false);
-  }
-
-  onBack(): void {
-    this.router.navigate(['/admin-setting']);
   }
 
   private timeStringToDate(time: string | null | undefined): Date | null {

@@ -6,7 +6,7 @@
   >
     <!-- Main Card -->
     <div class="bg-surface-card rounded-2xl border border-primary-light">
-      <!-- Header: Profile แบบ horizontal -->
+      <!-- Header: Profile Horizontal -->
       <div
         class="bg-gradient-to-br from-primary to-primary-dark rounded-t-2xl px-10 py-8 relative overflow-hidden"
       >
@@ -220,12 +220,8 @@
                             ></app-generic-icon>
                           </div>
                           <div>
-                            <div class="text-md text-surface-sub">
-                              ประเภทอาหาร
-                            </div>
-                            <div
-                              class="text-xl font-semibold text-surface-dark"
-                            >
+                            <div class="text-surface-sub">ประเภทอาหาร</div>
+                            <div class="text-xl font-semibold">
                               {{ shopInfo()?.foodType }}
                             </div>
                           </div>
@@ -244,12 +240,8 @@
                             ></app-generic-icon>
                           </div>
                           <div>
-                            <div class="text-md text-surface-sub">
-                              เบอร์โทรศัพท์
-                            </div>
-                            <div
-                              class="text-xl font-semibold text-surface-dark"
-                            >
+                            <div class="text-surface-sub">เบอร์โทรศัพท์</div>
+                            <div class="text-xl font-semibold">
                               {{ shopInfo()?.phoneNumber }}
                             </div>
                           </div>
@@ -269,11 +261,9 @@
                             ></app-generic-icon>
                           </div>
                           <div class="min-w-0">
-                            <div class="text-md text-surface-sub">
-                              รายละเอียด
-                            </div>
+                            <div class="text-surface-sub">รายละเอียด</div>
                             <p
-                              class="text-lg text-surface-dark mt-0.5 line-clamp-2 whitespace-pre-line"
+                              class="text-lg mt-0.5 line-clamp-2 whitespace-pre-line"
                             >
                               {{ shopInfo()?.description }}
                             </p>
@@ -319,7 +309,7 @@
 
                             <!-- ชื่อวัน -->
                             <span
-                              class="w-16 flex-shrink-0 text-md font-bold"
+                              class="w-16 flex-shrink-0 font-bold"
                               [class.text-surface-dark]="hour.isOpen"
                               [class.text-surface-sub]="!hour.isOpen"
                             >
@@ -333,21 +323,20 @@
                               @if (hour.isOpen) {
                                 @if (hour.openTime1 && hour.closeTime1) {
                                   <span
-                                    class="bg-primary text-white font-semibold rounded-lg px-3 py-1 text-md whitespace-nowrap"
+                                    class="bg-primary text-white font-semibold rounded-lg px-3 py-1 whitespace-nowrap"
                                   >
                                     {{ hour.openTime1 }} – {{ hour.closeTime1 }}
                                   </span>
                                 }
                                 @if (hour.openTime2 && hour.closeTime2) {
                                   <span
-                                    class="bg-primary text-white font-semibold rounded-lg px-3 py-1 text-md whitespace-nowrap"
+                                    class="bg-primary text-white font-semibold rounded-lg px-3 py-1 whitespace-nowrap"
                                   >
                                     {{ hour.openTime2 }} – {{ hour.closeTime2 }}
                                   </span>
                                 }
                               } @else {
-                                <span
-                                  class="text-surface-muted text-md font-medium"
+                                <span class="text-surface-muted font-medium"
                                   >—</span
                                 >
                               }

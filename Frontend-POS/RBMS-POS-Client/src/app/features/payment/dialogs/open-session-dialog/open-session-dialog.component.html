@@ -1,0 +1,50 @@
+<app-card-template [headerLabel]="config.header!">
+  <div class="space-y-4">
+    <form [formGroup]="form">
+      <!-- Shift Period (only for shops with 2 periods) -->
+      @if (hasTwoPeriods) {
+        <div class="mb-4">
+          <label class="block font-semibold mb-2">ช่วงเวลา</label>
+          <app-shift-period-dropdown
+            formControlName="shiftPeriod"
+            [showClear]="false"
+            placeholder="เลือกช่วงเวลา"
+          ></app-shift-period-dropdown>
+          <app-field-error [control]="form.controls['shiftPeriod']" label="ช่วงเวลา"></app-field-error>
+        </div>
+      }
+
+      <!-- Opening Cash -->
+      <div>
+        <label class="block font-semibold mb-2">จำนวนเงินเปิดรอบ (บาท)</label>
+        <p-inputNumber
+          formControlName="openingCash"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          [min]="0"
+          mode="decimal"
+          styleClass="w-full"
+          placeholder="0.00"
+        ></p-inputNumber>
+        <app-field-error [control]="form.controls['openingCash']" label="จำนวนเงินเปิดรอบ"></app-field-error>
+      </div>
+
+    </form>
+  </div>
+
+  <p-footer>
+    <button
+      pButton
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      (click)="onCancel()"
+    ></button>
+    <button
+      pButton
+      label="เปิดรอบ"
+      [loading]="isSaving()"
+      (click)="onSave()"
+    ></button>
+  </p-footer>
+</app-card-template>

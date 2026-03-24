@@ -5,6 +5,7 @@ using POS.Main.Business.HumanResource.Models;
 using POS.Main.Business.HumanResource.Models.EmployeeAddress;
 using POS.Main.Business.HumanResource.Models.EmployeeEducation;
 using POS.Main.Business.HumanResource.Models.EmployeeWorkHistory;
+using POS.Main.Business.HumanResource.Models.Profile;
 using POS.Main.Business.HumanResource.Models.UserAccount;
 using POS.Main.Core.Constants;
 using POS.Main.Core.Exceptions;
@@ -85,6 +86,114 @@ public class EmployeeService : IEmployeeService
         return EmployeeMapper.ToMyProfileResponse(employee);
     }
 
+    public async Task<EmployeeResponseModel> GetMyFullProfileAsync(int employeeId, CancellationToken ct = default)
+    {
+        var employee = await _unitOfWork.Employees.GetByIdWithDetailsAsync(employeeId, ct)
+            ?? throw new EntityNotFoundException("Employee", employeeId);
+
+        return EmployeeMapper.ToResponse(employee);
+    }
+
+    public async Task<EmployeeResponseModel> UpdateMyProfileAsync(
+        int employeeId, Guid userId, UpdateProfileRequestModel request,
+        int? newImageFileId = null, CancellationToken ct = default)
+    {
+        var employee = await _unitOfWork.Employees.GetByIdWithDetailsAsync(employeeId, ct)
+            ?? throw new EntityNotFoundException("Employee", employeeId);
+
+        if (employee.UserId != userId)
+            throw new BusinessException("ไม่สามารถแก้ไขโปรไฟล์ของผู้อื่นได้");
+
+        // Image handling
+        if (request.RemoveImage && employee.ImageFileId.HasValue)
+        {
+            var oldFile = await _unitOfWork.Files.GetByIdAsync(employee.ImageFileId.Value, ct);
+            if (oldFile != null)
+                oldFile.DeleteFlag = true;
+            employee.ImageFileId = null;
+        }
+        else if (newImageFileId.HasValue)
+        {
+            if (employee.ImageFileId.HasValue && employee.ImageFileId != newImageFileId)
+            {
+                var oldFile = await _unitOfWork.Files.GetByIdAsync(employee.ImageFileId.Value, ct);
+                if (oldFile != null)
+                    oldFile.DeleteFlag = true;
+            }
+            employee.ImageFileId = newImageFileId;
+        }
+
+        // Update allowed employee fields
+        EmployeeMapper.UpdateProfileEntity(employee, request);
+
+        // Update Username in TbUser if changed
+        if (!string.IsNullOrWhiteSpace(request.Username))
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId, ct)
+                ?? throw new EntityNotFoundException("User", userId);
+
+            if (user.Username != request.Username)
+            {
+                var existing = await _unitOfWork.Users.GetByUsernameAsync(request.Username, ct);
+                if (existing != null && existing.UserId != userId)
+                    throw new ValidationException("Username นี้ถูกใช้งานแล้ว");
+                user.Username = request.Username;
+                _unitOfWork.Users.Update(user);
+            }
+        }
+
+        // Replace-all sub-entities: addresses
+        if (request.Addresses != null)
+        {
+            var existingAddresses = await _unitOfWork.EmployeeAddresses.GetByEmployeeIdAsync(employeeId, ct);
+            foreach (var addr in existingAddresses)
+                _unitOfWork.EmployeeAddresses.Delete(addr);
+
+            foreach (var addrReq in request.Addresses)
+            {
+                var newAddr = EmployeeMapper.ToAddressEntity(addrReq, employeeId);
+                await _unitOfWork.EmployeeAddresses.AddAsync(newAddr, ct);
+            }
+        }
+
+        // Replace-all sub-entities: educations
+        if (request.Educations != null)
+        {
+            var existingEducations = await _unitOfWork.EmployeeEducations.GetByEmployeeIdAsync(employeeId, ct);
+            foreach (var edu in existingEducations)
+                _unitOfWork.EmployeeEducations.Delete(edu);
+
+            foreach (var eduReq in request.Educations)
+            {
+                var newEdu = EmployeeMapper.ToEducationEntity(eduReq, employeeId);
+                await _unitOfWork.EmployeeEducations.AddAsync(newEdu, ct);
+            }
+        }
+
+        // Replace-all sub-entities: work histories
+        if (request.WorkHistories != null)
+        {
+            var existingWorkHistories = await _unitOfWork.EmployeeWorkHistories.GetByEmployeeIdAsync(employeeId, ct);
+            foreach (var wh in existingWorkHistories)
+                _unitOfWork.EmployeeWorkHistories.Delete(wh);
+
+            foreach (var whReq in request.WorkHistories)
+            {
+                var newWh = EmployeeMapper.ToWorkHistoryEntity(whReq, employeeId);
+                await _unitOfWork.EmployeeWorkHistories.AddAsync(newWh, ct);
+            }
+        }
+
+        _unitOfWork.Employees.Update(employee);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Profile updated by Employee {EmployeeId}", employeeId);
+
+        // Reload with details for response
+        var updated = await _unitOfWork.Employees.GetByIdWithDetailsAsync(employeeId, ct);
+        return EmployeeMapper.ToResponse(updated!);
+    }
+
     public async Task<bool> CheckDuplicateAsync(string field, string value, int? excludeEmployeeId = null, CancellationToken ct = default)
     {
         return field.ToLower() switch
@@ -117,9 +226,13 @@ public class EmployeeService : IEmployeeService
         await _unitOfWork.Employees.AddAsync(employee, ct);
         await _unitOfWork.CommitAsync(ct);
 
+        // Save nested collections
+        await SaveNestedCollectionsAsync(employee.EmployeeId, request.Addresses, request.Educations, request.WorkHistories, ct);
+
         _logger.LogInformation("Employee created: {EmployeeId} - {FirstNameThai} {LastNameThai}", employee.EmployeeId, employee.FirstNameThai, employee.LastNameThai);
 
-        return EmployeeMapper.ToResponse(employee);
+        var created = await _unitOfWork.Employees.GetByIdWithDetailsAsync(employee.EmployeeId, ct);
+        return EmployeeMapper.ToResponse(created!);
     }
 
     public async Task<EmployeeResponseModel> UpdateEmployeeAsync(int employeeId, UpdateEmployeeRequestModel request, int? newImageFileId = null, CancellationToken ct = default)
@@ -166,9 +279,13 @@ public class EmployeeService : IEmployeeService
         _unitOfWork.Employees.Update(employee);
         await _unitOfWork.CommitAsync(ct);
 
+        // Replace-all nested collections
+        await ReplaceNestedCollectionsAsync(employeeId, request.Addresses, request.Educations, request.WorkHistories, ct);
+
         _logger.LogInformation("Employee updated: {EmployeeId}", employeeId);
 
-        return EmployeeMapper.ToResponse(employee);
+        var updated = await _unitOfWork.Employees.GetByIdWithDetailsAsync(employeeId, ct);
+        return EmployeeMapper.ToResponse(updated!);
     }
 
     public async Task DeleteEmployeeAsync(int employeeId, CancellationToken ct = default)
@@ -363,6 +480,67 @@ public class EmployeeService : IEmployeeService
         await _unitOfWork.CommitAsync(ct);
 
         _logger.LogInformation("WorkHistory hard deleted: {WorkHistoryId} for Employee {EmployeeId}", workHistoryId, employeeId);
+    }
+
+    // === Nested collection helpers ===
+    private async Task SaveNestedCollectionsAsync(
+        int employeeId,
+        List<CreateEmployeeAddressRequestModel>? addresses,
+        List<CreateEmployeeEducationRequestModel>? educations,
+        List<CreateEmployeeWorkHistoryRequestModel>? workHistories,
+        CancellationToken ct)
+    {
+        var hasData = (addresses?.Count > 0) || (educations?.Count > 0) || (workHistories?.Count > 0);
+        if (!hasData) return;
+
+        if (addresses != null)
+            foreach (var req in addresses)
+                await _unitOfWork.EmployeeAddresses.AddAsync(EmployeeMapper.ToAddressEntity(req, employeeId), ct);
+
+        if (educations != null)
+            foreach (var req in educations)
+                await _unitOfWork.EmployeeEducations.AddAsync(EmployeeMapper.ToEducationEntity(req, employeeId), ct);
+
+        if (workHistories != null)
+            foreach (var req in workHistories)
+                await _unitOfWork.EmployeeWorkHistories.AddAsync(EmployeeMapper.ToWorkHistoryEntity(req, employeeId), ct);
+
+        await _unitOfWork.CommitAsync(ct);
+    }
+
+    private async Task ReplaceNestedCollectionsAsync(
+        int employeeId,
+        List<CreateEmployeeAddressRequestModel>? addresses,
+        List<CreateEmployeeEducationRequestModel>? educations,
+        List<CreateEmployeeWorkHistoryRequestModel>? workHistories,
+        CancellationToken ct)
+    {
+        if (addresses != null)
+        {
+            var existing = await _unitOfWork.EmployeeAddresses.GetByEmployeeIdAsync(employeeId, ct);
+            foreach (var item in existing) _unitOfWork.EmployeeAddresses.Delete(item);
+            foreach (var req in addresses)
+                await _unitOfWork.EmployeeAddresses.AddAsync(EmployeeMapper.ToAddressEntity(req, employeeId), ct);
+        }
+
+        if (educations != null)
+        {
+            var existing = await _unitOfWork.EmployeeEducations.GetByEmployeeIdAsync(employeeId, ct);
+            foreach (var item in existing) _unitOfWork.EmployeeEducations.Delete(item);
+            foreach (var req in educations)
+                await _unitOfWork.EmployeeEducations.AddAsync(EmployeeMapper.ToEducationEntity(req, employeeId), ct);
+        }
+
+        if (workHistories != null)
+        {
+            var existing = await _unitOfWork.EmployeeWorkHistories.GetByEmployeeIdAsync(employeeId, ct);
+            foreach (var item in existing) _unitOfWork.EmployeeWorkHistories.Delete(item);
+            foreach (var req in workHistories)
+                await _unitOfWork.EmployeeWorkHistories.AddAsync(EmployeeMapper.ToWorkHistoryEntity(req, employeeId), ct);
+        }
+
+        if (addresses != null || educations != null || workHistories != null)
+            await _unitOfWork.CommitAsync(ct);
     }
 
     // === Private helpers ===

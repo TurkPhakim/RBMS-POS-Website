@@ -1,137 +1,328 @@
 <div class="space-y-5">
   <!-- Page Header -->
-  <div>
-    <h1 class="text-page-title text-surface-dark">
-      {{ isEditMode() ? 'แก้ไขตำแหน่ง' : 'เพิ่มตำแหน่ง' }}
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="lock-protect"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">
+      {{ isEditMode() ? "แก้ไขตำแหน่ง" : "เพิ่มตำแหน่ง" }}
     </h1>
-    <p class="text-surface-sub mt-1">
-      {{ isEditMode() ? 'แก้ไขข้อมูลตำแหน่งและสิทธิ์การเข้าถึง' : 'สร้างตำแหน่งใหม่และกำหนดสิทธิ์' }}
-    </p>
   </div>
 
   <!-- Form -->
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
-
-      <!-- ข้อมูลตำแหน่ง Card -->
-      <div class="bg-surface-card rounded-xl border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3 rounded-t-xl">
-          <h2 class="text-section-title text-white flex items-center gap-2">
-            <i class="pi pi-id-card"></i>
-            ข้อมูลตำแหน่ง
-          </h2>
-        </div>
-        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
-          <!-- ชื่อตำแหน่ง -->
-          <div>
-            <label for="positionName" class="block mb-1.5 text-surface-dark font-semibold">
-              ชื่อตำแหน่ง <span class="text-danger">*</span>
-            </label>
-            <input pInputText id="positionName" formControlName="positionName"
-              placeholder="กรอกชื่อตำแหน่ง" class="w-full" />
-            <app-field-error [control]="form.get('positionName')" type="text" />
-          </div>
-
-          <!-- คำอธิบาย -->
-          <div>
-            <label for="description" class="block mb-1.5 text-surface-dark font-semibold">
-              คำอธิบาย <span class="text-surface-sub font-normal">(ไม่บังคับ)</span>
-            </label>
-            <input pInputText id="description" formControlName="description"
-              placeholder="กรอกคำอธิบาย" class="w-full" />
-          </div>
-
-          <!-- สถานะ -->
-          <div class="md:col-span-2">
-            <div class="flex items-center justify-between p-4 rounded-lg border border-surface-border bg-surface">
-              <div>
-                <span class="text-surface-dark font-semibold">สถานะการใช้งาน</span>
-                <p class="text-surface-sub text-sm mt-0.5">เปิด/ปิดการใช้งานตำแหน่งนี้ในระบบ</p>
-              </div>
-              <p-inputSwitch formControlName="isActive"></p-inputSwitch>
-            </div>
-          </div>
-        </div>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <!-- Card: ข้อมูลตำแหน่ง -->
+    <app-section-card
+      headerLabel="ข้อมูลตำแหน่ง"
+      headerIcon="employee-id"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-5 gap-4"
+    >
+      <!-- ชื่อตำแหน่ง -->
+      <div class="md:col-span-2">
+        <label for="positionName" class="block font-semibold mb-2">
+          ชื่อตำแหน่ง <span class="text-danger">*</span>
+        </label>
+        <input
+          pInputText
+          id="positionName"
+          formControlName="positionName"
+          placeholder="ชื่อตำแหน่ง"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('positionName')" type="text" />
       </div>
 
-      <!-- สิทธิ์การเข้าใช้งานเมนู Card -->
-      <div class="bg-surface-card rounded-xl border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-5 py-3 rounded-t-xl">
-          <h2 class="text-section-title text-white flex items-center gap-2">
-            <i class="pi pi-shield"></i>
-            สิทธิ์การเข้าใช้งานเมนู
-          </h2>
+      <!-- คำอธิบาย -->
+      <div class="md:col-span-2">
+        <label for="description" class="block font-semibold mb-2">
+          คำอธิบาย
+        </label>
+        <input
+          pInputText
+          id="description"
+          formControlName="description"
+          placeholder="คำอธิบาย"
+          class="w-full"
+        />
+      </div>
+
+      <!-- สถานะการใช้งาน -->
+      <div>
+        <label for="isActive" class="block font-semibold mb-2"
+          >สถานะการใช้งาน</label
+        >
+        <div class="flex items-center gap-3 pt-2">
+          <p-inputSwitch
+            formControlName="isActive"
+            inputId="isActive"
+          ></p-inputSwitch>
+          <span
+            class="font-semibold mb-2"
+            [class]="
+              form.get('isActive')?.value ? 'text-success' : 'text-danger'
+            "
+            >{{
+              form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน"
+            }}</span
+          >
         </div>
-        <div class="p-5 space-y-3">
-          @for (mod of modules(); track mod.moduleId) {
-            <!-- Parent Module -->
-            <div class="rounded-lg overflow-hidden border border-surface-border">
-              <!-- Parent Header -->
-              <div class="bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 flex items-center justify-between cursor-pointer"
-                   (click)="toggleParent(mod.moduleId!)">
-                <span class="text-white font-bold text-sm">{{ mod.moduleName }}</span>
-                <div class="flex items-center gap-3">
-                  <!-- ทั้งหมด checkbox -->
-                  <label class="flex items-center gap-1.5 cursor-pointer" (click)="$event.stopPropagation()">
-                    <input type="checkbox"
-                      class="w-4 h-4 accent-white"
-                      [checked]="getParentAllState(mod) === 'all'"
-                      [indeterminate]="getParentAllState(mod) === 'indeterminate'"
-                      (change)="toggleParentAll(mod)" />
-                    <span class="text-white text-sm font-semibold">ทั้งหมด</span>
-                  </label>
-                  <i class="pi text-white text-xs"
-                     [class.pi-chevron-up]="isParentExpanded(mod.moduleId!)"
-                     [class.pi-chevron-down]="!isParentExpanded(mod.moduleId!)"></i>
-                </div>
-              </div>
+      </div>
+    </app-section-card>
 
-              <!-- Parent Content (Children) -->
-              @if (isParentExpanded(mod.moduleId!)) {
-                <div class="bg-surface-card">
-                  @for (child of mod.children; track child.moduleId) {
-                    <!-- Child Module -->
-                    <div class="border-b border-surface-border last:border-b-0">
-                      <!-- Child Header -->
-                      <div class="bg-primary-subtle px-4 py-2 flex items-center justify-between cursor-pointer"
-                           (click)="toggleChild(child.moduleId!)">
-                        <span class="text-primary-text font-semibold text-sm pl-4">{{ child.moduleName }}</span>
-                        <div class="flex items-center gap-3">
-                          <label class="flex items-center gap-1.5 cursor-pointer" (click)="$event.stopPropagation()">
-                            <input type="checkbox"
-                              class="w-4 h-4 accent-primary"
-                              [checked]="getChildAllState(child) === 'all'"
-                              [indeterminate]="getChildAllState(child) === 'indeterminate'"
-                              (change)="toggleChildAll(child)" />
-                            <span class="text-primary-text text-sm font-semibold">ทั้งหมด</span>
-                          </label>
-                          <i class="pi text-primary-text text-xs"
-                             [class.pi-chevron-up]="isChildExpanded(child.moduleId!)"
-                             [class.pi-chevron-down]="!isChildExpanded(child.moduleId!)"></i>
-                        </div>
-                      </div>
+    <!-- Card: พนักงานในตำแหน่งนี้ (Edit mode only) -->
+    @if (isEditMode()) {
+      <app-section-card
+        headerLabel="พนักงานในตำแหน่งนี้"
+        headerIcon="human-resource"
+      >
+        <p-table
+          [value]="positionEmployees()"
+          [stripedRows]="true"
+          [tableStyle]="{ 'min-width': '40rem' }"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 25]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first} - {last} of {totalRecords}"
+          styleClass="p-datatable-clean"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="w-[80px]">รหัส</th>
+              <th class="w-[120px]">รูปภาพ</th>
+              <th class="w-[220px]">ชื่อ-นามสกุล</th>
+              <th class="w-[200px]">อีเมล</th>
+              <th class="w-[120px] text-center">ประเภทการจ้าง</th>
+              <th class="w-[120px] text-center">สถานะ</th>
+            </tr>
+          </ng-template>
 
-                      <!-- Permission Checkboxes -->
-                      @if (isChildExpanded(child.moduleId!)) {
-                        <div class="px-4 py-3 pl-8 flex flex-wrap gap-x-8 gap-y-2">
-                          @for (perm of child.permissions; track perm.authorizeMatrixId) {
-                            <label class="flex items-center gap-2 cursor-pointer">
-                              <input type="checkbox"
-                                class="w-4 h-4 accent-primary"
-                                [checked]="isPermissionChecked(perm.authorizeMatrixId!)"
-                                (change)="togglePermission(perm.authorizeMatrixId!)" />
-                              <span class="text-surface-dark text-sm">{{ perm.permissionName }}</span>
-                            </label>
-                          }
-                        </div>
-                      }
+          <ng-template pTemplate="body" let-item>
+            <tr class="hover:bg-primary-subtle transition-colors">
+              <!-- รหัส -->
+              <td class="!text-center font-semibold">
+                {{ item.employeeId }}
+              </td>
+
+              <!-- รูปภาพ -->
+              <td class="!text-center">
+                <div class="flex justify-center">
+                  @if (item.imageFileId) {
+                    <img
+                      [src]="getImageUrl(item.imageFileId)"
+                      [alt]="item.fullNameThai || 'พนักงาน'"
+                      class="h-16 w-16 rounded-full object-cover"
+                    />
+                  } @else {
+                    <div
+                      class="h-16 w-16 rounded-full bg-surface-border flex items-center justify-center"
+                    >
+                      <app-generic-icon
+                        name="human"
+                        svgClass="w-9 h-9"
+                        class="text-surface-sub opacity-50"
+                      ></app-generic-icon>
                     </div>
                   }
                 </div>
-              }
-            </div>
-          }
-        </div>
-      </div>
+              </td>
 
-    </form>
+              <!-- ชื่อ-นามสกุล -->
+              <td class="whitespace-nowrap">
+                <div class="font-semibold">
+                  {{ item.fullNameThai }}
+                </div>
+                <div class="text-surface-sub mt-0.5">
+                  {{ item.fullNameEnglish }}
+                </div>
+              </td>
+
+              <!-- อีเมล -->
+              <td class="whitespace-nowrap">
+                {{ item.email }}
+              </td>
+
+              <!-- ประเภทการจ้าง -->
+              <td class="!text-center whitespace-nowrap">
+                @if (item.isFullTime) {
+                  <span class="font-bold text-primary">Full-time</span>
+                } @else {
+                  <span class="font-bold text-warning">Part-time</span>
+                }
+              </td>
+
+              <!-- สถานะ -->
+              <td class="!text-center">
+                @if (item.isActive) {
+                  <span class="font-bold text-primary">Active</span>
+                } @else {
+                  <span class="font-bold text-danger">Inactive</span>
+                }
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6">
+                <div class="flex justify-center items-center w-full py-10">
+                  <app-empty-view message="ยังไม่มีพนักงานในตำแหน่งนี้" />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </app-section-card>
+    }
+
+    <!-- Card: สิทธิ์การเข้าใช้งานเมนู -->
+    <app-section-card
+      headerLabel="สิทธิ์การเข้าใช้งานเมนู"
+      headerIcon="security-safety"
+    >
+      <div class="space-y-4">
+        @for (mod of modules(); track mod.moduleId) {
+          <!-- Parent Module -->
+          <div class="rounded-lg overflow-hidden border border-surface-border">
+            <!-- Parent Header -->
+            <div
+              class="bg-gradient-to-r from-primary to-primary-dark px-8 py-5 flex items-center justify-between cursor-pointer"
+              (click)="toggleParent(mod.moduleId!)"
+            >
+              <div class="flex items-center gap-3">
+                @if (moduleIconMap[mod.moduleCode!]) {
+                  <app-generic-icon
+                    [name]="moduleIconMap[mod.moduleCode!]"
+                    svgClass="w-6 h-6"
+                    class="text-white"
+                  ></app-generic-icon>
+                }
+                <span class="text-white font-bold text-2xl">{{
+                  moduleLabelMap[mod.moduleCode!] || mod.moduleName
+                }}</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <!-- ทั้งหมด checkbox -->
+                <label
+                  class="flex items-center gap-2 cursor-pointer"
+                  (click)="$event.stopPropagation()"
+                >
+                  <input
+                    type="checkbox"
+                    class="custom-checkbox"
+                    [checked]="getParentAllState(mod) === 'all'"
+                    [indeterminate]="getParentAllState(mod) === 'indeterminate'"
+                    [disabled]="!canUpdate"
+                    (change)="toggleParentAll(mod)"
+                  />
+                  <span class="text-white font-semibold text-lg">ทั้งหมด</span>
+                </label>
+                <i
+                  class="pi pi-chevron-down text-white mr-2 transition-transform duration-300"
+                  [class.rotate-180]="isParentExpanded(mod.moduleId!)"
+                ></i>
+              </div>
+            </div>
+
+            <!-- Parent Content (Children) -->
+            @if (isParentExpanded(mod.moduleId!)) {
+              <div class="bg-surface-card">
+                @for (child of mod.children; track child.moduleId) {
+                  <!-- Child Module -->
+                  <div class="border-b border-surface-border last:border-b-0">
+                    <!-- Child Header -->
+                    <div
+                      class="bg-primary-subtle pl-5 pr-8 py-4 flex items-center justify-between cursor-pointer"
+                      (click)="toggleChild(child.moduleId!)"
+                    >
+                      <div class="flex items-center gap-3 pl-4">
+                        @if (moduleIconMap[child.moduleCode!]) {
+                          <app-generic-icon
+                            [name]="moduleIconMap[child.moduleCode!]"
+                            svgClass="w-6 h-6"
+                            class="text-primary-text"
+                          ></app-generic-icon>
+                        }
+                        <span class="text-primary-text font-semibold text-xl">{{
+                          moduleLabelMap[child.moduleCode!] || child.moduleName
+                        }}</span>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <label
+                          class="flex items-center gap-2 cursor-pointer"
+                          (click)="$event.stopPropagation()"
+                        >
+                          <input
+                            type="checkbox"
+                            class="custom-checkbox"
+                            [checked]="getChildAllState(child) === 'all'"
+                            [indeterminate]="
+                              getChildAllState(child) === 'indeterminate'
+                            "
+                            [disabled]="!canUpdate"
+                            (change)="toggleChildAll(child)"
+                          />
+                          <span class="text-primary-text font-semibold text-lg"
+                            >ทั้งหมด</span
+                          >
+                        </label>
+                        <i
+                          class="pi pi-chevron-down text-primary-text mr-2 transition-transform duration-300"
+                          [class.rotate-180]="isChildExpanded(child.moduleId!)"
+                        ></i>
+                      </div>
+                    </div>
+
+                    <!-- Permission Checkboxes -->
+                    @if (isChildExpanded(child.moduleId!)) {
+                      <div class="px-10 py-4 grid grid-cols-4 gap-y-4">
+                        @for (
+                          perm of child.permissions;
+                          track perm.authorizeMatrixId
+                        ) {
+                          <label class="flex items-center gap-4 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              class="custom-checkbox"
+                              [checked]="
+                                isPermissionChecked(perm.authorizeMatrixId!)
+                              "
+                              [disabled]="!canUpdate"
+                              (change)="
+                                togglePermission(perm.authorizeMatrixId!)
+                              "
+                            />
+                            <span class="text-lg">{{
+                              perm.permissionName
+                            }}</span>
+                          </label>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </app-section-card>
+
+    <!-- Audit Footer (Edit mode only) -->
+    @if (isEditMode() && positionData()) {
+      <app-audit-footer
+        [createdByName]="positionData()!.createdBy"
+        [createdAt]="positionData()!.createdAt"
+        [updatedByName]="positionData()!.updatedBy"
+        [updatedAt]="positionData()!.updatedAt"
+      />
+    }
+  </form>
 </div>

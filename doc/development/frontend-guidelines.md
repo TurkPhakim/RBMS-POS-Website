@@ -14,8 +14,9 @@ src/app/
 ├── core/                    # Singleton services, กลาง app
 │   ├── api/                 # Generated clients (ng-openapi-gen) — ห้ามแก้ด้วยมือ
 │   │   ├── services/        # 7 API services: auth, human-resource, menus, service-charges, positions, shop-settings, file
-│   │   ├── models/          # Generated TypeScript interfaces
-│   │   └── api-config.provider.ts  # MANUAL: rootUrl จาก environment
+│   │   └── models/          # Generated TypeScript interfaces
+│   ├── providers/           # Manual providers (ไม่ถูก gen-api overwrite)
+│   │   └── api-config.provider.ts  # rootUrl จาก environment
 │   ├── guards/              # auth.guard, guest.guard, permission.guard
 │   ├── interceptors/        # auth.interceptor, loading.interceptor
 │   ├── models/              # auth.models.ts
@@ -144,9 +145,14 @@ this.service.getData().subscribe(data => this.data = data);
 
 ## API Integration Rules
 
+> **กฎเหล็ก:** ต้องรัน `npm run gen-api` **ก่อน** เขียน Frontend code ใดๆ — เพื่อให้ได้ generated models + services มาใช้ตั้งแต่ต้น
+
 ```typescript
-// ✅ ถูกต้อง — ใช้ generated service เสมอ
+// ✅ ถูกต้อง — ใช้ generated service + generated models เสมอ
 import { MenusService } from '@app/core/api/services';
+import { MenuResponseModel } from '@app/core/api/models';
+
+menus = signal<MenuResponseModel[]>([]);
 
 this.menusService.apiMenuPost({ body: request }).subscribe(...)
 this.menusService.apiMenuGet().subscribe(...)
@@ -156,9 +162,23 @@ this.menusService.apiMenuIdDelete({ id: 5 }).subscribe(...)
 this.http.post('/api/inventory', data).subscribe(...)
 this.http.get<Product[]>('/api/products').subscribe(...)
 
+// ❌ ผิด — ห้ามใช้ Record/any/bracket notation เมื่อ generated model มีให้
+addresses = signal<Record<string, unknown>[]>([]);    // ❌ ใช้ generated model แทน
+const r = response.result as Record<string, unknown>; // ❌ ใช้ dot notation ตรง
+addr["houseNumber"]                                    // ❌ ใช้ addr.houseNumber
+
 // Regenerate หลัง backend API เปลี่ยน
 // npm run gen-api
 ```
+
+### Multipart/Form-Data + Nested Objects
+
+เมื่อ endpoint ใช้ `[FromForm]` (multipart/form-data เพราะมี file upload) และ request model มี `List<T>` (nested collections):
+
+- **`fix-api-exports.js` จะ patch `request-builder.ts` อัตโนมัติ** — แปลง array of objects เป็น indexed keys (`Addresses[0].addressType`) แทน JSON Blob ที่ ASP.NET Core อ่านไม่ได้
+- **Frontend ต้อง map signal data เข้า body** — เช่น `Addresses: this.addresses().map(a => ({ addressType: a.addressType!, ... }))`
+- **Backend request model ต้องมี `List<T>?` properties** — เช่น `public List<CreateEmployeeAddressRequestModel>? Addresses { get; set; }`
+- ดูรายละเอียดใน [frontend-coding-standards.md](frontend-coding-standards.md) Section 4.2.1
 
 ---
 
@@ -499,6 +519,8 @@ features/{module}/
 | ใช้ Signal สำหรับ state                          | Reactive, readable       |
 | Cleanup subscriptions เสมอ                      | ป้องกัน memory leak      |
 | ใช้ generated API clients และ models เท่านั้น   | Type safety, consistency |
+| รัน `gen-api` ก่อนเขียน Frontend code ใดๆ       | ป้องกันใช้ untyped data  |
+| ห้าม `Record<string, unknown>`, `any`, bracket notation | ใช้ generated models + dot notation |
 | ใช้ PrimeNG components เป็นมาตรฐาน             | UI consistency, productivity |
 | แสดง success/error ผ่าน Shared Modal เท่านั้น   | UI consistency           |
 | ค้นหาด้วย Enter key — ห้ามใช้ debounce          | UX ชัดเจน, ลด API calls |

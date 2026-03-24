@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════════════════════════
+   Tailwind Directives
+   ═══════════════════════════════════════════════════════════════ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   @layer base — Global resets
+   ═══════════════════════════════════════════════════════════════ */
+@layer base {
+  html {
+    @apply h-full;
+  }
+  body {
+    @apply h-full m-0 font-sans text-surface-dark bg-surface antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Browser Overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Scrollbar — thin & minimal */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Form — Validation states
+   ═══════════════════════════════════════════════════════════════ */
+input.ng-invalid.ng-dirty,
+textarea.ng-invalid.ng-dirty,
+p-select.ng-invalid.ng-dirty .p-select,
+p-datepicker.ng-invalid.ng-dirty .p-datepicker-input {
+  border-color: #f43f5e !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PrimeNG Component Overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Button */
+.p-button:focus {
+  box-shadow: none !important;
+}
+
+/* Dialog — card dialog */
+.card-dialog .p-dialog-content {
+  padding: 0 !important;
+  border-radius: 0.75rem !important;
+}
+
+/* Dialog — alert dialog */
+.alert-dialog .p-dialog-content {
+  padding: 0 !important;
+  border-radius: 0.75rem !important;
+}
+
+/* Toast */
+.p-toast {
+  max-width: calc(100vw - 2rem) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Bottom Sheet — Mobile dialog pattern
+   ═══════════════════════════════════════════════════════════════ */
+.bottom-sheet .p-dialog {
+  margin: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  max-height: 85vh;
+  border-radius: 1.5rem 1.5rem 0 0 !important;
+  position: fixed !important;
+  bottom: 0 !important;
+}
+.bottom-sheet .p-dialog-content {
+  padding: 0 !important;
+  border-radius: 1.5rem 1.5rem 0 0 !important;
+  overflow-y: auto;
+}
+.bottom-sheet .p-dialog-mask {
+  align-items: flex-end !important;
+}

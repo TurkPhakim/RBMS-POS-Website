@@ -1,0 +1,136 @@
+<app-card-template [headerLabel]="config.header!">
+  <div class="space-y-4">
+    <!-- Bill Selection -->
+    @if (bills().length > 1) {
+      <div>
+        <label class="block font-semibold mb-2">เลือกบิลที่จะชำระ</label>
+        <div class="flex flex-col gap-2">
+          @for (bill of bills(); track bill.orderBillId) {
+            <div
+              class="p-3 border rounded-lg cursor-pointer transition-colors"
+              [ngClass]="{
+                'border-primary bg-primary-subtle': selectedBill()?.orderBillId === bill.orderBillId,
+                'border-surface-border': selectedBill()?.orderBillId !== bill.orderBillId
+              }"
+              (click)="selectBill(bill)"
+            >
+              <div class="flex items-center justify-between">
+                <span class="font-semibold">{{ bill.billNumber }}</span>
+                <span class="text-lg font-bold">{{ bill.grandTotal | number: '1.2-2' }} บาท</span>
+              </div>
+              <div class="flex gap-4 text-sm text-surface-sub mt-1">
+                <span>ค่าอาหาร {{ bill.subTotal | number: '1.2-2' }}</span>
+                <span>SC {{ bill.serviceChargeAmount | number: '1.2-2' }}</span>
+                <span>VAT {{ bill.vatAmount | number: '1.2-2' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- No bills -->
+    @if (bills().length === 0) {
+      <div class="text-center py-8 text-surface-sub">
+        ไม่มีบิลที่รอชำระเงิน
+      </div>
+    }
+
+    <!-- Payment Form -->
+    @if (selectedBill()) {
+      @let bill = selectedBill()!;
+      <!-- Bill Summary -->
+      <div class="bg-surface rounded-lg p-4">
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p class="text-surface-sub">เลขบิล</p>
+            <p class="font-semibold">{{ bill.billNumber }}</p>
+          </div>
+          <div>
+            <p class="text-surface-sub">ประเภท</p>
+            <p class="font-semibold">{{ bill.billType === 'Full' ? 'บิลเต็ม' : 'บิลแยก' }}</p>
+          </div>
+          <div>
+            <p class="text-surface-sub">ค่าอาหาร</p>
+            <p class="font-semibold">{{ bill.subTotal | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="text-surface-sub">Service Charge ({{ bill.serviceChargeRate }}%)</p>
+            <p class="font-semibold">{{ bill.serviceChargeAmount | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="text-surface-sub">VAT ({{ bill.vatRate }}%)</p>
+            <p class="font-semibold">{{ bill.vatAmount | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="text-surface-sub">ส่วนลด</p>
+            <p class="font-semibold">{{ bill.totalDiscountAmount | number: '1.2-2' }}</p>
+          </div>
+        </div>
+        <hr class="border-surface-border my-3" />
+        <div class="flex items-center justify-between">
+          <span class="text-lg font-bold">ยอดชำระ</span>
+          <span class="text-2xl font-bold text-primary">{{ bill.grandTotal | number: '1.2-2' }} บาท</span>
+        </div>
+      </div>
+
+      <!-- Amount Input -->
+      <form [formGroup]="form">
+        <div>
+          <label class="block font-semibold mb-2">จำนวนเงินที่รับ (บาท)</label>
+          <p-inputNumber
+            formControlName="amountReceived"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            [min]="0"
+            mode="decimal"
+            styleClass="w-full"
+            placeholder="0.00"
+            (onInput)="onAmountChange()"
+          ></p-inputNumber>
+          <app-field-error [control]="form.controls['amountReceived']" label="จำนวนเงินที่รับ"></app-field-error>
+        </div>
+
+        <!-- Change Display -->
+        @if (changeAmount() > 0) {
+          <div class="bg-success/10 rounded-lg p-4 text-center mt-3">
+            <p class="text-sm text-success mb-1">เงินทอน</p>
+            <p class="text-3xl font-bold text-success">{{ changeAmount() | number: '1.2-2' }} บาท</p>
+          </div>
+        }
+
+        <!-- Note -->
+        <div class="mt-4">
+          <label class="block font-semibold mb-2">หมายเหตุ</label>
+          <textarea
+            pInputTextarea
+            formControlName="note"
+            rows="2"
+            class="w-full"
+            placeholder="หมายเหตุ (ไม่บังคับ)"
+          ></textarea>
+        </div>
+      </form>
+    }
+  </div>
+
+  <p-footer>
+    <button
+      pButton
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      (click)="onCancel()"
+    ></button>
+    @if (selectedBill()) {
+      <button
+        pButton
+        label="ชำระเงินสด"
+        severity="success"
+        [loading]="isSaving()"
+        [disabled]="!selectedBill()"
+        (click)="onPay()"
+      ></button>
+    }
+  </p-footer>
+</app-card-template>

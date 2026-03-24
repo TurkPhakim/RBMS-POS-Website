@@ -25,7 +25,7 @@ public class PositionService : IPositionService
         _logger = logger;
     }
 
-    public async Task<PaginationResult<PositionResponseModel>> GetPositionsAsync(PaginationModel param, CancellationToken ct = default)
+    public async Task<PaginationResult<PositionResponseModel>> GetPositionsAsync(PaginationModel param, bool? isActive = null, CancellationToken ct = default)
     {
         var query = _unitOfWork.Positions.QueryNoTracking()
             .Include(p => p.CreatedByEmployee)
@@ -37,6 +37,9 @@ public class PositionService : IPositionService
             var term = param.Search.Trim().ToLower();
             query = query.Where(p => p.PositionName.ToLower().Contains(term));
         }
+
+        if (isActive.HasValue)
+            query = query.Where(p => p.IsActive == isActive.Value);
 
         var total = await query.CountAsync(ct);
 
@@ -57,7 +60,10 @@ public class PositionService : IPositionService
 
     public async Task<PositionResponseModel> GetPositionByIdAsync(int positionId, CancellationToken ct = default)
     {
-        var entity = await _unitOfWork.Positions.GetByIdAsync(positionId, ct)
+        var entity = await _unitOfWork.Positions.QueryNoTracking()
+            .Include(p => p.CreatedByEmployee)
+            .Include(p => p.UpdatedByEmployee)
+            .FirstOrDefaultAsync(p => p.PositionId == positionId, ct)
             ?? throw new EntityNotFoundException("Position", positionId);
 
         return PositionMapper.ToResponse(entity);
@@ -108,7 +114,7 @@ public class PositionService : IPositionService
 
         var hasEmployees = await _unitOfWork.Employees.ExistsAsync(e => e.PositionId == positionId, ct);
         if (hasEmployees)
-            throw new ValidationException("ไม่สามารถลบตำแหน่งได้ เนื่องจากมีพนักงานใช้งานอยู่");
+            throw new ValidationException("ไม่สามารถลบตำแหน่งได้\nเนื่องจากมีพนักงานใช้งานอยู่");
 
         entity.DeleteFlag = true;
         await _unitOfWork.CommitAsync(ct);

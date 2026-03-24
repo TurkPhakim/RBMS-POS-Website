@@ -5,9 +5,11 @@ using POS.Main.Business.HumanResource.Models;
 using POS.Main.Business.HumanResource.Models.EmployeeAddress;
 using POS.Main.Business.HumanResource.Models.EmployeeEducation;
 using POS.Main.Business.HumanResource.Models.EmployeeWorkHistory;
+using POS.Main.Business.HumanResource.Models.Profile;
 using POS.Main.Business.HumanResource.Models.UserAccount;
 using POS.Main.Business.HumanResource.Interfaces;
 using POS.Main.Core.Constants;
+using POS.Main.Core.Exceptions;
 using POS.Main.Core.Models;
 using RBMS.POS.WebAPI.Filters;
 
@@ -38,6 +40,45 @@ public class HumanResourceController : BaseController
             return Success<MyProfileResponseModel?>(null);
 
         return Success(await _employeeService.GetMyProfileAsync(employeeId, ct));
+    }
+
+    /// <summary>
+    /// ดึงข้อมูลโปรไฟล์ตัวเองแบบเต็ม (รวม sub-entities)
+    /// </summary>
+    [HttpGet("me/profile")]
+    [ProducesResponseType(typeof(BaseResponseModel<EmployeeResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyFullProfile(CancellationToken ct = default)
+    {
+        var employeeIdClaim = User.FindFirst("employee_id")?.Value;
+        if (string.IsNullOrEmpty(employeeIdClaim) || !int.TryParse(employeeIdClaim, out var employeeId))
+            throw new BusinessException("ไม่พบข้อมูลพนักงานของคุณ");
+
+        return Success(await _employeeService.GetMyFullProfileAsync(employeeId, ct));
+    }
+
+    /// <summary>
+    /// อัพเดตโปรไฟล์ตัวเอง — เฉพาะ fields ที่อนุญาต
+    /// </summary>
+    [HttpPut("me/profile")]
+    [RequestSizeLimit(10_485_760)]
+    [ProducesResponseType(typeof(BaseResponseModel<EmployeeResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateMyProfile(
+        [FromForm] UpdateProfileRequestModel request, IFormFile? imageFile, CancellationToken ct = default)
+    {
+        var employeeIdClaim = User.FindFirst("employee_id")?.Value;
+        if (string.IsNullOrEmpty(employeeIdClaim) || !int.TryParse(employeeIdClaim, out var employeeId))
+            throw new BusinessException("ไม่พบข้อมูลพนักงานของคุณ");
+
+        var userId = GetUserId();
+
+        int? newImageFileId = null;
+        if (imageFile != null)
+        {
+            var fileResult = await _fileService.UploadAsync(imageFile, ct);
+            newImageFileId = fileResult.FileId;
+        }
+
+        return Success(await _employeeService.UpdateMyProfileAsync(employeeId, userId, request, newImageFileId, ct));
     }
 
     [HttpGet]

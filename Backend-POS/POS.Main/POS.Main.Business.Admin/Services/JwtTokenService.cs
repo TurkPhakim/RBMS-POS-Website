@@ -73,4 +73,31 @@ public class JwtTokenService : IJwtTokenService
         return Convert.ToBase64String(randomNumber);
     }
 
+    /// <summary>
+    /// Generate Guest JWT token for customer self-order session (4hr expiry)
+    /// </summary>
+    public string GenerateCustomerToken(int sessionId, int tableId)
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
+        {
+            new("session_id", sessionId.ToString()),
+            new("table_id", tableId.ToString()),
+            new(ClaimTypes.Role, "customer"),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: _issuer,
+            audience: _audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
 }

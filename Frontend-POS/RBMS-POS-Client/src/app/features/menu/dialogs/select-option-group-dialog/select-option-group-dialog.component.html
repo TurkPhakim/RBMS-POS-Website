@@ -1,0 +1,69 @@
+<app-card-template [headerLabel]="config.header!">
+  <p-table
+    [value]="optionGroups()"
+    [(selection)]="selectedGroups"
+    dataKey="optionGroupId"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first} - {last} of {totalRecords}"
+
+    styleClass="p-datatable-clean"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="w-[50px]">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th class="w-[80px] text-center">รหัส</th>
+        <th class="w-[200px]">ชื่อกลุ่ม</th>
+        <th class="w-[120px] text-center">จำนวนตัวเลือก</th>
+        <th class="w-[100px] text-center">บังคับ</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-group>
+      <tr>
+        <td>
+          <p-tableCheckbox [value]="group"></p-tableCheckbox>
+        </td>
+        <td class="text-center">{{ group.optionGroupId }}</td>
+        <td>{{ group.name }}</td>
+        <td class="text-center">{{ group.optionItems?.length ?? 0 }}</td>
+        <td class="text-center">
+          <p-tag
+            [value]="group.isRequired ? 'บังคับ' : 'ไม่บังคับ'"
+            [severity]="group.isRequired ? 'warn' : 'secondary'"
+          ></p-tag>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td [attr.colspan]="5">
+          <div class="flex justify-center items-center w-full py-8 text-surface-placeholder">
+            ไม่มีกลุ่มตัวเลือกที่สามารถเพิ่มได้
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-footer>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      [style]="{ 'min-width': '100px' }"
+      (onClick)="onCancel()"
+    ></p-button>
+    <p-button
+      label="ตกลง"
+      [style]="{ 'min-width': '100px' }"
+      [disabled]="selectedGroups().length === 0"
+      (onClick)="onConfirm()"
+    ></p-button>
+  </p-footer>
+</app-card-template>

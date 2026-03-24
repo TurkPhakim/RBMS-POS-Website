@@ -25,7 +25,7 @@ export class WorkHistoryDialogComponent {
 
     this.form = this.fb.group({
       workplace: ['', [Validators.required, Validators.maxLength(200)]],
-      workPhone: ['', [Validators.maxLength(20)]],
+      workPhone: ['', [Validators.maxLength(10)]],
       position: ['', [Validators.required, Validators.maxLength(100)]],
       startDate: [null as Date | null, [Validators.required]],
       endDate: [null as Date | null],

@@ -19,12 +19,13 @@ import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component'
 export class MenuCategoryDropdownComponent extends DropdownBaseComponent {
   constructor() {
     super();
-    this.placeholder = 'เลือกหมวดหมู่';
-    this.showClear = false;
+    this.placeholder = 'หมวดหมู่เมนู';
+    this.showClear = true;
     this.filter = false;
     this.options = [
       { value: 1, label: 'อาหาร' },
       { value: 2, label: 'เครื่องดื่ม' },
+      { value: 3, label: 'ของหวาน' },
     ];
   }
 }

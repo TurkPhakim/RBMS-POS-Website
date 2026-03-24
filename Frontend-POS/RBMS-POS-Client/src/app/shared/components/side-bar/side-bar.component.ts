@@ -15,6 +15,8 @@ export class SideBarComponent {
   menuItems = signal<MenuItem[]>([]);
   expandedKeys = signal<Set<string>>(new Set());
 
+  private readonly allChildRoutes: string[] = [];
+
   private readonly allMenuItems: MenuItem[] = [
     {
       label: 'แดชบอร์ด',
@@ -24,33 +26,125 @@ export class SideBarComponent {
     },
     {
       label: 'ออเดอร์',
-      icon: 'orders',
+      icon: 'order-dinner',
       route: '/order',
       permissions: ['order-manage.read'],
     },
     {
       label: 'เมนู',
       icon: 'menu-restaurant',
-      permissions: ['menu-item.read'],
-      children: [{ label: 'รายการเมนู', icon: 'food', route: '/menu/items' }],
+      permissions: [
+        'menu-category.read',
+        'menu-food.read',
+        'menu-beverage.read',
+        'menu-dessert.read',
+        'menu-option.read',
+      ],
+      children: [
+        {
+          label: 'หมวดหมู่เมนู',
+          icon: 'category',
+          route: '/menu/categories',
+          permissions: ['menu-category.read'],
+        },
+        {
+          label: 'เมนูอาหาร',
+          icon: 'chicken-drumstick',
+          route: '/menu/food',
+          permissions: ['menu-food.read'],
+        },
+        {
+          label: 'เมนูเครื่องดื่ม',
+          icon: 'drinks-glass',
+          route: '/menu/beverage',
+          permissions: ['menu-beverage.read'],
+        },
+        {
+          label: 'เมนูของหวาน',
+          icon: 'dessert',
+          route: '/menu/dessert',
+          permissions: ['menu-dessert.read'],
+        },
+        {
+          label: 'ตัวเลือกเสริม',
+          icon: 'option-extra',
+          route: '/menu/options',
+          permissions: ['menu-option.read'],
+        },
+      ],
     },
     {
       label: 'โต๊ะ',
-      icon: 'table',
-      route: '/table',
-      permissions: ['table-manage.read'],
+      icon: 'table-set',
+      permissions: ['table-manage.read', 'floor-plan.read', 'reservation.read'],
+      children: [
+        {
+          label: 'ผังร้าน',
+          icon: 'table-dinner',
+          route: '/table/floor-plan',
+          permissions: ['floor-plan.read'],
+        },
+        {
+          label: 'โซน / โต๊ะ',
+          icon: 'table-restaurant',
+          route: '/table/zones',
+          permissions: ['table-manage.read'],
+        },
+        {
+          label: 'จองโต๊ะ',
+          icon: 'reservation',
+          route: '/table/reservations',
+          permissions: ['reservation.read'],
+        },
+      ],
     },
     {
       label: 'ชำระเงิน',
       icon: 'cashier',
-      route: '/payment',
-      permissions: ['payment-manage.read'],
+      permissions: ['payment-manage.read', 'cashier-session.read'],
+      children: [
+        {
+          label: 'รอบการขาย',
+          icon: 'bill-rastaurant',
+          route: '/payment',
+          permissions: ['payment-manage.read'],
+        },
+        {
+          label: 'ประวัติรอบขาย',
+          icon: 'bill-invoice',
+          route: '/payment/session-history',
+          permissions: ['cashier-session.read'],
+        },
+      ],
     },
     {
       label: 'ครัว',
-      icon: 'kitchen',
-      route: '/kitchen-display',
-      permissions: ['kitchen-order.read'],
+      icon: 'chef-human',
+      permissions: [
+        'kitchen-food.read',
+        'kitchen-beverage.read',
+        'kitchen-dessert.read',
+      ],
+      children: [
+        {
+          label: 'ครัวอาหาร',
+          icon: 'cook-chef',
+          route: '/kitchen-display/food',
+          permissions: ['kitchen-food.read'],
+        },
+        {
+          label: 'บาร์เครื่องดื่ม',
+          icon: 'bartender',
+          route: '/kitchen-display/beverage',
+          permissions: ['kitchen-beverage.read'],
+        },
+        {
+          label: 'ครัวขนมหวาน',
+          icon: 'pastry-chef',
+          route: '/kitchen-display/dessert',
+          permissions: ['kitchen-dessert.read'],
+        },
+      ],
     },
     {
       label: 'ทรัพยากรบุคคล',
@@ -58,7 +152,7 @@ export class SideBarComponent {
       permissions: ['employee.read'],
       children: [
         {
-          label: 'รายการพนักงาน',
+          label: 'รายชื่อพนักงาน',
           icon: 'human',
           route: '/human-resource/employees',
         },
@@ -71,25 +165,32 @@ export class SideBarComponent {
         'service-charge.read',
         'position.read',
         'shop-settings.read',
+        'user-management.read',
       ],
       children: [
         {
-          label: 'ค่าบริการ',
-          icon: 'coin',
-          route: '/admin-setting/service-charges',
-          permissions: ['service-charge.read'],
+          label: 'รายชื่อผู้ใช้งาน',
+          icon: 'user-octagon',
+          route: '/admin-setting/users',
+          permissions: ['user-management.read'],
         },
         {
           label: 'จัดการตำแหน่ง',
-          icon: 'human-resource',
+          icon: 'lock-protect',
           route: '/admin-setting/positions',
           permissions: ['position.read'],
         },
         {
           label: 'ตั้งค่าร้านค้า',
-          icon: 'web-setting',
+          icon: 'restaurant',
           route: '/admin-setting/shop-settings',
           permissions: ['shop-settings.read'],
+        },
+        {
+          label: 'ค่าบริการ',
+          icon: 'coin',
+          route: '/admin-setting/service-charges',
+          permissions: ['service-charge.read'],
         },
       ],
     },
@@ -104,6 +205,10 @@ export class SideBarComponent {
     this.isCollapsed = toSignal(this.sidebarService.isCollapsed$, {
       initialValue: false,
     });
+    this.allChildRoutes = this.allMenuItems
+      .flatMap((item) => item.children ?? [])
+      .map((child) => child.route!)
+      .filter(Boolean);
     this.menuItems.set(this.filterByPermissions(this.allMenuItems));
     this.autoExpandActiveParent();
 
@@ -130,7 +235,15 @@ export class SideBarComponent {
   }
 
   isActive(route: string): boolean {
-    return this.router.url === route || this.router.url.startsWith(route + '/');
+    const url = this.router.url.split('?')[0];
+    if (url === route) return true;
+    if (url.startsWith(route + '/')) {
+      const hasMoreSpecific = this.allChildRoutes.some(
+        (r) => r !== route && r.length > route.length && url.startsWith(r),
+      );
+      return !hasMoreSpecific;
+    }
+    return false;
   }
 
   getHomeRoute(item: MenuItem): string {

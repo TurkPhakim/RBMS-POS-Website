@@ -2,17 +2,15 @@
   <!-- Page Header -->
   <div class="flex items-center gap-3">
     <div
-      class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center"
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
     >
       <app-generic-icon
-        name="admin-setting"
-        svgClass="w-8 h-8"
+        name="restaurant"
+        svgClass="w-10 h-10"
         class="text-white"
       ></app-generic-icon>
     </div>
-    <h1 class="text-3xl font-extrabold tracking-tight text-primary">
-      ตั้งค่าร้านค้า
-    </h1>
+    <h1 class="text-page-title">ตั้งค่าร้านค้า</h1>
   </div>
 
   <!-- Form -->
@@ -23,6 +21,7 @@
       placeholderIcon="image-preview"
       [imageUrl]="serverLogoUrl()"
       [allowedTypes]="['image/png']"
+      [readOnly]="!canUpdate"
       (fileSelected)="selectedLogoFile.set($event)"
       (imageRemoved)="onLogoRemoved()"
     />
@@ -35,10 +34,7 @@
     >
       <!-- ชื่อร้าน (ไทย) -->
       <div>
-        <label
-          for="shopNameThai"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="shopNameThai" class="block font-semibold mb-2">
           ชื่อร้านค้า (ภาษาไทย) <span class="text-danger">*</span>
         </label>
         <input
@@ -54,10 +50,7 @@
 
       <!-- ชื่อร้านค้า (ภาษาอังกฤษ) -->
       <div>
-        <label
-          for="shopNameEnglish"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="shopNameEnglish" class="block font-semibold mb-2">
           ชื่อร้านค้า (ภาษาอังกฤษ) <span class="text-danger">*</span>
         </label>
         <input
@@ -73,10 +66,7 @@
 
       <!-- ชื่อบริษัท (ภาษาไทย) -->
       <div>
-        <label
-          for="companyNameThai"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="companyNameThai" class="block font-semibold mb-2">
           ชื่อบริษัท (ภาษาไทย)
         </label>
         <input
@@ -91,10 +81,7 @@
 
       <!-- ชื่อบริษัท (ภาษาอังกฤษ) -->
       <div>
-        <label
-          for="companyNameEnglish"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="companyNameEnglish" class="block font-semibold mb-2">
           ชื่อบริษัท (ภาษาอังกฤษ)
         </label>
         <input
@@ -109,7 +96,7 @@
 
       <!-- เลขประจำตัวผู้เสียภาษี -->
       <div>
-        <label for="taxId" class="block font-semibold text-surface-dark mb-2">
+        <label for="taxId" class="block font-semibold mb-2">
           เลขประจำตัวผู้เสียภาษี <span class="text-danger">*</span>
         </label>
         <input
@@ -126,10 +113,7 @@
 
       <!-- ประเภทอาหาร -->
       <div>
-        <label
-          for="foodType"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="foodType" class="block font-semibold mb-2">
           ประเภทอาหาร <span class="text-danger">*</span>
         </label>
         <input
@@ -145,10 +129,7 @@
 
       <!-- รายละเอียดร้านค้า -->
       <div class="md:col-span-2">
-        <label
-          for="description"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="description" class="block font-semibold mb-2">
           รายละเอียดร้านค้า
         </label>
         <textarea
@@ -175,7 +156,7 @@
         class="flex items-center gap-4 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full px-6 py-3"
       >
         <p-inputSwitch formControlName="hasTwoPeriods"></p-inputSwitch>
-        <span class="font-bold text-white text-md tracking-wide mb-1">
+        <span class="font-bold text-white text-lg tracking-wide mb-1">
           {{
             form.get("hasTwoPeriods")?.value
               ? "เปิด 2 ช่วงเวลา"
@@ -192,26 +173,26 @@
               class="bg-gradient-to-r from-primary to-primary-dark text-white"
             >
               <th
-                class="px-5 py-2.5 text-left text-md font-semibold w-28 border-r border-white/20"
+                class="px-5 py-2.5 text-center font-semibold w-28 border-r border-white/20"
                 rowspan="2"
               >
                 วัน
               </th>
               <th
-                class="px-4 py-2.5 text-center text-md font-semibold w-24 border-r border-white/20"
+                class="px-4 py-2.5 text-center font-semibold w-28 border-r border-white/20"
                 rowspan="2"
               >
                 สถานะ
               </th>
               <th
-                class="px-4 py-2 text-center text-md font-semibold border-b border-white/20"
+                class="px-4 py-2 text-center font-semibold border-b border-white/20"
                 colspan="2"
               >
                 ช่วงที่ 1
               </th>
               @if (form.get("hasTwoPeriods")?.value) {
                 <th
-                  class="px-4 py-2 text-center text-md font-semibold border-l border-b border-white/20"
+                  class="px-4 py-2 text-center font-semibold border-l border-b border-white/20"
                   colspan="2"
                 >
                   ช่วงที่ 2
@@ -250,7 +231,7 @@
               >
                 <td class="px-5 py-3">
                   <span
-                    class="text-base font-extrabold"
+                    class="font-extrabold"
                     [class.text-primary]="oh.get('isOpen')?.value"
                     [class.text-surface-sub]="!oh.get('isOpen')?.value"
                   >
@@ -266,7 +247,6 @@
                     [timeOnly]="true"
                     [hourFormat]="'24'"
                     [showClear]="true"
-                    [disabled]="!oh.get('isOpen')?.value"
                     styleClass="w-full"
                     placeholder="เปิด"
                   />
@@ -277,7 +257,6 @@
                     [timeOnly]="true"
                     [hourFormat]="'24'"
                     [showClear]="true"
-                    [disabled]="!oh.get('isOpen')?.value"
                     styleClass="w-full"
                     placeholder="ปิด"
                   />
@@ -289,7 +268,6 @@
                       [timeOnly]="true"
                       [hourFormat]="'24'"
                       [showClear]="true"
-                      [disabled]="!oh.get('isOpen')?.value"
                       styleClass="w-full"
                       placeholder="เปิด"
                     />
@@ -300,7 +278,6 @@
                       [timeOnly]="true"
                       [hourFormat]="'24'"
                       [showClear]="true"
-                      [disabled]="!oh.get('isOpen')?.value"
                       styleClass="w-full"
                       placeholder="ปิด"
                     />
@@ -316,12 +293,12 @@
     <!-- Card 4: ที่อยู่และช่องทางติดต่อ -->
     <app-section-card
       headerLabel="ที่อยู่และช่องทางติดต่อ"
-      headerIcon="telephone"
+      headerIcon="restaurant-address"
       contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
       <!-- ที่อยู่ (full width) -->
       <div class="md:col-span-2">
-        <label for="address" class="block font-semibold text-surface-dark mb-2">
+        <label for="address" class="block font-semibold mb-2">
           ที่อยู่ร้าน (สำหรับท้ายใบเสร็จ) <span class="text-danger">*</span>
         </label>
         <textarea
@@ -338,10 +315,7 @@
 
       <!-- เบอร์โทรศัพท์ -->
       <div>
-        <label
-          for="phoneNumber"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="phoneNumber" class="block font-semibold mb-2">
           เบอร์โทรศัพท์ <span class="text-danger">*</span>
         </label>
         <input
@@ -357,10 +331,7 @@
 
       <!-- อีเมลร้านค้า -->
       <div>
-        <label
-          for="shopEmail"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="shopEmail" class="block font-semibold mb-2">
           อีเมลร้านค้า
         </label>
         <input
@@ -376,10 +347,7 @@
 
       <!-- Facebook -->
       <div>
-        <label
-          for="facebook"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="facebook" class="block font-semibold mb-2">
           Facebook
         </label>
         <input
@@ -394,10 +362,7 @@
 
       <!-- Instagram -->
       <div>
-        <label
-          for="instagram"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="instagram" class="block font-semibold mb-2">
           Instagram
         </label>
         <input
@@ -412,7 +377,7 @@
 
       <!-- Website URL -->
       <div>
-        <label for="website" class="block font-semibold text-surface-dark mb-2">
+        <label for="website" class="block font-semibold mb-2">
           Website URL
         </label>
         <input
@@ -427,9 +392,7 @@
 
       <!-- Line ID -->
       <div>
-        <label for="lineId" class="block font-semibold text-surface-dark mb-2">
-          Line ID
-        </label>
+        <label for="lineId" class="block font-semibold mb-2"> Line ID </label>
         <input
           id="lineId"
           type="text"
@@ -441,17 +404,141 @@
       </div>
     </app-section-card>
 
-    <!-- Card 5: QR Code ชำระเงิน -->
-    <app-image-upload-card
-      variant="square"
-      label="คลิกเพื่ออัปโหลด QR Code ชำระเงิน"
-      uploadedLabel="QR Code ชำระเงิน"
-      placeholderIcon="image-preview"
-      [imageUrl]="qrCodePreview()"
-      [allowedTypes]="['image/png']"
-      (fileSelected)="selectedQrCodeFile.set($event)"
-      (imageRemoved)="onQrCodeRemoved()"
-    />
+    <!-- Card 5: ข้อมูลชำระเงิน -->
+    <app-section-card
+      headerLabel="ข้อมูลชำระเงิน"
+      headerIcon="payment-bath"
+      contentClass="p-6 space-y-5"
+    >
+      <!-- QR Code -->
+      <app-image-upload-card
+        variant="square"
+        label="คลิกเพื่ออัปโหลด QR Code ชำระเงิน"
+        uploadedLabel="QR Code ชำระเงิน"
+        placeholderIcon="image-preview"
+        [imageUrl]="qrCodePreview()"
+        [allowedTypes]="['image/png', 'image/jpeg']"
+        [readOnly]="!canUpdate"
+        (fileSelected)="selectedQrCodeFile.set($event)"
+        (imageRemoved)="onQrCodeRemoved()"
+      />
+
+      <!-- Bank Info -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div>
+          <label for="bankName" class="block font-semibold mb-2">
+            ธนาคาร
+          </label>
+          <input
+            id="bankName"
+            type="text"
+            pInputText
+            formControlName="bankName"
+            placeholder="ชื่อธนาคาร"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label for="accountNumber" class="block font-semibold mb-2">
+            เลขที่บัญชี
+          </label>
+          <input
+            id="accountNumber"
+            type="text"
+            pInputText
+            formControlName="accountNumber"
+            placeholder="เลขที่บัญชี"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label for="accountName" class="block font-semibold mb-2">
+            ชื่อบัญชี
+          </label>
+          <input
+            id="accountName"
+            type="text"
+            pInputText
+            formControlName="accountName"
+            placeholder="ชื่อบัญชี"
+            class="w-full"
+          />
+        </div>
+      </div>
+    </app-section-card>
+
+    <!-- Card 6: WiFi -->
+    <app-section-card
+      headerLabel="WiFi สำหรับลูกค้า"
+      headerIcon="information"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <div>
+        <label for="wifiSsid" class="block font-semibold mb-2">
+          ชื่อ WiFi (SSID)
+        </label>
+        <input
+          id="wifiSsid"
+          type="text"
+          pInputText
+          formControlName="wifiSsid"
+          placeholder="ชื่อ WiFi"
+          class="w-full"
+        />
+      </div>
+      <div>
+        <label for="wifiPassword" class="block font-semibold mb-2">
+          รหัสผ่าน WiFi
+        </label>
+        <input
+          id="wifiPassword"
+          type="text"
+          pInputText
+          formControlName="wifiPassword"
+          placeholder="รหัสผ่าน WiFi"
+          class="w-full"
+        />
+      </div>
+    </app-section-card>
+
+    <!-- Card 7: ตั้งค่าใบเสร็จ -->
+    <app-section-card
+      headerLabel="ตั้งค่าใบเสร็จ"
+      headerIcon="receipt"
+      contentClass="p-6 grid grid-cols-1 gap-5"
+    >
+      <!-- ข้อความหัวใบเสร็จ -->
+      <div>
+        <label for="receiptHeaderText" class="block font-semibold mb-2">
+          ข้อความหัวใบเสร็จ
+        </label>
+        <textarea
+          id="receiptHeaderText"
+          pTextarea
+          formControlName="receiptHeaderText"
+          rows="3"
+          placeholder="ข้อความหัวใบเสร็จ"
+          class="w-full"
+          [autoResize]="true"
+        ></textarea>
+      </div>
+
+      <!-- ข้อความท้ายใบเสร็จ -->
+      <div>
+        <label for="receiptFooterText" class="block font-semibold mb-2">
+          ข้อความท้ายใบเสร็จ
+        </label>
+        <textarea
+          id="receiptFooterText"
+          pTextarea
+          formControlName="receiptFooterText"
+          rows="3"
+          placeholder="ข้อความท้ายใบเสร็จ"
+          class="w-full"
+          [autoResize]="true"
+        ></textarea>
+      </div>
+    </app-section-card>
 
     <!-- Footer: Audit Info -->
     @if (settings()) {

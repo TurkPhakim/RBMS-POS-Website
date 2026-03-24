@@ -12,41 +12,48 @@
 ## กฎที่ต้องยึดถือตลอดการ redesign
 
 ### 1. ห้าม inline SVG path ใน HTML
+
 ```html
 <!-- ❌ ห้ามทำ -->
-<svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4..."/></svg>
+<svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4..." /></svg>
 
 <!-- ✅ ทำแบบนี้เสมอ -->
-<img src="icons/pen-edit.svg" class="w-5 h-5" alt="">
+<img src="icons/pen-edit.svg" class="w-5 h-5" alt="" />
 ```
 
 ### 2. ไอคอนทุกตัวต้องอยู่ใน `public/icons/`
+
 - ไฟล์ `.svg` ทุกตัวต้องอยู่ในโฟลเดอร์นี้เท่านั้น
 - ห้าม `class="invert"` — SVG ควรออกแบบให้ใช้ได้เลย หรือใช้ CSS filter ที่ถูกต้อง
 
 ### 3. ถ้าไม่รู้ว่าจะใช้ไอคอนอะไร → ใช้ `admin-setting.svg` ชั่วคราว
+
 AI จะระบุไว้ในโค้ดว่า:
+
 ```html
 <!-- TODO: replace with [ชื่อไอคอนที่ควรใช้].svg -->
-<img src="icons/admin-setting.svg" class="w-5 h-5" alt="">
+<img src="icons/admin-setting.svg" class="w-5 h-5" alt="" />
 ```
 
 ### 4. วิธีเปลี่ยนไอคอน (เมื่อผู้ใช้เตรียมไฟล์พร้อมแล้ว)
+
 1. วางไฟล์ `.svg` ใหม่ใน `public/icons/`
 2. หา `TODO: replace with [ชื่อ].svg` ใน component นั้น
 3. เปลี่ยน `src="icons/admin-setting.svg"` → `src="icons/[ชื่อจริง].svg"`
 4. ลบ comment `TODO:` ออก
 
 ### 5. ใช้ CSS token จาก design system เสมอ
+
 ```html
 <!-- ❌ ห้ามใช้ class สี raw -->
 <div class="bg-orange-500 text-slate-700 border-gray-200">
-
-<!-- ✅ ใช้ token เสมอ -->
-<div class="bg-primary text-surface-dark border-surface-border">
+  <!-- ✅ ใช้ token เสมอ -->
+  <div class="bg-primary text-surface-dark border-surface-border"></div>
+</div>
 ```
 
 ### 6. ห้ามเขียนไฟล์ `.css` เว้นแต่จำเป็นจริงๆ
+
 - **Style ทุกอย่างเขียนเป็น Tailwind class ใน HTML template** (`class="..."`)
 - ถ้าหลีกเลี่ยงไม่ได้จริงๆ (เช่น animation ที่ซับซ้อน, scrollbar custom) ให้เขียนใน `styles.css` เท่านั้น — **ห้ามสร้างไฟล์ `.css` ใหม่**
 - ก่อนเขียน `.css` ต้องบอกผู้ใช้ก่อนว่าทำไมถึงหลีกเลี่ยงไม่ได้
@@ -57,46 +64,46 @@ AI จะระบุไว้ในโค้ดว่า:
 
 ### ✅ มีแล้ว (ใช้ได้เลย)
 
-| ไฟล์ | ใช้ที่ไหน |
-|------|----------|
-| `dashboard.svg` | Sidebar: Dashboard |
-| `menu-restaurant.svg` | Sidebar: Menu |
-| `orders.svg` | Sidebar: Order |
-| `table.svg` | Sidebar: Table |
-| `cashier.svg` | Sidebar: Cashier/Sales |
-| `kitchen.svg` | Sidebar: Kitchen Display |
-| `human-resource.svg` | Sidebar: HR |
-| `admin-setting.svg` | Sidebar: Admin Setting |
-| `web-setting.svg` | Sidebar: (ไม่ได้ใช้ในตอนนี้) |
-| `profile.svg` | Header: profile dropdown |
-| `logout.svg` | Header: ปุ่ม logout |
-| `notification-bell.svg` | Header: notification |
-| `pen-edit.svg` | Actions: Edit button ทุกหน้า |
-| `trash.svg` | Actions: Delete button ทุกหน้า |
-| `empty-box.svg` | Empty state ทุกหน้า |
-| `human.svg` | HR: avatar placeholder |
-| `image-preview.svg` | Menu: image placeholder |
-| `knife-fork.svg` | Sidebar footer logo / Welcome page |
-| `arrow.svg` | Navigation: back button, breadcrumb |
-| `coin.svg` | Service Charge / Payment |
-| `login.svg` | Login page |
-| `food.svg` | Menu: Food category icon |
-| `champagne.svg` | Menu: Beverage category icon |
+| ไฟล์                    | ใช้ที่ไหน                           |
+| ----------------------- | ----------------------------------- |
+| `dashboard.svg`         | Sidebar: Dashboard                  |
+| `menu-restaurant.svg`   | Sidebar: Menu                       |
+| `orders.svg`            | Sidebar: Order                      |
+| `table.svg`             | Sidebar: Table                      |
+| `cashier.svg`           | Sidebar: Cashier/Sales              |
+| `kitchen.svg`           | Sidebar: Kitchen Display            |
+| `human-resource.svg`    | Sidebar: HR                         |
+| `admin-setting.svg`     | Sidebar: Admin Setting              |
+| `web-setting.svg`       | Sidebar: (ไม่ได้ใช้ในตอนนี้)        |
+| `profile.svg`           | Header: profile dropdown            |
+| `logout.svg`            | Header: ปุ่ม logout                 |
+| `notification-bell.svg` | Header: notification                |
+| `pen-edit.svg`          | Actions: Edit button ทุกหน้า        |
+| `trash.svg`             | Actions: Delete button ทุกหน้า      |
+| `empty-box.svg`         | Empty state ทุกหน้า                 |
+| `human.svg`             | HR: avatar placeholder              |
+| `image-preview.svg`     | Menu: image placeholder             |
+| `knife-fork.svg`        | Sidebar footer logo / Welcome page  |
+| `arrow.svg`             | Navigation: back button, breadcrumb |
+| `coin.svg`              | Service Charge / Payment            |
+| `login.svg`             | Login page                          |
+| `food.svg`              | Menu: Food category icon            |
+| `champagne.svg`         | Menu: Beverage category icon        |
 
 ### ⚠️ ยังไม่มี — ต้องเพิ่ม (ผู้ใช้เตรียมเอง)
 
-| ต้องการไฟล์ | ใช้ที่ไหน | ชั่วคราวใช้ |
-|------------|---------|------------|
-| `plus.svg` | ปุ่ม "เพิ่ม" ทุกหน้า | `admin-setting.svg` |
-| `search.svg` | Search input ทุกหน้า | `admin-setting.svg` |
-| `eye.svg` | Login: แสดงรหัสผ่าน | `admin-setting.svg` |
-| `eye-off.svg` | Login: ซ่อนรหัสผ่าน | `admin-setting.svg` |
-| `close.svg` | Modal close / error dismiss | `admin-setting.svg` |
-| `check.svg` | Success state / confirm | `admin-setting.svg` |
-| `hamburger.svg` | Sidebar toggle (header) | `admin-setting.svg` |
-| `user.svg` | Login: username field icon | `admin-setting.svg` |
-| `lock.svg` | Login: password field icon | `admin-setting.svg` |
-| `filter.svg` | Filter bar (optional) | `admin-setting.svg` |
+| ต้องการไฟล์    | ใช้ที่ไหน                   | ชั่วคราวใช้         |
+| -------------- | --------------------------- | ------------------- |
+| `plus.svg`     | ปุ่ม "เพิ่ม" ทุกหน้า        | `admin-setting.svg` |
+| `search.svg`   | Search input ทุกหน้า        | `admin-setting.svg` |
+| `eye.svg`      | Login: แสดงรหัสผ่าน         | `admin-setting.svg` |
+| `eye-off.svg`  | Login: ซ่อนรหัสผ่าน         | `admin-setting.svg` |
+| `close.svg`    | Modal close / error dismiss | `admin-setting.svg` |
+| `check.svg`    | Success state / confirm     | `admin-setting.svg` |
+| `menu-bar.svg` | Sidebar toggle (header)     | `admin-setting.svg` |
+| `user.svg`     | Login: username field icon  | `admin-setting.svg` |
+| `lock.svg`     | Login: password field icon  | `admin-setting.svg` |
+| `filter.svg`   | Filter bar (optional)       | `admin-setting.svg` |
 
 ---
 
@@ -113,10 +120,12 @@ AI จะระบุไว้ในโค้ดว่า:
 #### 1.1 Sidebar (`side-bar.component.html`)
 
 **ปัญหาปัจจุบัน:**
+
 - ใช้ `bg-gradient-to-br from-orange-300 via-orange-200 to-amber-300` — ไม่ตรง design system
 - `class="invert"` บน notification-bell (ผิด pattern)
 
 **เป้าหมาย:**
+
 - Background: `bg-surface-sidebar` (dark slate `#1e293b`)
 - Logo/brand area: แสดง `knife-fork.svg` + ชื่อ RBMS-POS สีขาว
 - Nav items: icon สีขาว 60% opacity, active = `bg-primary-subtle` + icon สีส้ม
@@ -126,6 +135,7 @@ AI จะระบุไว้ในโค้ดว่า:
 **Icons:** ใช้ SVG ที่มีอยู่ทั้งหมด ไม่ต้องเพิ่ม
 
 **Class เก่า → ใหม่:**
+
 ```
 bg-gradient-to-br from-orange-300 ... → bg-surface-sidebar
 text-gray-700                         → text-white/60 (inactive) / text-white (active)
@@ -137,28 +147,32 @@ bg-orange-400/40                      → bg-white/10 border-l-4 border-primary
 #### 1.2 Header (`header.component.html`)
 
 **ปัญหาปัจจุบัน:**
+
 - `bg-gradient-to-r from-orange-400 to-amber-400` — ควรเป็น gradient ที่ใช้ token
 - `class="invert"` บน notification-bell — ต้องลบออก
-- Inline SVG: hamburger icon (3 เส้น), dropdown chevron, close X
+- Inline SVG: menu-bar icon (3 เส้น), dropdown chevron, close X
 
 **เป้าหมาย:**
+
 - Background: `bg-gradient-to-r from-primary to-primary-dark`
-- Hamburger toggle: เปลี่ยนเป็น `hamburger.svg` (TODO หากยังไม่มี)
+- menu-bar toggle: เปลี่ยนเป็น `menu-bar.svg` (TODO หากยังไม่มี)
 - Notification bell: `notification-bell.svg` (ไม่ใช้ invert — ต้องให้ SVG เป็นสีขาวเอง หรือ filter)
 - Profile dropdown: `profile.svg` + ชื่อ + `arrow.svg` rotated
 - Logout: `logout.svg`
 - ลบ inline SVG ทั้งหมดออก
 
-**Icons ที่ต้องเพิ่ม:** `hamburger.svg`, `close.svg`
+**Icons ที่ต้องเพิ่ม:** `menu-bar.svg`, `close.svg`
 
 ---
 
 #### 1.3 Main Layout (`main-layout.component.html`)
 
 **ปัญหาปัจจุบัน:**
+
 - `bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50` — ไม่ใช้ token
 
 **เป้าหมาย:**
+
 - Background: `bg-surface` (เรียบง่าย ไม่มี gradient)
 
 ---
@@ -166,10 +180,12 @@ bg-orange-400/40                      → bg-white/10 border-l-4 border-primary
 #### 1.4 Breadcrumb (`top-breadcrumb.component.html`)
 
 **ปัญหาปัจจุบัน:**
+
 - `bg-gray-200` — ไม่ใช้ token
 - `text-orange-500` — ไม่ใช้ token
 
 **เป้าหมาย:**
+
 - Background: `bg-surface-card border-b border-surface-border`
 - Active crumb: `text-primary`
 - Separator: `arrow.svg` ขนาดเล็ก หรือ `/` text
@@ -181,11 +197,13 @@ bg-orange-400/40                      → bg-white/10 border-l-4 border-primary
 ความซับซ้อน: สูง (มี inline SVG เยอะมาก)
 
 **ปัญหาปัจจุบัน:**
+
 - Inline SVG: user icon, lock icon, eye/eye-off, error icon, close, arrow, spinner, check
 - `bg-orange-gradient` (custom class ที่ถูกลบจาก config แล้ว)
 - `from-primary-500 to-primary-600` — ต้องเปลี่ยนเป็น `from-primary to-primary-dark`
 
 **เป้าหมาย (redesign ทั้งหมด):**
+
 - Background: `bg-surface` หรือ subtle warm gradient
 - Login card: กลางหน้า, `bg-surface-card rounded-2xl shadow-xl`
 - Header card: logo `knife-fork.svg` + ชื่อระบบ
@@ -203,11 +221,13 @@ bg-orange-400/40                      → bg-white/10 border-l-4 border-primary
 ความซับซ้อน: ต่ำ
 
 **ปัญหาปัจจุบัน:**
+
 - Gradient text `bg-clip-text bg-gradient-to-r from-orange-600 via-orange-500 to-amber-600`
 - Role badge `bg-gradient-to-r from-orange-300 to-amber-300`
 - หลาย gradient ไม่ตรง token
 
 **เป้าหมาย:**
+
 - Welcome card: `bg-surface-card rounded-2xl shadow-sm`
 - Title: `text-surface-dark` + accent `text-primary`
 - Role badge: `bg-primary-subtle text-primary-text rounded-full`
@@ -223,11 +243,13 @@ bg-orange-400/40                      → bg-white/10 border-l-4 border-primary
 #### 4.1 Service Charge List
 
 **ปัญหาปัจจุบัน:**
+
 - `text-orange-500` (heading) — ใช้ token
 - `bg-orange-400 hover:bg-orange-600` (buttons) — ใช้ token
 - Inline SVG: add icon, delete icon, edit icon
 
 **เป้าหมาย:**
+
 ```
 Page header:
   ชื่อหน้า: text-page-title text-surface-dark
@@ -249,10 +271,12 @@ Status badge:
 #### 4.2 Service Charge Manage
 
 **ปัญหาปัจจุบัน:**
+
 - Card headers ใช้ gradient สีต่างกัน (orange, green, red)
 - Inline SVG: info icon, percentage, settings, error, save/spinner
 
 **เป้าหมาย:**
+
 - Section headers ทุกอัน: `bg-gradient-to-r from-primary to-primary-dark text-white`
 - Form fields: ตาม pattern ใน design-system.md
 - Submit: `bg-primary hover:bg-primary-dark`
@@ -268,11 +292,13 @@ Status badge:
 #### 5.1 Menu List
 
 **ปัญหาปัจจุบัน:**
+
 - สีส้มแบบ raw (`text-orange-500`, `bg-orange-400`)
 - Filter buttons ใช้ orange/blue/purple — ไม่สม่ำเสมอ
 - Inline SVG: list icon, food/beverage icons
 
 **เป้าหมาย:**
+
 ```
 Category filter buttons:
   All:       active = bg-primary text-white
@@ -289,11 +315,13 @@ Table:
 #### 5.2 Menu Manage
 
 **ปัญหาปัจจุบัน:**
+
 - Section headers ใช้หลายสี (orange, blue, green, red) — ทำให้ดูรกมาก
 - Image upload area: dashed hover
 - Inline SVG: upload, edit, delete, checkmark
 
 **เป้าหมาย:**
+
 - Section headers ทุกอัน: `bg-gradient-to-r from-primary to-primary-dark` เหมือนกันหมด
 - Sections แยกด้วย icons:
   - ข้อมูลพื้นฐาน: `menu-restaurant.svg`
@@ -311,10 +339,12 @@ Table:
 #### 6.1 Employee List
 
 **ปัญหาปัจจุบัน:**
+
 - ใช้ blue ทั้งหมด (`text-blue-500`, `bg-blue-500`) — ต่างจาก module อื่น
 - Filter status buttons: blue/green/yellow/red/gray — ต้องเปลี่ยนเป็น token
 
 **เป้าหมาย:**
+
 ```
 เปลี่ยน blue ทั้งหมด → orange (primary) ให้สม่ำเสมอกับทั้งระบบ
 
@@ -330,11 +360,13 @@ Employee avatar: human.svg (ใช้อยู่แล้ว — ✅)
 #### 6.2 Employee Manage
 
 **ปัญหาปัจจุบัน:**
+
 - Section headers ใช้สีต่างกัน 6 สี (blue, teal, purple, green, red)
 - Inline SVG จำนวนมาก
 - Focus rings ใช้ multiple colors
 
 **เป้าหมาย:**
+
 - Section headers: `from-primary to-primary-dark` ทุกอัน (สม่ำเสมอ)
 - Section icons: ใช้ SVG ที่เหมาะสมต่ออัน:
   - ข้อมูลส่วนตัว: `human-resource.svg`
@@ -374,6 +406,7 @@ Employee avatar: human.svg (ใช้อยู่แล้ว — ✅)
 4. แจ้ง AI ว่า "เพิ่ม [ชื่อไฟล์].svg แล้ว ให้อัปเดต [feature] ให้ใช้ไอคอนจริง"
 
 **แหล่งไอคอนที่แนะนำ (SVG ฟรี):**
+
 - [heroicons.com](https://heroicons.com) — clean, minimal (แนะนำ)
 - [lucide.dev](https://lucide.dev) — ครบมาก
 - [tabler-icons.io](https://tabler-icons.io) — ครบมาก

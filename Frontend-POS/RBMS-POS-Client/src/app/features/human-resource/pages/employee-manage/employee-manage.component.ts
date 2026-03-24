@@ -4,11 +4,19 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from 'primeng/dynamicdialog';
 import { ApiConfiguration } from '@app/core/api/api-configuration';
-import { EGender, ETitle } from '@app/core/api/models';
+import {
+  EGender,
+  ENationality,
+  EReligion,
+  ETitle,
+  EmployeeAddressResponseModel,
+  EmployeeEducationResponseModel,
+  EmployeeWorkHistoryResponseModel,
+} from '@app/core/api/models';
 import { HumanResourceService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
-import { Icon, ModalService } from '@app/core/services/modal.service';
+import { ModalService } from '@app/core/services/modal.service';
 import { linkDateRange, markFormDirty } from '@app/shared/utils';
 import { AddressDialogComponent } from '@app/shared/dialogs/address-dialog/address-dialog.component';
 import { EducationDialogComponent } from '@app/shared/dialogs/education-dialog/education-dialog.component';
@@ -32,9 +40,9 @@ export class EmployeeManageComponent implements OnDestroy {
 
   minEndDate = signal<Date | null>(null);
   isReadOnly = false;
-  addresses = signal<Record<string, unknown>[]>([]);
-  educations = signal<Record<string, unknown>[]>([]);
-  workHistories = signal<Record<string, unknown>[]>([]);
+  addresses = signal<EmployeeAddressResponseModel[]>([]);
+  educations = signal<EmployeeEducationResponseModel[]>([]);
+  workHistories = signal<EmployeeWorkHistoryResponseModel[]>([]);
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -162,7 +170,6 @@ export class EmployeeManageComponent implements OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.result) {
-            const r = response.result as Record<string, unknown>;
             this.form.patchValue({
               firstNameThai: response.result.firstNameThai,
               lastNameThai: response.result.lastNameThai,
@@ -178,15 +185,15 @@ export class EmployeeManageComponent implements OnDestroy {
               email: response.result.email,
               phone: response.result.phone,
               nationalId: response.result.nationalId,
-              nationality: r['nationality'],
-              religion: r['religion'],
-              lineId: r['lineId'] ?? '',
+              nationality: response.result.nationality,
+              religion: response.result.religion,
+              lineId: response.result.lineId ?? '',
               dateOfBirth: response.result.dateOfBirth
                 ? new Date(response.result.dateOfBirth)
                 : null,
-              isFullTime: r['isFullTime'] ?? true,
+              isFullTime: response.result.isFullTime ?? true,
               salary: response.result.salary,
-              hourlyRate: r['hourlyRate'],
+              hourlyRate: response.result.hourlyRate,
               bankName: response.result.bankName,
               bankAccountNumber: response.result.bankAccountNumber,
               endDate: response.result.endDate
@@ -206,16 +213,9 @@ export class EmployeeManageComponent implements OnDestroy {
               this.calculateAge(new Date(response.result.dateOfBirth));
             }
 
-            // Load sub-entity data
-            this.addresses.set(
-              (r['addresses'] as Record<string, unknown>[]) ?? [],
-            );
-            this.educations.set(
-              (r['educations'] as Record<string, unknown>[]) ?? [],
-            );
-            this.workHistories.set(
-              (r['workHistories'] as Record<string, unknown>[]) ?? [],
-            );
+            this.addresses.set(response.result.addresses ?? []);
+            this.educations.set(response.result.educations ?? []);
+            this.workHistories.set(response.result.workHistories ?? []);
 
             if (this.isReadOnly) {
               this.form.disable();
@@ -254,27 +254,25 @@ export class EmployeeManageComponent implements OnDestroy {
 
     const f = this.form.value;
     const body = {
-      Title: f.title as ETitle | undefined,
+      Title: f.title as ETitle,
       FirstNameThai: f.firstNameThai as string,
       LastNameThai: f.lastNameThai as string,
       FirstNameEnglish: f.firstNameEnglish as string,
       LastNameEnglish: f.lastNameEnglish as string,
-      Nickname: f.nickname as string | undefined,
+      Nickname: (f.nickname ?? '') as string,
       Gender: f.gender as EGender,
-      DateOfBirth: f.dateOfBirth
-        ? (f.dateOfBirth as Date).toISOString()
-        : undefined,
+      DateOfBirth: f.dateOfBirth ? (f.dateOfBirth as Date).toISOString() : '',
       StartDate: (f.startDate as Date).toISOString(),
       EndDate: f.endDate ? (f.endDate as Date).toISOString() : undefined,
-      NationalId: f.nationalId as string | undefined,
+      NationalId: (f.nationalId ?? '') as string,
       BankAccountNumber: f.bankAccountNumber as string | undefined,
       BankName: f.bankName as string | undefined,
-      PositionId: f.positionId as number | undefined,
-      Phone: f.phone as string | undefined,
-      Email: f.email as string | undefined,
-      Nationality: f.nationality as number | undefined,
-      Religion: f.religion as number | undefined,
-      LineId: f.lineId as string | undefined,
+      Nationality: f.nationality as ENationality,
+      Religion: f.religion as EReligion,
+      LineId: (f.lineId ?? '') as string,
+      PositionId: f.positionId as number,
+      Phone: (f.phone ?? '') as string,
+      Email: (f.email ?? '') as string,
       IsFullTime: f.isFullTime as boolean,
       Salary: f.salary as number | undefined,
       HourlyRate: f.hourlyRate as number | undefined,
@@ -282,55 +280,72 @@ export class EmployeeManageComponent implements OnDestroy {
       UserId: f.userId as string | undefined,
       imageFile: this.selectedFile() as Blob | undefined,
       RemoveImage: this.imageRemoved(),
+      Addresses: this.addresses().map((a) => ({
+        addressType: a.addressType!,
+        houseNumber: a.houseNumber,
+        building: a.building,
+        moo: a.moo,
+        soi: a.soi,
+        yaek: a.yaek,
+        road: a.road,
+        subDistrict: a.subDistrict,
+        district: a.district,
+        province: a.province,
+        postalCode: a.postalCode,
+      })),
+      Educations: this.educations().map((e) => ({
+        educationLevel: e.educationLevel!,
+        major: e.major!,
+        institution: e.institution!,
+        gpa: e.gpa,
+        graduationYear: e.graduationYear,
+      })),
+      WorkHistories: this.workHistories().map((w) => ({
+        workplace: w.workplace!,
+        workPhone: w.workPhone,
+        position: w.position!,
+        startDate: w.startDate!,
+        endDate: w.endDate,
+      })),
     };
 
     if (this.isEditMode()) {
-      this.updateEmployee(body);
+      this.humanResourceService
+        .humanResourceUpdatePut({ employeeId: this.employeeId()!, body })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.resetSavingState();
+            this.modalService.commonSuccess();
+            this.router.navigate(['/human-resource/employees']);
+          },
+          error: () => {
+            this.modalService.cancel({
+              title: 'ผิดพลาด !',
+              message: 'ไม่สามารถแก้ไขข้อมูลพนักงานได้',
+            });
+            this.resetSavingState();
+          },
+        });
     } else {
-      this.createEmployee(body);
+      this.humanResourceService
+        .humanResourceCreatePost({ body })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.resetSavingState();
+            this.modalService.commonSuccess();
+            this.router.navigate(['/human-resource/employees']);
+          },
+          error: () => {
+            this.modalService.cancel({
+              title: 'ผิดพลาด !',
+              message: 'ไม่สามารถเพิ่มพนักงานได้',
+            });
+            this.resetSavingState();
+          },
+        });
     }
-  }
-
-  private createEmployee(body: Record<string, unknown>): void {
-    this.humanResourceService
-      .humanResourceCreatePost({ body: body as any })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.resetSavingState();
-          this.modalService.commonSuccess();
-          this.router.navigate(['/human-resource/employees']);
-        },
-        error: () => {
-          this.modalService.cancel({
-            title: 'ผิดพลาด !',
-            message: 'ไม่สามารถเพิ่มพนักงานได้',
-          });
-          this.resetSavingState();
-        },
-      });
-  }
-
-  private updateEmployee(body: Record<string, unknown>): void {
-    const employeeId = this.employeeId()!;
-
-    this.humanResourceService
-      .humanResourceUpdatePut({ employeeId, body: body as any })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.resetSavingState();
-          this.modalService.commonSuccess();
-          this.router.navigate(['/human-resource/employees']);
-        },
-        error: () => {
-          this.modalService.cancel({
-            title: 'ผิดพลาด !',
-            message: 'ไม่สามารถแก้ไขข้อมูลพนักงานได้',
-          });
-          this.resetSavingState();
-        },
-      });
   }
 
   private resetSavingState(): void {
@@ -358,13 +373,12 @@ export class EmployeeManageComponent implements OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result) => {
         if (result) {
-          // API call will be wired after gen-api (Phase 9)
           this.addresses.update((list) => [...list, result]);
         }
       });
   }
 
-  onEditAddress(address: Record<string, unknown>, index: number): void {
+  onEditAddress(address: EmployeeAddressResponseModel, index: number): void {
     const ref = this.dialogService.open(AddressDialogComponent, {
       header: 'แก้ไขที่อยู่',
       width: '60vw',
@@ -424,7 +438,10 @@ export class EmployeeManageComponent implements OnDestroy {
       });
   }
 
-  onEditEducation(education: Record<string, unknown>, index: number): void {
+  onEditEducation(
+    education: EmployeeEducationResponseModel,
+    index: number,
+  ): void {
     const ref = this.dialogService.open(EducationDialogComponent, {
       header: 'แก้ไขประวัติการศึกษา',
       width: '60vw',
@@ -471,7 +488,10 @@ export class EmployeeManageComponent implements OnDestroy {
       });
   }
 
-  onEditWorkHistory(workHistory: Record<string, unknown>, index: number): void {
+  onEditWorkHistory(
+    workHistory: EmployeeWorkHistoryResponseModel,
+    index: number,
+  ): void {
     const ref = this.dialogService.open(WorkHistoryDialogComponent, {
       header: 'แก้ไขประวัติการทำงาน',
       width: '60vw',
@@ -518,9 +538,10 @@ export class EmployeeManageComponent implements OnDestroy {
       .subscribe({
         next: (res) => {
           if (res.result) {
-            const msg = field === 'nationalId'
-              ? 'เลขประจำตัวประชาชนนี้มีอยู่ในระบบแล้ว'
-              : 'อีเมลนี้มีอยู่ในระบบแล้ว';
+            const msg =
+              field === 'nationalId'
+                ? 'เลขประจำตัวประชาชนนี้มีอยู่ในระบบแล้ว'
+                : 'อีเมลนี้มีอยู่ในระบบแล้ว';
             control.setErrors({ ...control.errors, duplicate: msg });
           } else if (control.hasError('duplicate')) {
             const { duplicate, ...rest } = control.errors!;
@@ -570,11 +591,14 @@ export class EmployeeManageComponent implements OnDestroy {
       ?.setValue(parts.length > 0 ? parts.join(' ') : 'เกิดวันนี้');
   }
 
-  getWorkDuration(startDate: unknown, endDate: unknown): string {
+  getWorkDuration(
+    startDate: string | null | undefined,
+    endDate: string | null | undefined,
+  ): string {
     if (!startDate) return '';
 
-    const start = new Date(startDate as string);
-    const end = endDate ? new Date(endDate as string) : new Date();
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : new Date();
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return '';
 

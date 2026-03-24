@@ -1,0 +1,97 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="invoice-bill"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">ประวัติการชำระเงิน</h1>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-surface-card rounded-lg">
+    <div class="p-4">
+      <p-table
+        [value]="payments()"
+        [lazy]="true"
+        [totalRecords]="totalRecords()"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+
+        (onLazyLoad)="loadHistory($event)"
+        [stripedRows]="true"
+        styleClass="p-datatable-clean"
+      >
+        <ng-template pTemplate="header">
+          <tr class="whitespace-nowrap">
+            <th class="w-[80px]">รหัส</th>
+            <th class="w-[120px]">เลขบิล</th>
+            <th class="w-[120px]">เลขออเดอร์</th>
+            <th class="w-[100px]">โต๊ะ</th>
+            <th class="w-[100px]">ช่องทาง</th>
+            <th class="w-[120px]">ยอดบิล</th>
+            <th class="w-[120px]">รับเงิน</th>
+            <th class="w-[120px]">เงินทอน</th>
+            <th class="w-[160px]">เวลาชำระ</th>
+            <th class="w-[100px]">ตัวเลือก</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-payment>
+          <tr>
+            <td>{{ payment.paymentId }}</td>
+            <td class="font-semibold">{{ payment.billNumber }}</td>
+            <td>{{ payment.orderNumber }}</td>
+            <td>{{ payment.tableName || '-' }}</td>
+            <td>
+              @if (payment.paymentMethod === 'Cash') {
+                <span class="text-success font-semibold">เงินสด</span>
+              } @else if (payment.paymentMethod === 'QrCode') {
+                <span class="text-info font-semibold">QR Code</span>
+              } @else {
+                <span>{{ payment.paymentMethod }}</span>
+              }
+            </td>
+            <td class="font-semibold">{{ payment.grandTotal | number: '1.2-2' }}</td>
+            <td>{{ payment.amountReceived | number: '1.2-2' }}</td>
+            <td>
+              @if (payment.changeAmount > 0) {
+                <span class="text-success font-semibold">{{ payment.changeAmount | number: '1.2-2' }}</span>
+              } @else {
+                <span>-</span>
+              }
+            </td>
+            <td>{{ payment.paidAt | dateFormat: 'DATE_TIME' }}</td>
+            <td>
+              <button
+                pButton
+                size="small"
+                severity="secondary"
+                [outlined]="true"
+                [loading]="downloadingId() === payment.paymentId"
+                (click)="onDownloadReceipt(payment.paymentId)"
+              >
+                <i class="pi pi-download mr-1"></i>
+                ใบเสร็จ
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="10" class="text-center py-8 text-surface-sub">
+              ไม่มีประวัติการชำระเงิน
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

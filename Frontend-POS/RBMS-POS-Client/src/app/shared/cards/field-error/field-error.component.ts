@@ -9,10 +9,7 @@ import { AbstractControl } from '@angular/forms';
       <small
         class="text-danger mt-1 flex items-center gap-1 text-sm font-semibold"
       >
-        <app-generic-icon
-          name="field-error"
-          svgClass="w-4 h-4"
-        ></app-generic-icon>
+        <app-generic-icon name="error" svgClass="w-4 h-4"></app-generic-icon>
         {{ errorMessage }}
       </small>
     }

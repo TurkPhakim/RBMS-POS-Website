@@ -1,0 +1,294 @@
+<app-card-template [headerLabel]="headerLabel">
+  <div class="space-y-5">
+    <!-- Header Banner -->
+    <div
+      class="relative bg-gradient-to-r from-primary-dark to-primary rounded-xl p-4 overflow-hidden"
+    >
+      <div
+        class="absolute w-24 h-24 rounded-full bg-white/10 -top-8 -right-6"
+      ></div>
+      <div
+        class="absolute w-16 h-16 rounded-full bg-white/10 -bottom-6 left-10"
+      ></div>
+      <div class="relative flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div
+            class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0"
+          >
+            <app-generic-icon
+              name="bill-rastaurant"
+              svgClass="w-10 h-10"
+              class="text-white"
+            ></app-generic-icon>
+          </div>
+          <div class="text-white">
+            <p class="text-xl font-bold">แยกบิลชำระเงิน</p>
+            <p class="text-white/80">{{ activeItemCount }} รายการ</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-white text-sm font-semibold">ยอดรวม</p>
+          <p class="text-4xl font-extrabold text-white">
+            {{ totalAmount | number: "1.2-2" }}
+            <span class="text-base font-semibold">บาท</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode Selector -->
+    <div class="bg-surface rounded-xl p-2 flex gap-2">
+      <button
+        class="flex-1 py-2 rounded-lg font-semibold transition-all text-center flex text-lg font-semibold items-center justify-center gap-2"
+        [class]="
+          mode === 'by-amount'
+            ? 'bg-white text-primary-text'
+            : 'text-surface-sub hover:text-primary-text'
+        "
+        (click)="onModeChange('by-amount')"
+      >
+        <app-generic-icon name="divide" svgClass="w-8 h-8"></app-generic-icon
+        >หารเท่า
+      </button>
+      <button
+        class="flex-1 py-2 rounded-lg font-semibold transition-all text-center flex text-lg font-semibold items-center justify-center gap-2"
+        [class]="
+          mode === 'by-item'
+            ? 'bg-white text-primary-text'
+            : 'text-surface-sub hover:text-primary-text'
+        "
+        (click)="onModeChange('by-item')"
+      >
+        <app-generic-icon
+          name="check-list"
+          svgClass="w-8 h-8"
+        ></app-generic-icon>
+        แยกตามรายการ
+      </button>
+    </div>
+
+    <!-- ==================== By Amount ==================== -->
+    @if (mode === "by-amount") {
+      <div class="space-y-4">
+        <!-- Split Counter -->
+        <div class="flex items-center justify-between">
+          <span class="font-semibold">จำนวนที่ต้องการแยก</span>
+          <div class="flex items-center gap-3">
+            <button
+              class="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+              [class]="
+                numberOfSplits > 2
+                  ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                  : 'bg-surface-hover text-surface-sub'
+              "
+              (click)="decrementSplits()"
+              [disabled]="numberOfSplits <= 2"
+            >
+              <i class="pi pi-minus text-sm"></i>
+            </button>
+            <span class="text-3xl font-bold w-10 text-center text-primary">{{
+              numberOfSplits
+            }}</span>
+            <button
+              class="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+              [class]="
+                numberOfSplits < 10
+                  ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                  : 'bg-surface-hover text-surface-sub'
+              "
+              (click)="incrementSplits()"
+              [disabled]="numberOfSplits >= 10"
+            >
+              <i class="pi pi-plus text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Preview Cards -->
+        <div class="bg-surface rounded-xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-surface-sub">ยอดต่อบิล</span>
+            <p-tag
+              [value]="numberOfSplits + ' บิล'"
+              severity="warning"
+              [rounded]="true"
+              styleClass="px-4 py-1 text-sm"
+            ></p-tag>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            @for (
+              i of [].constructor(numberOfSplits > 4 ? 4 : numberOfSplits);
+              track $index
+            ) {
+              <div
+                class="rounded-lg p-3 border"
+                [class]="
+                  getBillColor($index).bg + ' ' + getBillColor($index).border
+                "
+              >
+                <div class="flex items-center gap-2 mb-1">
+                  <div
+                    class="w-2.5 h-2.5 rounded-full"
+                    [class]="getBillColor($index).dot"
+                  ></div>
+                  <span
+                    class="text-sm font-semibold"
+                    [class]="getBillColor($index).text"
+                    >บิล {{ $index + 1 }}</span
+                  >
+                </div>
+                <p
+                  class="text-lg font-bold"
+                  [class]="getBillColor($index).text"
+                >
+                  {{ perSplitAmount | number: "1.2-2" }} บาท
+                </p>
+              </div>
+            }
+          </div>
+          @if (numberOfSplits > 4) {
+            <p class="text-center text-surface-sub mt-2">
+              และอีก {{ numberOfSplits - 4 }} บิล บิลละ
+              {{ perSplitAmount | number: "1.2-2" }} บาท
+            </p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ==================== By Item ==================== -->
+    @if (mode === "by-item") {
+      <div class="space-y-4">
+        <!-- Group Counter -->
+        <div class="flex items-center justify-between">
+          <span class="text-lg font-semibold">จำนวนกลุ่มบิล</span>
+          <div class="flex items-center gap-3">
+            <button
+              class="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+              [class]="
+                numberOfGroups > 2
+                  ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                  : 'bg-surface-hover text-surface-sub'
+              "
+              (click)="decrementGroups()"
+              [disabled]="numberOfGroups <= 2"
+            >
+              <i class="pi pi-minus text-sm"></i>
+            </button>
+            <span class="text-3xl font-bold w-10 text-center text-primary">{{
+              numberOfGroups
+            }}</span>
+            <button
+              class="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+              [class]="
+                numberOfGroups < 10
+                  ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                  : 'bg-surface-hover text-surface-sub'
+              "
+              (click)="incrementGroups()"
+              [disabled]="numberOfGroups >= 10"
+            >
+              <i class="pi pi-plus text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2 Column: Item List (left) + Bill Cards (right) -->
+        <div class="flex gap-2">
+          <!-- LEFT: Item List -->
+          <div class="flex-1 space-y-2 max-h-[400px] overflow-y-auto pr-1">
+            @for (ig of itemGroups; track ig.orderItemId) {
+              <div
+                class="flex items-center justify-between rounded-lg p-3 gap-2 border transition-colors"
+                [class]="
+                  getBillColor(ig.groupIndex).bg +
+                  ' ' +
+                  getBillColor(ig.groupIndex).border
+                "
+              >
+                <div class="flex-1 min-w-0">
+                  <span class="text-lg font-semibold truncate block"
+                    >{{ ig.menuNameThai }}
+                    @if (ig.quantity > 1) {
+                      <span class="text-surface-sub ml-1">
+                        x{{ ig.quantity }}</span
+                      >
+                    }
+                  </span>
+                  <span
+                    class="font-bold"
+                    [class]="getBillColor(ig.groupIndex).text"
+                    >{{ ig.totalPrice | number: "1.2-2" }} บาท</span
+                  >
+                </div>
+                <p-dropdown
+                  [options]="groupOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [(ngModel)]="ig.groupIndex"
+                  [style]="{ width: '100px' }"
+                  [panelStyle]="{ 'min-width': '100px' }"
+                  styleClass="compact-dropdown"
+                  panelStyleClass="compact-dropdown-panel"
+                  appendTo="body"
+                ></p-dropdown>
+              </div>
+            }
+          </div>
+
+          <!-- RIGHT: Bill Summary Cards -->
+          <div
+            class="w-[280px] flex-shrink-0 space-y-2 max-h-[400px] overflow-y-auto"
+          >
+            @for (opt of groupOptions; track opt.value) {
+              <div
+                class="rounded-lg p-3 border"
+                [class]="
+                  getBillColor(opt.value).bg +
+                  ' ' +
+                  getBillColor(opt.value).border
+                "
+              >
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-2.5 h-2.5 rounded-full"
+                    [class]="getBillColor(opt.value).dot"
+                  ></div>
+                  <span
+                    class="font-semibold"
+                    [class]="getBillColor(opt.value).text"
+                    >{{ opt.label }}</span
+                  >
+                  <span class="text-xs text-surface-sub ml-auto"
+                    >{{ getGroupItemCount(opt.value) }} รายการ</span
+                  >
+                </div>
+                <p
+                  class="text-lg font-bold"
+                  [class]="getBillColor(opt.value).text"
+                >
+                  {{ getGroupSubtotal(opt.value) | number: "1.2-2" }} บาท
+                </p>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <p-footer>
+    <button
+      pButton
+      label="ย้อนกลับ"
+      class="p-button-secondary p-button-outlined"
+      (click)="onCancel()"
+    ></button>
+    <button
+      pButton
+      label="แยกบิล"
+      [disabled]="!isValid()"
+      (click)="onConfirm()"
+    ></button>
+  </p-footer>
+</app-card-template>

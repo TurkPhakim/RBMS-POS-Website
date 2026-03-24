@@ -1,6 +1,6 @@
 # Frontend Coding Standards — RBMS-POS
 
-> อัพเดตล่าสุด: 2026-03-11
+> อัพเดตล่าสุด: 2026-03-16
 >
 > **Related:** [frontend-guidelines.md](frontend-guidelines.md) | [module-development-workflow.md](module-development-workflow.md) | [design-system.md](../architecture/design-system.md)
 
@@ -388,7 +388,139 @@ export class BadProductService {
 }
 ```
 
-### 4.2 Facade Services (สำหรับ business logic ที่ซับซ้อน)
+### 4.2 Generated Models — กฎ Typing
+
+> **กฎเหล็ก:** ต้องรัน `npm run gen-api` ก่อนเขียน Frontend code ใดๆ — แล้วใช้ generated models จาก `@core/api/models/` ทุกที่ ห้ามใช้ `Record<string, unknown>`, `any`, `$any()`, หรือ bracket notation (`obj["prop"]`) เมื่อ generated model มี property ให้ใช้
+
+```typescript
+// ✅ DO: ใช้ generated model สำหรับ signal types
+addresses = signal<EmployeeAddressResponseModel[]>([]);
+educations = signal<EmployeeEducationResponseModel[]>([]);
+
+// ❌ DON'T: ใช้ Record หรือ any
+addresses = signal<Record<string, unknown>[]>([]);   // ❌
+educations = signal<any[]>([]);                       // ❌
+```
+
+```typescript
+// ✅ DO: ใช้ dot notation + generated type สำหรับ method params
+onEditAddress(address: EmployeeAddressResponseModel, index: number): void { ... }
+
+// ❌ DON'T: ใช้ Record สำหรับ typed data
+onEditAddress(address: Record<string, unknown>, index: number): void { ... }  // ❌
+```
+
+```typescript
+// ✅ DO: เข้าถึง response properties ด้วย dot notation
+const employee = response.result;
+this.form.patchValue({
+  nationality: employee.nationality,
+  religion: employee.religion,
+  lineId: employee.lineId ?? '',
+});
+this.addresses.set(employee.addresses ?? []);
+
+// ❌ DON'T: cast แล้วใช้ bracket notation
+const r = response.result as Record<string, unknown>;
+this.form.patchValue({
+  nationality: r['nationality'],          // ❌
+  religion: r['religion'],                // ❌
+});
+this.addresses.set(r['addresses'] as any[] ?? []);  // ❌
+```
+
+```html
+<!-- ✅ DO: dot notation ใน template -->
+<td>{{ addr.houseNumber }}</td>
+<td>{{ addr.subDistrict }}</td>
+
+<!-- ❌ DON'T: bracket notation ใน template -->
+<td>{{ addr["houseNumber"] }}</td>      <!-- ❌ -->
+<td>{{ $any(addr["subDistrict"]) }}</td> <!-- ❌ -->
+```
+
+```typescript
+// ✅ DO: ส่ง body ตรงตาม generated params type (ไม่ต้อง as any)
+this.humanResourceService
+  .humanResourceUpdatePut({ employeeId: id, body })
+  .subscribe(...);
+
+// ❌ DON'T: ใช้ as any เพื่อ bypass type check
+this.humanResourceService
+  .humanResourceUpdatePut({ employeeId: id, body: body as any })  // ❌
+  .subscribe(...);
+```
+
+**ข้อยกเว้น:** กรณีที่ `as any` จำเป็น (เช่น `multipart/form-data` + flattened array keys สำหรับ ASP.NET Core `[FromForm]` binding) ต้องมี comment อธิบายเหตุผลชัดเจน
+
+### 4.2.1 Multipart/Form-Data กับ Nested Objects (Array of Objects)
+
+> **ปัญหา:** `ng-openapi-gen` สร้าง `RequestBuilder` ที่ส่ง array of objects เป็น JSON Blob — แต่ ASP.NET Core `[FromForm]` อ่าน JSON Blob ไม่ได้ ต้องส่งเป็น **indexed keys** แทน
+
+**RequestBuilder Patch (บังคับ):**
+
+ไฟล์ `request-builder.ts` เป็น generated file ที่ต้อง patch ทุกครั้งหลัง `npm run gen-api` — script `fix-api-exports.js` จะ patch ให้อัตโนมัติ
+
+```
+❌ Original (ng-openapi-gen) — ASP.NET Core อ่านไม่ได้
+FormData: Addresses = Blob('{"addressType":1,"houseNumber":"123"}')
+
+✅ Patched — ASP.NET Core [FromForm] binding ถูกต้อง
+FormData: Addresses[0].addressType = "1"
+FormData: Addresses[0].houseNumber = "123"
+FormData: Addresses[1].addressType = "2"
+```
+
+**Frontend — ส่ง nested data ใน body:**
+
+```typescript
+// ✅ DO: map signal data เข้า body ตรงตาม generated params
+const body = {
+  Title: f.title as ETitle,
+  FirstNameThai: f.firstNameThai as string,
+  // ... other fields ...
+  Addresses: this.addresses().map((a) => ({
+    addressType: a.addressType!,
+    houseNumber: a.houseNumber,
+    building: a.building,
+    // ... map ทุก field ที่ Backend request model ต้องการ
+  })),
+  Educations: this.educations().map((e) => ({
+    educationLevel: e.educationLevel!,
+    major: e.major!,
+    institution: e.institution!,
+    gpa: e.gpa,
+    graduationYear: e.graduationYear,
+  })),
+};
+
+this.humanResourceService
+  .humanResourceUpdatePut({ employeeId: id, body })
+  .subscribe(...);
+```
+
+**Backend — รับ nested data ผ่าน `[FromForm]`:**
+
+```csharp
+// Request model ต้องมี List<T> properties
+public class UpdateEmployeeRequestModel
+{
+    public string FirstNameThai { get; set; }
+    // ... other fields ...
+    public List<CreateEmployeeAddressRequestModel>? Addresses { get; set; }
+    public List<CreateEmployeeEducationRequestModel>? Educations { get; set; }
+}
+
+// Controller ใช้ [FromForm] ปกติ
+public async Task<IActionResult> Update(
+    int employeeId,
+    [FromForm] UpdateEmployeeRequestModel request,
+    IFormFile? imageFile, CancellationToken ct = default)
+```
+
+> **สำคัญ:** ถ้า `fix-api-exports.js` ไม่ได้ patch `request-builder.ts` → nested objects จะหายเงียบ (Backend ได้ `null`) โดยไม่มี error
+
+### 4.3 Facade Services (สำหรับ business logic ที่ซับซ้อน)
 
 ```typescript
 // ✅ DO: Facade service สำหรับ operations ที่ต้องประกอบหลาย API calls
@@ -442,7 +574,7 @@ export class CartFacadeService {
 }
 ```
 
-### 4.3 Singleton Services
+### 4.4 Singleton Services
 
 ```typescript
 // ✅ DO: ใช้ providedIn: 'root' สำหรับ singleton services
@@ -1444,8 +1576,9 @@ export class InventoryModule {}
 
 - [ ] Subscriptions ทุกตัวมี `takeUntilDestroyed` หรือ `takeUntil(destroy$)`
 - [ ] ไม่มี direct HttpClient — ใช้ generated services เท่านั้น
-- [ ] ไม่มี `any` type — ใช้ generated models จาก `@core/api/models/` เท่านั้น
+- [ ] ไม่มี `any`, `Record<string, unknown>`, `$any()`, bracket notation — ใช้ generated models + dot notation
 - [ ] ไม่มี custom Interface/Type ที่ generated models ครอบคลุมอยู่แล้ว
+- [ ] `npm run gen-api` รันแล้วก่อนเริ่มเขียน Frontend code
 - [ ] Success/Error แสดงผ่าน Shared Modal — ไม่ใช้ `alert()` หรือ toast อื่น
 - [ ] Search input trigger ด้วย Enter key — ไม่ใช้ debounce
 - [ ] Loading state จัดการครบถ้วน (set false ทั้ง next และ error)

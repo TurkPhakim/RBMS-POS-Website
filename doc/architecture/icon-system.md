@@ -8,10 +8,10 @@
 
 โปรเจคใช้ **2 วิธี** ในการแสดง icon:
 
-| วิธี | Component/Class | ใช้เมื่อ |
-|------|----------------|----------|
-| `<app-generic-icon>` | Custom SVG component | icon ที่ออกแบบเอง (ร้านอาหาร, ครัว, modal ฯลฯ) |
-| `<i class="pi pi-*">` | PrimeNG Icons | icon ทั่วไป (plus, search, chevron, close) |
+| วิธี                  | Component/Class      | ใช้เมื่อ                                       |
+| --------------------- | -------------------- | ---------------------------------------------- |
+| `<app-generic-icon>`  | Custom SVG component | icon ที่ออกแบบเอง (ร้านอาหาร, ครัว, modal ฯลฯ) |
+| `<i class="pi pi-*">` | PrimeNG Icons        | icon ทั่วไป (plus, search, chevron, close)     |
 
 ---
 
@@ -41,10 +41,26 @@ public/icons/                      ← SVG ไฟล์ทั้งหมด (34
 <app-generic-icon name="trash" svgClass="w-8 h-8"></app-generic-icon>
 
 <!-- กำหนดสี ผ่าน Tailwind text-* -->
-<app-generic-icon name="check" svgClass="w-8 h-8" class="text-success"></app-generic-icon>
-<app-generic-icon name="error" svgClass="w-8 h-8" class="text-danger"></app-generic-icon>
-<app-generic-icon name="warning" svgClass="w-8 h-8" class="text-warning"></app-generic-icon>
-<app-generic-icon name="hamburger" svgClass="w-6 h-6" class="text-white"></app-generic-icon>
+<app-generic-icon
+  name="check"
+  svgClass="w-8 h-8"
+  class="text-success"
+></app-generic-icon>
+<app-generic-icon
+  name="error"
+  svgClass="w-8 h-8"
+  class="text-danger"
+></app-generic-icon>
+<app-generic-icon
+  name="warning"
+  svgClass="w-8 h-8"
+  class="text-warning"
+></app-generic-icon>
+<app-generic-icon
+  name="menu-bar"
+  svgClass="w-6 h-6"
+  class="text-white"
+></app-generic-icon>
 
 <!-- Dynamic name (binding) -->
 <app-generic-icon [name]="item.icon" svgClass="w-7 h-7"></app-generic-icon>
@@ -52,9 +68,9 @@ public/icons/                      ← SVG ไฟล์ทั้งหมด (34
 
 ### @Input Properties
 
-| Input | Type | Default | คำอธิบาย |
-|-------|------|---------|----------|
-| `name` | `string` | `''` | ชื่อไฟล์ SVG (ไม่ต้องใส่ `.svg` และ path) |
+| Input      | Type     | Default     | คำอธิบาย                                     |
+| ---------- | -------- | ----------- | -------------------------------------------- |
+| `name`     | `string` | `''`        | ชื่อไฟล์ SVG (ไม่ต้องใส่ `.svg` และ path)    |
 | `svgClass` | `string` | `'w-5 h-5'` | Tailwind class สำหรับ `<svg>` element (ขนาด) |
 
 ### การเพิ่ม icon ใหม่
@@ -89,12 +105,12 @@ public/icons/                      ← SVG ไฟล์ทั้งหมด (34
 
 ### เมื่อไหร่ใช้ PrimeNG vs Custom SVG
 
-| ใช้ PrimeNG (`pi pi-*`) | ใช้ Custom SVG (`app-generic-icon`) |
-|--------------------------|--------------------------------------|
-| ลูกศร navigation (chevron) | icon เฉพาะทาง (dashboard, kitchen, orders) |
-| ปุ่ม +, -, search, close | icon ที่ออกแบบเองตาม RBMS design |
-| icon ใน PrimeNG component | icon ใน modal (check, error, warning, trash) |
-| icon เล็กๆ ใน UI control | icon หลักของหน้า/feature |
+| ใช้ PrimeNG (`pi pi-*`)    | ใช้ Custom SVG (`app-generic-icon`)          |
+| -------------------------- | -------------------------------------------- |
+| ลูกศร navigation (chevron) | icon เฉพาะทาง (dashboard, kitchen, orders)   |
+| ปุ่ม +, -, search, close   | icon ที่ออกแบบเองตาม RBMS design             |
+| icon ใน PrimeNG component  | icon ใน modal (check, error, warning, trash) |
+| icon เล็กๆ ใน UI control   | icon หลักของหน้า/feature                     |
 
 ---
 
@@ -110,42 +126,42 @@ public/icons/                      ← SVG ไฟล์ทั้งหมด (34
 
 ## รายชื่อ Icon ที่มี
 
-| ชื่อ | ใช้ที่ |
-|------|--------|
-| `admin-setting` | Sidebar — Admin Setting |
-| `arrow` | Admin Setting — navigation |
-| `bell` | Header — notification icon |
-| `cashier` | Sidebar — Payment |
-| `champagne` | (สำรอง — ยังไม่ใช้) |
-| `check` | Success Modal |
-| `chevron-down` | Header — dropdown |
-| `close` | (สำรอง — ยังไม่ใช้) |
-| `coin` | Admin Setting — Service Charge |
-| `dashboard` | Sidebar — Dashboard |
-| `empty-box` | Empty state ทุกหน้า |
-| `error` | Error/Cancel Modal |
-| `eye` / `eye-off` | Login — toggle password |
-| `food` | Menu List — placeholder รูปเมนู |
-| `hamburger` | Header — toggle sidebar |
-| `home` | (สำรอง — ยังไม่ใช้) |
-| `human` | Employee — empty state |
-| `human-resource` | Sidebar — HR |
-| `image-preview` | Menu Manage, Shop Settings — image upload placeholder |
-| `kitchen` | Sidebar — Kitchen Display |
-| `knife-fork` | Sidebar — collapsed logo |
-| `lock` | Login — password field |
-| `login` | Login — submit button, Header — login option |
-| `logout` | Header — logout |
-| `menu-restaurant` | Sidebar — Menu |
-| `notification-bell` | (สำรอง — ใช้ `bell` แทน) |
-| `orders` | Sidebar — Order |
-| `pen-edit` | Table action — แก้ไข (position-list, menu-list, employee, image-upload-card) |
-| `profile` | Header — profile menu |
-| `table` | Sidebar — Table |
-| `trash` | Confirm Modal — delete |
-| `user` | Login — username field |
-| `warning` | Confirm Modal — warning |
-| `web-setting` | Admin Setting — header |
+| ชื่อ                | ใช้ที่                                                                       |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `admin-setting`     | Sidebar — Admin Setting                                                      |
+| `arrow`             | Admin Setting — navigation                                                   |
+| `bell`              | Header — notification icon                                                   |
+| `cashier`           | Sidebar — Payment                                                            |
+| `champagne`         | (สำรอง — ยังไม่ใช้)                                                          |
+| `check`             | Success Modal                                                                |
+| `chevron-down`      | Header — dropdown                                                            |
+| `close`             | (สำรอง — ยังไม่ใช้)                                                          |
+| `coin`              | Admin Setting — Service Charge                                               |
+| `dashboard`         | Sidebar — Dashboard                                                          |
+| `empty-box`         | Empty state ทุกหน้า                                                          |
+| `error`             | Error/Cancel Modal                                                           |
+| `eye` / `eye-off`   | Login — toggle password                                                      |
+| `food`              | Menu List — placeholder รูปเมนู                                              |
+| `menu-bar`          | Header — toggle sidebar                                                      |
+| `home`              | (สำรอง — ยังไม่ใช้)                                                          |
+| `human`             | Employee — empty state                                                       |
+| `human-resource`    | Sidebar — HR                                                                 |
+| `image-preview`     | Menu Manage, Shop Settings — image upload placeholder                        |
+| `kitchen`           | Sidebar — Kitchen Display                                                    |
+| `knife-fork`        | Sidebar — collapsed logo                                                     |
+| `lock`              | Login — password field                                                       |
+| `login`             | Login — submit button, Header — login option                                 |
+| `logout`            | Header — logout                                                              |
+| `menu-restaurant`   | Sidebar — Menu                                                               |
+| `notification-bell` | (สำรอง — ใช้ `bell` แทน)                                                     |
+| `orders`            | Sidebar — Order                                                              |
+| `pen-edit`          | Table action — แก้ไข (position-list, menu-list, employee, image-upload-card) |
+| `profile`           | Header — profile menu                                                        |
+| `table`             | Sidebar — Table                                                              |
+| `trash`             | Confirm Modal — delete                                                       |
+| `user`              | Login — username field                                                       |
+| `warning`           | Confirm Modal — warning                                                      |
+| `web-setting`       | Admin Setting — header                                                       |
 
 ---
 

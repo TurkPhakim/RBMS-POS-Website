@@ -59,6 +59,20 @@ public class AuthService : IAuthService
         if (user.LockedUntil.HasValue && user.LockedUntil > DateTime.UtcNow)
             throw new AccountLockedException(user.LockedUntil.Value);
 
+        if (user.IsLockedByAdmin)
+        {
+            if (user.AutoUnlockDate.HasValue && user.AutoUnlockDate <= DateTime.UtcNow)
+            {
+                user.IsLockedByAdmin = false;
+                user.AutoUnlockDate = null;
+                await _unitOfWork.CommitAsync(ct);
+            }
+            else
+            {
+                throw new AccountLockedByAdminException(user.AutoUnlockDate);
+            }
+        }
+
         if (!user.IsActive)
             throw new AccountDisabledException();
 
@@ -173,6 +187,9 @@ public class AuthService : IAuthService
 
         if (!user.IsActive)
             throw new BusinessException("บัญชีนี้ถูกระงับ กรุณาติดต่อผู้ดูแลระบบ");
+
+        if (user.IsLockedByAdmin)
+            throw new AccountLockedByAdminException(user.AutoUnlockDate);
 
         // Invalidate OTP เก่าทั้งหมด
         await _unitOfWork.PasswordResetTokens.InvalidateAllByUserIdAsync(user.UserId, ct);
@@ -315,6 +332,49 @@ public class AuthService : IAuthService
             user.Email, employeeName, "RBMS POS - รหัสผ่านของคุณถูกเปลี่ยนเรียบร้อยแล้ว", confirmHtml, ct);
     }
 
+    public async Task ChangePasswordAsync(Guid userId, ChangePasswordRequestModel request, CancellationToken ct = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, ct)
+            ?? throw new EntityNotFoundException("User", userId);
+
+        // ตรวจสอบรหัสผ่านเก่า
+        if (!_passwordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            throw new InvalidCredentialsException("รหัสผ่านเก่าไม่ถูกต้อง");
+
+        // ตรวจสอบ password policy
+        ValidatePasswordPolicy(request.NewPassword, user.Username);
+
+        // ตรวจสอบว่ารหัสใหม่ไม่ซ้ำกับรหัสปัจจุบัน
+        if (_passwordHasher.VerifyPassword(request.NewPassword, user.PasswordHash))
+            throw new ValidationException("รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่านปัจจุบัน");
+
+        // ตรวจสอบ password history (ห้ามซ้ำ 3 รหัสล่าสุด)
+        var recentPasswords = await _unitOfWork.PasswordHistory.GetRecentByUserIdAsync(
+            user.UserId, PasswordHistoryCount, ct);
+
+        foreach (var history in recentPasswords)
+        {
+            if (_passwordHasher.VerifyPassword(request.NewPassword, history.PasswordHash))
+                throw new ValidationException("รหัสผ่านใหม่ต้องไม่ซ้ำกับรหัสผ่าน 3 ครั้งล่าสุด");
+        }
+
+        // บันทึก password เก่าลง history
+        await _unitOfWork.PasswordHistory.AddAsync(new TbPasswordHistory
+        {
+            UserId = user.UserId,
+            PasswordHash = user.PasswordHash,
+            CreatedAt = DateTime.UtcNow
+        }, ct);
+
+        // อัพเดตรหัสผ่านใหม่
+        user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+        user.LastPasswordChangedDate = DateTime.UtcNow;
+
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Password changed by user: {UserId}", userId);
+    }
+
     public async Task<bool> VerifyPasswordAsync(Guid userId, string password, CancellationToken ct = default)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(userId, ct);
@@ -326,6 +386,69 @@ public class AuthService : IAuthService
             throw new InvalidCredentialsException("รหัสผ่านไม่ถูกต้อง");
 
         return true;
+    }
+
+    // ========================
+    // PIN Code
+    // ========================
+
+    public async Task SetupPinAsync(Guid userId, string pinCode, CancellationToken ct = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, ct)
+            ?? throw new EntityNotFoundException("User", userId);
+
+        if (!string.IsNullOrEmpty(user.PinCodeHash))
+            throw new BusinessException("มี PIN อยู่แล้ว กรุณาใช้เปลี่ยน PIN แทน");
+
+        user.PinCodeHash = _passwordHasher.HashPassword(pinCode);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("PIN setup completed: {UserId}", userId);
+    }
+
+    public async Task ChangePinAsync(Guid userId, string currentPinCode, string newPinCode, CancellationToken ct = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, ct)
+            ?? throw new EntityNotFoundException("User", userId);
+
+        if (string.IsNullOrEmpty(user.PinCodeHash))
+            throw new BusinessException("ยังไม่มี PIN กรุณาตั้ง PIN ก่อน");
+
+        if (!_passwordHasher.VerifyPassword(currentPinCode, user.PinCodeHash))
+            throw new InvalidCredentialsException("รหัส PIN ปัจจุบันไม่ถูกต้อง");
+
+        user.PinCodeHash = _passwordHasher.HashPassword(newPinCode);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("PIN changed: {UserId}", userId);
+    }
+
+    public async Task<bool> VerifyPinAsync(Guid userId, string pinCode, CancellationToken ct = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, ct)
+            ?? throw new EntityNotFoundException("User", userId);
+
+        if (string.IsNullOrEmpty(user.PinCodeHash))
+            throw new BusinessException("ยังไม่มี PIN กรุณาตั้ง PIN ก่อน");
+
+        if (!_passwordHasher.VerifyPassword(pinCode, user.PinCodeHash))
+            throw new InvalidCredentialsException("รหัส PIN ไม่ถูกต้อง");
+
+        return true;
+    }
+
+    public async Task ResetPinAsync(Guid userId, string password, CancellationToken ct = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, ct)
+            ?? throw new EntityNotFoundException("User", userId);
+
+        if (!_passwordHasher.VerifyPassword(password, user.PasswordHash))
+            throw new InvalidCredentialsException("รหัสผ่านไม่ถูกต้อง");
+
+        user.PinCodeHash = null;
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("PIN reset via password: {UserId}", userId);
     }
 
     // ========================

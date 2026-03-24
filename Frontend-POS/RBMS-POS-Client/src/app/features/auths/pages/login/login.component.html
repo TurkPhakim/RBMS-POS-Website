@@ -173,10 +173,7 @@
             >
               <!-- Username -->
               <div>
-                <label
-                  for="username"
-                  class="block text-lg font-semibold text-surface-dark mb-2"
-                >
+                <label for="username" class="block text-lg font-semibold mb-2">
                   Username
                 </label>
                 <div class="relative">
@@ -184,7 +181,7 @@
                     class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-primary"
                   >
                     <app-generic-icon
-                      name="user"
+                      name="avatar-default"
                       svgClass="w-6 h-6"
                     ></app-generic-icon>
                   </div>
@@ -194,17 +191,14 @@
                     formControlName="username"
                     placeholder="๊Username"
                     autocomplete="username"
-                    class="block w-full pl-11 pr-4 py-3.5 border border-surface-border rounded-lg text-base placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    class="block w-full pl-11 pr-4 py-3.5 border border-surface-border rounded-lg placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   />
                 </div>
               </div>
 
               <!-- Password -->
               <div>
-                <label
-                  for="password"
-                  class="block text-lg font-semibold text-surface-dark mb-2"
-                >
+                <label for="password" class="block text-lg font-semibold mb-2">
                   Password
                 </label>
                 <div class="relative">
@@ -222,7 +216,7 @@
                     formControlName="password"
                     placeholder="Password"
                     autocomplete="current-password"
-                    class="block w-full pl-11 pr-11 py-3.5 border border-surface-border rounded-lg text-base placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                    class="block w-full pl-11 pr-11 py-3.5 border border-surface-border rounded-lg placeholder-surface-sub focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   />
                   <button
                     type="button"
@@ -249,13 +243,13 @@
                 <button
                   type="button"
                   (click)="onForgotPassword()"
-                  class="text-md text-primary hover:text-primary-dark transition-colors font-medium"
+                  class="text-primary hover:text-primary-dark transition-colors font-medium"
                 >
                   ลืมรหัสผ่าน?
                 </button>
               </div>
 
-              <!-- reCAPTCHA — แสดงเมื่อกรอก username + password แล้ว -->
+              <!-- reCAPTCHA — จะแสดงเมื่อกรอก username + password แล้ว -->
               @if (showCaptcha()) {
                 <div class="w-full overflow-hidden" style="height: 115px">
                   <div

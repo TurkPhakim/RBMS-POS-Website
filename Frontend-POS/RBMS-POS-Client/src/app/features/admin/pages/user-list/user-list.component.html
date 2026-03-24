@@ -1,0 +1,225 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="user-octagon"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">รายชื่อผู้ใช้งาน</h1>
+  </div>
+
+  <!-- Content (Search + Table รวมกัน) -->
+  <div class="bg-surface-card rounded-lg">
+    <!-- Filter Section -->
+    <div class="p-4">
+      <div class="flex flex-wrap items-end gap-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block font-semibold mb-2">ค้นหา</label>
+          <div class="relative">
+            <p-iconField>
+              <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+              <input
+                pInputText
+                type="text"
+                placeholder="ค้นหาด้วยชื่อ-นามสกุล หรือ Username"
+                class="w-full pr-8"
+                [(ngModel)]="searchTerm"
+                (keyup.enter)="onFilterChange()"
+              />
+            </p-iconField>
+            @if (searchTerm) {
+              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                 (click)="searchTerm = ''; onFilterChange()"></i>
+            }
+          </div>
+        </div>
+
+        <!-- Position Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">ตำแหน่ง</label>
+          <app-position-dropdown
+            [(ngModel)]="positionFilter"
+            (ngModelChange)="onFilterChange()"
+            [showClear]="true"
+          ></app-position-dropdown>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">สถานะบัญชีผู้ใช้งาน</label>
+          <app-user-status-dropdown
+            [(ngModel)]="statusFilter"
+            (ngModelChange)="onFilterChange()"
+          ></app-user-status-dropdown>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="px-4 pb-4">
+      <p-table
+        [value]="users()"
+        [stripedRows]="true"
+        [tableStyle]="{ 'min-width': '70rem' }"
+        [scrollable]="true"
+        [paginator]="true"
+        [rows]="rows"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        styleClass="p-datatable-clean"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="w-[100px]">Username</th>
+            <th style="min-width: 140px; width: 140px">รูปภาพ</th>
+            <th class="w-[200px]">ชื่อ-นามสกุล</th>
+            <th class="w-[120px]">ตำแหน่ง</th>
+            <th class="w-[200px]">อีเมล</th>
+            <th class="w-[200px]">เบอร์โทร</th>
+            <th class="w-[120px]">สถานะ</th>
+            <th class="w-[160px] whitespace-nowrap">เข้าสู่ระบบล่าสุด</th>
+            <th class="w-[100px] text-center whitespace-nowrap">ตัวเลือก</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <!-- Username -->
+            <td class="font-semibold whitespace-nowrap">
+              {{ item.username }}
+            </td>
+
+            <!-- รูปภาพ -->
+            <td class="!text-center">
+              <div class="flex justify-center">
+                @if (item.imageFileId) {
+                  <img
+                    [src]="getImageUrl(item.imageFileId)"
+                    [alt]="item.fullNameThai || 'ผู้ใช้งาน'"
+                    class="h-16 w-16 rounded-full object-cover"
+                  />
+                } @else {
+                  <div
+                    class="h-16 w-16 rounded-full bg-surface-border flex items-center justify-center"
+                  >
+                    <app-generic-icon
+                      name="human"
+                      svgClass="w-9 h-9"
+                      class="text-surface-sub opacity-50"
+                    ></app-generic-icon>
+                  </div>
+                }
+              </div>
+            </td>
+
+            <!-- ชื่อ-นามสกุล -->
+            <td class="whitespace-nowrap">
+              <div class="font-semibold">
+                {{ item.fullNameThai || "-" }}
+              </div>
+              <div class="text-surface-sub mt-1">
+                {{ item.fullNameEnglish || "" }}
+              </div>
+            </td>
+
+            <!-- ตำแหน่ง -->
+            <td class="whitespace-nowrap">
+              {{ item.positionName || "-" }}
+            </td>
+
+            <!-- อีเมล -->
+            <td class="whitespace-nowrap">{{ item.email }}</td>
+
+            <!-- เบอร์โทร -->
+            <td class="whitespace-nowrap">
+              {{ item.phone ? (item.phone | formatPhone) : "-" }}
+            </td>
+
+            <!-- สถานะ -->
+            <td class="!text-center">
+              @if (item.isLockedByAdmin) {
+                <span class="font-bold text-warning">Locked</span>
+              } @else if (item.isActive) {
+                <span class="font-bold text-primary">Active</span>
+              } @else {
+                <span class="font-bold text-danger">Inactive</span>
+              }
+            </td>
+
+            <!-- เข้าสู่ระบบล่าสุด -->
+            <td>
+              <span
+                class="whitespace-nowrap"
+                [ngClass]="
+                  item.lastLoginDate ? 'text-surface-sub' : 'text-danger'
+                "
+              >
+                {{
+                  item.lastLoginDate
+                    ? (item.lastLoginDate | dateFormat)
+                    : "ยังไม่เคยเข้าสู่ระบบ"
+                }}
+              </span>
+            </td>
+
+            <!-- ตัวเลือก -->
+            <td class="text-center">
+              <div class="flex justify-center gap-2">
+                @if (item.failedLoginAttempts >= 3 && canUpdate) {
+                  <button
+                    (click)="
+                      onResetLoginAttempts(
+                        item.userId,
+                        item.fullNameThai || item.username
+                      )
+                    "
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-warning text-white"
+                    pTooltip="ปลดล็อค"
+                    tooltipPosition="top"
+                  >
+                    <app-generic-icon
+                      name="unlock"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
+
+                <button
+                  (click)="onEdit(item.userId)"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                  pTooltip="ดู/แก้ไข"
+                  tooltipPosition="top"
+                >
+                  <app-generic-icon
+                    name="eye"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่พบข้อมูลผู้ใช้งาน" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

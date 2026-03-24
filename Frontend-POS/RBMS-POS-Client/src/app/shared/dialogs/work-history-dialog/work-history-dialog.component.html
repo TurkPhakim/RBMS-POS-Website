@@ -1,11 +1,10 @@
 <app-card-template
   [headerLabel]="config.header!"
-  headerLabelClass="text-xl font-semibold text-primary-dark"
 >
   <form [formGroup]="form" class="grid grid-cols-3 gap-x-4 gap-y-3">
     <!-- สถานที่ทำงาน -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >สถานที่ทำงาน <span class="text-danger">*</span></label
       >
       <input
@@ -19,7 +18,7 @@
 
     <!-- ตำแหน่งงาน -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >ตำแหน่งงาน <span class="text-danger">*</span></label
       >
       <input
@@ -33,7 +32,7 @@
 
     <!-- เบอร์โทรศัพท์ที่ทำงาน -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >เบอร์โทรศัพท์ที่ทำงาน</label
       >
       <input
@@ -41,12 +40,15 @@
         formControlName="workPhone"
         class="w-full"
         placeholder="เบอร์โทรศัพท์ที่ทำงาน"
+        maxlength="10"
+        (keypress)="'0123456789'.includes($event.key)"
+        (paste)="$event.preventDefault()"
       />
     </div>
 
     <!-- วันที่เริ่มทำงาน -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >วันที่เริ่มทำงาน <span class="text-danger">*</span></label
       >
       <p-datepicker
@@ -64,7 +66,7 @@
 
     <!-- วันที่สิ้นสุดทำงาน -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >วันที่สิ้นสุดทำงาน</label
       >
       <p-datepicker

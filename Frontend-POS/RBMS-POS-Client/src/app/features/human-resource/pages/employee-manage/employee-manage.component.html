@@ -2,15 +2,15 @@
   <!-- Page Header -->
   <div class="flex items-center gap-3">
     <div
-      class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center"
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
     >
       <app-generic-icon
         name="human-resource"
-        svgClass="w-8 h-8"
+        svgClass="w-10 h-10"
         class="text-white"
       ></app-generic-icon>
     </div>
-    <h1 class="text-3xl font-extrabold tracking-tight text-primary">
+    <h1 class="text-page-title">
       {{ isEditMode() ? "แก้ไขข้อมูลพนักงาน" : "เพิ่มข้อมูลพนักงาน" }}
     </h1>
   </div>
@@ -35,7 +35,7 @@
     >
       <!-- คำนำหน้าชื่อ -->
       <div>
-        <label for="title" class="block font-semibold text-surface-dark mb-2">
+        <label for="title" class="block font-semibold mb-2">
           คำนำหน้าชื่อ <span class="text-danger">*</span>
         </label>
         <app-title-dropdown formControlName="title"></app-title-dropdown>
@@ -44,10 +44,7 @@
 
       <!-- ชื่อเล่น -->
       <div>
-        <label
-          for="nickname"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="nickname" class="block font-semibold mb-2">
           ชื่อเล่น <span class="text-danger">*</span>
         </label>
         <input
@@ -63,10 +60,7 @@
 
       <!-- ชื่อ (ไทย) -->
       <div>
-        <label
-          for="firstNameThai"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="firstNameThai" class="block font-semibold mb-2">
           ชื่อ (ภาษาไทย) <span class="text-danger">*</span>
         </label>
         <input
@@ -82,10 +76,7 @@
 
       <!-- นามสกุล (ไทย) -->
       <div>
-        <label
-          for="lastNameThai"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="lastNameThai" class="block font-semibold mb-2">
           นามสกุล (ภาษาไทย) <span class="text-danger">*</span>
         </label>
         <input
@@ -101,10 +92,7 @@
 
       <!-- ชื่อ (อังกฤษ) -->
       <div>
-        <label
-          for="firstNameEnglish"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="firstNameEnglish" class="block font-semibold mb-2">
           ชื่อ (ภาษาอังกฤษ) <span class="text-danger">*</span>
         </label>
         <input
@@ -120,10 +108,7 @@
 
       <!-- นามสกุล (อังกฤษ) -->
       <div>
-        <label
-          for="lastNameEnglish"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="lastNameEnglish" class="block font-semibold mb-2">
           นามสกุล (ภาษาอังกฤษ) <span class="text-danger">*</span>
         </label>
         <input
@@ -139,7 +124,7 @@
 
       <!-- เพศ -->
       <div>
-        <label for="gender" class="block font-semibold text-surface-dark mb-2">
+        <label for="gender" class="block font-semibold mb-2">
           เพศ <span class="text-danger">*</span>
         </label>
         <app-gender-dropdown formControlName="gender"></app-gender-dropdown>
@@ -148,10 +133,7 @@
 
       <!-- เลขประจำตัวประชาชน -->
       <div>
-        <label
-          for="nationalId"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="nationalId" class="block font-semibold mb-2">
           เลขประจำตัวประชาชน <span class="text-danger">*</span>
         </label>
         <input
@@ -163,16 +145,15 @@
           maxlength="13"
           class="w-full"
           (blur)="checkDuplicate('nationalId')"
+          (keypress)="'0123456789'.includes($event.key)"
+          (paste)="$event.preventDefault()"
         />
         <app-field-error [control]="form.get('nationalId')" type="text" />
       </div>
 
       <!-- วัน/เดือน/ปี เกิด -->
       <div>
-        <label
-          for="dateOfBirth"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="dateOfBirth" class="block font-semibold mb-2">
           วัน/เดือน/ปี เกิด <span class="text-danger">*</span>
         </label>
         <p-datepicker
@@ -186,9 +167,7 @@
 
       <!-- อายุ -->
       <div>
-        <label for="age" class="block font-semibold text-surface-dark mb-2"
-          >อายุ</label
-        >
+        <label for="age" class="block font-semibold mb-2">อายุ</label>
         <input
           id="age"
           type="text"
@@ -202,7 +181,7 @@
 
       <!-- สัญชาติ -->
       <div>
-        <label class="block font-semibold text-surface-dark mb-2">
+        <label class="block font-semibold mb-2">
           สัญชาติ <span class="text-danger">*</span>
         </label>
         <app-nationality-dropdown
@@ -213,7 +192,7 @@
 
       <!-- ศาสนา -->
       <div>
-        <label class="block font-semibold text-surface-dark mb-2">
+        <label class="block font-semibold mb-2">
           ศาสนา <span class="text-danger">*</span>
         </label>
         <app-religion-dropdown
@@ -224,7 +203,7 @@
 
       <!-- Line ID -->
       <div>
-        <label for="lineId" class="block font-semibold text-surface-dark mb-2">
+        <label for="lineId" class="block font-semibold mb-2">
           Line ID <span class="text-danger">*</span>
         </label>
         <input
@@ -240,7 +219,7 @@
 
       <!-- สถานะการใช้งาน -->
       <div>
-        <label for="isActive" class="block font-semibold text-surface-dark mb-2"
+        <label for="isActive" class="block font-semibold mb-2"
           >สถานะการใช้งาน</label
         >
         <div class="flex items-center gap-3 pt-2">
@@ -249,7 +228,7 @@
             inputId="isActive"
           ></p-inputSwitch>
           <span
-            class="font-semibold"
+            class="font-semibold mb-2"
             [class]="
               form.get('isActive')?.value ? 'text-success' : 'text-danger'
             "
@@ -267,10 +246,10 @@
       headerIcon="employee-id"
       contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
-      <!-- ตำแหน่งงาน -->
+      <!-- ตำแหน่ง -->
       <div>
-        <label class="block font-semibold text-surface-dark mb-2">
-          ตำแหน่งงาน<span class="text-danger">*</span>
+        <label class="block font-semibold mb-2">
+          ตำแหน่ง <span class="text-danger">*</span>
         </label>
         <app-position-dropdown
           formControlName="positionId"
@@ -281,9 +260,7 @@
 
       <!-- ประเภทการจ้างงาน -->
       <div>
-        <label class="block font-semibold text-surface-dark mb-2"
-          >ประเภทการจ้างงาน</label
-        >
+        <label class="block font-semibold mb-2">ประเภทการจ้างงาน</label>
         <div class="flex gap-6 h-[2.6rem] items-center">
           <div class="flex items-center gap-2">
             <p-radioButton
@@ -291,9 +268,7 @@
               [value]="true"
               inputId="fullTime"
             ></p-radioButton>
-            <label
-              for="fullTime"
-              class="cursor-pointer font-medium text-surface-dark"
+            <label for="fullTime" class="cursor-pointer font-medium"
               >Full-Time</label
             >
           </div>
@@ -303,9 +278,7 @@
               [value]="false"
               inputId="partTime"
             ></p-radioButton>
-            <label
-              for="partTime"
-              class="cursor-pointer font-medium text-surface-dark"
+            <label for="partTime" class="cursor-pointer font-medium"
               >Part-Time</label
             >
           </div>
@@ -314,10 +287,7 @@
 
       <!-- วันที่เริ่มทำงาน -->
       <div>
-        <label
-          for="startDate"
-          class="block font-semibold text-surface-dark mb-2"
-        >
+        <label for="startDate" class="block font-semibold mb-2">
           วันที่เริ่มทำงาน <span class="text-danger">*</span>
         </label>
         <p-datepicker
@@ -331,7 +301,7 @@
 
       <!-- วันที่สิ้นสุดการทำงาน -->
       <div>
-        <label for="endDate" class="block font-semibold text-surface-dark mb-2"
+        <label for="endDate" class="block font-semibold mb-2"
           >วันที่สิ้นสุดการทำงาน</label
         >
         <p-datepicker
@@ -339,6 +309,7 @@
           dateFormat="dd/mm/yy"
           placeholder="วันที่สิ้นสุดการทำงาน"
           [minDate]="minEndDate()"
+          [showClear]="true"
           styleClass="w-full"
         />
       </div>
@@ -346,9 +317,7 @@
       <!-- เงินเดือน / ค่าจ้าง -->
       @if (form.get("isFullTime")?.value === true) {
         <div>
-          <label for="salary" class="block font-semibold text-surface-dark mb-2"
-            >เงินเดือน</label
-          >
+          <label for="salary" class="block font-semibold mb-2">เงินเดือน</label>
           <p-inputgroup>
             <p-inputNumber
               inputId="salary"
@@ -365,9 +334,7 @@
 
       @if (form.get("isFullTime")?.value === false) {
         <div>
-          <label
-            for="hourlyRate"
-            class="block font-semibold text-surface-dark mb-2"
+          <label for="hourlyRate" class="block font-semibold mb-2"
             >ค่าจ้างรายชั่วโมง</label
           >
           <p-inputgroup>
@@ -386,7 +353,7 @@
 
       <!-- บัญชีธนาคาร -->
       <div>
-        <label for="bankName" class="block font-semibold text-surface-dark mb-2"
+        <label for="bankName" class="block font-semibold mb-2"
           >บัญชีธนาคาร</label
         >
         <input
@@ -401,9 +368,7 @@
 
       <!-- เลขที่บัญชี -->
       <div>
-        <label
-          for="bankAccountNumber"
-          class="block font-semibold text-surface-dark mb-2"
+        <label for="bankAccountNumber" class="block font-semibold mb-2"
           >เลขที่บัญชี</label
         >
         <input
@@ -414,6 +379,8 @@
           placeholder="เลขที่บัญชี"
           maxlength="20"
           class="w-full"
+          (keypress)="'0123456789'.includes($event.key)"
+          (paste)="$event.preventDefault()"
         />
       </div>
     </app-section-card>
@@ -426,7 +393,7 @@
     >
       <!-- อีเมล -->
       <div>
-        <label for="email" class="block font-semibold text-surface-dark mb-2">
+        <label for="email" class="block font-semibold mb-2">
           อีเมล <span class="text-danger">*</span>
         </label>
         <input
@@ -443,7 +410,7 @@
 
       <!-- เบอร์โทรศัพท์ -->
       <div>
-        <label for="phone" class="block font-semibold text-surface-dark mb-2">
+        <label for="phone" class="block font-semibold mb-2">
           เบอร์โทรศัพท์ <span class="text-danger">*</span>
         </label>
         <input
@@ -454,6 +421,8 @@
           placeholder="เบอร์โทรศัพท์"
           class="w-full"
           maxlength="10"
+          (keypress)="'0123456789'.includes($event.key)"
+          (paste)="$event.preventDefault()"
         />
         <app-field-error [control]="form.get('phone')" type="text" />
       </div>
@@ -493,31 +462,31 @@
                 <div>
                   <span
                     class="px-3 py-2 rounded-full bg-primary text-white font-semibold opacity-80"
-                    >{{ getAddressTypeLabel($any(addr["addressType"])) }}</span
+                    >{{ getAddressTypeLabel(addr.addressType!) }}</span
                   >
-                  <p class="text-surface-dark text-lg mt-4">
-                    เลขที่ {{ addr["houseNumber"] }}
-                    @if (addr["building"]) {
-                      {{ addr["building"] }}
+                  <p class="text-lg mt-4">
+                    เลขที่ {{ addr.houseNumber }}
+                    @if (addr.building) {
+                      {{ addr.building }}
                     }
-                    @if (addr["moo"]) {
-                      หมู่ {{ addr["moo"] }}
+                    @if (addr.moo) {
+                      หมู่ {{ addr.moo }}
                     }
-                    @if (addr["soi"]) {
-                      ซอย {{ addr["soi"] }}
+                    @if (addr.soi) {
+                      ซอย {{ addr.soi }}
                     }
-                    @if (addr["yaek"]) {
-                      แยก {{ addr["yaek"] }}
+                    @if (addr.yaek) {
+                      แยก {{ addr.yaek }}
                     }
-                    @if (addr["road"]) {
-                      ถนน {{ addr["road"] }}
+                    @if (addr.road) {
+                      ถนน {{ addr.road }}
                     }
                   </p>
                   <p class="text-surface-sub text-lg mt-1">
-                    {{ addr["subDistrict"] }}
-                    {{ addr["district"] }}
-                    {{ addr["province"] }}
-                    {{ addr["postalCode"] }}
+                    {{ addr.subDistrict }}
+                    {{ addr.district }}
+                    {{ addr.province }}
+                    {{ addr.postalCode }}
                   </p>
                 </div>
               </div>
@@ -587,26 +556,26 @@
                   ></app-generic-icon>
                 </div>
                 <div class="gap-1 flex flex-col">
-                  <p class="font-bold text-surface-dark text-xl leading-tight">
-                    {{ edu["institution"] }}
+                  <p class="font-bold text-xl leading-tight">
+                    {{ edu.institution }}
                   </p>
-                  <p class="text-surface-dark text-lg">
-                    {{ edu["educationLevel"] }}
+                  <p class="text-lg">
+                    {{ edu.educationLevel }}
                   </p>
                   <div class="flex items-center gap-2">
                     <p class="text-surface-sub text-lg">
-                      สาขาวิชา {{ edu["major"] }}
+                      สาขาวิชา {{ edu.major }}
                     </p>
-                    @if (edu["gpa"]) {
+                    @if (edu.gpa) {
                       <span
                         class="px-3 py-1 rounded-full bg-primary-subtle text-primary font-semibold"
-                        >GPA {{ edu["gpa"] }}</span
+                        >GPA {{ edu.gpa }}</span
                       >
                     }
                   </div>
-                  @if (edu["graduationYear"]) {
+                  @if (edu.graduationYear) {
                     <p class="text-surface-sub text-lg">
-                      ปีที่จบการศึกษา {{ edu["graduationYear"] }}
+                      ปีที่จบการศึกษา {{ edu.graduationYear }}
                     </p>
                   }
                 </div>
@@ -677,22 +646,20 @@
                   ></app-generic-icon>
                 </div>
                 <div class="gap-1 flex flex-col">
-                  <p class="font-bold text-surface-dark text-xl leading-tight">
-                    {{ wh["workplace"] }}
+                  <p class="font-bold text-xl leading-tight">
+                    {{ wh.workplace }}
                   </p>
-                  <p class="text-surface-dark text-lg">
-                    ตำแหน่ง {{ wh["position"] }}
-                  </p>
-                  @if (wh["workPhone"]) {
+                  <p class="text-lg">ตำแหน่ง {{ wh.position }}</p>
+                  @if (wh.workPhone) {
                     <p class="text-surface-sub text-lg">
-                      เบอร์โทร {{ $any(wh["workPhone"]) | formatPhone }}
+                      เบอร์โทร {{ wh.workPhone | formatPhone }}
                     </p>
                   }
                   <div class="flex items-center gap-2 flex-wrap">
                     <p class="text-surface-sub text-lg">
-                      ช่วงเวลาทำงาน {{ $any(wh["startDate"]) | dateFormat }} -
-                      @if (wh["endDate"]) {
-                        {{ $any(wh["endDate"]) | dateFormat }}
+                      ช่วงเวลาทำงาน {{ wh.startDate | dateFormat }} -
+                      @if (wh.endDate) {
+                        {{ wh.endDate | dateFormat }}
                       } @else {
                         ปัจจุบัน
                       }
@@ -700,9 +667,7 @@
                     <span
                       class="px-3 py-1 rounded-full bg-primary-subtle text-primary font-semibold"
                       >ระยะเวลา
-                      {{
-                        getWorkDuration(wh["startDate"], wh["endDate"])
-                      }}</span
+                      {{ getWorkDuration(wh.startDate, wh.endDate) }}</span
                     >
                   </div>
                 </div>

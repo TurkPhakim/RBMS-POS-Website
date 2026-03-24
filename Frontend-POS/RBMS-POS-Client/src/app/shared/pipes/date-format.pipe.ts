@@ -1,17 +1,16 @@
 import { Pipe, PipeTransform } from '@angular/core';
-
-type DateFormatMode = 'DATE' | 'TIME' | 'DATE_TIME' | 'MONTH' | 'DAY' | 'thLongDate';
-
-const TH_MONTHS = [
-  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
-];
-
-const TH_DAYS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+import {
+  DateFormatMode,
+  TH_DAYS,
+  TH_MONTHS,
+} from '@app/shared/component-interfaces';
 
 @Pipe({ name: 'dateFormat', standalone: false })
 export class DateFormatPipe implements PipeTransform {
-  transform(value: string | Date | null | undefined, mode: DateFormatMode = 'DATE'): string {
+  transform(
+    value: string | Date | null | undefined,
+    mode: DateFormatMode = 'DATE',
+  ): string {
     if (!value) return '';
 
     const date = typeof value === 'string' ? new Date(value) : value;

@@ -6,7 +6,7 @@ namespace POS.Main.Business.Authorization.Interfaces;
 
 public interface IPositionService
 {
-    Task<PaginationResult<PositionResponseModel>> GetPositionsAsync(PaginationModel param, CancellationToken ct = default);
+    Task<PaginationResult<PositionResponseModel>> GetPositionsAsync(PaginationModel param, bool? isActive = null, CancellationToken ct = default);
     Task<PositionResponseModel> GetPositionByIdAsync(int positionId, CancellationToken ct = default);
     Task<PositionResponseModel> CreatePositionAsync(CreatePositionRequestModel request, CancellationToken ct = default);
     Task<PositionResponseModel> UpdatePositionAsync(int positionId, UpdatePositionRequestModel request, CancellationToken ct = default);

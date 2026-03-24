@@ -12,7 +12,7 @@ import { Component, Input } from '@angular/core';
         svgClass="w-24 h-24"
         class="text-primary opacity-80"
       ></app-generic-icon>
-      <p class="text-xl font-semibold text-surface-dark">{{ message }}</p>
+      <p class="text-xl font-semibold">{{ message }}</p>
       @if (detail) {
         <p class="text-center">{{ detail }}</p>
       }

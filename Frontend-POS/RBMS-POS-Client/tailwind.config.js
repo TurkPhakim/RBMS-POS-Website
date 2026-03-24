@@ -21,6 +21,7 @@ module.exports = {
         // ใช้: bg-surface, bg-surface-card, text-surface-dark, bg-sidebar
         surface: {
           DEFAULT: "var(--color-surface)",          // #f8fafc — page background
+          hover:   "#eef2f7",                       // เข้มกว่า page bg เล็กน้อย (placeholder bg)
           card:    "var(--color-surface-card)",     // #ffffff — card / table body
           border:  "var(--color-surface-border)",   // #e2e8f0 — divider / border
           muted:   "var(--color-surface-muted)",    // #cbd5e1 — disabled element
@@ -33,6 +34,7 @@ module.exports = {
         // ใช้: bg-success, text-success, bg-success-bg ฯลฯ
         success: {
           DEFAULT: "var(--color-success)",          // #14b8a6 — teal active/available
+          dark:    "var(--color-success-dark)",     // #0d9488 — darker teal
           bg:      "var(--color-success-bg)",       // #ccfbf1 — badge background
           text:    "var(--color-success-text)",     // #0f766e — badge text
         },
@@ -45,6 +47,14 @@ module.exports = {
           DEFAULT: "var(--color-warning)",          // #fbbf24 — pending
           bg:      "var(--color-warning-bg)",       // #fef3c7 — badge background
           dark:    "var(--color-warning-dark)",     // #d97706 — hover
+        },
+        info: {
+          DEFAULT: "var(--color-info)",             // #3B82F6 — blue info / digital
+          bg:      "var(--color-info-bg)",          // #EFF6FF — badge background
+        },
+        billing: {
+          DEFAULT: "var(--color-billing)",          // #8B5CF6 — violet billing
+          dark:    "var(--color-billing-dark)",      // #7C3AED — gradient end
         },
 
         // ─── Gender Colors ──────────────────────────────────────────────
@@ -82,16 +92,21 @@ module.exports = {
           '80%':  { transform: 'rotate(-1deg)' },
           '100%': { transform: 'rotate(0deg)' },
         },
+        'slide-in-right': {
+          '0%':   { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
       },
       animation: {
         'glitch': 'glitch 0.3s ease-in-out infinite',
         'bell-ring': 'bell-ring 0.6s ease-in-out',
+        'slide-in-right': 'slide-in-right 0.25s ease-out',
       },
 
       // ─── Typography Tokens ─────────────────────────────────────────────
       // ใช้: text-page-title, text-section-title, text-card-title
       fontSize: {
-        "page-title":    ["1.75rem",  { lineHeight: "2.25rem", fontWeight: "700" }],
+        "page-title":    ["2.25rem", { lineHeight: "2.5rem", fontWeight: "700", letterSpacing: "-0.025em" }],
         "section-title": ["1.125rem", { lineHeight: "1.75rem", fontWeight: "600" }],
         "card-title":    ["1rem",     { lineHeight: "1.5rem",  fontWeight: "600" }],
       },
@@ -99,6 +114,16 @@ module.exports = {
   },
 
   plugins: [
+    // ─── Typography Token Colors ──────────────────────────────────────
+    // fontSize utility ไม่รองรับ color → ใช้ addComponents เพิ่มสีให้ token
+    plugin(function ({ addComponents }) {
+      addComponents({
+        '.text-page-title': {
+          color: 'var(--color-primary-text)',
+        },
+      });
+    }),
+
     // ─── CSS Variables (:root) ─────────────────────────────────────────
     plugin(function ({ addBase }) {
       addBase({
@@ -122,6 +147,7 @@ module.exports = {
 
           // Status
           "--color-success":      "#14b8a6",
+          "--color-success-dark": "#0d9488",
           "--color-success-bg":   "#ccfbf1",
           "--color-success-text": "#0f766e",
 
@@ -132,6 +158,13 @@ module.exports = {
           "--color-warning":      "#fbbf24",
           "--color-warning-bg":   "#fef3c7",
           "--color-warning-dark": "#d97706",
+
+          "--color-info":    "#3B82F6",
+          "--color-info-bg": "#EFF6FF",
+
+          // Billing
+          "--color-billing":      "#8B5CF6",
+          "--color-billing-dark": "#7C3AED",
 
           // Gender
           "--color-gender-male":   "#93C5FD",

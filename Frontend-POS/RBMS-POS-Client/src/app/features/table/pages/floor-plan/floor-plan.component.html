@@ -1,0 +1,134 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center">
+      <app-generic-icon name="table-dinner" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">ผังโต๊ะ</h1>
+  </div>
+
+  <!-- Zone Tabs (Segmented Control) -->
+  <div class="flex bg-surface-border rounded-xl gap-4">
+    @for (zone of zones(); track zone.zoneId) {
+      <button
+        class="flex-1 flex items-center justify-center gap-4 py-3 rounded-lg font-semibold transition-all"
+        [class]="selectedZoneId() === zone.zoneId
+          ? 'bg-surface-card text-primary'
+          : 'text-surface-sub hover:text-primary'"
+        (click)="onSelectZone(zone.zoneId!)"
+      >
+        <app-generic-icon name="tray-plate" svgClass="w-8 h-8"></app-generic-icon>
+        {{ zone.zoneName }}
+      </button>
+    }
+  </div>
+
+  <!-- Canvas -->
+  <div
+    class="relative bg-surface-card rounded-lg border-4 overflow-hidden canvas-boundary"
+    [style.border-color]="selectedZoneColor() ?? ''"
+    [class.border-surface-border]="!selectedZoneColor()"
+    [style.min-height.px]="700"
+  >
+    <!-- Canvas Header -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-surface-border">
+      @if (isEditMode()) {
+        <div class="flex items-center gap-2.5 text-primary font-semibold text-lg">
+          <i class="pi pi-arrows-alt"></i>
+          <span>ลากโต๊ะ/วัตถุเพื่อจัดตำแหน่ง</span>
+        </div>
+      } @else {
+        <div class="flex items-center gap-2.5 text-surface-sub font-semibold text-lg">
+          <i class="pi pi-info-circle"></i>
+          <span>กดที่โต๊ะเพื่อดูรายละเอียด</span>
+        </div>
+      }
+
+      <!-- Status Legend -->
+      <div class="flex flex-wrap gap-4">
+        <span class="flex items-center gap-1.5 text-lg">
+          <span class="w-4 h-4 rounded-full bg-success"></span> ว่าง
+        </span>
+        <span class="flex items-center gap-1.5 text-lg">
+          <span class="w-4 h-4 rounded-full bg-primary"></span> มีลูกค้า
+        </span>
+        <span class="flex items-center gap-1.5 text-lg">
+          <span class="w-4 h-4 rounded-full bg-warning"></span> เช็คบิล
+        </span>
+        <span class="flex items-center gap-1.5 text-lg">
+          <span class="w-4 h-4 rounded-full bg-info"></span> จองแล้ว
+        </span>
+        <span class="flex items-center gap-1.5 text-lg">
+          <span class="w-4 h-4 rounded-full bg-surface-sub"></span> ทำความสะอาด
+        </span>
+        <span class="flex items-center gap-1.5 text-lg">
+          <span class="w-4 h-4 rounded-full bg-danger"></span> ปิดใช้งาน
+        </span>
+      </div>
+    </div>
+
+    <!-- Table Cards -->
+    @for (table of filteredTables(); track table.tableId) {
+      <div
+        class="absolute select-none"
+        cdkDrag
+        [cdkDragDisabled]="!isEditMode()"
+        [cdkDragFreeDragPosition]="getFreeDragPosition(table)"
+        cdkDragBoundary=".canvas-boundary"
+        (cdkDragEnded)="onDragEnded($event, table)"
+        (click)="onTableClick(table)"
+      >
+        <div [ngClass]="getTableClasses(table)">
+          <!-- Link icon -->
+          @if (table.linkedGroupCode) {
+            <i class="pi pi-link text-[10px] absolute top-1 right-1 text-surface-sub"></i>
+          }
+
+          <!-- Table Name -->
+          <span class="font-bold text-lg leading-none">{{ table.tableName }}</span>
+
+          <!-- Capacity -->
+          <span class="text-sm leading-none mt-1">
+            {{ getCapacityLabel(table) }} คน
+          </span>
+
+          <!-- Status -->
+          <span class="text-xs leading-none mt-1 opacity-70">
+            {{ getStatusLabel(table.status) }}
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- Floor Object Cards -->
+    @for (obj of filteredFloorObjects(); track obj.floorObjectId) {
+      <div
+        class="absolute select-none"
+        cdkDrag
+        [cdkDragDisabled]="!isEditMode()"
+        [cdkDragFreeDragPosition]="getObjFreeDragPosition(obj)"
+        cdkDragBoundary=".canvas-boundary"
+        (cdkDragStarted)="onObjDragStarted()"
+        (cdkDragEnded)="onObjDragEnded($event, obj)"
+        (click)="onFloorObjectClick(obj)"
+      >
+        <div class="flex flex-col items-center justify-center w-36 h-36 rounded-lg border-2 border-dashed bg-surface-card"
+             [ngClass]="getObjectTypeClasses(obj.objectType)"
+             [class.cursor-move]="isEditMode()"
+             [class.cursor-pointer]="isEditMode() && canUpdateFloorObject">
+          <app-generic-icon [name]="getObjectIconName(obj.objectType)" svgClass="w-12 h-12"></app-generic-icon>
+          <span class="text-sm mt-1.5 font-medium text-center leading-tight truncate max-w-[120px]">
+            {{ obj.label }}
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (filteredTables().length === 0 && filteredFloorObjects().length === 0) {
+      <div class="flex justify-center items-center h-full min-h-[500px]">
+        <app-empty-view message="ไม่พบโต๊ะ" />
+      </div>
+    }
+  </div>
+</div>

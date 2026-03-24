@@ -23,7 +23,7 @@ export class ForgotPasswordDialogComponent {
     private readonly modalService: ModalService,
   ) {
     this.form = this.formBuilder.group({
-      usernameOrEmail: ['', Validators.required],
+      usernameOrEmail: ['', [Validators.required, Validators.email]],
     });
   }
 
@@ -47,9 +47,22 @@ export class ForgotPasswordDialogComponent {
         },
         error: (err) => {
           this.isLoading.set(false);
+          if (
+            err.status === 423 &&
+            err.error?.code === 'ACCOUNT_LOCKED_BY_ADMIN'
+          ) {
+            const message: string[] = [
+              'บัญชีนี้ถูกล็อคโดยผู้ดูแลระบบ',
+              'ไม่สามารถรีเซ็ตรหัสผ่านได้',
+              'กรุณาติดต่อผู้ดูแลระบบ',
+            ];
+            this.modalService.cancel({ title: 'บัญชีถูกล็อค !', message });
+            return;
+          }
           this.modalService.cancel({
             title: 'ผิดพลาด !',
-            message: err.error?.message || 'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่อีกครั้ง',
+            message:
+              err.error?.message || 'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่อีกครั้ง',
           });
         },
       });

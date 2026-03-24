@@ -1,6 +1,6 @@
 # Quick Start — RBMS-POS
 
-> อ้างอิงจาก config จริงในโปรเจค — อัปเดตล่าสุด 2026-03-15
+> อ้างอิงจาก config จริงในโปรเจค — อัปเดตล่าสุด 2026-03-22
 
 ---
 
@@ -166,18 +166,28 @@ Now listening on: http://localhost:5301
 
 ---
 
-## ขั้นตอนที่ 3 — รัน Frontend
+## ขั้นตอนที่ 3 — รัน Frontend (Client + Web-Mobile)
 
-### 3.1 ติดตั้ง dependencies
+> ระบบมี Frontend 2 ตัว — ต้องรันทั้งคู่
+
+| โปรเจค | โฟลเดอร์ | Port | คำอธิบาย |
+|--------|----------|------|----------|
+| **Client** (Admin/Staff) | `Frontend-POS/RBMS-POS-Client` | `4300` | เว็บหลักสำหรับ Admin/พนักงาน |
+| **Web-Mobile** (ลูกค้า) | `Frontend-POS/RBMS-POS-Mobile-Web` | `4400` | เว็บสำหรับลูกค้าสั่งอาหาร |
+
+### 3.1 ติดตั้ง dependencies (ทั้ง 2 โปรเจค)
 
 ```bash
 cd Frontend-POS/RBMS-POS-Client
+npm install
+
+cd ../RBMS-POS-Mobile-Web
 npm install
 ```
 
 ### 3.2 ตรวจสอบ environment
 
-เปิด `src/environments/environment.ts` — ต้องชี้ไปที่ Backend:
+เปิด `src/environments/environment.ts` ของแต่ละโปรเจค — ต้องชี้ไปที่ Backend:
 
 ```typescript
 export const environment = {
@@ -188,13 +198,26 @@ export const environment = {
 
 > **สำคัญ:** Port ต้องตรงกับ `launchSettings.json` ของ Backend (HTTPS = 5300)
 
-### 3.3 รัน dev server
+### 3.3 รัน dev server (ทั้ง 2 โปรเจค)
+
+**Terminal 2 — Client:**
 
 ```bash
+cd Frontend-POS/RBMS-POS-Client
 ng serve
 ```
 
-เปิดเบราว์เซอร์ที่ `http://localhost:4300`
+**Terminal 3 — Web-Mobile:**
+
+```bash
+cd Frontend-POS/RBMS-POS-Mobile-Web
+ng serve
+```
+
+| โปรเจค | URL |
+|--------|-----|
+| Client | `http://localhost:4300` |
+| Web-Mobile | `http://localhost:4400` |
 
 ---
 
@@ -233,7 +256,7 @@ docker compose ps
 ### Step 2 — ตรวจสอบ Port ก่อนรัน
 
 ```bash
-netstat -ano | grep -E ':(5300|4300)' | grep LISTENING
+netstat -ano | grep -E ':(5300|4300|4400)' | grep LISTENING
 ```
 
 ถ้า port ยังถูกใช้อยู่ (มีผลลัพธ์ออกมา) ให้ kill process ก่อน:
@@ -242,6 +265,8 @@ netstat -ano | grep -E ':(5300|4300)' | grep LISTENING
 # ดู PID จากผลลัพธ์ netstat แล้วใช้คำสั่งนี้ (แทน <PID> ด้วยเลขจริง)
 taskkill /PID <PID> /F
 ```
+
+> **ห้าม restart ถ้า port ยัง LISTENING อยู่** — จะเกิด "address already in use"
 
 ---
 
@@ -267,7 +292,7 @@ Now listening on: http://localhost:5301
 
 ---
 
-### Step 4 — รัน Frontend
+### Step 4 — รัน Frontend Client
 
 **Terminal 2:**
 
@@ -285,11 +310,30 @@ Local: http://localhost:4300/
 
 ---
 
-### Step 5 — เปิดแอป
+### Step 5 — รัน Frontend Web-Mobile
 
-เปิดเบราว์เซอร์ที่ `http://localhost:4300`
+**Terminal 3:**
 
-Login: `admin` / `P@ssw0rd`
+```bash
+cd Frontend-POS/RBMS-POS-Mobile-Web
+npx ng serve
+```
+
+รอจนเห็น:
+
+```
+Application bundle generation complete.
+Local: http://localhost:4400/
+```
+
+---
+
+### Step 6 — เปิดแอป
+
+| โปรเจค | URL | Login |
+|--------|-----|-------|
+| Client (Admin/Staff) | `http://localhost:4300` | `admin` / `P@ssw0rd` |
+| Web-Mobile (ลูกค้า) | `http://localhost:4400` | — (QR Code / Session) |
 
 ---
 
@@ -320,7 +364,7 @@ npm run gen-api
 }
 ```
 
-> **Workflow**: Copy `swagger.json` จาก Swagger UI (`https://localhost:{port}/swagger/v1/swagger.json`) มาวางที่ `Frontend-POS/RBMS-POS-Client/swagger.json` ก่อนรัน `npm run gen-api`
+> **Workflow**: Copy `swagger.json` จาก Swagger UI (`https://localhost:{port}/swagger/v2/swagger.json`) มาวางที่ `Frontend-POS/RBMS-POS-Client/swagger.json` ก่อนรัน `npm run gen-api`
 
 ---
 

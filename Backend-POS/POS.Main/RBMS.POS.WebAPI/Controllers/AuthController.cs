@@ -89,6 +89,17 @@ public class AuthController : BaseController
         return Success("รีเซ็ตรหัสผ่านสำเร็จ");
     }
 
+    [HttpPost("change-password")]
+    [ProducesResponseType(typeof(BaseResponseModel<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestModel request, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        await _authService.ChangePasswordAsync(userId, request, ct);
+        return Success("เปลี่ยนรหัสผ่านสำเร็จ");
+    }
+
     [HttpPost("verify-password")]
     [ProducesResponseType(typeof(BaseResponseModel<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -96,5 +107,44 @@ public class AuthController : BaseController
     {
         var userId = GetUserId();
         return Success(await _authService.VerifyPasswordAsync(userId, request.Password, ct));
+    }
+
+    [HttpPost("pin/setup")]
+    [ProducesResponseType(typeof(BaseResponseModel<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SetupPin([FromBody] SetupPinRequestModel request, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        await _authService.SetupPinAsync(userId, request.PinCode, ct);
+        return Success("ตั้งค่า PIN สำเร็จ");
+    }
+
+    [HttpPost("pin/change")]
+    [ProducesResponseType(typeof(BaseResponseModel<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ChangePin([FromBody] ChangePinRequestModel request, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        await _authService.ChangePinAsync(userId, request.CurrentPinCode, request.NewPinCode, ct);
+        return Success("เปลี่ยน PIN สำเร็จ");
+    }
+
+    [HttpPost("pin/verify")]
+    [ProducesResponseType(typeof(BaseResponseModel<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> VerifyPin([FromBody] VerifyPinRequestModel request, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        return Success(await _authService.VerifyPinAsync(userId, request.PinCode, ct));
+    }
+
+    [HttpPost("pin/reset")]
+    [ProducesResponseType(typeof(BaseResponseModel<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ResetPin([FromBody] ResetPinRequestModel request, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        await _authService.ResetPinAsync(userId, request.Password, ct);
+        return Success("รีเซ็ต PIN สำเร็จ");
     }
 }

@@ -1,0 +1,58 @@
+<app-card-template [headerLabel]="headerLabel">
+  <div class="space-y-4">
+    <div class="text-sm">
+      <span class="text-surface-sub">โต๊ะหลัก:</span>
+      <span class="font-semibold ml-1">
+        {{ table.tableName }} ({{ table.currentGuests }}/{{ table.capacity }} คน)
+      </span>
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">เลือกโต๊ะที่ต้องการเชื่อม</label>
+
+      @if (linkableTables().length === 0) {
+        <p class="text-surface-sub text-sm">ไม่มีโต๊ะที่สามารถเชื่อมได้</p>
+      } @else {
+        <div class="space-y-2 max-h-[300px] overflow-y-auto">
+          @for (t of linkableTables(); track t.tableId) {
+            <div
+              class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+              [ngClass]="t.selected ? 'border-primary bg-primary/5' : 'border-surface-border'"
+              (click)="onToggle(t)"
+            >
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="t.selected"
+                (ngModelChange)="onToggle(t)"
+              ></p-checkbox>
+              <div class="flex-1">
+                <span class="font-semibold">{{ t.tableName }}</span>
+                <span class="text-surface-sub text-sm ml-2">
+                  {{ t.zoneName }}, {{ t.currentGuests ?? 0 }}/{{ t.capacity }} คน
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <p-footer>
+    <div class="flex justify-center gap-3">
+      <p-button
+        label="ยกเลิก"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="onCancel()"
+      ></p-button>
+      <p-button
+        label="เชื่อมโต๊ะ"
+        severity="primary"
+        [disabled]="!hasSelection"
+        [loading]="isSubmitting()"
+        (onClick)="onSubmit()"
+      ></p-button>
+    </div>
+  </p-footer>
+</app-card-template>

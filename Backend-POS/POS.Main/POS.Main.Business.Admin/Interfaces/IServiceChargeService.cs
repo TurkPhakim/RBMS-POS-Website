@@ -1,4 +1,5 @@
 using POS.Main.Business.Admin.Models.AdminSettings;
+using POS.Main.Core.Models;
 
 namespace POS.Main.Business.Admin.Services;
 
@@ -8,9 +9,9 @@ namespace POS.Main.Business.Admin.Services;
 public interface IServiceChargeService
 {
     /// <summary>
-    /// Get all service charges (excluding deleted)
+    /// Get all service charges (paginated)
     /// </summary>
-    Task<IEnumerable<ServiceChargeResponseModel>> GetAllServiceChargesAsync(CancellationToken ct = default);
+    Task<PaginationResult<ServiceChargeResponseModel>> GetAllServiceChargesAsync(PaginationModel param, bool? isActive = null, CancellationToken ct = default);
 
     /// <summary>
     /// Get service charge by ID

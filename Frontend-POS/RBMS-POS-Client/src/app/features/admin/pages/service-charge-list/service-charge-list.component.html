@@ -2,16 +2,16 @@
   <!-- Page Header -->
   <div class="flex items-center gap-3">
     <div
-      class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center"
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
     >
       <app-generic-icon
         name="coin"
-        svgClass="w-8 h-8"
+        svgClass="w-10 h-10"
         class="text-white"
       ></app-generic-icon>
     </div>
-    <h1 class="text-3xl font-extrabold tracking-tight text-primary">
-      จัดการ Service Charge
+    <h1 class="text-page-title">
+      จัดการค่าบริการ
     </h1>
   </div>
 
@@ -20,29 +20,33 @@
     <!-- Filter Section -->
     <div class="p-4">
       <div class="flex flex-wrap items-end gap-4">
-        <!-- Start Date Filter -->
+        <!-- Search -->
         <div class="flex-1 min-w-[200px]">
-          <label class="block font-semibold text-surface-dark mb-2"
-            >วันที่เริ่มต้น</label
-          >
-          <p-datepicker
-            [ngModel]="startDateFilter()"
-            (ngModelChange)="startDateFilter.set($event)"
-            dateFormat="dd/mm/yy"
-            placeholder="วันที่เริ่มต้น"
-            [showClear]="true"
-            styleClass="w-full"
-          />
+          <label class="block font-semibold mb-2">ค้นหา</label>
+          <div class="relative">
+            <p-iconField>
+              <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+              <input
+                pInputText
+                placeholder="ค้นหาด้วยชื่อค่าบริการ"
+                class="w-full pr-8"
+                [(ngModel)]="searchTerm"
+                (keyup.enter)="onFilterChange()"
+              />
+            </p-iconField>
+            @if (searchTerm) {
+              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                 (click)="searchTerm = ''; onFilterChange()"></i>
+            }
+          </div>
         </div>
 
         <!-- Status Filter -->
         <div class="flex-1 min-w-[160px]">
-          <label class="block font-semibold text-surface-dark mb-2"
-            >สถานะ</label
-          >
+          <label class="block font-semibold mb-2">สถานะ</label>
           <app-active-status-dropdown
-            [ngModel]="statusFilter()"
-            (ngModelChange)="statusFilter.set($event)"
+            [(ngModel)]="statusFilter"
+            (ngModelChange)="onFilterChange()"
           ></app-active-status-dropdown>
         </div>
       </div>
@@ -54,39 +58,43 @@
         [value]="serviceCharges()"
         [stripedRows]="true"
         [tableStyle]="{ 'min-width': '70rem' }"
+        [scrollable]="true"
         [paginator]="true"
-        [rows]="10"
+        [rows]="rows"
         [rowsPerPageOptions]="[10, 25, 50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr class="whitespace-nowrap">
-            <th class="!w-20">รหัส</th>
-            <th class="!min-w-[8rem]">ชื่อ</th>
-            <th class="!w-28">อัตรา (%)</th>
-            <th>รายละเอียด</th>
-            <th class="!w-37">วันที่เริ่มต้น</th>
-            <th class="!w-37">วันที่สิ้นสุด</th>
-            <th class="!w-28">สถานะ</th>
-            <th class="!w-32">ตัวเลือก</th>
+            <th class="w-[80px]">รหัส</th>
+            <th class="w-[150px]">ชื่อ</th>
+            <th class="w-[100px]">อัตรา (%)</th>
+            <th class="w-[200px]">รายละเอียด</th>
+            <th class="w-[160px]">วันที่เริ่มต้น</th>
+            <th class="w-[160px]">วันที่สิ้นสุด</th>
+            <th class="w-[100px]">สถานะ</th>
+            <th class="w-[120px]">ตัวเลือก</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-item>
-          <tr class="hover:bg-primary-subtle transition-colors">
-            <td class="!text-center font-semibold text-surface-dark">
+          <tr>
+            <td class="!text-center font-semibold">
               {{ item.serviceChargeId }}
             </td>
-            <td class="text-surface-dark font-semibold">{{ item.name }}</td>
+            <td class="font-semibold">{{ item.name }}</td>
             <td class="text-center text-primary font-bold text-lg">
               {{ item.percentageRate }}%
             </td>
             <td class="text-surface-sub">{{ item.description || "-" }}</td>
-            <td class="text-surface-dark">
+            <td>
               {{ item.startDate | dateFormat: "DATE" }}
             </td>
-            <td class="text-surface-dark">
+            <td>
               @if (item.endDate) {
                 {{ item.endDate | dateFormat: "DATE" }}
               } @else {
@@ -103,7 +111,7 @@
             <td class="text-center">
               <div class="flex justify-center gap-2">
                 <button
-                  (click)="onEdit(item.serviceChargeId!)"
+                  (click)="onEdit(item)"
                   class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
                   pTooltip="ดู/แก้ไข"
                   tooltipPosition="top"
@@ -134,7 +142,7 @@
           <tr>
             <td colspan="8">
               <div class="flex justify-center items-center w-full p-[100px]">
-                <app-empty-view message="ไม่พบข้อมูล Service Charge" />
+                <app-empty-view message="ไม่พบข้อมูลค่าบริการ" />
               </div>
             </td>
           </tr>

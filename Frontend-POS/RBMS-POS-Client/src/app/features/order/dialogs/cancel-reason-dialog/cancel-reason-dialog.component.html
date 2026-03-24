@@ -1,0 +1,112 @@
+<app-card-template [headerLabel]="headerLabel">
+  <div class="space-y-5">
+    <!-- Danger Banner -->
+    <div
+      class="relative bg-gradient-to-r from-danger to-danger-dark rounded-xl p-4 overflow-hidden"
+    >
+      <div
+        class="absolute w-24 h-24 rounded-full bg-white/10 -top-8 -left-6"
+      ></div>
+      <div
+        class="absolute w-16 h-16 rounded-full bg-white/10 -bottom-6 right-10"
+      ></div>
+      <div class="relative flex items-center gap-4">
+        <div
+          class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0"
+        >
+          <app-generic-icon
+            name="cancel"
+            svgClass="w-10 h-10"
+            class="text-white"
+          ></app-generic-icon>
+        </div>
+        <div class="text-white">
+          <p class="text-xl font-bold">ยกเลิกรายการ{{ categoryLabel }}</p>
+          <p class="text-white/80 mt-0.5">รายการนี้จะถูกยกเลิกจากออเดอร์</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item Info Card -->
+    <div class="bg-surface rounded-xl p-4">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-lg font-bold">{{ item.menuNameThai }}</h3>
+          @if (item.menuNameEnglish) {
+            <p class="text-surface-sub">{{ item.menuNameEnglish }}</p>
+          }
+          @if (item.options?.length) {
+            <div class="mt-2 space-y-1">
+              @for (opt of item.options; track $index) {
+                <div class="text-surface-sub flex items-center gap-1.5">
+                  <app-generic-icon
+                    name="plus"
+                    svgClass="w-4 h-4"
+                    class="text-primary"
+                  ></app-generic-icon>
+                  <span>{{ opt.optionItemName }}</span>
+                  @if (opt.additionalPrice) {
+                    <span class="text-primary font-semibold"
+                      >(+{{ opt.additionalPrice | number: "1.2-2" }})</span
+                    >
+                  }
+                </div>
+              }
+            </div>
+          }
+          @if (item.note) {
+            <div
+              class="mt-2 text-sm text-warning-dark italic flex items-center gap-1.5"
+            >
+              <app-generic-icon
+                name="information"
+                svgClass="w-4 h-4"
+                class="text-warning flex-shrink-0"
+              ></app-generic-icon>
+              {{ item.note }}
+            </div>
+          }
+        </div>
+        <div class="text-right flex-shrink-0">
+          <span
+            class="text-sm bg-surface-hover px-2.5 py-0.5 rounded-full text-surface-sub font-semibold"
+            >x{{ item.quantity }}</span
+          >
+          <div class="text-xl font-bold text-danger mt-2">
+            {{ item.totalPrice | number: "1.2-2" }} บาท
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancel Reason -->
+    <div>
+      <label class="block font-bold mb-2"
+        >ระบุเหตุผล <span class="text-danger">*</span></label
+      >
+      <textarea
+        pInputTextarea
+        [formControl]="cancelReasonControl"
+        rows="2"
+        class="w-full"
+        placeholder="ระบุเหตุผลประกอบ"
+      ></textarea>
+      <app-field-error [control]="cancelReasonControl"></app-field-error>
+    </div>
+  </div>
+
+  <p-footer>
+    <button
+      pButton
+      label="ย้อนกลับ"
+      class="p-button-secondary p-button-outlined"
+      (click)="onCancel()"
+    ></button>
+    <button
+      pButton
+      label="ยกเลิกออเดอร์"
+      class="p-button-danger"
+      (click)="onConfirm()"
+    ></button>
+  </p-footer>
+</app-card-template>

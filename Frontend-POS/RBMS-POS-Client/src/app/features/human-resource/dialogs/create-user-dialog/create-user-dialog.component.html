@@ -1,6 +1,5 @@
 <app-card-template
   [headerLabel]="config.header!"
-  headerLabelClass="text-xl font-semibold text-primary-dark"
   contentClass="space-y-4"
 >
   <!-- Profile Header -->
@@ -83,7 +82,7 @@
       <div class="grid grid-cols-2 divide-x divide-surface-border">
         <div class="px-5 py-4">
           <div class="text-surface-sub text-lg">ชื่อเล่น</div>
-          <div class="text-surface-dark font-semibold text-xl mt-1">
+          <div class="font-semibold text-xl mt-1">
             {{ employee.nickname }}
           </div>
         </div>
@@ -106,7 +105,7 @@
         </div>
         <div class="px-5 py-4">
           <div class="text-surface-sub text-lg">เบอร์โทร</div>
-          <div class="text-surface-dark font-semibold text-xl mt-1">
+          <div class="font-semibold text-xl mt-1">
             {{ employee.phone | formatPhone }}
           </div>
         </div>
@@ -125,7 +124,7 @@
         class="text-white"
       ></app-generic-icon>
     </div>
-    <p class="text-base text-surface-dark">
+    <p>
       ระบบจะสร้างบัญชีผู้ใช้โดยใช้
       <span class="font-bold text-primary">อีเมล</span> เป็น Username และสุ่ม
       Password ให้อัตโนมัติ พร้อมส่งข้อมูลเข้าสู่ระบบทางอีเมลพนักงาน

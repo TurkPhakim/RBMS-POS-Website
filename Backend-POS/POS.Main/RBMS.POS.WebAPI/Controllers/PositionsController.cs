@@ -25,8 +25,8 @@ public class PositionsController : BaseController
     [HttpGet]
     [PermissionAuthorize(Permissions.Position.Read)]
     [ProducesResponseType(typeof(PaginationResult<PositionResponseModel>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetPositions([FromQuery] PaginationModel param, CancellationToken ct = default)
-        => PagedSuccess(await _positionService.GetPositionsAsync(param, ct));
+    public async Task<IActionResult> GetPositions([FromQuery] PaginationModel param, [FromQuery] bool? isActive, CancellationToken ct = default)
+        => PagedSuccess(await _positionService.GetPositionsAsync(param, isActive, ct));
 
     [HttpGet("{positionId}")]
     [PermissionAuthorize(Permissions.Position.Read)]

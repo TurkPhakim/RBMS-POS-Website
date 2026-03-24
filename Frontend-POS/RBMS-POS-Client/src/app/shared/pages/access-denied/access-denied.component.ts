@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { AnimationOptions } from 'ngx-lottie';
 
 @Component({
   selector: 'app-access-denied',
@@ -8,6 +9,10 @@ import { Router } from '@angular/router';
 })
 export class AccessDeniedComponent {
   isFlipped = signal(false);
+
+  lottieOptions: AnimationOptions = {
+    path: 'animations/access-denied.json',
+  };
 
   constructor(private router: Router) {}
 

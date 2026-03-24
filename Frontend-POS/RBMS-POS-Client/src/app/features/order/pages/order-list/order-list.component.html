@@ -1,9 +1,199 @@
-<div class="flex items-center justify-center min-h-[70vh]">
-  <div class="text-center">
-    <div class="mb-4 flex justify-center">
-      <app-generic-icon name="orders" svgClass="h-28 w-28" class="opacity-40"></app-generic-icon>
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="order-dinner"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
     </div>
-    <h1 class="text-page-title text-primary mb-4">รายการออเดอร์</h1>
-    <p class="text-xl text-surface-sub">โมดูลนี้อยู่ระหว่างการพัฒนา</p>
+    <h1 class="text-page-title">รายการออเดอร์</h1>
+  </div>
+
+  <!-- Content -->
+  <div class="bg-surface-card rounded-lg">
+    <!-- Filter Section -->
+    <div class="p-4">
+      <div class="space-y-4">
+        <!-- Row 1: Search + Zone + Table -->
+        <div class="flex items-end gap-4">
+          <div class="flex-[2] min-w-0">
+            <label class="block font-semibold mb-2">ค้นหา</label>
+            <div class="relative">
+              <p-iconField>
+                <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+                <input
+                  pInputText
+                  placeholder="ค้นหาด้วยหมายเลขออเดอร์"
+                  class="w-full pr-8"
+                  [(ngModel)]="searchTerm"
+                  (keyup.enter)="onFilterChange()"
+                />
+              </p-iconField>
+              @if (searchTerm) {
+                <i
+                  class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                  (click)="searchTerm = ''; onFilterChange()"
+                ></i>
+              }
+            </div>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <label class="block font-semibold mb-2">โซนร้าน</label>
+            <app-zone-dropdown
+              [ngModel]="zoneFilter"
+              (ngModelChange)="onZoneChange($event)"
+            ></app-zone-dropdown>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <label class="block font-semibold mb-2">โต๊ะที่นั่ง</label>
+            <app-table-dropdown
+              [(ngModel)]="tableFilter"
+              (ngModelChange)="onFilterChange()"
+              [zoneId]="zoneFilter"
+            ></app-table-dropdown>
+          </div>
+        </div>
+
+        <!-- Row 2: Status + Date From + Date To -->
+        <div class="flex items-end gap-4">
+          <div class="flex-1 min-w-0">
+            <label class="block font-semibold mb-2">สถานะออเดอร์</label>
+            <app-order-status-dropdown
+              [(ngModel)]="statusFilter"
+              (ngModelChange)="onFilterChange()"
+            ></app-order-status-dropdown>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <label class="block font-semibold mb-2">วันที่เริ่มต้น</label>
+            <p-datepicker
+              [(ngModel)]="dateFrom"
+              (ngModelChange)="onFilterChange()"
+              dateFormat="dd/mm/yy"
+              placeholder="วันที่เริ่มต้น"
+              [showClear]="true"
+              styleClass="w-full"
+            ></p-datepicker>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <label class="block font-semibold mb-2">วันที่สิ้นสุด</label>
+            <p-datepicker
+              [(ngModel)]="dateTo"
+              (ngModelChange)="onFilterChange()"
+              dateFormat="dd/mm/yy"
+              placeholder="วันที่สิ้นสุด"
+              [showClear]="true"
+              [minDate]="dateFrom!"
+              styleClass="w-full"
+            ></p-datepicker>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="px-4 pb-4">
+      <p-table
+        [value]="orders()"
+        [lazy]="true"
+        [totalRecords]="totalRecords()"
+        [paginator]="true"
+        [rows]="rows"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+        (onLazyLoad)="
+          onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })
+        "
+        [stripedRows]="true"
+        [tableStyle]="{ 'min-width': '70rem' }"
+        [scrollable]="true"
+        styleClass="p-datatable-clean"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="w-[140px] whitespace-nowrap">หมายเลขออเดอร์</th>
+            <th class="w-[200px]">โซน - โต๊ะ</th>
+            <th class="w-[120px] whitespace-nowrap">ประเภทลูกค้า</th>
+            <th class="w-[120px] whitespace-nowrap">จำนวนรายการ</th>
+            <th class="w-[120px] whitespace-nowrap">จำนวนลูกค้า</th>
+            <th class="w-[120px]">ยอดรวม</th>
+            <th class="w-[100px] whitespace-nowrap">สถานะออเดอร์</th>
+            <th class="w-[160px] whitespace-nowrap">วันที่สร้างออเดอร์</th>
+            <th class="w-[100px]">ตัวเลือก</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td class="font-semibold whitespace-nowrap">
+              {{ item.orderNumber }}
+            </td>
+            <td class="!text-center whitespace-nowrap">
+              โซน{{ item.zoneName }} - โต๊ะ{{ item.tableName }}
+            </td>
+            <td class="!text-center">
+              {{ item.guestType === "Reserved" ? "ลูกค้าจอง" : "Walk-In" }}
+            </td>
+            <td class="!text-center">{{ item.itemCount }}</td>
+            <td class="!text-center">{{ item.guestCount }}</td>
+            <td class="!text-right font-semibold">
+              {{ item.subTotal | number: "1.2-2" }}
+            </td>
+            <td class="!text-center whitespace-nowrap">
+              <span [class]="getStatusClass(item.status)">
+                {{ getStatusLabel(item.status) }}
+              </span>
+            </td>
+            <td>{{ item.createdAt | dateFormat }}</td>
+            <td class="text-center">
+              <div class="flex justify-center gap-2">
+                <button
+                  (click)="onViewDetail(item.orderId!)"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                  pTooltip="ดู/แก้ไข"
+                  tooltipPosition="top"
+                >
+                  <app-generic-icon
+                    name="eye"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
+                </button>
+                @if (canPayment && item.status === "Billing") {
+                  <button
+                    (click)="onGoToCheckout(item.orderId!)"
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-success text-white"
+                    pTooltip="ชำระเงิน"
+                    tooltipPosition="top"
+                  >
+                    <app-generic-icon
+                      name="payment-bath"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่พบรายการออเดอร์" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   </div>
 </div>

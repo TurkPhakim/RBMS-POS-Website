@@ -30,7 +30,7 @@ export class AddressDialogComponent {
       subDistrict: ['', [Validators.required, Validators.maxLength(100)]],
       district: ['', [Validators.required, Validators.maxLength(100)]],
       province: ['', [Validators.required, Validators.maxLength(100)]],
-      postalCode: ['', [Validators.required, Validators.maxLength(10)]],
+      postalCode: ['', [Validators.required, Validators.maxLength(6)]],
     });
 
     if (this.isEditMode) {

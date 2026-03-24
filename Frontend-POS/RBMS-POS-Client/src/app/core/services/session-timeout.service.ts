@@ -90,7 +90,15 @@ export class SessionTimeoutService {
     if (this.inWarningState) return;
 
     const now = Date.now();
-    if (now - this.lastResetTime < ACTIVITY_THROTTLE_MS) return;
+    const elapsed = now - this.lastResetTime;
+
+    // ถ้าเลยเวลา idle (เช่นเครื่องหลับ/tab background) → แสดง dialog ทันที
+    if (elapsed >= IDLE_TIMEOUT_MS) {
+      this.ngZone.run(() => this.showWarningDialog());
+      return;
+    }
+
+    if (elapsed < ACTIVITY_THROTTLE_MS) return;
 
     this.resetTimer();
   }

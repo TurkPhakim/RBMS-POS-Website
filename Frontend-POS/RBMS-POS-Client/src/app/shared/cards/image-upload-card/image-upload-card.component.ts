@@ -130,26 +130,26 @@ import { ModalService } from '@app/core/services/modal.service';
               <img
                 [src]="displayUrl"
                 [alt]="label"
-                class="w-48 h-48 rounded-xl object-contain border-4 border-white bg-white"
+                class="w-72 rounded-xl border-4 border-white"
               />
               @if (!readOnly) {
                 <button
                   type="button"
                   (click)="fileInput.click()"
-                  class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-dark transition-colors"
+                  class="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-dark transition-colors"
                   pTooltip="เปลี่ยนรูป"
                   tooltipPosition="top"
                 >
                   <app-generic-icon
                     name="pen-edit"
-                    svgClass="w-4 h-4"
+                    svgClass="w-5 h-5"
                     class="text-white"
                   ></app-generic-icon>
                 </button>
                 <button
                   type="button"
                   (click)="onRemove()"
-                  class="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-danger flex items-center justify-center"
+                  class="absolute -bottom-2 -left-2 w-10 h-10 rounded-full bg-danger flex items-center justify-center"
                   pTooltip="ลบรูป"
                   tooltipPosition="top"
                 >
@@ -169,16 +169,16 @@ import { ModalService } from '@app/core/services/modal.service';
               type="button"
               [disabled]="readOnly"
               (click)="fileInput.click()"
-              class="p-12 border-2 border-dashed border-surface-border rounded-xl hover:border-primary transition-all duration-300 flex flex-col items-center justify-center gap-3 bg-white/70 hover:bg-white group disabled:opacity-60 disabled:pointer-events-none"
+              class="min-w-72 min-h-72 px-12 border-2 border-dashed border-surface-border rounded-xl hover:border-primary transition-all duration-300 flex flex-col items-center justify-center gap-3 bg-white/70 hover:bg-white group disabled:opacity-60 disabled:pointer-events-none"
             >
               <app-generic-icon
                 [name]="placeholderIcon"
-                svgClass="w-16 h-16"
+                svgClass="w-24 h-24"
                 class="text-surface-sub group-hover:text-primary transition-colors"
               ></app-generic-icon>
               @if (label) {
                 <p
-                  class="text-xl font-bold text-surface-dark group-hover:text-primary transition-colors"
+                  class="text-2xl font-bold group-hover:text-primary transition-colors"
                 >
                   {{ label }}
                 </p>

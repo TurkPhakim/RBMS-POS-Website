@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-
 import { PermissionGuard } from '@app/core/guards/permission.guard';
 import { EmployeeListComponent } from './pages/employee-list/employee-list.component';
 import { EmployeeManageComponent } from './pages/employee-manage/employee-manage.component';
@@ -13,7 +12,7 @@ const routes: Routes = [
   },
   {
     path: 'employees',
-    data: { breadcrumb: 'พนักงาน' },
+    data: { breadcrumb: 'รายการพนักงาน' },
     children: [
       {
         path: '',

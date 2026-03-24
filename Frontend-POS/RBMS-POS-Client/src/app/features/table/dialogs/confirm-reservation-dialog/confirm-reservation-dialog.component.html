@@ -1,0 +1,51 @@
+<app-card-template [headerLabel]="headerLabel">
+  <div class="space-y-4">
+    <!-- Reservation Info -->
+    <div class="grid grid-cols-2 gap-3 text-sm">
+      <div>
+        <span class="text-surface-sub">ลูกค้า:</span>
+        <span class="font-semibold ml-1">{{ reservation.customerName }}</span>
+      </div>
+      <div>
+        <span class="text-surface-sub">จำนวน:</span>
+        <span class="font-semibold ml-1">{{ reservation.guestCount }} คน</span>
+      </div>
+      <div>
+        <span class="text-surface-sub">วันที่:</span>
+        <span class="font-semibold ml-1">{{ reservation.reservationDate | dateFormat }}</span>
+      </div>
+      <div>
+        <span class="text-surface-sub">เวลา:</span>
+        <span class="font-semibold ml-1">{{ reservation.reservationTime }}</span>
+      </div>
+    </div>
+
+    <!-- Table Selection -->
+    <div>
+      <label class="block font-semibold mb-2">
+        เลือกโต๊ะ <span class="text-danger">*</span>
+      </label>
+      <app-available-table-dropdown
+        [ngModel]="selectedTableId()"
+        (ngModelChange)="selectedTableId.set($event)"
+      ></app-available-table-dropdown>
+    </div>
+  </div>
+
+  <p-footer>
+    <div class="flex justify-center gap-3">
+      <p-button
+        label="ยกเลิก"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="onCancel()"
+      ></p-button>
+      <p-button
+        label="ยืนยัน"
+        severity="primary"
+        [disabled]="!selectedTableId()"
+        (onClick)="onConfirm()"
+      ></p-button>
+    </div>
+  </p-footer>
+</app-card-template>

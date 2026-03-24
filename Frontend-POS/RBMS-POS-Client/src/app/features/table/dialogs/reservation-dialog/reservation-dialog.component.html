@@ -1,0 +1,126 @@
+<app-card-template [headerLabel]="config.header!">
+  <form [formGroup]="form" class="space-y-5">
+    <!-- ข้อมูลลูกค้า -->
+    <div>
+      <h3 class="text-card-title text-primary-dark mb-3">ข้อมูลลูกค้า</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="customerName" class="block font-semibold mb-2">
+            ชื่อลูกค้า <span class="text-danger">*</span>
+          </label>
+          <input
+            pInputText
+            id="customerName"
+            formControlName="customerName"
+            placeholder="ชื่อ-สกุล"
+            class="w-full"
+          />
+          <app-field-error [control]="form.get('customerName')" type="text" />
+        </div>
+
+        <div>
+          <label for="customerPhone" class="block font-semibold mb-2">
+            เบอร์โทร <span class="text-danger">*</span>
+          </label>
+          <input
+            pInputText
+            id="customerPhone"
+            formControlName="customerPhone"
+            placeholder="0xx-xxx-xxxx"
+            class="w-full"
+          />
+          <app-field-error [control]="form.get('customerPhone')" type="text" />
+        </div>
+
+        <div>
+          <label for="guestCount" class="block font-semibold mb-2">
+            จำนวนคน <span class="text-danger">*</span>
+          </label>
+          <p-inputNumber
+            id="guestCount"
+            formControlName="guestCount"
+            [min]="1"
+            [max]="50"
+            [showButtons]="true"
+            buttonLayout="horizontal"
+            incrementButtonIcon="pi pi-plus"
+            decrementButtonIcon="pi pi-minus"
+            inputStyleClass="w-full"
+            styleClass="w-full"
+          ></p-inputNumber>
+          <app-field-error [control]="form.get('guestCount')" type="text" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ข้อมูลการจอง -->
+    <div>
+      <h3 class="text-card-title text-primary-dark mb-3">ข้อมูลการจอง</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block font-semibold mb-2">
+            วันที่และเวลาจอง <span class="text-danger">*</span>
+          </label>
+          <p-datepicker
+            formControlName="reservationDateTime"
+            dateFormat="dd/mm/yy"
+            placeholder="เลือกวันที่และเวลา"
+            [showTime]="true"
+            [hourFormat]="'24'"
+            [minDate]="minDate"
+            styleClass="w-full"
+          />
+          <app-field-error [control]="form.get('reservationDateTime')" type="select" />
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-2">โต๊ะ (ไม่บังคับ)</label>
+          <app-available-table-dropdown
+            formControlName="tableId"
+            placeholder="เลือกโต๊ะ"
+          ></app-available-table-dropdown>
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="note" class="block font-semibold mb-2">หมายเหตุ</label>
+          <textarea
+            pInputTextarea
+            id="note"
+            formControlName="note"
+            placeholder="เช่น แพ้อาหาร, ต้องการเก้าอี้เด็ก..."
+            [rows]="3"
+            class="w-full"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Footer (edit mode only) -->
+    @if (isEditMode() && reservation) {
+      <app-audit-footer
+        [createdAt]="reservation.createdAt"
+        [createdByName]="reservation.createdBy"
+        [updatedAt]="reservation.updatedAt"
+        [updatedByName]="reservation.updatedBy"
+      />
+    }
+  </form>
+
+  <p-footer>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      variant="outlined"
+      (onClick)="onCancel()"
+      [disabled]="isSubmitting()"
+    />
+    @if (!isEditMode() || canUpdate) {
+      <p-button
+        label="บันทึก"
+        severity="primary"
+        (onClick)="onSubmit()"
+        [loading]="isSubmitting()"
+      />
+    }
+  </p-footer>
+</app-card-template>

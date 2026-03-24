@@ -20,4 +20,9 @@ public interface IJwtTokenService
     /// </summary>
     /// <returns>Refresh token string</returns>
     string GenerateRefreshToken();
+
+    /// <summary>
+    /// Generate Guest JWT token for customer self-order session (4hr expiry)
+    /// </summary>
+    string GenerateCustomerToken(int sessionId, int tableId);
 }

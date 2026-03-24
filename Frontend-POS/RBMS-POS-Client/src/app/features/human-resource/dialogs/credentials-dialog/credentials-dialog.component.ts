@@ -1,5 +1,4 @@
 import { Component, signal } from '@angular/core';
-
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 @Component({

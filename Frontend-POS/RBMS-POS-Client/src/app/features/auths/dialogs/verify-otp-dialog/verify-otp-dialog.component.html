@@ -1,6 +1,5 @@
 <app-card-template
   headerLabel="การยืนยัน OTP"
-  headerLabelClass="text-xl font-semibold text-primary-dark"
   contentClass="space-y-4"
 >
   <!-- Email info -->
@@ -12,7 +11,7 @@
       name="information"
       svgClass="w-6 h-6"
     ></app-generic-icon>
-    <p class="text-sm text-surface-dark">
+    <p class="text-sm">
       ระบบได้ส่งรหัส OTP 6 หลักไปยังอีเมล
       <span class="font-semibold text-primary">{{ maskedEmail }}</span>
       กรุณากรอกรหัสเพื่อยืนยันตัวตน
@@ -22,7 +21,7 @@
   <!-- OTP 6-digit Input -->
   <div>
     <label
-      class="block text-xl font-semibold text-surface-dark mb-3 text-center"
+      class="block text-xl font-semibold mb-3 text-center"
     >
       รหัส OTP
     </label>
@@ -51,7 +50,7 @@
   <!-- Countdown Timer -->
   <div class="text-center">
     @if (!canResend()) {
-      <span class="text-surface-dark">
+      <span>
         หมดอายุใน
         <span class="font-bold text-primary text-lg">{{
           countdownDisplay()

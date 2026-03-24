@@ -3,6 +3,7 @@ import { Component, Input } from '@angular/core';
 @Component({
   selector: 'app-section-card',
   standalone: false,
+  host: { class: 'block' },
   template: `
     <div class="bg-surface-card rounded-xl border border-surface-border">
       <!-- Gradient Header -->

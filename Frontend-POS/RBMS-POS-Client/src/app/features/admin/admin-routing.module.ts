@@ -1,41 +1,24 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-
 import { PermissionGuard } from '@app/core/guards/permission.guard';
-
 import { PositionListComponent } from './pages/position-list/position-list.component';
 import { PositionManageComponent } from './pages/position-manage/position-manage.component';
 import { ServiceChargeListComponent } from './pages/service-charge-list/service-charge-list.component';
-import { ServiceChargeManageComponent } from './pages/service-charge-manage/service-charge-manage.component';
 import { ShopSettingsComponent } from './pages/shop-settings/shop-settings.component';
+import { UserListComponent } from './pages/user-list/user-list.component';
+import { UserManageComponent } from './pages/user-manage/user-manage.component';
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'service-charges',
+    redirectTo: 'users',
     pathMatch: 'full',
   },
   {
     path: 'service-charges',
-    data: { breadcrumb: 'ค่าบริการ', permissions: ['service-charge.read'] },
+    data: { breadcrumb: 'จัดการค่าบริการ', permissions: ['service-charge.read'] },
     canActivate: [PermissionGuard],
-    children: [
-      {
-        path: '',
-        component: ServiceChargeListComponent,
-      },
-      {
-        path: 'create',
-        component: ServiceChargeManageComponent,
-        data: { breadcrumb: 'เพิ่ม', permissions: ['service-charge.create'] },
-        canActivate: [PermissionGuard],
-      },
-      {
-        path: 'update/:serviceChargeId',
-        component: ServiceChargeManageComponent,
-        data: { breadcrumb: 'แก้ไข' },
-      },
-    ],
+    component: ServiceChargeListComponent,
   },
   {
     path: 'positions',
@@ -49,7 +32,8 @@ const routes: Routes = [
       {
         path: 'create',
         component: PositionManageComponent,
-        data: { breadcrumb: 'เพิ่ม' },
+        data: { breadcrumb: 'เพิ่ม', permissions: ['position.create'] },
+        canActivate: [PermissionGuard],
       },
       {
         path: 'update/:positionId',
@@ -63,6 +47,25 @@ const routes: Routes = [
     component: ShopSettingsComponent,
     data: { breadcrumb: 'ตั้งค่าร้านค้า', permissions: ['shop-settings.read'] },
     canActivate: [PermissionGuard],
+  },
+  {
+    path: 'users',
+    data: {
+      breadcrumb: 'รายชื่อผู้ใช้งาน',
+      permissions: ['user-management.read'],
+    },
+    canActivate: [PermissionGuard],
+    children: [
+      {
+        path: '',
+        component: UserListComponent,
+      },
+      {
+        path: 'update/:userId',
+        component: UserManageComponent,
+        data: { breadcrumb: 'แก้ไข' },
+      },
+    ],
   },
 ];
 

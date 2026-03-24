@@ -1,3 +1,6 @@
+using POS.Main.Business.HumanResource.Models.EmployeeAddress;
+using POS.Main.Business.HumanResource.Models.EmployeeEducation;
+using POS.Main.Business.HumanResource.Models.EmployeeWorkHistory;
 using POS.Main.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
@@ -170,4 +173,8 @@ public class UpdateEmployeeRequestModel
     /// Set to true to remove the existing profile image
     /// </summary>
     public bool RemoveImage { get; set; }
+
+    public List<CreateEmployeeAddressRequestModel>? Addresses { get; set; }
+    public List<CreateEmployeeEducationRequestModel>? Educations { get; set; }
+    public List<CreateEmployeeWorkHistoryRequestModel>? WorkHistories { get; set; }
 }

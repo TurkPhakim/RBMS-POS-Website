@@ -1,8 +1,8 @@
 import {
   Component,
-  computed,
   DestroyRef,
   OnDestroy,
+  OnInit,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -16,46 +16,26 @@ import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { Icon, ModalService } from '@app/core/services/modal.service';
 import { CreateUserDialogComponent } from '../../dialogs/create-user-dialog/create-user-dialog.component';
 import { CredentialsDialogComponent } from '../../dialogs/credentials-dialog/credentials-dialog.component';
+
 const KEY_BTN_ADD = 'add-employee';
+
 @Component({
   selector: 'app-employee-list',
   standalone: false,
   templateUrl: './employee-list.component.html',
 })
-export class EmployeeListComponent implements OnDestroy {
-  private allEmployees = signal<EmployeeResponseModel[]>([]);
-  statusFilter = signal<string | null>(null);
-  positionFilter = signal<number | null>(null);
-  searchTerm = signal('');
+export class EmployeeListComponent implements OnInit, OnDestroy {
+  employees = signal<EmployeeResponseModel[]>([]);
+  totalRecords = signal(0);
+
+  searchTerm = '';
+  statusFilter: string | null = null;
+  positionFilter: number | null = null;
+  page = 1;
+  rows = 10;
+
   canCreate: boolean;
   canDelete: boolean;
-
-  employees = computed(() => {
-    const status = this.statusFilter();
-    const positionId = this.positionFilter();
-    const search = this.searchTerm().toLowerCase().trim();
-    let filtered = this.allEmployees();
-
-    if (status === 'active') {
-      filtered = filtered.filter((emp) => emp.isActive === true);
-    } else if (status === 'inactive') {
-      filtered = filtered.filter((emp) => emp.isActive === false);
-    }
-
-    if (positionId) {
-      filtered = filtered.filter((emp) => emp.positionId === positionId);
-    }
-
-    if (search) {
-      filtered = filtered.filter(
-        (emp) =>
-          emp.fullNameThai?.toLowerCase().includes(search) ||
-          emp.fullNameEnglish?.toLowerCase().includes(search),
-      );
-    }
-
-    return filtered.sort((a, b) => (a.employeeId || 0) - (b.employeeId || 0));
-  });
 
   constructor(
     private readonly apiConfig: ApiConfiguration,
@@ -84,40 +64,15 @@ export class EmployeeListComponent implements OnDestroy {
     this.breadcrumbService.clearButtons();
   }
 
-  private setupBreadcrumbButtons(): void {
-    if (this.canCreate) {
-      this.breadcrumbService.addOrUpdateButton({
-        key: KEY_BTN_ADD,
-        type: 'button',
-        item: {
-          key: KEY_BTN_ADD,
-          label: 'เพิ่มพนักงาน',
-          callback: () => this.onAdd(),
-        },
-      });
-    }
+  onFilterChange(): void {
+    this.page = 1;
+    this.loadEmployees();
   }
 
-  loadEmployees(): void {
-    this.humanResourceService
-      .humanResourceGetEmployeesGet()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          this.allEmployees.set(response.results ?? []);
-        },
-        error: () => {
-          this.modalService.cancel({
-            title: 'ผิดพลาด !',
-            message: 'ไม่สามารถโหลดข้อมูลพนักงานได้',
-          });
-        },
-      });
-  }
-
-  onSearch(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
+  onPageChange(event: { first?: number; rows?: number }): void {
+    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.rows)) + 1;
+    this.rows = event.rows ?? this.rows;
+    this.loadEmployees();
   }
 
   onAdd(): void {
@@ -167,17 +122,54 @@ export class EmployeeListComponent implements OnDestroy {
 
     ref.onClose
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(
-        (result?: {
-          username: string;
-          password: string;
-        }) => {
-          if (result) {
-            this.openCredentialsDialog(result);
-            this.loadEmployees();
-          }
+      .subscribe((result?: { username: string; password: string }) => {
+        if (result) {
+          this.openCredentialsDialog(result);
+          this.loadEmployees();
+        }
+      });
+  }
+
+  private loadEmployees(): void {
+    const isActive =
+      this.statusFilter === 'active' ? true :
+      this.statusFilter === 'inactive' ? false : undefined;
+
+    this.humanResourceService
+      .humanResourceGetEmployeesGet({
+        Page: this.page,
+        ItemPerPage: this.rows,
+        Search: this.searchTerm || undefined,
+        isActive,
+        positionId: this.positionFilter ?? undefined,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.employees.set(response.results ?? []);
+          this.totalRecords.set(response.total ?? 0);
         },
-      );
+        error: () => {
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถโหลดข้อมูลพนักงานได้',
+          });
+        },
+      });
+  }
+
+  private setupBreadcrumbButtons(): void {
+    if (this.canCreate) {
+      this.breadcrumbService.addOrUpdateButton({
+        key: KEY_BTN_ADD,
+        type: 'button',
+        item: {
+          key: KEY_BTN_ADD,
+          label: 'เพิ่มพนักงาน',
+          callback: () => this.onAdd(),
+        },
+      });
+    }
   }
 
   private openCredentialsDialog(credentials: {

@@ -1,0 +1,177 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="option-extra"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">ตัวเลือกเสริม</h1>
+  </div>
+
+  <!-- Content (Search + Table รวมกัน) -->
+  <div class="bg-surface-card rounded-lg">
+    <!-- Filter Section -->
+    <div class="p-4">
+      <div class="flex flex-wrap items-end gap-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block font-semibold mb-2">ค้นหา</label>
+          <div class="relative">
+            <p-iconField>
+              <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+              <input
+                pInputText
+                placeholder="ค้นหาชื่อกลุ่มตัวเลือก..."
+                class="w-full pr-8"
+                [(ngModel)]="searchTerm"
+                (keyup.enter)="onFilterChange()"
+              />
+            </p-iconField>
+            @if (searchTerm) {
+              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                 (click)="searchTerm = ''; onFilterChange()"></i>
+            }
+          </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">ประเภทเมนู</label>
+          <app-menu-category-dropdown
+            [showClear]="true"
+            [(ngModel)]="selectedCategoryType"
+            (ngModelChange)="onFilterChange()"
+          ></app-menu-category-dropdown>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">สถานะ</label>
+          <app-active-status-dropdown
+            [(ngModel)]="selectedStatus"
+            (ngModelChange)="onFilterChange()"
+          ></app-active-status-dropdown>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="px-4 pb-4">
+      <p-table
+        [value]="optionGroups()"
+        [stripedRows]="true"
+        [scrollable]="true"
+        [paginator]="true"
+        [rows]="rows"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        styleClass="p-datatable-clean"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="w-[80px]">รหัส</th>
+            <th class="w-[200px]">ชื่อกลุ่ม</th>
+            <th class="w-[120px]">ประเภท</th>
+            <th class="w-[120px]">จำนวนตัวเลือก</th>
+            <th class="w-[120px]">เมนูที่ใช้</th>
+            <th class="w-[120px]">สถานะ</th>
+            <th class="w-[100px]">ตัวเลือก</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <!-- ID -->
+            <td class="!text-center font-semibold">
+              {{ item.optionGroupId }}
+            </td>
+
+            <!-- Name -->
+            <td class="whitespace-nowrap">
+              {{ item.name }}
+            </td>
+
+            <!-- Category Type -->
+            <td class="!text-center whitespace-nowrap">
+              <p-tag
+                [value]="item.categoryTypeName"
+                severity="info"
+              ></p-tag>
+            </td>
+
+            <!-- Option Items Count -->
+            <td class="!text-center whitespace-nowrap">
+              {{ item.optionItems?.length ?? 0 }}
+            </td>
+
+            <!-- Linked Menu Count -->
+            <td class="!text-center whitespace-nowrap">
+              {{ item.linkedMenuCount ?? 0 }} เมนู
+            </td>
+
+            <!-- Status -->
+            <td class="!text-center">
+              @if (item.isActive) {
+                <span class="font-bold text-primary">เปิดใช้งาน</span>
+              } @else {
+                <span class="font-bold text-danger">ปิดใช้งาน</span>
+              }
+            </td>
+
+            <!-- Actions -->
+            <td class="text-center">
+              <div class="flex justify-center gap-2">
+                @if (canUpdate) {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                    pTooltip="ดู/แก้ไข"
+                    tooltipPosition="top"
+                    (click)="onEdit(item.optionGroupId)"
+                  >
+                    <app-generic-icon
+                      name="eye"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
+                @if (canDelete && !item.linkedMenuCount) {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                    pTooltip="ลบ"
+                    tooltipPosition="top"
+                    (click)="onDelete(item.optionGroupId, item.name)"
+                  >
+                    <app-generic-icon
+                      name="trash"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่พบข้อมูลตัวเลือกเสริม" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

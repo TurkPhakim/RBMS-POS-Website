@@ -29,12 +29,12 @@
         @if (!last && item.route) {
           <a
             [routerLink]="item.route"
-            class="text-lg text-primary-badge font-semibold hover:text-primary transition-colors"
+            class="text-xl text-primary-badge font-semibold hover:text-primary transition-colors"
           >
             {{ item.label }}
           </a>
         } @else {
-          <span class="text-lg text-primary-badge font-semibold">{{
+          <span class="text-xl text-primary-badge font-semibold">{{
             item.label
           }}</span>
         }
@@ -51,7 +51,7 @@
             [label]="btn.item.label || ''"
             [icon]="btn.item.icon || ''"
             [severity]="btn.item.severity || 'primary'"
-            [size]="btn.item.size || 'small'"
+            [size]="btn.item.size || 'large'"
             [rounded]="btn.item.rounded || false"
             [raised]="btn.item.raised || false"
             [outlined]="btn.item.variant === 'outlined'"
@@ -70,7 +70,7 @@
               [label]="btn.item.label || ''"
               [icon]="btn.item.icon || ''"
               [severity]="btn.item.severity || 'primary'"
-              [size]="btn.item.size || 'small'"
+              [size]="btn.item.size || 'large'"
               [rounded]="btn.item.rounded || false"
               [raised]="btn.item.raised || false"
               [loading]="btn.item.loading || false"

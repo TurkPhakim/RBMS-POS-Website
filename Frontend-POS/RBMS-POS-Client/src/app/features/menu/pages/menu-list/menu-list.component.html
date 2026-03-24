@@ -1,128 +1,239 @@
 <div class="space-y-5">
   <!-- Page Header -->
-  <div>
-    <h1 class="text-page-title text-primary">จัดการเมนู</h1>
-    <p class="text-lg text-surface-sub mt-1">จัดการเมนูอาหารและเครื่องดื่มทั้งหมด</p>
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        [name]="config.icon"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">{{ config.title }}</h1>
   </div>
 
-  <!-- Content -->
+  <!-- Content (Search + Table รวมกัน) -->
+  <div class="bg-surface-card rounded-lg">
     <!-- Filter Section -->
-    <div class="bg-surface-card rounded-xl shadow-sm p-4 border border-surface-border">
-      <div class="flex items-center gap-3 flex-wrap">
-        <span class="text-surface-dark font-semibold">กรองตามหมวดหมู่:</span>
-        <div class="flex gap-2 flex-wrap">
-          <p-button label="ทั้งหมด" icon="pi pi-list"
-            [severity]="isFilterActive('all') ? undefined : 'secondary'"
-            [outlined]="!isFilterActive('all')"
-            size="small"
-            (onClick)="setFilter('all')">
-          </p-button>
-          <p-button label="อาหาร" icon="pi pi-box"
-            [severity]="isFilterActive('food') ? 'info' : 'secondary'"
-            [outlined]="!isFilterActive('food')"
-            size="small"
-            (onClick)="setFilter('food')">
-          </p-button>
-          <p-button label="เครื่องดื่ม" icon="pi pi-glass-martini"
-            [severity]="isFilterActive('beverage') ? 'warn' : 'secondary'"
-            [outlined]="!isFilterActive('beverage')"
-            size="small"
-            (onClick)="setFilter('beverage')">
-          </p-button>
+    <div class="p-4">
+      <div class="flex flex-wrap items-end gap-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block font-semibold mb-2">ค้นหา</label>
+          <div class="relative">
+            <p-iconField>
+              <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+              <input
+                pInputText
+                placeholder="ค้นหาชื่อเมนู..."
+                class="w-full pr-8"
+                [(ngModel)]="searchTerm"
+                (keyup.enter)="onFilterChange()"
+              />
+            </p-iconField>
+            @if (searchTerm) {
+              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                 (click)="searchTerm = ''; onFilterChange()"></i>
+            }
+          </div>
         </div>
-        <div class="ml-auto">
-          <span class="text-surface-sub">
-            แสดง <span class="font-bold text-primary">{{ menus().length }}</span> รายการ
-          </span>
+
+        <!-- Sub Category Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">หมวดหมู่ย่อย</label>
+          <app-sub-category-dropdown
+            [categoryType]="categoryType"
+            [(ngModel)]="selectedSubCategoryId"
+            (ngModelChange)="onFilterChange()"
+            placeholder="หมวดหมู่ทั้งหมด"
+          ></app-sub-category-dropdown>
         </div>
+
+        <!-- Status Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">สถานะ</label>
+          <app-availability-status-dropdown
+            [(ngModel)]="selectedStatus"
+            (ngModelChange)="onFilterChange()"
+          ></app-availability-status-dropdown>
+        </div>
+
+        <!-- Period Filter -->
+        @if (hasTwoPeriods()) {
+          <div class="flex-1 min-w-[160px]">
+            <label class="block font-semibold mb-2">ช่วงเวลาขาย</label>
+            <app-period-dropdown
+              [(ngModel)]="selectedPeriod"
+              (ngModelChange)="onFilterChange()"
+            ></app-period-dropdown>
+          </div>
+        }
       </div>
     </div>
 
     <!-- Table -->
-    <div class="bg-surface-card overflow-hidden border border-surface-border">
-      <p-table [value]="menus()" [stripedRows]="true" [tableStyle]="{'min-width': '70rem'}">
+    <div class="px-4 pb-4">
+      <p-table
+        [value]="menus()"
+        [stripedRows]="true"
+        [scrollable]="true"
+        [paginator]="true"
+        [rows]="rows"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        styleClass="p-datatable-clean"
+      >
         <ng-template pTemplate="header">
           <tr>
-            <th>รหัส</th>
-            <th>รูปภาพ</th>
-            <th>ชื่อเมนู (ไทย)</th>
-            <th>ชื่อเมนู (อังกฤษ)</th>
-            <th>ราคา</th>
-            <th>หมวดหมู่</th>
-            <th>สถานะขาย</th>
-            <th>สถานะระบบ</th>
-            <th>ตัวเลือก</th>
+            <th class="w-[80px]">รหัส</th>
+            <th class="w-[80px]">รูปเมนู</th>
+            <th class="w-[200px]">ชื่อเมนู</th>
+            <th class="w-[140px]">หมวดหมู่ย่อย</th>
+            <th class="w-[100px]">ราคา</th>
+            <th class="w-[120px]">ช่วงเวลา</th>
+            <th class="w-[160px]">Tags</th>
+            <th class="w-[80px]">ปักหมุด</th>
+            <th class="w-[120px]">สถานะ</th>
+            <th class="w-[100px]">ตัวเลือก</th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-item>
-          <tr class="border-b border-surface-border hover:bg-primary-subtle transition-colors">
+          <tr>
             <!-- ID -->
-            <td class="font-semibold text-primary">#{{ item.menuId }}</td>
+            <td class="!text-center font-semibold">
+              {{ item.menuId }}
+            </td>
 
             <!-- Image -->
-            <td>
-              @if (item.imageFileId) {
-                <img [src]="getImageUrl(item.imageFileId)" [alt]="item.nameThai || 'เมนู'"
-                  class="h-16 w-16 rounded-lg object-cover shadow-sm border border-surface-border" />
-              } @else {
-                <div class="h-16 w-16 rounded-lg bg-surface flex items-center justify-center border border-surface-border">
-                  <app-generic-icon name="food" svgClass="w-10 h-10" class="text-surface-sub opacity-50"></app-generic-icon>
+            <td class="!text-center">
+              <div class="flex justify-center">
+                @if (getImageUrl(item.imageFileId)) {
+                  <img
+                    [src]="getImageUrl(item.imageFileId)"
+                    alt=""
+                    class="h-16 w-16 rounded-lg object-cover"
+                  />
+                } @else {
+                  <div
+                    class="h-16 w-16 rounded-lg bg-surface-border flex items-center justify-center"
+                  >
+                    <app-generic-icon
+                      [name]="config.icon"
+                      svgClass="w-9 h-9"
+                      class="text-surface-sub opacity-50"
+                    ></app-generic-icon>
+                  </div>
+                }
+              </div>
+            </td>
+
+            <!-- Name -->
+            <td class="whitespace-nowrap">
+              <div class="font-semibold">{{ item.nameThai }}</div>
+              @if (item.nameEnglish) {
+                <div class="text-surface-sub mt-0.5">
+                  {{ item.nameEnglish }}
                 </div>
               }
             </td>
 
-            <!-- Name Thai -->
-            <td>
-              <span class="font-semibold text-surface-dark">{{ item.nameThai }}</span>
-            </td>
-
-            <!-- Name English -->
-            <td>
-              <span class="text-surface-dark">{{ item.nameEnglish || '-' }}</span>
-            </td>
-
-            <!-- Price -->
-            <td class="text-right">
-              <span class="font-bold text-primary text-lg">{{ item.price | number: '1.2-2' }}</span>
-            </td>
-
-            <!-- Category -->
-            <td class="text-center">
-              <p-tag [value]="getCategoryLabel(item.category!)" [severity]="getCategorySeverity(item.category!)"></p-tag>
-            </td>
-
-            <!-- Available Status -->
-            <td class="text-center">
-              @if (item.isAvailable) {
-                <p-tag value="พร้อมขาย" severity="success"></p-tag>
-              } @else {
-                <p-tag value="หยุดขาย" severity="secondary"></p-tag>
+            <!-- Sub Category -->
+            <td class="!text-center whitespace-nowrap">
+              @if (item.subCategoryName) {
+                <p-tag
+                  [value]="item.subCategoryName"
+                  severity="info"
+                ></p-tag>
               }
             </td>
 
-            <!-- System Status -->
-            <td class="text-center">
-              @if (item.isActive) {
-                <p-tag value="ใช้งาน" severity="success"></p-tag>
+            <!-- Price -->
+            <td class="!text-center font-semibold">
+              {{ item.price | number : "1.2-2" }}
+            </td>
+
+            <!-- Period -->
+            <td class="!text-center">
+              <p-tag
+                [value]="getPeriodLabel(item).text"
+                [severity]="getPeriodLabel(item).severity"
+              ></p-tag>
+            </td>
+
+            <!-- Tags -->
+            <td class="!text-center">
+              <div class="flex flex-wrap justify-center gap-1">
+                @for (tag of getTagLabels(item.tags); track tag.label) {
+                  <p-tag
+                    [value]="tag.label"
+                    [severity]="tag.severity"
+                  ></p-tag>
+                }
+              </div>
+            </td>
+
+            <!-- Pinned -->
+            <td class="!text-center">
+              @if (item.isPinned) {
+                <app-generic-icon
+                  name="pin"
+                  svgClass="w-5 h-5"
+                  class="text-primary"
+                ></app-generic-icon>
               } @else {
-                <p-tag value="ปิดใช้งาน" severity="secondary"></p-tag>
+                <app-generic-icon
+                  name="pin"
+                  svgClass="w-5 h-5"
+                  class="text-surface-placeholder"
+                ></app-generic-icon>
+              }
+            </td>
+
+            <!-- Status -->
+            <td class="!text-center">
+              @if (item.isAvailable) {
+                <span class="font-bold text-primary">เปิดขาย</span>
+              } @else {
+                <span class="font-bold text-danger">ปิดขาย</span>
               }
             </td>
 
             <!-- Actions -->
             <td class="text-center">
               <div class="flex justify-center gap-2">
-                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-primary-subtle hover:bg-primary-light text-primary transition-colors duration-200"
-                  pTooltip="แก้ไข" tooltipPosition="top"
-                  (click)="onEdit(item.menuId!)">
-                  <app-generic-icon name="pen-edit" svgClass="w-4 h-4"></app-generic-icon>
-                </button>
-                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-danger-bg hover:bg-danger text-danger hover:text-white transition-colors duration-200"
-                  pTooltip="ลบ" tooltipPosition="top"
-                  (click)="onDelete(item.menuId!, item.nameThai!)">
-                  <app-generic-icon name="trash" svgClass="w-4 h-4"></app-generic-icon>
-                </button>
+                @if (canUpdate) {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                    pTooltip="ดู/แก้ไข"
+                    tooltipPosition="top"
+                    (click)="onEdit(item.menuId)"
+                  >
+                    <app-generic-icon
+                      name="eye"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
+                @if (canDelete) {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                    pTooltip="ลบ"
+                    tooltipPosition="top"
+                    (click)="onDelete(item.menuId, item.nameThai)"
+                  >
+                    <app-generic-icon
+                      name="trash"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
               </div>
             </td>
           </tr>
@@ -130,7 +241,7 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="9">
+            <td colspan="10">
               <div class="flex justify-center items-center w-full p-[100px]">
                 <app-empty-view message="ไม่พบข้อมูลเมนู" />
               </div>
@@ -139,4 +250,5 @@
         </ng-template>
       </p-table>
     </div>
+  </div>
 </div>

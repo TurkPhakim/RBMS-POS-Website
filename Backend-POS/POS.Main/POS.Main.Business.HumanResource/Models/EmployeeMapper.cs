@@ -1,6 +1,7 @@
 using POS.Main.Business.HumanResource.Models.EmployeeAddress;
 using POS.Main.Business.HumanResource.Models.EmployeeEducation;
 using POS.Main.Business.HumanResource.Models.EmployeeWorkHistory;
+using POS.Main.Business.HumanResource.Models.Profile;
 using POS.Main.Dal.Entities;
 
 namespace POS.Main.Business.HumanResource.Models;
@@ -96,6 +97,7 @@ public static class EmployeeMapper
             IsActive = entity.IsActive,
             UserId = entity.UserId,
             Username = entity.User?.Username,
+            HasPinCode = !string.IsNullOrEmpty(entity.User?.PinCodeHash),
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             CreatedBy = entity.CreatedByEmployee?.Nickname ?? entity.CreatedBy?.ToString(),
@@ -104,6 +106,15 @@ public static class EmployeeMapper
             Educations = entity.Educations?.Select(ToEducationResponse).ToList() ?? new(),
             WorkHistories = entity.WorkHistories?.Select(ToWorkHistoryResponse).ToList() ?? new()
         };
+
+    public static void UpdateProfileEntity(TbEmployee entity, UpdateProfileRequestModel request)
+    {
+        entity.LineId = request.LineId;
+        entity.BankName = request.BankName;
+        entity.BankAccountNumber = request.BankAccountNumber;
+        entity.EndDate = request.EndDate;
+        entity.Phone = request.Phone;
+    }
 
     public static MyProfileResponseModel ToMyProfileResponse(TbEmployee entity)
         => new()

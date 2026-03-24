@@ -32,16 +32,18 @@
       [fluid]="true"
       [severity]="'secondary'"
       [outlined]="true"
-      (onClick)="handleCancel()">
-      {{ config.data?.cancelButtonLabel ?? 'ยกเลิก' }}
+      (onClick)="handleCancel()"
+    >
+      {{ config.data?.cancelButtonLabel ?? "ยกเลิก" }}
     </p-button>
     <p-button
       class="flex-1"
       [fluid]="true"
       severity="primary"
       [loading]="confirmLoading"
-      (onClick)="handleConfirm()">
-      {{ config.data?.confirmButtonLabel ?? 'ยืนยัน' }}
+      (onClick)="handleConfirm()"
+    >
+      {{ config.data?.confirmButtonLabel ?? "ยืนยัน" }}
     </p-button>
   </div>
 </div>

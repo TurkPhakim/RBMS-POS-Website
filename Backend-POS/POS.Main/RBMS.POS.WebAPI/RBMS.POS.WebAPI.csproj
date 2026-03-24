@@ -26,6 +26,10 @@
     <ProjectReference Include="..\POS.Main.Business.Menu\POS.Main.Business.Menu.csproj" />
     <ProjectReference Include="..\POS.Main.Business.HumanResource\POS.Main.Business.HumanResource.csproj" />
     <ProjectReference Include="..\POS.Main.Business.Authorization\POS.Main.Business.Authorization.csproj" />
+    <ProjectReference Include="..\POS.Main.Business.Table\POS.Main.Business.Table.csproj" />
+    <ProjectReference Include="..\POS.Main.Business.Order\POS.Main.Business.Order.csproj" />
+    <ProjectReference Include="..\POS.Main.Business.Payment\POS.Main.Business.Payment.csproj" />
+    <ProjectReference Include="..\POS.Main.Business.Notification\POS.Main.Business.Notification.csproj" />
   </ItemGroup>
 
 </Project>

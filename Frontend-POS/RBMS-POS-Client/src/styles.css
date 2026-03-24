@@ -1,12 +1,34 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   RBMS-POS — Global Styles
+
+   ลำดับหมวดหมู่ (ห้ามสลับ):
+   1. Tailwind Directives
+   2. @layer base — Global Resets (html, body)
+   3. Browser Overrides — Scrollbar, Native element resets
+   4. Form — Validation states, Focus ring, Dropdown highlights
+   5. PrimeNG Component Overrides — เรียงตามชื่อ component A-Z
+   6. Dialog Overrides — Alert dialog, Card dialog
+   7. Custom Components — App-specific elements
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║ 1. TAILWIND DIRECTIVES                                                  ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Base Resets ──────────────────────────────────────────────────────────── */
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║ 2. @LAYER BASE — Global Resets                                          ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
 @layer base {
-  html, body {
+  html,
+  body {
     @apply h-full overflow-hidden;
     font-family: "Sarabun", sans-serif;
+    font-size: 1rem;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -15,13 +37,12 @@
   }
 }
 
-/* ─── Hide Browser Native Password Reveal Button ───────────────────────── */
-input[type="password"]::-ms-reveal,
-input[type="password"]::-ms-clear {
-  display: none;
-}
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║ 3. BROWSER OVERRIDES — Scrollbar, Native element resets                 ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
 
-/* ─── Custom Scrollbar ────────────────────────────────────────────────────── */
+/* ─── Custom Scrollbar ──────────────────────────────────────────────────── */
+
 /* Webkit (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
   width: 6px;
@@ -64,128 +85,200 @@ input[type="password"]::-ms-clear {
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-/* ─── Alert Dialog (ModalService) ─────────────────────────────────────────── */
-.alert-dialog .p-dialog-content {
-  padding: 1.25rem;
-  min-height: 240px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* ─── Hide Browser Native Password Reveal Button ───────────────────────── */
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
 }
 
-.alert-dialog .p-dialog-content > div {
-  width: 100%;
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║ 4. FORM — Validation states, Focus ring, Dropdown highlights            ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
+/* ─── Form Validation — กรอบแดงเฉพาะตอนกดบันทึก (dirty) ─────────────────── */
+
+/* Reset: ลบกรอบแดงสำหรับ input ที่ยังไม่ dirty (ป้องกัน PrimeNG + browser default) */
+.p-inputtext.ng-invalid:not(.ng-dirty),
+.p-textarea.ng-invalid:not(.ng-dirty),
+.p-select.ng-invalid:not(.ng-dirty),
+.p-dropdown.ng-invalid:not(.ng-dirty),
+.ng-invalid:not(.ng-dirty) > .p-inputtext,
+.ng-invalid:not(.ng-dirty) > .p-dropdown {
+  border-color: var(--p-inputtext-border-color) !important;
 }
 
-.alert-dialog p-button {
-  display: block;
-  flex: 1;
-}
-
-.alert-dialog .p-dialog-header {
-  border-width: 0 !important;
-}
-
-/* ─── PrimeNG Toggle Switch ───────────────────────────────────────────────── */
-/* Reset ALL PrimeNG default styles */
-.p-toggleswitch,
-.p-toggleswitch .p-toggleswitch-slider,
-.p-toggleswitch .p-toggleswitch-handle {
+/* Reset: ป้องกัน browser :user-invalid (Chrome 119+) แสดงกรอบแดงตอน blur */
+input:user-invalid,
+textarea:user-invalid {
+  border-color: var(--p-inputtext-border-color) !important;
   box-shadow: none !important;
+  outline-color: transparent !important;
+}
+
+/* Apply: กรอบแดงเฉพาะเมื่อ dirty + invalid (กดบันทึกแล้ว) */
+.p-inputtext.ng-invalid.ng-dirty,
+.p-textarea.ng-invalid.ng-dirty,
+.p-select.ng-invalid.ng-dirty,
+.p-dropdown.ng-invalid.ng-dirty,
+.ng-invalid.ng-dirty > .p-inputtext,
+.ng-invalid.ng-dirty > .p-dropdown {
+  border-color: var(--color-danger) !important;
+}
+
+/* Override: ไม่เปลี่ยนสี placeholder ตอน error (PrimeNG default เปลี่ยนเป็นแดง) */
+.p-inputtext.ng-invalid.ng-dirty::placeholder {
+  color: var(--p-inputtext-placeholder-color) !important;
+}
+
+/* ─── Focus Ring — primary color ─────────────────────────────────────────── */
+
+.p-inputtext:enabled:focus,
+.p-inputnumber-input:enabled:focus,
+.p-dropdown:not(.p-disabled).p-focus,
+.p-textarea:enabled:focus,
+.p-select:not(.p-disabled).p-focus,
+.p-multiselect:not(.p-disabled).p-focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 0.2rem var(--color-primary-light) !important;
   outline: none !important;
 }
 
-/* Slider track */
-.p-toggleswitch .p-toggleswitch-slider {
-  position: relative !important;
-  width: 3rem !important;
-  height: 1.75rem !important;
-  border-radius: 9999px !important;
-  border: none !important;
-  background: var(--color-danger) !important;
-  transition: background 0.2s !important;
-}
+/* ─── Dropdown / Select — Selected item highlight ────────────────────────── */
 
-.p-toggleswitch:not(.p-disabled):hover .p-toggleswitch-slider {
-  background: var(--color-danger-dark) !important;
-}
-
-.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
-  background: var(--color-success) !important;
-}
-
-.p-toggleswitch.p-toggleswitch-checked:not(.p-disabled):hover .p-toggleswitch-slider {
-  background: var(--color-success-text) !important;
-}
-
-/* Handle (white knob) */
-.p-toggleswitch .p-toggleswitch-handle {
-  position: absolute !important;
-  top: 50% !important;
-  inset-inline-start: 0.25rem !important;
-  transform: translateY(-50%) !important;
-  width: 1.25rem !important;
-  height: 1.25rem !important;
-  border-radius: 50% !important;
-  border: none !important;
-  background: #ffffff !important;
-  transition: inset-inline-start 0.2s !important;
-}
-
-.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle {
-  inset-inline-start: calc(3rem - 1.25rem - 0.25rem) !important;
-}
-
-/* ─── PrimeNG Table — Clean Style ────────────────────────────────────── */
-.p-datatable-clean .p-datatable-table {
-  border-radius: 0.5rem !important;
-  overflow: hidden !important;
-}
-
-.p-datatable-clean .p-datatable-thead > tr > th {
+.p-dropdown-item.p-highlight,
+.p-select-option.p-select-option-selected,
+.p-listbox-option.p-listbox-option-selected {
   background: var(--color-primary-subtle) !important;
   color: var(--color-primary-text) !important;
-  font-weight: 600 !important;
-  text-align: center !important;
-  border: none !important;
-  border-bottom: 2px solid var(--color-primary-light) !important;
-  border-right: 1px solid var(--color-primary-light) !important;
-  font-size: 0.875rem !important;
 }
 
-.p-datatable-clean .p-datatable-thead > tr > th:last-child {
-  border-right: none !important;
-}
-
-.p-datatable-clean .p-datatable-tbody > tr > td {
-  border: none !important;
-  border-bottom: 1px solid var(--color-surface-border) !important;
-  border-right: 1px solid var(--color-surface-border) !important;
-  vertical-align: middle !important;
-}
-
-.p-datatable-clean .p-datatable-tbody > tr > td.text-center {
-  text-align: center !important;
-}
-
-.p-datatable-clean .p-datatable-tbody > tr > td:last-child {
-  border-right: none !important;
-}
-
-.p-datatable-clean .p-datatable-tbody > tr:last-child > td {
-  border-bottom: none !important;
-}
-
-/* Striped rows */
-.p-datatable-clean .p-datatable-tbody > tr:nth-child(even) {
+.p-dropdown-item:not(.p-highlight):hover,
+.p-select-option:not(.p-select-option-selected):hover,
+.p-listbox-option:not(.p-listbox-option-selected):hover {
   background: var(--color-surface) !important;
 }
 
-.p-datatable-clean .p-datatable-tbody > tr:nth-child(even):hover {
-  background: var(--color-primary-subtle) !important;
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║ 5. PRIMENG COMPONENT OVERRIDES — เรียงตามชื่อ component A-Z             ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
+/* ─── Compact Dropdown (ลดความสูง ใช้ใน split-bill) ─────────────────────── */
+
+.compact-dropdown .p-dropdown-label {
+  padding: 0.15rem 0.4rem !important;
+  font-size: 0.8rem;
+  line-height: 1.2;
 }
 
-/* ─── PrimeNG Paginator ──────────────────────────────────────────────────── */
+.compact-dropdown .p-dropdown-trigger {
+  width: 1.4rem;
+  padding: 0;
+}
+
+.compact-dropdown .p-dropdown-trigger .p-dropdown-trigger-icon {
+  font-size: 0.6rem;
+}
+
+.compact-dropdown-panel .p-dropdown-item {
+  padding: 0.3rem 0.5rem !important;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+/* ─── DatePicker ─────────────────────────────────────────────────────────── */
+
+/* ป้องกัน datepicker ถูกทับโดย element อื่น (dynamic overlay ใช้ Tailwind ไม่ได้) */
+.p-datepicker-panel {
+  z-index: 9999 !important;
+}
+
+/* ขยับ clear icon ไปซ้ายเมื่อมี custom icon (directive เพิ่ม class .has-clear-icon) */
+p-datepicker.has-clear-icon .p-datepicker-clear-icon {
+  right: 2.25rem;
+}
+
+/* Time Picker section (showTime) — ปฏิทิน+เวลา แบบ side-by-side */
+.p-datepicker-panel:has(.p-datepicker-calendar-container):has(
+    .p-datepicker-time-picker
+  ) {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+.p-datepicker-panel:has(.p-datepicker-time-picker)
+  .p-datepicker-calendar-container {
+  flex: 1;
+}
+
+.p-datepicker-calendar-container + .p-datepicker-time-picker {
+  border-top: none !important;
+  border-left: 1px solid var(--color-surface-border);
+  padding: 1rem 2rem !important;
+  align-self: center;
+  gap: 0.5rem !important;
+}
+
+/* ปุ่ม chevron — ใช้สีธีม primary-badge */
+.p-datepicker-time-picker .p-datepicker-increment-button,
+.p-datepicker-time-picker .p-datepicker-decrement-button {
+  color: var(--color-primary-badge) !important;
+  width: 2.5rem !important;
+  height: 2rem !important;
+}
+
+.p-datepicker-time-picker .p-datepicker-increment-button:hover,
+.p-datepicker-time-picker .p-datepicker-decrement-button:hover {
+  background: var(--color-primary-subtle) !important;
+  color: var(--color-primary-badge) !important;
+}
+
+/* ตัวเลขชั่วโมง-นาที */
+.p-datepicker-hour-picker > span,
+.p-datepicker-minute-picker > span {
+  font-size: 2rem !important;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  min-width: 3rem;
+  text-align: center;
+  line-height: 1;
+  padding: 0.25rem 0;
+}
+
+/* เครื่องหมาย : */
+.p-datepicker-separator {
+  font-size: 2rem !important;
+  font-weight: 700;
+  color: var(--color-surface-muted);
+}
+
+/* ─── InputNumber (Horizontal Buttons) ───────────────────────────────────── */
+
+.p-inputnumber-horizontal .p-inputnumber-button {
+  background: var(--color-surface);
+  border-color: var(--color-surface-border);
+  color: var(--color-surface-sub);
+  transition: all 0.15s ease;
+}
+
+.p-inputnumber-horizontal .p-inputnumber-button:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.p-inputnumber-horizontal .p-inputnumber-button:active {
+  background: var(--color-primary-text);
+  border-color: var(--color-primary-text);
+}
+
+.p-inputnumber-horizontal .p-inputnumber-input {
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ─── Paginator ──────────────────────────────────────────────────────────── */
+
 .p-paginator {
   justify-content: flex-end !important;
   padding: 0.5rem 1rem !important;
@@ -221,89 +314,8 @@ input[type="password"]::-ms-clear {
   font-weight: 600 !important;
 }
 
-/* Rows-per-page dropdown — overlay กว้างเท่า trigger */
-.p-paginator .p-select-overlay {
-  min-width: 0 !important;
-  width: 100% !important;
-}
+/* ─── RadioButton ────────────────────────────────────────────────────────── */
 
-/* ─── Form Validation — กรอบแดงเฉพาะตอนกดบันทึก (dirty) ──────────────────── */
-/* Reset: ลบกรอบแดงสำหรับ input ที่ยังไม่ dirty (ป้องกัน PrimeNG + browser default) */
-.p-inputtext.ng-invalid:not(.ng-dirty),
-.p-textarea.ng-invalid:not(.ng-dirty),
-.p-select.ng-invalid:not(.ng-dirty),
-.p-dropdown.ng-invalid:not(.ng-dirty),
-.ng-invalid:not(.ng-dirty) > .p-inputtext,
-.ng-invalid:not(.ng-dirty) > .p-dropdown {
-  border-color: var(--p-inputtext-border-color) !important;
-}
-
-/* Reset: ป้องกัน browser :user-invalid (Chrome 119+) แสดงกรอบแดงตอน blur */
-input:user-invalid,
-textarea:user-invalid {
-  border-color: var(--p-inputtext-border-color) !important;
-  box-shadow: none !important;
-  outline-color: transparent !important;
-}
-
-/* Apply: กรอบแดงเฉพาะเมื่อ dirty + invalid (กดบันทึกแล้ว) */
-.p-inputtext.ng-invalid.ng-dirty,
-.p-textarea.ng-invalid.ng-dirty,
-.p-select.ng-invalid.ng-dirty,
-.p-dropdown.ng-invalid.ng-dirty,
-.ng-invalid.ng-dirty > .p-inputtext,
-.ng-invalid.ng-dirty > .p-dropdown {
-  border-color: var(--color-danger) !important;
-}
-
-/* ─── PrimeNG Input Focus Ring → orange ──────────────────────────────────── */
-.p-inputtext:enabled:focus,
-.p-inputnumber-input:enabled:focus,
-.p-dropdown:not(.p-disabled).p-focus,
-.p-textarea:enabled:focus,
-.p-select:not(.p-disabled).p-focus,
-.p-multiselect:not(.p-disabled).p-focus {
-  border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 0.2rem var(--color-primary-light) !important;
-  outline: none !important;
-}
-
-/* Dropdown / Select — selected item highlight → orange */
-.p-dropdown-item.p-highlight,
-.p-select-option.p-select-option-selected,
-.p-listbox-option.p-listbox-option-selected {
-  background: var(--color-primary-subtle) !important;
-  color: var(--color-primary-text) !important;
-}
-
-.p-dropdown-item:not(.p-highlight):hover,
-.p-select-option:not(.p-select-option-selected):hover,
-.p-listbox-option:not(.p-listbox-option-selected):hover {
-  background: var(--color-surface) !important;
-}
-
-/* ─── Card Dialog (app-card-template) ────────────────────────────────────── */
-/* Reset PrimeNG dialog padding เพื่อให้ card-template ควบคุม layout */
-.card-dialog .p-dialog-content {
-  padding: 0 !important;
-}
-
-app-card-template p-footer {
-  display: contents;
-}
-
-/* ─── PrimeNG DatePicker Overlay ──────────────────────────────────────────── */
-/* ป้องกัน datepicker ถูกทับโดย element อื่น (ไม่สามารถใช้ Tailwind ได้เพราะเป็น dynamic overlay) */
-.p-datepicker-panel {
-  z-index: 9999 !important;
-}
-
-/* ขยับ clear icon ไปซ้ายเมื่อมี custom icon (directive เพิ่ม class .has-clear-icon) */
-p-datepicker.has-clear-icon .p-datepicker-clear-icon {
-  right: 2.25rem;
-}
-
-/* ─── PrimeNG RadioButton ────────────────────────────────────────────────── */
 .p-radiobutton-box {
   width: 1.25rem !important;
   height: 1.25rem !important;
@@ -322,9 +334,336 @@ p-datepicker.has-clear-icon .p-datepicker-clear-icon {
   height: 0.5rem !important;
 }
 
-/* ─── Password Input ──────────────────────────────────────────────────────── */
+/* ─── Table (p-datatable-clean) ──────────────────────────────────────────── */
+
+.p-datatable-clean .p-datatable-table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  min-width: 100% !important;
+}
+
+/* ป้องกัน scrollable flex หดคอลัมน์ */
+.p-datatable-clean .p-datatable-thead > tr > th,
+.p-datatable-clean .p-datatable-tbody > tr > td {
+  flex-shrink: 0 !important;
+}
+
+/* Header — rounded corners */
+.p-datatable-clean .p-datatable-thead > tr > th:first-child {
+  border-top-left-radius: 0.5rem !important;
+}
+
+.p-datatable-clean .p-datatable-thead > tr > th:last-child {
+  border-top-right-radius: 0.5rem !important;
+}
+
+/* Header — style */
+.p-datatable-clean .p-datatable-thead > tr > th {
+  background: var(--color-primary-subtle) !important;
+  color: var(--color-primary-text) !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  border: none !important;
+  border-bottom: 2px solid var(--color-primary-light) !important;
+  border-right: 1px solid var(--color-primary-light) !important;
+  font-size: 1rem !important;
+}
+
+.p-datatable-clean .p-datatable-thead > tr > th:last-child {
+  border-right: none !important;
+}
+
+/* Body — cell style */
+.p-datatable-clean .p-datatable-tbody > tr > td {
+  border: none !important;
+  border-bottom: 1px solid var(--color-surface-border) !important;
+  border-right: 1px solid var(--color-surface-border) !important;
+  vertical-align: middle !important;
+  font-size: 1.125rem !important;
+  color: var(--color-surface-dark) !important;
+}
+
+.p-datatable-clean .p-datatable-tbody > tr > td.text-center {
+  text-align: center !important;
+}
+
+.p-datatable-clean .p-datatable-tbody > tr > td:last-child {
+  border-right: none !important;
+}
+
+.p-datatable-clean .p-datatable-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+
+/* Body — row striped */
+.p-datatable-clean .p-datatable-tbody > tr:nth-child(even) {
+  background: var(--color-surface) !important;
+}
+
+/* Sticky last column (ตัวเลือก) */
+.p-datatable-clean .p-datatable-thead > tr > th:last-child,
+.p-datatable-clean .p-datatable-tbody > tr > td:last-child {
+  position: sticky !important;
+  right: 0 !important;
+  z-index: 1 !important;
+}
+
+.p-datatable-clean .p-datatable-thead > tr > th:last-child {
+  background: var(--color-primary-subtle) !important;
+  z-index: 2 !important;
+}
+
+.p-datatable-clean .p-datatable-tbody > tr > td:last-child {
+  background: white !important;
+}
+
+.p-datatable-clean .p-datatable-tbody > tr:nth-child(even) > td:last-child {
+  background: var(--color-surface) !important;
+}
+
+/* ─── ToggleSwitch ───────────────────────────────────────────────────────── */
+
+/* Reset ALL PrimeNG default styles */
+.p-toggleswitch,
+.p-toggleswitch .p-toggleswitch-slider {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Slider track */
+.p-toggleswitch .p-toggleswitch-slider {
+  position: relative !important;
+  width: 3rem !important;
+  height: 1.75rem !important;
+  border-radius: 9999px !important;
+  border: none !important;
+  background: var(--color-danger) !important;
+  transition: background 0.2s !important;
+}
+
+.p-toggleswitch:not(.p-disabled):hover .p-toggleswitch-slider {
+  background: var(--color-danger-dark) !important;
+}
+
+.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider {
+  background: var(--color-success) !important;
+}
+
+.p-toggleswitch.p-toggleswitch-checked:not(.p-disabled):hover
+  .p-toggleswitch-slider {
+  background: var(--color-success-text) !important;
+}
+
+/* Handle (white knob) — PrimeNG InputSwitch ใช้ ::before pseudo-element */
+.p-toggleswitch .p-toggleswitch-slider::before {
+  background: #ffffff !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  border-radius: 50% !important;
+}
+
+.p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider::before {
+  left: calc(3rem - 1.25rem - 0.25rem) !important;
+}
+
+/* Disabled state — ไม่ลด opacity, knob ขาวเสมอ */
+.p-toggleswitch.p-disabled {
+  opacity: 1 !important;
+}
+
+.p-toggleswitch.p-disabled .p-toggleswitch-slider::before {
+  background: #ffffff !important;
+}
+
+/* ─── Notification Toast (Phone Banner) ───────────────────────────────────── */
+
+.noti-toast {
+  top: 1rem !important;
+  width: 32rem !important;
+}
+
+.noti-toast .p-toast-message {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.noti-toast .p-toast-message-content {
+  padding: 0 !important;
+}
+
+.noti-toast .p-toast-icon-close,
+.noti-toast .p-toast-close-button,
+.noti-toast button[aria-label="Close"] {
+  display: none !important;
+}
+
+.noti-toast .p-toast-message-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.noti-toast app-generic-icon,
+.noti-toast app-generic-icon > span {
+  display: inline-flex !important;
+  align-items: center;
+}
+
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║ 6. DIALOG OVERRIDES                                                     ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
+/* ─── Alert Dialog (ModalService) ────────────────────────────────────────── */
+
+.alert-dialog .p-dialog-content {
+  padding: 1.25rem;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alert-dialog .p-dialog-content > div {
+  width: 100%;
+}
+
+.alert-dialog p-button {
+  display: block;
+  flex: 1;
+}
+
+.alert-dialog .p-dialog-header {
+  border-width: 0 !important;
+}
+
+/* ─── Card Dialog (app-card-template) ────────────────────────────────────── */
+
+/* Lock header/footer, scroll content only */
+.card-dialog .p-dialog-content {
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 85vh !important;
+  overflow: hidden !important;
+}
+
+.card-dialog .p-dialog-content > *,
+.card-dialog app-card-template {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.card-dialog .card-template-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+app-card-template p-footer {
+  display: contents;
+}
+
+/* ╔═══════════════════════════════════════════════════════════════════════════╗
+   ║ 7. CUSTOM COMPONENTS — App-specific elements                            ║
+   ╚═══════════════════════════════════════════════════════════════════════════╝ */
+
+/* ─── Custom Checkbox (Permission Tree) ──────────────────────────────────── */
+
+.custom-checkbox {
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--color-primary-light);
+  border-radius: 0.25rem;
+  background: white;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.custom-checkbox:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.custom-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 0.35rem;
+  height: 0.65rem;
+  border: solid white;
+  border-width: 0 2.5px 2.5px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.custom-checkbox:indeterminate {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.custom-checkbox:indeterminate::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.6rem;
+  height: 0;
+  border: solid white;
+  border-width: 0 0 2.5px 0;
+  transform: translate(-50%, -50%);
+}
+
+.custom-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Password Input ────────────────────────────────────────────────────── */
+
+/* ─── CDK Drag & Drop ──────────────────────────────────────────────────── */
+
+/* Placeholder — ช่องว่างแสดงตำแหน่งที่จะวาง */
+.cdk-drag-placeholder {
+  background: var(--color-primary-subtle) !important;
+  border: 2px dashed var(--color-primary) !important;
+  border-radius: 0.5rem;
+}
+
+.cdk-drag-placeholder > * {
+  visibility: hidden;
+}
+
+/* Preview — ตัวที่ลากตามเมาส์ ไฮไลต์สีส้มอ่อน */
+.cdk-drag-preview {
+  background: var(--color-primary-subtle);
+  border: 2px solid var(--color-primary);
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Animation — แถวอื่นเลื่อนหลีกทางอย่างนุ่มนวล */
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* ระหว่าง drag — แถวอื่น transition ตำแหน่ง */
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* ─── Password Input ────────────────────────────────────────────────────── */
+
 .password-input::-ms-reveal,
-.password-input::-ms-clear { display: none; }
+.password-input::-ms-clear {
+  display: none;
+}
+
 .password-input::-webkit-credentials-auto-fill-button,
 .password-input::-webkit-contacts-auto-fill-button {
   visibility: hidden;
@@ -332,4 +671,18 @@ p-datepicker.has-clear-icon .p-datepicker-clear-icon {
   pointer-events: none;
   position: absolute;
   right: 0;
+}
+
+/* ─── Shake Animation ──────────────────────────────────────────────────── */
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
 }

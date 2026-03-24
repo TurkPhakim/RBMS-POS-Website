@@ -1,7 +1,5 @@
 import { Component } from '@angular/core';
-
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { DialogData } from '@app/core/services/modal.service';
 
 @Component({

@@ -1,6 +1,6 @@
 # Module Development Workflow — RBMS-POS
 
-> อัพเดตล่าสุด: 2026-03-10
+> อัพเดตล่าสุด: 2026-03-16
 >
 > **Related docs:** [backend-guide.md](backend-guide.md) | [frontend-guidelines.md](frontend-guidelines.md) | [ai-prompting-guide.md](ai-prompting-guide.md)
 
@@ -106,13 +106,17 @@ Add DbSet ใน POSMainContext:
 public DbSet<TbProduct> Products { get; set; }
 ```
 
-### Step 4: Create Migration
+### Step 4: Create Migration + Apply Database
+
+> **กฎเหล็ก:** ต้อง apply migration (`database update`) **ทันที** หลังสร้าง — ห้ามข้ามไปทำ Repository/Service ก่อน เพราะจะทำให้ run backend ไม่ได้
 
 ```bash
 cd Backend-POS
 dotnet ef migrations add AddProductTable \
     --project POS.Main/POS.Main.Dal \
     --startup-project POS.Main/RBMS.POS.WebAPI
+
+# ตรวจสอบไฟล์ Migration ก่อน apply เสมอ
 
 dotnet ef database update \
     --project POS.Main/POS.Main.Dal \
@@ -259,11 +263,53 @@ builder.Services.AddScoped<IProductService, ProductService>();
 
 **→ รัน backend และเปิด Swagger ตรวจสอบก่อนไปทำ Frontend**
 
+### Step 10.5: Permission Constants + Seed Data (ถ้า module มี authorization)
+
+> **กฎเหล็ก:** ถ้า Controller endpoints ใช้ `[HasPermission]` หรือ authorization → ต้องสร้าง Permission constants + seed data **ก่อน** ไปทำ Frontend เพราะถ้าไม่ seed จะเข้าหน้าไม่ได้
+
+**ขั้นตอน:**
+
+1. **เพิ่ม Permission constants** ใน `POS.Main.Core/Constants/Permissions.cs`:
+```csharp
+public static class Inventory
+{
+    public const string Read = "inventory.read";
+    public const string Create = "inventory.create";
+    public const string Update = "inventory.update";
+    public const string Delete = "inventory.delete";
+}
+```
+
+2. **สร้าง Seed Migration**:
+```bash
+dotnet ef migrations add SeedInventoryPermissions \
+    --project POS.Main/POS.Main.Dal \
+    --startup-project POS.Main/RBMS.POS.WebAPI
+```
+
+3. **เพิ่ม seed data ใน Migration file** — insert Module, AuthorizeMatrix, AuthorizeMatrixPositions:
+```csharp
+// ดูตัวอย่างจริงที่:
+// Migrations/20260311143050_AddPositionBasedRbac.cs (ครบทุก module)
+// Migrations/20260316093337_SeedUserManagementPermissions.cs (เพิ่ม module เดียว)
+```
+
+4. **Apply migration ทันที**:
+```bash
+dotnet ef database update \
+    --project POS.Main/POS.Main.Dal \
+    --startup-project POS.Main/RBMS.POS.WebAPI
+```
+
+5. **ทดสอบ** — Login แล้วเข้า endpoint ที่ต้องใช้ permission ได้
+
 ---
 
 ## Part 2: Frontend Development
 
-### Step 11: Generate API Client
+> **กฎเหล็ก:** ห้ามเขียน Frontend code ใดๆ ก่อนรัน `npm run gen-api` — ต้อง generate models + services ก่อนเสมอ เพื่อให้ได้ typed models ที่ถูกต้องมาใช้ตั้งแต่ต้น
+
+### Step 11: Generate API Client (ต้องทำก่อนเขียนโค้ด Frontend)
 
 ```bash
 cd Frontend-POS/RBMS-POS-Client
@@ -274,6 +320,8 @@ npm run gen-api
 - `src/app/core/api/models/product-response.ts`
 - `src/app/core/api/models/create-product-request.ts`
 - `src/app/core/api/services/products.service.ts`
+
+> **หลังรัน gen-api แล้ว** ต้องตรวจสอบ generated models + services ว่ามี types/methods ครบตาม API ที่ออกแบบไว้ ก่อนเริ่มเขียน component — ใช้ generated models เหล่านี้ทุกที่ (signal types, method params, template binding) ห้ามใช้ `Record<string, unknown>`, `any`, หรือ bracket notation
 
 ### Step 12: Create Feature Module
 
@@ -416,7 +464,7 @@ const routes: Routes = [
 - [ ] สร้าง Entity class ใน `POS.Main.Dal/Entities/`
 - [ ] สร้าง Entity Configuration ใน `EntityConfigurations/`
 - [ ] Add DbSet ใน `POSMainContext`
-- [ ] สร้าง Migration + apply
+- [ ] สร้าง Migration + **apply ทันที** (`database update`) — ห้ามข้ามขั้นตอนนี้
 - [ ] สร้าง Repository interface + implementation
 - [ ] Add repository ใน UnitOfWork
 - [ ] สร้าง Request/Response DTOs
@@ -424,14 +472,17 @@ const routes: Routes = [
 - [ ] สร้าง Service interface + implementation
 - [ ] สร้าง Controller + XML comments + ProducesResponseType
 - [ ] Register ใน Program.cs (ถ้าจำเป็น)
+- [ ] **Permission seed data** (ถ้า module มี authorization): สร้าง constants + seed migration + apply
 - [ ] ทดสอบใน Swagger UI
 
 ### Frontend
-- [ ] รัน `npm run gen-api` หลัง backend พร้อม
+- [ ] รัน `npm run gen-api` หลัง backend พร้อม **(ต้องทำก่อนเขียน code Frontend ใดๆ)**
+- [ ] ตรวจสอบ generated models + services ว่ามี types/methods ครบ
 - [ ] สร้าง Feature Module + Routing
 - [ ] สร้าง Page components (smart)
 - [ ] สร้าง Presentational components
 - [ ] ใช้ generated API service (ห้าม manual HTTP)
+- [ ] ใช้ generated models สำหรับ typed data — ห้าม `Record<string, unknown>`, `any`, bracket notation (`obj["prop"]`)
 - [ ] ใช้ PrimeNG components (p-table, p-dropdown, p-button ฯลฯ) — ห้ามเขียนเอง
 - [ ] Implement subscription cleanup (destroyRef / destroy$)
 - [ ] ใช้ design tokens ใน styling

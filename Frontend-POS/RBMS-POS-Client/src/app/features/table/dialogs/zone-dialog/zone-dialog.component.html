@@ -1,0 +1,98 @@
+<app-card-template [headerLabel]="config.header!">
+  <form [formGroup]="form" class="space-y-5">
+    <!-- ชื่อโซน -->
+    <div>
+      <label for="zoneName" class="block font-semibold mb-2">
+        ชื่อโซน <span class="text-danger">*</span>
+      </label>
+      <input
+        pInputText
+        id="zoneName"
+        formControlName="zoneName"
+        placeholder="เช่น ชั้น 1, ระเบียง, VIP"
+        class="w-full"
+      />
+      <app-field-error [control]="form.get('zoneName')" type="text" />
+    </div>
+
+    <!-- สีโซน -->
+    <div>
+      <label class="block font-semibold mb-2">สีโซน</label>
+      <!-- Preset Colors -->
+      <div class="flex flex-wrap gap-3 mb-4">
+        @for (color of presetColors; track color) {
+          <button
+            type="button"
+            class="w-10 h-10 rounded-full border-2 transition-all"
+            [style.background-color]="color"
+            [class]="selectedColor === color ? 'border-primary scale-110' : 'border-surface-border'"
+            (click)="selectColor(color)"
+          ></button>
+        }
+      </div>
+
+      <!-- Custom Color Picker -->
+      <div class="flex items-center gap-4">
+        <label class="font-semibold">สีที่กำหนดเอง:</label>
+        <div class="flex items-center gap-3">
+          <input
+            type="color"
+            [value]="selectedColor"
+            (input)="onColorInput($event)"
+            class="w-10 h-10 rounded cursor-pointer border border-surface-border"
+          />
+          <span class="font-mono text-sm">{{ selectedColor }}</span>
+        </div>
+      </div>
+
+      <!-- Preview -->
+      <div class="mt-4 flex items-center gap-3">
+        <span class="font-semibold">ตัวอย่าง:</span>
+        <span
+          class="inline-block w-10 h-10 rounded-full"
+          [style.background-color]="selectedColor"
+        ></span>
+        <span class="font-semibold">{{ form.get("zoneName")?.value || "ชื่อโซน" }}</span>
+      </div>
+    </div>
+
+    <!-- สถานะ -->
+    <div>
+      <label class="block font-semibold mb-2">สถานะ</label>
+      <div class="flex items-center gap-3">
+        <p-inputSwitch formControlName="isActive" inputId="isActive"></p-inputSwitch>
+        <span [class]="form.get('isActive')?.value ? 'text-success' : 'text-danger'">
+          {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Audit Footer (edit mode only) -->
+    @if (isEditMode() && zone) {
+      <app-audit-footer
+        [createdAt]="zone.createdAt"
+        [createdByName]="zone.createdBy"
+        [updatedAt]="zone.updatedAt"
+        [updatedByName]="zone.updatedBy"
+      />
+    }
+  </form>
+
+  <p-footer>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      variant="outlined"
+      (onClick)="onCancel()"
+      [disabled]="isSubmitting()"
+    />
+    @if (!isEditMode() || canUpdate) {
+      <p-button
+        label="บันทึก"
+        severity="primary"
+        (onClick)="onSubmit()"
+        [loading]="isSubmitting()"
+      />
+    }
+  </p-footer>
+</app-card-template>

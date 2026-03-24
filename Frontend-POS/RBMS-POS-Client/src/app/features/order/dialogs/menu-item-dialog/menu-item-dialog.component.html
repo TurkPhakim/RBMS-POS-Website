@@ -1,0 +1,179 @@
+<app-card-template [headerLabel]="headerLabel">
+  <div class="space-y-5">
+    <!-- Menu Info — รูปซ้าย / ข้อมูลขวา -->
+    <div class="flex gap-5">
+      <!-- รูปเมนู -->
+      <div
+        class="w-48 h-48 rounded-2xl bg-surface-hover flex items-center justify-center overflow-hidden flex-shrink-0"
+      >
+        @if (menu.imageFileId) {
+          <img
+            [src]="getImageUrl(menu.imageFileId!)"
+            [alt]="menu.nameThai"
+            class="w-full h-full object-cover"
+          />
+        } @else {
+          <app-generic-icon
+            name="food"
+            svgClass="w-24 h-24"
+            class="text-surface-sub"
+          ></app-generic-icon>
+        }
+      </div>
+      <!-- ข้อมูลเมนู + ราคา + จำนวน -->
+      <div class="flex flex-col justify-between flex-1 py-1">
+        <!-- ชื่อ + ราคาต้น -->
+        <div>
+          <h3 class="text-2xl font-bold">{{ menu.nameThai }}</h3>
+          @if (menu.nameEnglish) {
+            <p class="text-surface-sub mt-0.5">{{ menu.nameEnglish }}</p>
+          }
+          <p class="text-xl text-primary font-bold mt-2">
+            {{ menu.price | number: "1.2-2" }} บาท
+          </p>
+        </div>
+        <!-- ราคารวม + จำนวน -->
+        <div class="flex items-end justify-between">
+          <div>
+            <span class="text-sm text-surface-sub">ราคารวม</span>
+            <p class="text-3xl font-bold text-primary">
+              {{ getTotalPrice() | number: "1.2-2" }}
+              <span class="text-lg">บาท</span>
+            </p>
+          </div>
+          <!-- ปุ่มจำนวน — pill border -->
+          <div
+            class="flex items-center border border-surface-border rounded-full overflow-hidden"
+          >
+            <button
+              class="w-10 h-9 bg-surface-hover hover:bg-surface-border flex items-center justify-center transition-colors"
+              (click)="onDecrease()"
+              [disabled]="quantity <= 1"
+            >
+              <i class="pi pi-minus text-[10px] font-bold text-surface-sub"></i>
+            </button>
+            <span class="font-bold text-lg w-10 text-center bg-surface-card">{{
+              quantity
+            }}</span>
+            <button
+              class="w-10 h-9 bg-surface-hover hover:bg-surface-border flex items-center justify-center transition-colors"
+              (click)="onIncrease()"
+            >
+              <i class="pi pi-plus text-[10px] font-bold text-primary"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option Groups -->
+    @for (group of menu.optionGroups; track group.optionGroupId) {
+      <div
+        class="rounded-2xl border overflow-hidden transition-colors"
+        [class]="
+          isGroupError(group) ? 'border-danger' : 'border-surface-border'
+        "
+      >
+        <!-- Group Header -->
+        <div
+          class="px-4 py-3 flex items-center gap-3"
+          [class]="isGroupError(group) ? 'bg-danger/5' : 'bg-surface'"
+        >
+          <app-generic-icon
+            name="option-extra"
+            svgClass="w-7 h-7"
+            [class]="isGroupError(group) ? 'text-danger' : 'text-primary'"
+          ></app-generic-icon>
+          <span class="font-bold text-lg">{{ group.name }}</span>
+          @if (group.isRequired) {
+            <span
+              class="text-xs bg-danger text-white px-2.5 py-0.5 rounded-full font-semibold"
+              >ต้องเลือก</span
+            >
+          }
+          <span class="text-sm text-surface-sub ml-auto">
+            @if (group.maxSelect === 1) {
+              เลือก 1 รายการ
+            } @else if (group.maxSelect) {
+              เลือกได้สูงสุด {{ group.maxSelect }} รายการ
+            }
+          </span>
+        </div>
+        @if (isGroupError(group)) {
+          <div
+            class="px-4 py-1.5 bg-danger/5 text-danger text-sm font-medium flex items-center gap-1.5"
+          >
+            <i class="pi pi-exclamation-circle text-xs"></i>
+            กรุณาเลือกอย่างน้อย {{ group.minSelect || 1 }} รายการ
+          </div>
+        }
+        <!-- Options -->
+        <div class="p-3 space-y-2">
+          @for (item of group.optionItems; track item.optionItemId) {
+            @if (item.isActive) {
+              <button
+                class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all border"
+                [class]="
+                  isOptionSelected(group.optionGroupId!, item.optionItemId!)
+                    ? 'bg-primary/10 border-primary'
+                    : 'bg-surface-card border-transparent hover:bg-surface-hover'
+                "
+                (click)="onToggleOption(group, item)"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all"
+                    [class]="
+                      isOptionSelected(group.optionGroupId!, item.optionItemId!)
+                        ? 'border-primary bg-primary'
+                        : 'border-surface-muted'
+                    "
+                  >
+                    @if (
+                      isOptionSelected(group.optionGroupId!, item.optionItemId!)
+                    ) {
+                      <i class="pi pi-check text-white text-xs"></i>
+                    }
+                  </div>
+                  <span class="font-medium text-lg">{{ item.name }}</span>
+                </div>
+                @if (item.additionalPrice) {
+                  <span class="text-primary font-bold text-lg">
+                    +{{ item.additionalPrice | number: "1.2-2" }}
+                  </span>
+                }
+              </button>
+            }
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Note -->
+    <div>
+      <label class="block font-bold text-lg mb-2">หมายเหตุ</label>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="note"
+        rows="2"
+        class="w-full"
+        placeholder="หมายเหตุเพิ่มเติม"
+      ></textarea>
+    </div>
+  </div>
+
+  <p-footer>
+    <button
+      pButton
+      label="ยกเลิก"
+      class="p-button-secondary p-button-outlined p-button-lg"
+      (click)="onCancel()"
+    ></button>
+    <button
+      pButton
+      label="เพิ่มรายการ"
+      class="p-button-lg"
+      (click)="onConfirm()"
+    ></button>
+  </p-footer>
+</app-card-template>

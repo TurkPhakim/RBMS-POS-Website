@@ -9,11 +9,11 @@
         title="Toggle Sidebar"
       >
         <div
-          class="w-10 h-10 transition-transform duration-300"
+          class="w-12 h-12 transition-transform duration-300"
           [class.rotate-180]="!isSidebarCollapsed()"
         >
           <app-generic-icon
-            [name]="isSidebarCollapsed() ? 'hamburger' : 'hamburger-nav'"
+            [name]="isSidebarCollapsed() ? 'menu-bar' : 'hamburger-nav'"
             svgClass="w-full h-full"
           ></app-generic-icon>
         </div>
@@ -21,7 +21,7 @@
 
       <div class="flex items-center space-x-2">
         <div
-          class="flex items-center justify-center w-12 h-12"
+          class="flex items-center justify-center w-16 h-16"
           [ngClass]="
             brandingService.hasCustomLogo()
               ? 'rounded-xl'
@@ -35,7 +35,7 @@
             [class.rounded-xl]="brandingService.hasCustomLogo()"
           />
         </div>
-        <h1 class="text-white font-bold text-2xl drop-shadow-md">
+        <h1 class="text-white font-bold text-3xl drop-shadow-md">
           {{ brandingService.shopName() }}
         </h1>
       </div>
@@ -76,13 +76,20 @@
         <div class="origin-top group-hover:animate-bell-ring">
           <app-generic-icon name="bell" svgClass="w-6 h-6"></app-generic-icon>
         </div>
+        @if (notiStore.unreadCount() > 0) {
+          <span
+            class="absolute -top-0.5 -right-0.5 bg-danger text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
+          >
+            {{ notiStore.unreadCount() > 99 ? "99+" : notiStore.unreadCount() }}
+          </span>
+        }
       </button>
 
       <!-- Profile Menu -->
       <div
         class="relative profile-menu-container flex items-center space-x-2 text-white"
       >
-        <span class="text-base font-semibold whitespace-nowrap">
+        <span class="font-semibold whitespace-nowrap text-lg">
           {{ currentUser()?.nickname || currentUser()?.username || "User" }}
         </span>
         <!-- Avatar -->
@@ -90,15 +97,15 @@
           <img
             [src]="profileImageUrl()"
             alt="avatar"
-            class="w-10 h-10 rounded-full object-cover border-2 border-white/30"
+            class="w-12 h-12 rounded-full object-cover border-2 border-white/30"
           />
         } @else {
           <div
-            class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary"
+            class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary"
           >
             <app-generic-icon
               name="avatar-default"
-              svgClass="w-6 h-6"
+              svgClass="w-7 h-7"
             ></app-generic-icon>
           </div>
         }
@@ -121,33 +128,44 @@
         <!-- Dropdown -->
         @if (showProfileMenu()) {
           <div
-            class="absolute right-0 top-full mt-1 w-48 bg-surface-card rounded-lg shadow-xl py-1 z-50 border border-surface-border"
+            class="absolute right-0 top-full mt-1 w-56 bg-surface-card rounded-lg shadow-xl py-1 z-50 border border-surface-border"
           >
             <button
               (click)="navigateToProfile()"
-              class="w-full text-left flex items-center px-4 py-2 text-surface-dark hover:bg-surface transition-colors text-sm"
+              class="w-full text-left flex items-center px-4 py-2 text-surface-dark hover:bg-surface transition-colors"
               type="button"
             >
-              <i class="pi pi-user mr-3 text-surface-sub"></i>
-              <span class="font-medium">โปรไฟล์</span>
+              <app-generic-icon
+                name="profile"
+                svgClass="w-6 h-6"
+                class="mr-3 text-surface-sub"
+              ></app-generic-icon>
+              <span class="font-medium text-lg">โปรไฟล์</span>
             </button>
             <button
-              routerLink="/profile"
-              (click)="showProfileMenu.set(false)"
-              class="w-full text-left flex items-center px-4 py-2 text-surface-dark hover:bg-surface transition-colors text-sm"
+              (click)="openChangePassword()"
+              class="w-full text-left flex items-center px-4 py-2 text-surface-dark hover:bg-surface transition-colors"
               type="button"
             >
-              <i class="pi pi-key mr-3 text-surface-sub"></i>
-              <span class="font-medium">เปลี่ยนรหัสผ่าน</span>
+              <app-generic-icon
+                name="password-reset"
+                svgClass="w-6 h-6"
+                class="mr-3 text-surface-sub"
+              ></app-generic-icon>
+              <span class="font-medium text-lg">เปลี่ยนรหัสผ่าน</span>
             </button>
             <hr class="border-surface-border" />
             <button
               (click)="logout()"
-              class="w-full text-left flex items-center px-4 py-2 text-danger hover:bg-danger-bg transition-colors text-sm"
+              class="w-full text-left flex items-center px-4 py-2 text-danger hover:bg-danger-bg transition-colors"
               type="button"
             >
-              <i class="pi pi-sign-out mr-3"></i>
-              <span class="font-medium">ออกจากระบบ</span>
+              <app-generic-icon
+                name="logout"
+                svgClass="w-6 h-6"
+                class="mr-3"
+              ></app-generic-icon>
+              <span class="font-medium text-lg">ออกจากระบบ</span>
             </button>
           </div>
         }
@@ -155,6 +173,3 @@
     </div>
   </div>
 </header>
-
-<!-- Notification Panel -->
-<app-notification-panel></app-notification-panel>

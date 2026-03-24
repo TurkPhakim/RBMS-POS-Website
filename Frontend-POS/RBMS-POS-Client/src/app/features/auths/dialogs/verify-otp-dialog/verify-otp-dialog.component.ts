@@ -1,4 +1,13 @@
-import { Component, DestroyRef, ElementRef, OnDestroy, OnInit, QueryList, signal, ViewChildren } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  signal,
+  ViewChildren,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
@@ -41,7 +50,10 @@ export class VerifyOtpDialogComponent implements OnInit, OnDestroy {
     this.maskedEmail = this.config.data.maskedEmail;
 
     this.form = this.formBuilder.group({
-      otpCode: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]],
+      otpCode: [
+        '',
+        [Validators.required, Validators.minLength(6), Validators.maxLength(6)],
+      ],
     });
   }
 
@@ -76,7 +88,9 @@ export class VerifyOtpDialogComponent implements OnInit, OnDestroy {
 
   onPaste(event: ClipboardEvent): void {
     event.preventDefault();
-    const pasted = event.clipboardData?.getData('text')?.replace(/\D/g, '').slice(0, 6) ?? '';
+    const pasted =
+      event.clipboardData?.getData('text')?.replace(/\D/g, '').slice(0, 6) ??
+      '';
     const inputs = this.otpInputs.toArray();
     for (let i = 0; i < 6; i++) {
       inputs[i].nativeElement.value = pasted[i] || '';
@@ -140,7 +154,8 @@ export class VerifyOtpDialogComponent implements OnInit, OnDestroy {
           this.isResending.set(false);
           this.modalService.cancel({
             title: 'ผิดพลาด !',
-            message: err.error?.message || 'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่อีกครั้ง',
+            message:
+              err.error?.message || 'ไม่สามารถส่ง OTP ได้ กรุณาลองใหม่อีกครั้ง',
           });
         },
       });
@@ -151,12 +166,15 @@ export class VerifyOtpDialogComponent implements OnInit, OnDestroy {
   }
 
   private syncOtpCode(): void {
-    const code = this.otpInputs.toArray().map(i => i.nativeElement.value).join('');
+    const code = this.otpInputs
+      .toArray()
+      .map((i) => i.nativeElement.value)
+      .join('');
     this.form.get('otpCode')!.setValue(code);
   }
 
   private clearOtpInputs(): void {
-    this.otpInputs?.toArray().forEach(i => (i.nativeElement.value = ''));
+    this.otpInputs?.toArray().forEach((i) => (i.nativeElement.value = ''));
     this.form.get('otpCode')!.setValue('');
   }
 
@@ -183,7 +201,7 @@ export class VerifyOtpDialogComponent implements OnInit, OnDestroy {
     const minutes = Math.floor(remaining / 60);
     const seconds = remaining % 60;
     this.countdownDisplay.set(
-      `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+      `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
     );
   }
 

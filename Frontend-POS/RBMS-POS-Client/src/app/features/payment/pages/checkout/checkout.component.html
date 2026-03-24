@@ -1,0 +1,334 @@
+@let order = orderDetail();
+@let bill = currentBill();
+
+  <!-- -m-6 breaks out of parent p-6 wrapper to fill full main area -->
+  <div class="-m-6 flex h-[calc(100vh-184px)]">
+
+    <!-- Left Column (70%) — Order Info + Items + Summary -->
+    <div class="w-[70%] flex flex-col border-r border-surface-border">
+
+      <!-- Order Info (compact) -->
+      <div class="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-primary to-primary-dark flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+            <app-generic-icon name="bill-rastaurant" svgClass="w-5 h-5" class="text-white"></app-generic-icon>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-white">ชำระเงิน {{ order?.orderNumber }}</h1>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="bg-white/20 text-white/80 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                <i class="pi pi-map-marker mr-1 text-[10px]"></i>{{ order?.tableName }}
+              </span>
+            </div>
+          </div>
+        </div>
+        @if (bill) {
+          <span class="text-sm text-white bg-white/20 px-4 py-1.5 rounded-full font-medium">{{ bill.billNumber }}</span>
+        }
+      </div>
+
+      <!-- Bill Tabs (แสดงเมื่อมี > 1 bill) -->
+      @if (allBills().length > 1) {
+        <div class="flex items-center gap-2 px-5 py-2.5 bg-surface border-b border-surface-border flex-shrink-0 overflow-x-auto">
+          @for (b of allBills(); track b.orderBillId; let i = $index) {
+            <button
+              type="button"
+              class="px-4 py-2 rounded-full text-sm font-semibold transition-colors whitespace-nowrap flex items-center gap-1.5"
+              [class]="
+                i === selectedBillIndex()
+                  ? (b.status === 'Paid' ? 'bg-success text-white' : 'bg-primary text-white')
+                  : (b.status === 'Paid' ? 'bg-success/15 text-success' : 'bg-surface-hover text-surface-sub')
+              "
+              (click)="onSelectBill(i)"
+            >
+              @if (b.status === 'Paid') {
+                <i class="pi pi-check-circle text-xs"></i>
+              }
+              {{ b.billNumber }}
+              <span class="font-bold">{{ b.grandTotal | number: '1.0-0' }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- All Bills Paid Banner -->
+      @if (allBillsPaid()) {
+        <div class="flex-1 flex items-center justify-center">
+          <div class="text-center">
+            <div class="w-20 h-20 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-4">
+              <i class="pi pi-check-circle text-5xl text-success"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-success mb-2">ชำระเงินครบทุกบิลแล้ว</h2>
+            <p class="text-surface-sub mb-6">ออเดอร์ {{ order?.orderNumber }} เสร็จสมบูรณ์</p>
+            <button pButton label="กลับหน้าชำระเงิน" severity="success" (click)="goBack()"></button>
+          </div>
+        </div>
+      } @else {
+        <!-- Items List (scrollable) -->
+        <div class="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
+          @for (item of activeItems(); track item.orderItemId) {
+            <div class="flex items-center gap-5 p-5 bg-surface-card rounded-xl border border-surface-border">
+              <!-- Thumbnail -->
+              <div class="w-[84px] h-[84px] rounded-xl overflow-hidden bg-surface flex-shrink-0">
+                @if (getImageUrl(item.menuImageFileId)) {
+                  <img
+                    [src]="getImageUrl(item.menuImageFileId)"
+                    [alt]="item.menuNameThai"
+                    class="w-full h-full object-cover"
+                  />
+                } @else {
+                  <div class="w-full h-full flex items-center justify-center">
+                    <i class="pi pi-image text-surface-sub text-2xl"></i>
+                  </div>
+                }
+              </div>
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-2xl font-semibold truncate">{{ item.menuNameThai }}</span>
+                  <span class="bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">x{{ item.quantity }}</span>
+                </div>
+                @if (item.menuNameEnglish) {
+                  <p class="text-surface-sub mt-0.5">{{ item.menuNameEnglish }}</p>
+                }
+                @if (item.options && item.options.length > 0) {
+                  @for (opt of item.options; track opt.orderItemOptionId) {
+                    <p class="text-surface-sub">
+                      + {{ opt.optionItemName }}
+                      @if (opt.additionalPrice && opt.additionalPrice > 0) {
+                        (+{{ opt.additionalPrice | number: '1.2-2' }})
+                      }
+                    </p>
+                  }
+                }
+                @if (item.note) {
+                  <p class="text-warning mt-0.5">{{ item.note }}</p>
+                }
+              </div>
+              <span class="font-bold whitespace-nowrap text-2xl">
+                {{ item.totalPrice | number: '1.2-2' }}
+              </span>
+            </div>
+          }
+
+          @if (activeItems().length === 0) {
+            <div class="text-center py-6 text-surface-sub text-sm">
+              ไม่มีรายการอาหาร
+            </div>
+          }
+        </div>
+
+        <!-- Summary Section (pinned bottom) -->
+        @if (bill) {
+          <div class="bg-surface-card border-t border-surface-border px-5 py-3 space-y-2.5 flex-shrink-0">
+            @if (bill.status !== 'Paid') {
+              <!-- SC Dropdown -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="text-lg font-semibold">ค่าบริการ</span>
+                  <p-dropdown
+                    [options]="scOptions()"
+                    [ngModel]="selectedScId()"
+                    (ngModelChange)="onScChange($event)"
+                    optionLabel="name"
+                    optionValue="serviceChargeId"
+                    [showClear]="true"
+                    placeholder="ไม่คิดค่าบริการ"
+                    appendTo="body"
+                    [loading]="isUpdatingSc()"
+                    styleClass="w-[200px]"
+                  ></p-dropdown>
+                </div>
+                <span class="text-xl font-semibold">{{ bill.serviceChargeAmount | number: '1.2-2' }}</span>
+              </div>
+            } @else {
+              <div class="flex items-center justify-between">
+                <span class="text-lg font-semibold">ค่าบริการ</span>
+                <span class="text-xl font-semibold">{{ bill.serviceChargeAmount | number: '1.2-2' }}</span>
+              </div>
+            }
+
+            <div class="flex items-center justify-between text-lg text-surface-sub">
+              <span>VAT {{ bill.vatRate }}%</span>
+              <span>{{ bill.vatAmount | number: '1.2-2' }}</span>
+            </div>
+            <div class="flex items-center justify-between text-lg text-surface-sub">
+              <span>ค่าอาหาร</span>
+              <span>{{ bill.subTotal | number: '1.2-2' }}</span>
+            </div>
+
+            @if (bill.totalDiscountAmount && bill.totalDiscountAmount > 0) {
+              <div class="flex items-center justify-between text-lg">
+                <span class="text-danger">ส่วนลด</span>
+                <span class="text-danger">-{{ bill.totalDiscountAmount | number: '1.2-2' }}</span>
+              </div>
+            }
+
+            <hr class="border-surface-border" />
+            <div class="flex items-center justify-between">
+              <span class="text-xl font-bold">รวมทั้งหมด</span>
+              @if (bill.status === 'Paid') {
+                <span class="text-2xl font-bold text-success">
+                  {{ bill.grandTotal | number: '1.2-2' }}
+                  <span class="text-sm ml-1">ชำระแล้ว</span>
+                </span>
+              } @else {
+                <span class="text-2xl font-bold text-primary">
+                  {{ bill.grandTotal | number: '1.2-2' }}
+                </span>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Right Column (30%) — Amount + Numpad + Pay -->
+    <div class="w-[30%] flex flex-col justify-between bg-surface-card p-4">
+      @if (allBillsPaid()) {
+        <!-- All Paid — show summary -->
+        <div class="flex items-center justify-center flex-1">
+          <div class="text-center text-success">
+            <i class="pi pi-check-circle text-6xl mb-3"></i>
+            <p class="text-xl font-bold">เสร็จสิ้น</p>
+          </div>
+        </div>
+      } @else if (bill && bill.status === 'Paid') {
+        <!-- Selected bill already paid -->
+        <div class="flex items-center justify-center flex-1">
+          <div class="text-center text-surface-sub">
+            <i class="pi pi-check-circle text-4xl text-success mb-3"></i>
+            <p class="font-semibold">{{ bill.billNumber }} ชำระแล้ว</p>
+            <p class="text-sm mt-1">กรุณาเลือกบิลอื่นที่ยังไม่ชำระ</p>
+          </div>
+        </div>
+      } @else if (bill) {
+        <!-- Top: Amount Display -->
+        <div
+          class="bg-gradient-to-r from-primary to-primary-dark rounded-2xl p-5 cursor-pointer"
+          (click)="onSetExactAmount()"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <i class="pi pi-wallet text-white/70 text-xl"></i>
+              <span class="text-white/70 font-semibold text-lg">รับเงิน (บาท)</span>
+            </div>
+            <span class="bg-white/20 text-white text-lg px-4 py-1 rounded-full font-medium">ยอด {{ bill.grandTotal | number: '1.2-2' }} บาท</span>
+          </div>
+          <p class="text-5xl font-bold tracking-wider text-white text-right">
+            {{ numpadDisplay() }}@if (numpadDisplay() !== '0') { <span class="text-2xl font-semibold text-white/70">บาท</span>}
+          </p>
+        </div>
+
+        <!-- Center: Numpad -->
+        <div class="flex flex-col items-center gap-2">
+          <!-- Row 1-3: Number keys -->
+          <div class="grid grid-cols-3 gap-2">
+            @for (key of numpadKeys; track key) {
+              <button
+                type="button"
+                class="w-[88px] h-[60px] rounded-full text-2xl font-semibold transition-colors bg-surface hover:bg-primary-light"
+                (click)="onNumpadPress(key)"
+              >
+                {{ key }}
+              </button>
+            }
+          </div>
+          <!-- Row 4: 0 (span 2) + . -->
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              class="col-span-2 h-[60px] rounded-full text-2xl font-semibold transition-colors bg-surface hover:bg-primary-light"
+              (click)="onNumpadPress('0')"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              class="w-[88px] h-[60px] rounded-full text-2xl font-semibold transition-colors bg-surface hover:bg-primary-light"
+              (click)="onNumpadPress('.')"
+            >
+              .
+            </button>
+          </div>
+          <!-- Row 5: AC + Backspace -->
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              class="w-[88px] h-[60px] rounded-full text-lg font-semibold transition-colors bg-danger-bg text-danger hover:bg-danger-dark hover:text-white"
+              (click)="onNumpadPress('C')"
+            >
+              AC
+            </button>
+            <button
+              type="button"
+              class="col-span-2 h-[60px] rounded-full transition-colors bg-surface hover:bg-primary-light flex items-center justify-center"
+              (click)="onNumpadPress('backspace')"
+            >
+              <app-generic-icon name="backspace" svgClass="w-8 h-8"></app-generic-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bottom: Change + Pay Buttons -->
+        <div class="space-y-3">
+          @if (changeAmount() > 0) {
+            <div class="bg-gradient-to-r from-success/15 to-success/5 border border-success/30 rounded-2xl px-5 py-4 flex items-center justify-between">
+              <span class="text-xl font-bold text-success">เงินทอน</span>
+              <span class="text-3xl font-bold text-success">{{ changeAmount() | number: '1.2-2' }} บาท</span>
+            </div>
+          }
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              class="w-full h-[56px] rounded-xl text-lg font-semibold text-white bg-info hover:bg-info/90 transition-colors flex items-center justify-center gap-2"
+              (click)="onPayQr()"
+            >
+              <i class="pi pi-qrcode text-xl"></i>
+              QR/สลิป
+            </button>
+            <button
+              type="button"
+              class="w-full h-[56px] rounded-xl text-lg font-semibold text-white bg-success hover:bg-success/90 transition-colors flex items-center justify-center gap-2"
+              [class.opacity-70]="isSaving()"
+              [disabled]="isSaving()"
+              (click)="onPayCash()"
+            >
+              @if (isSaving()) {
+                <i class="pi pi-spin pi-spinner text-xl"></i>
+              } @else {
+                <i class="pi pi-wallet text-xl"></i>
+              }
+              เงินสด
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              class="w-full h-[44px] rounded-xl font-medium border border-surface-border flex items-center justify-center gap-2 transition-colors hover:bg-surface-hover"
+              (click)="onSplitBill()"
+            >
+              <i class="pi pi-objects-column"></i>
+              แยกบิล
+            </button>
+            <button
+              type="button"
+              class="w-full h-[44px] rounded-xl font-medium border border-danger/30 text-danger/50 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
+              [disabled]="true"
+            >
+              <i class="pi pi-ban"></i>
+              Void Bill
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="flex items-center justify-center flex-1">
+          <div class="text-center text-surface-sub">
+            <i class="pi pi-exclamation-circle text-4xl mb-3"></i>
+            <p>ไม่พบบิลที่รอชำระเงิน</p>
+            <button pButton label="ย้อนกลับ" severity="secondary" [outlined]="true" class="mt-4" (click)="goBack()"></button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>

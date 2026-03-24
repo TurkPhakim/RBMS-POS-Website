@@ -1,51 +1,129 @@
 <div class="space-y-5">
   <!-- Page Header -->
-  <div>
-    <h1 class="text-page-title text-surface-dark">จัดการตำแหน่ง</h1>
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="lock-protect"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">จัดการตำแหน่ง</h1>
   </div>
 
-  <!-- Table -->
-    <div class="bg-surface-card overflow-hidden border border-surface-border">
-      <p-table [value]="positions()" [stripedRows]="true" [tableStyle]="{'min-width': '50rem'}">
+  <!-- Content (Search + Table รวมกัน) -->
+  <div class="bg-surface-card rounded-lg">
+    <!-- Filter Section -->
+    <div class="p-4">
+      <div class="flex flex-wrap items-end gap-4">
+        <!-- Search -->
+        <div class="flex-1 min-w-[200px]">
+          <label class="block font-semibold mb-2">ค้นหา</label>
+          <div class="relative">
+            <p-iconField>
+              <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+              <input
+                pInputText
+                placeholder="ค้นหาด้วยชื่อตำแหน่ง"
+                class="w-full pr-8"
+                [(ngModel)]="searchTerm"
+                (keyup.enter)="onFilterChange()"
+              />
+            </p-iconField>
+            @if (searchTerm) {
+              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                 (click)="searchTerm = ''; onFilterChange()"></i>
+            }
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">สถานะ</label>
+          <app-active-status-dropdown
+            [(ngModel)]="statusFilter"
+            (ngModelChange)="onFilterChange()"
+          ></app-active-status-dropdown>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="px-4 pb-4">
+      <p-table
+        [value]="positions()"
+        [stripedRows]="true"
+        [tableStyle]="{ 'min-width': '70rem' }"
+        [scrollable]="true"
+        [paginator]="true"
+        [rows]="rows"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+        [totalRecords]="totalRecords()"
+        [lazy]="true"
+        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        styleClass="p-datatable-clean"
+      >
         <ng-template pTemplate="header">
           <tr>
-            <th class="w-16">#</th>
-            <th>ชื่อตำแหน่ง</th>
-            <th>คำอธิบาย</th>
-            <th class="w-28 text-center">สถานะ</th>
-            <th class="w-28 text-center">ตัวเลือก</th>
+            <th class="w-[80px]">รหัส</th>
+            <th class="w-[180px]">ชื่อตำแหน่ง</th>
+            <th class="w-[300px]">คำอธิบาย</th>
+            <th class="w-[150px]">สถานะ</th>
+            <th class="w-[100px]">ตัวเลือก</th>
           </tr>
         </ng-template>
+
         <ng-template pTemplate="body" let-item let-i="rowIndex">
-          <tr class="border-b border-surface-border hover:bg-primary-subtle transition-colors">
-            <td class="text-primary font-semibold">{{ i + 1 }}</td>
-            <td class="text-surface-dark font-semibold">{{ item.positionName }}</td>
-            <td class="text-surface-sub">{{ item.description || '-' }}</td>
-            <td class="text-center">
+          <tr>
+            <td class="!text-center font-semibold">
+              {{ item.positionId }}
+            </td>
+            <td class="font-semibold">
+              {{ item.positionName }}
+            </td>
+            <td class="text-surface-sub">{{ item.description || "-" }}</td>
+            <td class="!text-center">
               @if (item.isActive) {
-                <p-tag value="ใช้งาน" severity="success"></p-tag>
+                <span class="font-bold text-primary">Active</span>
               } @else {
-                <p-tag value="ปิดใช้งาน" severity="secondary"></p-tag>
+                <span class="font-bold text-danger">Inactive</span>
               }
             </td>
             <td class="text-center">
               <div class="flex justify-center gap-2">
                 <button
                   (click)="onEdit(item.positionId!)"
-                  class="w-9 h-9 flex items-center justify-center rounded-full bg-primary-subtle hover:bg-primary-light text-primary transition-colors duration-200"
-                  pTooltip="แก้ไข" tooltipPosition="top">
-                  <app-generic-icon name="pen-edit" svgClass="w-4 h-4"></app-generic-icon>
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                  pTooltip="ดู/แก้ไข"
+                  tooltipPosition="top"
+                >
+                  <app-generic-icon
+                    name="eye"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
                 </button>
-                <button
-                  (click)="onDelete(item.positionId!, item.positionName!)"
-                  class="w-9 h-9 flex items-center justify-center rounded-full bg-danger-bg hover:bg-danger text-danger hover:text-white transition-colors duration-200"
-                  pTooltip="ลบ" tooltipPosition="top">
-                  <app-generic-icon name="trash" svgClass="w-4 h-4"></app-generic-icon>
-                </button>
+                @if (canDelete) {
+                  <button
+                    (click)="onDelete(item.positionId!, item.positionName!)"
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                    pTooltip="ลบ"
+                    tooltipPosition="top"
+                  >
+                    <app-generic-icon
+                      name="trash"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
               </div>
             </td>
           </tr>
         </ng-template>
+
         <ng-template pTemplate="emptymessage">
           <tr>
             <td colspan="5">
@@ -57,4 +135,5 @@
         </ng-template>
       </p-table>
     </div>
+  </div>
 </div>

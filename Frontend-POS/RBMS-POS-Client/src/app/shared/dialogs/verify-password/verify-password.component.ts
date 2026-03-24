@@ -6,6 +6,7 @@ import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 
 import { AuthService as AuthApiService } from '@app/core/api/services/auth.service';
 import { AuthService } from '@app/core/services/auth.service';
+import { ModalService } from '@app/core/services/modal.service';
 
 const MAX_ATTEMPTS = 3;
 
@@ -28,15 +29,12 @@ export class VerifyPasswordDialogComponent {
     private readonly fb: FormBuilder,
     private readonly authApiService: AuthApiService,
     private readonly authService: AuthService,
+    private readonly modalService: ModalService,
   ) {
     this.username = this.authService.currentUserValue?.username ?? '';
     this.passwordForm = this.fb.group({
       password: ['', Validators.required],
     });
-  }
-
-  get remainingAttempts(): number {
-    return MAX_ATTEMPTS - this.attempts();
   }
 
   onSubmit(): void {
@@ -52,7 +50,11 @@ export class VerifyPasswordDialogComponent {
       .subscribe({
         next: () => {
           this.isLoading.set(false);
-          this.ref.close(true);
+          if (this.config.data?.returnPassword) {
+            this.ref.close({ verified: true, password: this.passwordForm.value.password });
+          } else {
+            this.ref.close(true);
+          }
         },
         error: () => {
           this.isLoading.set(false);
@@ -60,7 +62,11 @@ export class VerifyPasswordDialogComponent {
           this.attempts.set(newAttempts);
 
           if (newAttempts >= MAX_ATTEMPTS) {
-            this.ref.close('max-attempts');
+            this.modalService.cancel({
+              title: 'ยืนยันตัวตนล้มเหลว',
+              message: 'กรอกรหัสผ่านผิดเกินจำนวนครั้งที่กำหนด',
+              onConfirm: () => this.ref.close('max-attempts'),
+            });
             return;
           }
 

@@ -8,19 +8,21 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { Store } from '@ngrx/store';
+import { DialogService } from 'primeng/dynamicdialog';
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { UserModel } from '@app/core/api/models';
 import { AuthService } from '@app/core/services/auth.service';
 import { HeaderService } from '@app/core/services/header.service';
+import { NotiStoreService } from '@app/core/services/noti-store.service';
 import { ShopBrandingService } from '@app/core/services/shop-branding.service';
 import { SidebarService } from '@app/core/services/sidebar.service';
-import * as LayoutActions from '@app/store/layout/layout.actions';
+import { ChangePasswordDialogComponent } from '@app/shared/dialogs/change-password/change-password-dialog.component';
 
 @Component({
   selector: 'app-header',
   standalone: false,
   templateUrl: './header.component.html',
+  providers: [DialogService],
 })
 export class HeaderComponent {
   currentUser = signal<UserModel | null>(null);
@@ -38,9 +40,10 @@ export class HeaderComponent {
     public readonly brandingService: ShopBrandingService,
     private readonly destroyRef: DestroyRef,
     public readonly headerService: HeaderService,
+    private readonly dialogService: DialogService,
+    public readonly notiStore: NotiStoreService,
     private readonly router: Router,
     private readonly sidebarService: SidebarService,
-    private readonly store: Store,
   ) {
     this.isSidebarCollapsed = toSignal(this.sidebarService.isCollapsed$, {
       initialValue: false,
@@ -56,7 +59,7 @@ export class HeaderComponent {
   }
 
   toggleNotifications(): void {
-    this.store.dispatch(LayoutActions.toggleNotificationPanel());
+    this.notiStore.toggleDrawer();
   }
 
   toggleProfileMenu(): void {
@@ -74,6 +77,17 @@ export class HeaderComponent {
   navigateToProfile(): void {
     this.router.navigate(['/profile']);
     this.showProfileMenu.set(false);
+  }
+
+  openChangePassword(): void {
+    this.showProfileMenu.set(false);
+    this.dialogService.open(ChangePasswordDialogComponent, {
+      header: 'เปลี่ยนรหัสผ่าน',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      width: '40vw',
+      modal: true,
+    });
   }
 
   logout(): void {

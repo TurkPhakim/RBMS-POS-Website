@@ -1,0 +1,372 @@
+<div class="flex gap-4 h-[calc(100vh-140px)]">
+  <!-- Left: Menu Browse -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <!-- Category Tabs (Segmented Control) -->
+    <div class="flex bg-surface-border rounded-xl gap-4 mb-4">
+      @for (cat of categories; track cat.type) {
+        <button
+          class="flex-1 flex items-center justify-center gap-3 py-3 rounded-lg font-semibold transition-all"
+          [class]="
+            selectedCategory() === cat.type
+              ? 'bg-surface-card text-primary'
+              : 'text-surface-sub hover:text-primary'
+          "
+          (click)="onSelectCategory(cat.type)"
+        >
+          <app-generic-icon
+            [name]="cat.icon"
+            svgClass="w-10 h-10"
+          ></app-generic-icon>
+          {{ cat.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Search -->
+    <div class="relative mb-4">
+      <p-iconField>
+        <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+        <input
+          pInputText
+          placeholder="ค้นหาเมนู..."
+          class="w-full pr-8 text-lg py-3"
+          [(ngModel)]="searchTerm"
+          (input)="onSearchInput()"
+        />
+      </p-iconField>
+      @if (searchTerm) {
+        <i
+          class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+          (click)="clearSearch()"
+        ></i>
+      }
+    </div>
+
+    <!-- Sub-Category Chips -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button
+        class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all border-2"
+        [class]="
+          selectedSubCategoryId() === null
+            ? 'bg-primary text-white border-primary'
+            : 'bg-surface-card text-surface-sub border-surface-border hover:border-primary hover:text-primary'
+        "
+        (click)="onSelectSubCategory(null)"
+      >
+        ทั้งหมด
+      </button>
+      @for (sub of subCategories(); track sub.subCategoryId) {
+        <button
+          class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all border-2"
+          [class]="
+            selectedSubCategoryId() === sub.subCategoryId
+              ? 'bg-primary text-white border-primary'
+              : 'bg-surface-card text-surface-sub border-surface-border hover:border-primary hover:text-primary'
+          "
+          (click)="onSelectSubCategory(sub.subCategoryId!)"
+        >
+          {{ sub.name }}
+        </button>
+      }
+    </div>
+
+    <!-- Menu Grid -->
+    <div class="flex-1 overflow-y-auto p-1">
+      @if (!filteredMenus().length) {
+        <div class="flex items-center justify-center h-full">
+          <app-empty-view message="ไม่พบเมนูในหมวดหมู่นี้" />
+        </div>
+      } @else {
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          @for (menu of filteredMenus(); track menu.menuId) {
+            <button
+              class="bg-surface-card rounded-xl text-left hover:ring-2 hover:ring-primary transition-all group"
+              (click)="onMenuClick(menu)"
+            >
+              <!-- Image -->
+              <div
+                class="relative aspect-square bg-surface-hover flex items-center justify-center overflow-hidden rounded-t-xl"
+              >
+                @if (menu.imageFileId) {
+                  <img
+                    [src]="getImageUrl(menu.imageFileId)"
+                    [alt]="menu.nameThai"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                } @else {
+                  <app-generic-icon
+                    [name]="placeholderIcon"
+                    svgClass="w-20 h-20"
+                    class="text-surface-sub"
+                  ></app-generic-icon>
+                }
+                <!-- Pinned Badge (มุมซ้ายบน) -->
+                @if (menu.isPinned) {
+                  <span
+                    class="absolute top-2 left-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center"
+                    pTooltip="เมนูปักหมุด"
+                    tooltipPosition="right"
+                  >
+                    <app-generic-icon
+                      name="pin-tag"
+                      svgClass="w-5 h-5"
+                      class="text-white"
+                    ></app-generic-icon>
+                  </span>
+                }
+                <!-- Tag Badges (icon-only, มุมขวาบน) -->
+                @if (menu.tags) {
+                  <div class="absolute top-2 right-2 flex flex-col gap-1.5">
+                    @if (hasTag(menu, 1)) {
+                      <span
+                        class="w-10 h-10 rounded-full bg-danger flex items-center justify-center"
+                        pTooltip="แนะนำ"
+                        tooltipPosition="left"
+                      >
+                        <app-generic-icon
+                          name="thumb-tag"
+                          svgClass="w-6 h-6"
+                          class="text-white"
+                        ></app-generic-icon>
+                      </span>
+                    }
+                    @if (hasTag(menu, 2)) {
+                      <span
+                        class="w-10 h-10 rounded-full bg-success flex items-center justify-center"
+                        pTooltip="ตามฤดูกาล"
+                        tooltipPosition="left"
+                      >
+                        <app-generic-icon
+                          name="clover-tag"
+                          svgClass="w-6 h-6"
+                          class="text-white"
+                        ></app-generic-icon>
+                      </span>
+                    }
+                    @if (hasTag(menu, 4)) {
+                      <span
+                        class="w-10 h-10 rounded-full bg-warning flex items-center justify-center"
+                        pTooltip="ใช้เวลา"
+                        tooltipPosition="left"
+                      >
+                        <app-generic-icon
+                          name="time-tag"
+                          svgClass="w-6 h-6"
+                          class="text-white"
+                        ></app-generic-icon>
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+              <!-- Info -->
+              <div class="p-4">
+                <div class="flex items-start gap-2">
+                  <span class="font-bold text-xl truncate flex-1">{{
+                    menu.nameThai
+                  }}</span>
+                  @if (menu.allergens) {
+                    <app-generic-icon
+                      name="shield-warning"
+                      svgClass="w-8 h-8"
+                      class="text-warning flex-shrink-0 cursor-help"
+                      [pTooltip]="'สารก่อภูมิแพ้: ' + menu.allergens"
+                      tooltipPosition="top"
+                      appendTo="body"
+                    ></app-generic-icon>
+                  }
+                </div>
+                @if (menu.nameEnglish) {
+                  <div class="text-lg text-surface-sub truncate">
+                    {{ menu.nameEnglish }}
+                  </div>
+                }
+                @if (menu.caloriesPerServing) {
+                  <div class="text-surface-sub mt-1 flex items-center gap-1">
+                    <app-generic-icon
+                      name="thunder"
+                      svgClass="w-7 h-7"
+                      class="text-primary"
+                    ></app-generic-icon>
+                    {{ menu.caloriesPerServing }} Kcal
+                  </div>
+                }
+                <div class="flex items-end justify-between mt-2">
+                  <div>
+                    @if (menu.optionGroups?.length) {
+                      <div
+                        class="text-sm text-surface-sub flex items-center gap-1"
+                      >
+                        <app-generic-icon
+                          name="option-extra"
+                          svgClass="w-5 h-5"
+                        ></app-generic-icon>
+                        มีตัวเลือก
+                      </div>
+                    }
+                  </div>
+                  <span class="text-2xl font-bold text-primary">
+                    {{ menu.price | number: "1.2-2" }} บาท
+                  </span>
+                </div>
+              </div>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Right: Cart -->
+  <div
+    class="w-[400px] bg-surface-card rounded-2xl flex flex-col border border-surface-border"
+  >
+    <!-- Cart Header -->
+    <div
+      class="bg-gradient-to-r from-primary to-primary-dark rounded-t-2xl p-5"
+    >
+      <div class="flex items-center gap-4">
+        <div
+          class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center"
+        >
+          <app-generic-icon
+            name="basket-shopping"
+            svgClass="w-9 h-9"
+            class="text-white"
+          ></app-generic-icon>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <h2 class="text-2xl font-bold text-white">รายการสั่ง</h2>
+          </div>
+          <p class="text-base text-white/80 mt-0.5">
+            {{ orderNumber }}
+          </p>
+          <p class="text-lg font-semibold text-white mt-0.5">
+            โซน{{ zoneName }} - โต๊ะ{{ tableName }}
+            <span class="text-white/80 ml-2">ลูกค้า: {{ guestCount }} คน</span>
+          </p>
+        </div>
+        @if (cartItems().length) {
+          <span
+            class="bg-white/20 text-white text-sm font-bold px-3 py-0.5 rounded-full self-start"
+          >
+            {{ cartItems().length }} รายการ
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- Cart Items -->
+    <div class="flex-1 overflow-y-auto p-2 space-y-2">
+      @if (!cartItems().length) {
+        <div class="flex flex-col items-center justify-center h-full">
+          <ng-lottie
+            [options]="emptyCartLottie"
+            width="140px"
+            height="140px"
+          ></ng-lottie>
+          <p class="text-xl font-semibold text-surface-sub mt-2">
+            ยังไม่มีรายการ
+          </p>
+        </div>
+      } @else {
+        @for (item of cartItems(); track $index) {
+          <div
+            class="rounded-xl bg-surface-card border border-surface-border overflow-hidden"
+          >
+            <!-- ชื่อเมนู + ปุ่มลบ -->
+            <div class="px-4 pt-4 pb-2 flex items-start justify-between gap-2">
+              <div class="flex-1 min-w-0">
+                <div class="font-bold text-xl truncate">
+                  {{ item.nameThai }}
+                </div>
+                @if (item.options.length) {
+                  <div class="text-sm text-surface-sub">
+                    @for (opt of item.options; track $index) {
+                      <span
+                        >{{ opt.optionItemName }}
+                        @if (opt.additionalPrice) {
+                          (+{{ opt.additionalPrice }})
+                        }
+                      </span>
+                      @if (!$last) {
+                        <span>, </span>
+                      }
+                    }
+                  </div>
+                }
+                @if (item.note) {
+                  <div class="text-sm text-warning">{{ item.note }}</div>
+                }
+              </div>
+              <button
+                class="w-8 h-8 rounded-lg text-danger hover:bg-danger/10 flex items-center justify-center transition-colors"
+                (click)="onRemoveItem($index)"
+              >
+                <i class="pi pi-trash text-sm"></i>
+              </button>
+            </div>
+            <!-- จำนวน + ราคา -->
+            <div class="px-4 pb-4 pt-1 flex items-center justify-between">
+              <div
+                class="flex items-center border border-surface-border rounded-full overflow-hidden"
+              >
+                <button
+                  class="w-9 h-8 bg-surface-hover hover:bg-surface-border flex items-center justify-center transition-colors"
+                  (click)="onDecreaseQty($index)"
+                >
+                  <i
+                    class="pi pi-minus text-[10px] font-bold text-surface-sub"
+                  ></i>
+                </button>
+                <span
+                  class="font-bold text-sm w-10 text-center bg-surface-card"
+                  >{{ item.quantity }}</span
+                >
+                <button
+                  class="w-9 h-8 bg-surface-hover hover:bg-surface-border flex items-center justify-center transition-colors"
+                  (click)="onIncreaseQty($index)"
+                >
+                  <i class="pi pi-plus text-[10px] font-bold text-primary"></i>
+                </button>
+              </div>
+              <span class="font-bold text-2xl text-primary">
+                {{ item.totalPrice | number: "1.2-2" }} บาท
+              </span>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Cart Footer -->
+    <div class="p-5">
+      <div
+        class="bg-primary-subtle rounded-xl p-4 flex justify-between items-center mb-4"
+      >
+        <span class="text-lg font-bold">รวมทั้งหมด</span>
+        <span class="text-2xl font-bold text-primary"
+          >{{ getCartTotal() | number: "1.2-2" }} บาท</span
+        >
+      </div>
+      <div class="flex gap-3">
+        <button
+          pButton
+          label="เพิ่มรายการ"
+          class="flex-1 p-button-outlined p-button-lg"
+          [disabled]="!cartItems().length || isSending()"
+          (click)="onAddItemsOnly()"
+        ></button>
+        <button
+          pButton
+          label="ส่งครัว"
+          class="flex-1 p-button-lg"
+          [disabled]="!cartItems().length || isSending()"
+          [loading]="isSending()"
+          (click)="onSendToKitchen()"
+        ></button>
+      </div>
+    </div>
+  </div>
+</div>

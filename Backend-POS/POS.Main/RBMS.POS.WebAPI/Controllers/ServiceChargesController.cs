@@ -23,13 +23,13 @@ public class ServiceChargesController : BaseController
     }
 
     /// <summary>
-    /// Get all service charges
+    /// Get all service charges (paginated)
     /// </summary>
     [HttpGet]
     [PermissionAuthorize(Permissions.ServiceCharge.Read)]
-    [ProducesResponseType(typeof(ListResponseModel<ServiceChargeResponseModel>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll(CancellationToken ct = default)
-        => ListSuccess(await _serviceChargeService.GetAllServiceChargesAsync(ct));
+    [ProducesResponseType(typeof(PaginationResult<ServiceChargeResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll([FromQuery] PaginationModel param, [FromQuery] bool? isActive, CancellationToken ct = default)
+        => PagedSuccess(await _serviceChargeService.GetAllServiceChargesAsync(param, isActive, ct));
 
     /// <summary>
     /// Get service charge by ID

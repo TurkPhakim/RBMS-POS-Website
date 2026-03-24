@@ -1,0 +1,175 @@
+<div class="min-h-screen bg-surface flex justify-center">
+  <div class="w-full max-w-[480px] p-4">
+
+    <!-- Loading -->
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center py-20">
+        <p-progressSpinner
+          [style]="{ width: '48px', height: '48px' }"
+          strokeWidth="4"
+        ></p-progressSpinner>
+        <p class="mt-4 text-surface-sub">กำลังโหลดข้อมูลบิล...</p>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (errorMessage()) {
+      <div class="rounded-xl bg-white p-6 text-center mt-10">
+        <i class="pi pi-exclamation-circle text-4xl text-danger mb-3"></i>
+        <p class="text-lg font-semibold mb-2">ไม่สามารถเข้าถึงบิลได้</p>
+        <p class="text-surface-sub">{{ errorMessage() }}</p>
+      </div>
+    }
+
+    <!-- Bill Content -->
+    @if (!isLoading() && !errorMessage() && billData()) {
+      <!-- Header -->
+      <div class="rounded-xl bg-gradient-to-r from-primary to-primary-dark p-5 text-white text-center mb-4">
+        <p class="text-lg font-bold">{{ billData()!.tableName }}</p>
+        <p class="text-sm opacity-80">คำสั่ง #{{ billData()!.orderNumber }}</p>
+      </div>
+
+      <!-- Items -->
+      <div class="rounded-xl bg-white p-4 mb-4">
+        <p class="font-semibold mb-3">รายการอาหาร</p>
+        @for (item of billData()!.items; track $index) {
+          <div class="py-2 border-b border-surface-border last:border-0">
+            <div class="flex justify-between">
+              <span class="font-medium">{{ item.menuName }}</span>
+              <span class="text-nowrap ml-2">{{ formatCurrency(item.totalPrice) }}</span>
+            </div>
+            <div class="text-sm text-surface-sub">
+              {{ item.quantity }} x {{ formatCurrency(item.unitPrice) }}
+            </div>
+            @if (item.options && item.options.length > 0) {
+              <div class="text-xs text-surface-sub mt-0.5">
+                @for (opt of item.options; track $index) {
+                  <span class="mr-2">+ {{ opt }}</span>
+                }
+              </div>
+            }
+            @if (item.note) {
+              <div class="text-xs text-warning mt-0.5">
+                <i class="pi pi-comment mr-1"></i>{{ item.note }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Bills -->
+      @for (bill of billData()!.bills; track bill.orderBillId) {
+        <div class="rounded-xl bg-white p-4 mb-4">
+          <!-- Bill Header -->
+          <div class="flex justify-between items-center mb-3">
+            <p class="font-semibold">บิล #{{ bill.billNumber }}</p>
+            <span
+              class="px-2 py-0.5 rounded-full text-xs font-medium"
+              [class.bg-warning-bg]="isBillPending(bill)"
+              [class.text-warning-dark]="isBillPending(bill)"
+              [class.bg-success-bg]="isBillPaid(bill)"
+              [class.text-success]="isBillPaid(bill)"
+            >
+              {{ getBillStatusLabel(bill) }}
+            </span>
+          </div>
+
+          <!-- Amount Summary -->
+          <div class="space-y-1 text-sm">
+            <div class="flex justify-between">
+              <span class="text-surface-sub">ราคาอาหาร</span>
+              <span>{{ formatCurrency(bill.subTotal) }}</span>
+            </div>
+            @if (bill.totalDiscountAmount && bill.totalDiscountAmount > 0) {
+              <div class="flex justify-between text-danger">
+                <span>ส่วนลด</span>
+                <span>-{{ formatCurrency(bill.totalDiscountAmount) }}</span>
+              </div>
+            }
+            @if (bill.serviceChargeAmount && bill.serviceChargeAmount > 0) {
+              <div class="flex justify-between">
+                <span class="text-surface-sub">ค่าบริการ</span>
+                <span>{{ formatCurrency(bill.serviceChargeAmount) }}</span>
+              </div>
+            }
+            @if (bill.vatAmount && bill.vatAmount > 0) {
+              <div class="flex justify-between">
+                <span class="text-surface-sub">VAT</span>
+                <span>{{ formatCurrency(bill.vatAmount) }}</span>
+              </div>
+            }
+            <div class="flex justify-between font-bold text-base pt-2 border-t border-surface-border">
+              <span>รวมทั้งสิ้น</span>
+              <span class="text-primary-text">{{ formatCurrency(bill.grandTotal) }}</span>
+            </div>
+          </div>
+
+          <!-- Upload Slip (Pending bills only) -->
+          @if (isBillPending(bill)) {
+            <div class="mt-4">
+              <!-- Upload Result -->
+              @if (uploadResult() && uploadResult()!.orderBillId === bill.orderBillId) {
+                <div class="rounded-lg bg-success-bg p-3 text-sm text-center mb-3">
+                  <i class="pi pi-check-circle text-success mr-1"></i>
+                  <span>อัปโหลดสลิปสำเร็จ</span>
+                  <p class="text-xs text-surface-sub mt-1">
+                    {{ getVerificationLabel(uploadResult()!.verificationStatus) }}
+                  </p>
+                  @if (pollingBillId() === bill.orderBillId) {
+                    <p class="text-xs mt-1 animate-pulse">กำลังรอการยืนยัน...</p>
+                  }
+                </div>
+              }
+
+              <!-- Upload Error -->
+              @if (uploadError() && uploadingBillId() === null) {
+                <div class="rounded-lg bg-danger-bg p-3 text-sm text-center text-danger mb-3">
+                  <i class="pi pi-times-circle mr-1"></i>{{ uploadError() }}
+                </div>
+              }
+
+              <!-- Upload Button -->
+              @if (!uploadResult() || uploadResult()!.orderBillId !== bill.orderBillId) {
+                <label
+                  class="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-primary text-white font-medium cursor-pointer hover:bg-primary-dark transition-colors"
+                  [class.opacity-50]="uploadingBillId() !== null"
+                  [class.pointer-events-none]="uploadingBillId() !== null"
+                >
+                  @if (uploadingBillId() === bill.orderBillId) {
+                    <i class="pi pi-spinner pi-spin"></i>
+                    <span>กำลังอัปโหลด...</span>
+                  } @else {
+                    <i class="pi pi-camera"></i>
+                    <span>อัปโหลดสลิปการโอนเงิน</span>
+                  }
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    class="hidden"
+                    (change)="onSelectFile($event, bill)"
+                    [disabled]="uploadingBillId() !== null"
+                  />
+                </label>
+              }
+            </div>
+          }
+
+          <!-- Paid Status -->
+          @if (isBillPaid(bill)) {
+            <div class="mt-4 rounded-lg bg-success-bg p-3 text-center">
+              <i class="pi pi-check-circle text-success text-xl"></i>
+              <p class="text-success font-medium mt-1">ชำระเงินเรียบร้อยแล้ว</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Footer -->
+      <p class="text-center text-xs text-surface-sub py-4">
+        ขอบคุณที่ใช้บริการ
+      </p>
+    }
+
+  </div>
+</div>

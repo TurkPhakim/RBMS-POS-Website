@@ -1,0 +1,50 @@
+<app-card-template [headerLabel]="config.header!">
+  <form [formGroup]="form" class="space-y-4">
+    <!-- ประเภทวัตถุ -->
+    <div>
+      <label class="block text-sm font-semibold mb-1">ประเภทวัตถุ</label>
+      <app-floor-object-type-dropdown
+        formControlName="objectType"
+      ></app-floor-object-type-dropdown>
+      <app-field-error [control]="form.controls['objectType']" type="select" />
+    </div>
+
+    <!-- ชื่อวัตถุ -->
+    <div>
+      <label class="block text-sm font-semibold mb-1">ชื่อ/ป้ายกำกับ</label>
+      <input
+        type="text"
+        pInputText
+        formControlName="label"
+        placeholder="เช่น ห้องน้ำชาย, บันไดชั้น 2"
+        class="w-full"
+      />
+      <app-field-error [control]="form.controls['label']" type="text" />
+    </div>
+  </form>
+
+  <p-footer>
+    @if (isEditMode()) {
+      <p-button
+        label="ลบ"
+        severity="danger"
+        variant="outlined"
+        (onClick)="onDelete()"
+        [disabled]="isSubmitting()"
+      />
+    }
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      variant="outlined"
+      (onClick)="onCancel()"
+      [disabled]="isSubmitting()"
+    />
+    <p-button
+      label="บันทึก"
+      severity="primary"
+      (onClick)="onSubmit()"
+      [loading]="isSubmitting()"
+    />
+  </p-footer>
+</app-card-template>

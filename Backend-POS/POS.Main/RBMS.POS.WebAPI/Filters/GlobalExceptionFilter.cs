@@ -22,7 +22,9 @@ public class GlobalExceptionFilter : IExceptionFilter
             ValidationException => (400, "VALIDATION_ERROR"),
             EntityNotFoundException => (404, "NOT_FOUND"),
             BusinessException => (422, "BUSINESS_ERROR"),
+            AccountLockedByAdminException => (423, "ACCOUNT_LOCKED_BY_ADMIN"),
             AccountLockedException => (423, "ACCOUNT_LOCKED"),
+            ForbiddenException => (403, "FORBIDDEN"),
             AccountDisabledException => (403, "ACCOUNT_DISABLED"),
             InvalidCredentialsException => (401, "INVALID_CREDENTIALS"),
             InvalidRefreshTokenException => (401, "INVALID_REFRESH_TOKEN"),
@@ -46,6 +48,13 @@ public class GlobalExceptionFilter : IExceptionFilter
         if (context.Exception is ValidationException validationEx && validationEx.Errors != null)
         {
             response.Errors = validationEx.Errors;
+        }
+
+        if (context.Exception is AccountLockedByAdminException adminLockedEx)
+        {
+            response.Result = adminLockedEx.AutoUnlockDate.HasValue
+                ? new { autoUnlockDate = DateTime.SpecifyKind(adminLockedEx.AutoUnlockDate.Value, DateTimeKind.Utc).ToString("O") }
+                : null;
         }
 
         if (context.Exception is AccountLockedException lockedEx && lockedEx.LockedUntil.HasValue)

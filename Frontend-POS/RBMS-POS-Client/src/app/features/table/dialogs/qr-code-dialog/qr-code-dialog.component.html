@@ -1,0 +1,45 @@
+<app-card-template [headerLabel]="headerLabel" contentClass="p-6">
+  <div class="flex items-center gap-6">
+    <!-- QR Code (ซ้าย) -->
+    <div class="shrink-0 rounded-2xl bg-surface p-4">
+      <div #qrCanvas class="flex justify-center"></div>
+    </div>
+
+    <!-- ข้อมูล (ขวา) -->
+    <div class="flex flex-col gap-3">
+      <img [src]="logoUrl" alt="Shop Logo" class="h-12 object-contain self-start" />
+
+      <div>
+        <p class="text-2xl font-bold text-primary">{{ shopName }}</p>
+        @if (shopNameThai) {
+          <p class="text-lg font-semibold text-primary-text">{{ shopNameThai }}</p>
+        }
+      </div>
+
+      <div class="h-px bg-primary-light"></div>
+
+      <p class="text-2xl font-bold">{{ table.tableName }}</p>
+      <p class="text-lg text-surface-sub">{{ table.zoneName }}</p>
+
+      <span class="inline-flex items-center gap-1.5 bg-primary-subtle text-primary px-3 py-1.5 rounded-full text-lg font-semibold self-start">
+        <i class="pi pi-qrcode"></i>
+        สแกนเพื่อสั่งอาหาร
+      </span>
+
+      <p class="text-surface-sub">{{ openedDate }}</p>
+    </div>
+  </div>
+
+  <p-footer>
+    <p-button
+      label="ดาวน์โหลด QR"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="onDownload()"
+    />
+    <p-button
+      label="ปิด"
+      (onClick)="onClose()"
+    />
+  </p-footer>
+</app-card-template>

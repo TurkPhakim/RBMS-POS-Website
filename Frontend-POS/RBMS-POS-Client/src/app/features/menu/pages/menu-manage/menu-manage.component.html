@@ -1,165 +1,406 @@
-<div class="space-y-5">
-  <!-- Page Header -->
-  <div>
-    <h1 class="text-page-title text-primary">
-      {{ isEditMode() ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่' }}
-    </h1>
-    <p class="text-lg text-surface-sub mt-1">
-      {{ isEditMode() ? 'แก้ไขรายละเอียดเมนู' : 'กรอกข้อมูลเมนูใหม่' }}
-    </p>
+<!-- Page Header -->
+<div class="flex items-center gap-3 mb-6">
+  <div
+    class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+  >
+    <app-generic-icon
+      [name]="config.icon"
+      svgClass="w-10 h-10"
+      class="text-white"
+    ></app-generic-icon>
   </div>
-
-  <!-- Form -->
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
-
-      <!-- Card 1: ข้อมูลเมนู -->
-      <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4 rounded-t-xl">
-          <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <i class="pi pi-book"></i>
-            ข้อมูลเมนู
-          </h2>
-        </div>
-
-        <div class="p-6 space-y-5">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- ชื่อเมนู (ไทย) -->
-            <div>
-              <label for="nameThai" class="block font-semibold text-surface-dark mb-2">
-                ชื่อเมนู (ไทย) <span class="text-danger">*</span>
-              </label>
-              <input id="nameThai" type="text" pInputText formControlName="nameThai"
-                placeholder="กรอกชื่อเมนูภาษาไทย"
-                class="w-full" />
-              <app-field-error [control]="form.get('nameThai')" type="text" />
-            </div>
-
-            <!-- ชื่อเมนู (อังกฤษ) -->
-            <div>
-              <label for="nameEnglish" class="block font-semibold text-surface-dark mb-2">
-                ชื่อเมนู (อังกฤษ) <span class="text-danger">*</span>
-              </label>
-              <input id="nameEnglish" type="text" pInputText formControlName="nameEnglish"
-                placeholder="กรอกชื่อเมนูภาษาอังกฤษ"
-                class="w-full" />
-              <app-field-error [control]="form.get('nameEnglish')" type="text" />
-            </div>
-          </div>
-
-          <!-- คำอธิบาย -->
-          <div>
-            <label for="description" class="block font-semibold text-surface-dark mb-2">
-              คำอธิบายเมนู
-            </label>
-            <textarea id="description" pTextarea formControlName="description"
-              rows="4"
-              placeholder="กรอกคำอธิบายเมนู"
-              class="w-full resize-none">
-            </textarea>
-            <app-field-error [control]="form.get('description')" type="text" />
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- ราคา -->
-            <div>
-              <label for="price" class="block font-semibold text-surface-dark mb-2">
-                ราคา <span class="text-danger">*</span>
-              </label>
-              <p-inputNumber id="price" formControlName="price"
-                mode="currency" currency="THB" locale="th-TH"
-                placeholder="กรอกราคา"
-                [min]="0" [max]="99999999.99"
-                [styleClass]="'w-full'"
-                [inputStyleClass]="'w-full'">
-              </p-inputNumber>
-              <app-field-error [control]="form.get('price')" type="text" />
-            </div>
-
-            <!-- หมวดหมู่ -->
-            <div>
-              <label for="category" class="block font-semibold text-surface-dark mb-2">
-                หมวดหมู่ <span class="text-danger">*</span>
-              </label>
-              <app-menu-category-dropdown formControlName="category"></app-menu-category-dropdown>
-              <app-field-error [control]="form.get('category')" type="select" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 2: รูปภาพเมนู -->
-      <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4 rounded-t-xl">
-          <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <i class="pi pi-image"></i>
-            รูปภาพเมนู
-          </h2>
-        </div>
-
-        <div class="p-6">
-          @if (!imagePreview()) {
-            <!-- Upload Area -->
-            <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
-            <button type="button" (click)="fileInput.click()"
-              class="w-full px-8 py-12 border-2 border-dashed border-surface-border rounded-xl hover:border-primary transition-all duration-300 flex flex-col items-center justify-center gap-4 bg-surface hover:bg-primary-subtle group">
-              <app-generic-icon name="image-preview" svgClass="w-16 h-16" class="text-surface-sub group-hover:text-primary transition-colors"></app-generic-icon>
-              <div class="text-center">
-                <p class="text-lg font-semibold text-surface-dark group-hover:text-primary transition-colors">
-                  คลิกเพื่ออัปโหลดรูปภาพเมนู
-                </p>
-                <p class="text-surface-sub mt-2">PNG, JPG, GIF ขนาดไม่เกิน 5MB</p>
-              </div>
-            </button>
-          } @else {
-            <!-- Image Preview -->
-            <div class="flex flex-col md:flex-row gap-6 items-start">
-              <div class="relative">
-                <img [src]="imagePreview()" alt="ตัวอย่างรูปเมนู"
-                  class="h-64 w-64 object-cover rounded-xl border border-surface-border shadow-sm" />
-              </div>
-              <div class="flex flex-col gap-3">
-                <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
-                <p-button label="เปลี่ยนรูปภาพ" icon="pi pi-pencil" severity="secondary" [outlined]="true"
-                  (onClick)="fileInput.click()"></p-button>
-                <p-button label="ลบรูปภาพ" icon="pi pi-trash" severity="danger" [outlined]="true"
-                  (onClick)="removeImage()"></p-button>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-
-      <!-- Card 3: สถานะ -->
-      <div class="bg-surface-card rounded-xl shadow-sm border border-surface-border">
-        <div class="bg-gradient-to-r from-primary to-primary-dark px-6 py-4 rounded-t-xl">
-          <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <i class="pi pi-cog"></i>
-            สถานะ
-          </h2>
-        </div>
-
-        <div class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- พร้อมขาย -->
-            <div class="flex items-center justify-between p-4 border border-surface-border rounded-xl bg-surface">
-              <div>
-                <label class="block font-semibold text-surface-dark">พร้อมขาย</label>
-                <p class="text-sm text-surface-sub mt-1">เปิด/ปิดสถานะพร้อมขายให้ลูกค้าสั่ง</p>
-              </div>
-              <p-inputSwitch formControlName="isAvailable"></p-inputSwitch>
-            </div>
-
-            <!-- สถานะระบบ -->
-            <div class="flex items-center justify-between p-4 border border-surface-border rounded-xl bg-surface">
-              <div>
-                <label class="block font-semibold text-surface-dark">สถานะระบบ</label>
-                <p class="text-sm text-surface-sub mt-1">เปิด/ปิดการใช้งานเมนูในระบบ</p>
-              </div>
-              <p-inputSwitch formControlName="isActive"></p-inputSwitch>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </form>
+  <h1 class="text-page-title">
+    {{ isEditMode() ? "แก้ไข" + config.title : "เพิ่ม" + config.title }}
+  </h1>
 </div>
+
+<form [formGroup]="form" class="flex flex-col gap-4">
+  <!-- Card 1: รูปเมนู -->
+  <app-image-upload-card
+    [imageUrl]="serverImageUrl()"
+    label="รูปเมนู"
+    [placeholderIcon]="config.icon"
+    variant="square"
+    [readOnly]="isEditMode() && !canUpdate"
+    (fileSelected)="onFileSelected($event)"
+    (imageRemoved)="removeImage()"
+  ></app-image-upload-card>
+
+  <!-- Card 2: ข้อมูลเมนู -->
+  <app-section-card
+    headerLabel="ข้อมูลเมนู"
+    [headerIcon]="config.icon"
+    contentClass="p-6 grid grid-cols-1 md:grid-cols-3 gap-5"
+  >
+    <!-- Row 1: ชื่อไทย, ชื่ออังกฤษ, หมวดหมู่ย่อย -->
+    <div>
+      <label for="nameThai" class="block font-semibold mb-2">
+        ชื่อเมนู (ไทย) <span class="text-danger">*</span>
+      </label>
+      <input
+        pInputText
+        id="nameThai"
+        formControlName="nameThai"
+        placeholder="กรอกชื่อเมนูภาษาไทย"
+        class="w-full"
+      />
+      <app-field-error [control]="form.get('nameThai')" type="text" />
+    </div>
+
+    <div>
+      <label for="nameEnglish" class="block font-semibold mb-2">
+        ชื่อเมนู (อังกฤษ) <span class="text-danger">*</span>
+      </label>
+      <input
+        pInputText
+        id="nameEnglish"
+        formControlName="nameEnglish"
+        placeholder="Enter menu name in English"
+        class="w-full"
+      />
+      <app-field-error [control]="form.get('nameEnglish')" type="text" />
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        หมวดหมู่ย่อย <span class="text-danger">*</span>
+      </label>
+      <app-sub-category-dropdown
+        [categoryType]="categoryType"
+        formControlName="subCategoryId"
+        placeholder="เลือกหมวดหมู่ย่อย"
+      ></app-sub-category-dropdown>
+      <app-field-error [control]="form.get('subCategoryId')" type="select" />
+    </div>
+
+    <!-- Row 2: ราคาขาย, ต้นทุน, สถานะการขาย -->
+    <div>
+      <label for="price" class="block font-semibold mb-2">
+        ราคา <span class="text-danger">*</span>
+      </label>
+      <p-inputgroup>
+        <p-inputNumber
+          formControlName="price"
+          inputId="price"
+          [min]="0"
+          mode="decimal"
+          placeholder="ราคา"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          styleClass="w-full"
+        ></p-inputNumber>
+        <p-inputgroup-addon>บาท</p-inputgroup-addon>
+      </p-inputgroup>
+      <app-field-error [control]="form.get('price')" type="text" />
+    </div>
+
+    <div>
+      <label for="costPrice" class="block font-semibold mb-2">
+        ราคาต้นทุน
+      </label>
+      <p-inputgroup>
+        <p-inputNumber
+          formControlName="costPrice"
+          inputId="costPrice"
+          [min]="0"
+          mode="decimal"
+          placeholder="ราคาต้นทุน"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          styleClass="w-full"
+        ></p-inputNumber>
+        <p-inputgroup-addon>บาท</p-inputgroup-addon>
+      </p-inputgroup>
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">สถานะการขาย</label>
+      <div class="flex items-center gap-3 pt-2">
+        <p-inputSwitch
+          formControlName="isAvailable"
+          inputId="isAvailable"
+        ></p-inputSwitch>
+        <span
+          [class]="
+            form.get('isAvailable')?.value ? 'text-success' : 'text-danger'
+          "
+        >
+          {{ form.get("isAvailable")?.value ? "เปิดขาย" : "ปิดขาย" }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Row 3: คำอธิบาย, สารก่อภูมิแพ้, แคลอรี่ -->
+    <div>
+      <label for="description" class="block font-semibold mb-2">
+        คำอธิบาย
+      </label>
+      <textarea
+        pTextarea
+        id="description"
+        formControlName="description"
+        placeholder="คำอธิบายเมนู (ถ้ามี)"
+        class="w-full"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <div>
+      <label for="allergens" class="block font-semibold mb-2">
+        สารก่อภูมิแพ้
+      </label>
+      <textarea
+        pTextarea
+        id="allergens"
+        formControlName="allergens"
+        placeholder="ระบุสารก่อภูมิแพ้ (ถ้ามี)"
+        class="w-full"
+        rows="3"
+      ></textarea>
+    </div>
+
+    <div>
+      <label for="caloriesPerServing" class="block font-semibold mb-2">
+        แคลอรี่ต่อจาน
+      </label>
+      <p-inputgroup>
+        <p-inputNumber
+          formControlName="caloriesPerServing"
+          inputId="caloriesPerServing"
+          [min]="0"
+          styleClass="w-full"
+        ></p-inputNumber>
+        <p-inputgroup-addon>กิโลแคลอรี่</p-inputgroup-addon>
+      </p-inputgroup>
+    </div>
+  </app-section-card>
+
+  <!-- Card 2: ช่วงเวลาขาย -->
+  <app-section-card
+    headerLabel="ช่วงเวลาขาย"
+    headerIcon="calendar-clock"
+    contentClass="p-6"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      @if (hasTwoPeriods()) {
+        <div>
+          <label class="block font-semibold mb-2">ช่วงที่ 1</label>
+          <div class="flex items-center gap-3 pt-2">
+            <p-inputSwitch
+              formControlName="isAvailablePeriod1"
+              inputId="isAvailablePeriod1"
+            ></p-inputSwitch>
+            <span
+              [class]="
+                form.get('isAvailablePeriod1')?.value
+                  ? 'text-success'
+                  : 'text-danger'
+              "
+            >
+              {{
+                form.get("isAvailablePeriod1")?.value ? "เปิดขาย" : "ปิดขาย"
+              }}
+            </span>
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold mb-2">ช่วงที่ 2</label>
+          <div class="flex items-center gap-3 pt-2">
+            <p-inputSwitch
+              formControlName="isAvailablePeriod2"
+              inputId="isAvailablePeriod2"
+            ></p-inputSwitch>
+            <span
+              [class]="
+                form.get('isAvailablePeriod2')?.value
+                  ? 'text-success'
+                  : 'text-danger'
+              "
+            >
+              {{
+                form.get("isAvailablePeriod2")?.value ? "เปิดขาย" : "ปิดขาย"
+              }}
+            </span>
+          </div>
+        </div>
+      } @else {
+        <div>
+          <label class="block font-semibold mb-2">สถานะช่วงเวลาขาย</label>
+          <div class="flex items-center gap-3 pt-2">
+            <p-inputSwitch
+              formControlName="isAvailablePeriod1"
+              inputId="isAvailablePeriod1"
+            ></p-inputSwitch>
+            <span
+              [class]="
+                form.get('isAvailablePeriod1')?.value
+                  ? 'text-success'
+                  : 'text-danger'
+              "
+            >
+              {{
+                form.get("isAvailablePeriod1")?.value ? "เปิดขาย" : "ปิดขาย"
+              }}
+            </span>
+          </div>
+        </div>
+      }
+
+      <!-- ปักหมุด -->
+      <div>
+        <label class="block font-semibold mb-2">ปักหมุด</label>
+        <div class="flex items-center gap-3 pt-2">
+          <p-inputSwitch
+            formControlName="isPinned"
+            inputId="isPinned"
+          ></p-inputSwitch>
+          <span>
+            {{ form.get("isPinned")?.value ? "ปักหมุดแล้ว" : "ไม่ได้ปักหมุด" }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </app-section-card>
+
+  <!-- Card 4: Tags -->
+  <app-section-card
+    headerLabel="Tags"
+    headerIcon="tag"
+    contentClass="p-6"
+  >
+    <div class="flex flex-wrap gap-3">
+      <button
+        pButton
+        type="button"
+        [severity]="tagRecommended() ? 'info' : 'secondary'"
+        [outlined]="!tagRecommended()"
+        (click)="onTagToggle('recommended')"
+        class="gap-2"
+      >
+        <app-generic-icon name="star" svgClass="w-4 h-4"></app-generic-icon>
+        แนะนำ
+      </button>
+      <button
+        pButton
+        type="button"
+        [severity]="tagSeasonal() ? 'warn' : 'secondary'"
+        [outlined]="!tagSeasonal()"
+        (click)="onTagToggle('seasonal')"
+        class="gap-2"
+      >
+        <app-generic-icon
+          name="calendar-clock"
+          svgClass="w-4 h-4"
+        ></app-generic-icon>
+        ตามเทศกาล
+      </button>
+      <button
+        pButton
+        type="button"
+        [severity]="tagSlow() ? 'danger' : 'secondary'"
+        [outlined]="!tagSlow()"
+        (click)="onTagToggle('slow')"
+        class="gap-2"
+      >
+        <app-generic-icon
+          name="clock-activity"
+          svgClass="w-4 h-4"
+        ></app-generic-icon>
+        ช้า
+      </button>
+    </div>
+  </app-section-card>
+
+  <!-- Card 5: ตัวเลือกเสริม -->
+  <app-section-card
+    headerLabel="ตัวเลือกเสริม"
+    headerIcon="option-extra"
+    contentClass="p-6"
+  >
+    <button
+      sectionActions
+      type="button"
+      class="px-5 py-2 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-subtle transition-colors"
+      (click)="openSelectOptionGroupDialog()"
+    >
+      เพิ่มตัวเลือกเสริม
+    </button>
+
+    @if (linkedOptionGroups().length === 0) {
+      <app-empty-view></app-empty-view>
+    } @else {
+      <div
+        class="space-y-4"
+        cdkDropList
+        (cdkDropListDropped)="onOptionGroupDrop($event)"
+      >
+        @for (group of linkedOptionGroups(); track group.optionGroupId; let i = $index) {
+          <div
+            cdkDrag
+            [cdkDragData]="group"
+            class="rounded-2xl border-l-4 border-l-primary border border-surface-border bg-surface-card px-6 py-5"
+          >
+            <!-- Row: drag + info + actions -->
+            <div class="flex items-start gap-4">
+              <div class="cursor-move shrink-0 pt-1" cdkDragHandle>
+                <app-generic-icon
+                  name="menu-bar"
+                  svgClass="w-6 h-6"
+                  class="text-surface-muted"
+                ></app-generic-icon>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <!-- Name -->
+                <h3 class="text-xl font-bold truncate mb-4">{{ group.name }}</h3>
+
+                <!-- Option Items + Tag -->
+                <div class="flex flex-wrap items-center gap-2.5">
+                  @for (oi of group.optionItems ?? []; track oi.name) {
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-subtle">
+                      <span class="text-base font-semibold text-primary-text">{{ oi.name }}</span>
+                      @if (oi.additionalPrice) {
+                        <span class="text-primary font-bold text-base">+{{ oi.additionalPrice | number:'1.0-0' }}</span>
+                      }
+                    </div>
+                  }
+                  <p-tag
+                    class="ml-auto"
+                    [value]="group.isRequired ? 'บังคับเลือก' : 'ไม่บังคับ'"
+                    [severity]="group.isRequired ? 'warn' : 'secondary'"
+                  ></p-tag>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="shrink-0">
+                <button
+                  type="button"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                  pTooltip="นำออก"
+                  tooltipPosition="top"
+                  (click)="removeOptionGroup(i)"
+                >
+                  <app-generic-icon
+                    name="trash"
+                    svgClass="w-5 h-5"
+                  ></app-generic-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </app-section-card>
+
+  <!-- Audit Footer (edit mode only) -->
+  @if (isEditMode() && menuData()) {
+    <app-audit-footer
+      [createdAt]="menuData()!.createdAt"
+      [createdByName]="menuData()!.createdBy"
+      [updatedAt]="menuData()!.updatedAt"
+      [updatedByName]="menuData()!.updatedBy"
+    />
+  }
+</form>

@@ -1,6 +1,5 @@
 import { Component, forwardRef } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
-
 import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component';
 
 @Component({

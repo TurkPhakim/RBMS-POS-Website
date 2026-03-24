@@ -22,6 +22,12 @@ public class TbUser : BaseEntity
 
     public DateTime? LastPasswordChangedDate { get; set; }
 
+    public bool IsLockedByAdmin { get; set; } = false;
+
+    public DateTime? AutoUnlockDate { get; set; }
+
+    public string? PinCodeHash { get; set; }
+
     // Navigation Properties (1:1 with Employee)
     public virtual TbEmployee? Employee { get; set; }
 

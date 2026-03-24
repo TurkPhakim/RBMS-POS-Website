@@ -1,3 +1,6 @@
+using POS.Main.Business.HumanResource.Models.EmployeeAddress;
+using POS.Main.Business.HumanResource.Models.EmployeeEducation;
+using POS.Main.Business.HumanResource.Models.EmployeeWorkHistory;
 using POS.Main.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
@@ -165,4 +168,8 @@ public class CreateEmployeeRequestModel
     /// </summary>
     /// <example>00000000-0000-0000-0000-000000000000</example>
     public Guid? UserId { get; set; }
+
+    public List<CreateEmployeeAddressRequestModel>? Addresses { get; set; }
+    public List<CreateEmployeeEducationRequestModel>? Educations { get; set; }
+    public List<CreateEmployeeWorkHistoryRequestModel>? WorkHistories { get; set; }
 }

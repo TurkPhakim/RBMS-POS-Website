@@ -41,9 +41,9 @@ export class AuthInterceptor implements HttpInterceptor {
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
-          // verify-password ใช้ 401 สำหรับรหัสผ่านผิด — ให้ component จัดการเอง
-          const isVerifyPassword = request.url.endsWith('/verify-password');
-          if (!isVerifyPassword) {
+          // verify-password / pin/verify ใช้ 401 สำหรับรหัสผ่าน/PIN ผิด — ให้ component จัดการเอง
+          const isCredentialCheck = request.url.endsWith('/verify-password') || request.url.endsWith('/pin/verify') || request.url.endsWith('/change-password');
+          if (!isCredentialCheck) {
             this.authService.clearAndRedirectToLogin();
           }
         }

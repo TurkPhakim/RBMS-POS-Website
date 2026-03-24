@@ -1,0 +1,261 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center">
+      <app-generic-icon name="reservation" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">จัดการการจอง</h1>
+  </div>
+
+  <!-- Calendar Card -->
+  <div class="bg-surface-card rounded-lg overflow-hidden">
+    <!-- Calendar Header -->
+    <div class="flex items-center px-6 py-5 border-b border-surface-border">
+      <!-- Spacer (ซ้าย เพื่อให้กลางจริง) -->
+      <div class="w-[180px]"></div>
+
+      <!-- Month Navigation (กลาง) -->
+      <div class="flex-1 flex items-center justify-center gap-4">
+        <button
+          class="w-11 h-11 flex items-center justify-center rounded-full bg-primary-subtle text-primary hover:bg-primary hover:text-white transition-colors"
+          (click)="onPrevMonth()"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <h2 class="text-3xl font-extrabold min-w-[300px] text-center tracking-tight">
+          {{ formatMonthYear() }}
+        </h2>
+        <button
+          class="w-11 h-11 flex items-center justify-center rounded-full bg-primary-subtle text-primary hover:bg-primary hover:text-white transition-colors"
+          (click)="onNextMonth()"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- Status Filter (ขวา) -->
+      <div class="w-[180px]">
+        <app-reservation-status-dropdown
+          [ngModel]="selectedStatus()"
+          (ngModelChange)="onStatusChange($event)"
+        ></app-reservation-status-dropdown>
+      </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="px-4 pb-4 pt-2">
+      <!-- Day Headers (สีประจำวันไทย) -->
+      <div class="grid grid-cols-7 gap-1 mb-1">
+        @for (dc of dayColors; track dc.label; let i = $index) {
+          <div
+            class="text-center text-sm font-bold py-2.5 rounded-lg"
+            [style.background-color]="dc.headerBg"
+            [style.color]="dc.color"
+          >
+            {{ dc.label }}
+          </div>
+        }
+      </div>
+
+      <!-- Day Cells -->
+      <div class="grid grid-cols-7 gap-1">
+        @for (day of calendarDays(); track day.dateStr) {
+          <button
+            class="relative flex flex-col items-center rounded-lg py-4 min-h-[80px] transition-all cursor-pointer"
+            [class.ring-2]="day.isToday && !isSelectedDate(day)"
+            [class.ring-primary]="day.isToday && !isSelectedDate(day)"
+            [class.bg-primary]="isSelectedDate(day)"
+            [class.text-white]="isSelectedDate(day)"
+            [class.opacity-40]="!day.isCurrentMonth"
+            [style.background-color]="!isSelectedDate(day) && day.isCurrentMonth ? getDayCellBg(day) : null"
+            (click)="onSelectDate(day)"
+          >
+            <!-- Day Number -->
+            <span
+              class="text-xl leading-tight"
+              [class.font-extrabold]="day.isToday"
+              [class.font-semibold]="!day.isToday && day.isCurrentMonth"
+            >
+              {{ day.day }}
+            </span>
+
+            <!-- Today Label -->
+            @if (day.isToday && !isSelectedDate(day)) {
+              <span class="text-[10px] font-bold text-primary mt-0.5">วันนี้</span>
+            }
+            @if (day.isToday && isSelectedDate(day)) {
+              <span class="text-[10px] font-bold text-white mt-0.5">วันนี้</span>
+            }
+
+            <!-- Status Dots -->
+            @if (getStatusDots(day.dateStr).length > 0) {
+              <div class="flex items-center gap-0.5 mt-1">
+                @for (dot of getStatusDots(day.dateStr); track $index) {
+                  <span
+                    class="w-2.5 h-2.5 rounded-full"
+                    [ngClass]="dot"
+                    [class.ring-1]="isSelectedDate(day)"
+                    [class.ring-white]="isSelectedDate(day)"
+                  ></span>
+                }
+              </div>
+            }
+
+            <!-- Reservation Count Badge -->
+            @if (getReservationCountForDate(day.dateStr) > 0) {
+              <span
+                class="absolute top-1.5 right-1.5 min-w-[20px] h-[20px] flex items-center justify-center rounded-full text-xs font-bold"
+                [class.bg-white]="isSelectedDate(day)"
+                [class.text-primary]="isSelectedDate(day)"
+                [class.bg-primary]="!isSelectedDate(day)"
+                [class.text-white]="!isSelectedDate(day)"
+              >
+                {{ getReservationCountForDate(day.dateStr) }}
+              </span>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Day Detail Section -->
+  <div class="space-y-4">
+    <!-- Day Title -->
+    <div class="flex items-center gap-3">
+      <h3 class="text-section-title">
+        {{ formatSelectedDate() }}
+      </h3>
+      <span
+        class="px-3 py-1 rounded-full text-sm font-bold bg-primary-subtle text-primary"
+      >
+        {{ selectedDayReservations().length }} รายการ
+      </span>
+    </div>
+
+    <!-- Timeline Reservation Cards -->
+    @if (selectedDayReservations().length > 0) {
+      <div class="relative">
+        @for (item of selectedDayReservations(); track item.reservationId; let last = $last) {
+          <div class="flex gap-4" [class.opacity-50]="isPastReservation(item)">
+            <!-- Timeline Left: Time + Line -->
+            <div class="flex flex-col items-center w-[70px] shrink-0">
+              <span class="text-lg font-extrabold whitespace-nowrap">
+                {{ formatTime(item.reservationTime) }}
+              </span>
+              @if (!last) {
+                <div class="flex-1 w-px bg-surface-border mt-2 mb-1"></div>
+              }
+            </div>
+
+            <!-- Card -->
+            <div
+              class="flex-1 rounded-lg border-l-4 p-4 mb-3"
+              [ngClass]="[
+                getStatusBorderColor(item.status),
+                isPastReservation(item) ? 'bg-surface' : 'bg-surface-card'
+              ]"
+            >
+              <div class="flex items-start justify-between gap-3">
+                <!-- Info -->
+                <div class="flex-1 min-w-0">
+                  <!-- Status + Customer -->
+                  <div class="flex items-center gap-2.5 mb-2">
+                    <span
+                      class="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                      [ngClass]="[getStatusColor(item.status), getStatusBgColor(item.status)]"
+                    >
+                      {{ getStatusLabel(item.status) }}
+                    </span>
+                    <span class="font-bold text-lg truncate">{{ item.customerName }}</span>
+                  </div>
+
+                  <!-- Details Row -->
+                  <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
+                    <span class="flex items-center gap-1.5">
+                      <i class="pi pi-phone text-surface-sub"></i>
+                      {{ item.customerPhone }}
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                      <i class="pi pi-users text-surface-sub"></i>
+                      {{ item.guestCount }} คน
+                    </span>
+                    <span class="flex items-center gap-1.5">
+                      <app-generic-icon name="tray-plate" svgClass="w-4 h-4" class="text-surface-sub"></app-generic-icon>
+                      {{ item.tableName ?? 'ยังไม่ระบุโต๊ะ' }}
+                    </span>
+                  </div>
+
+                  @if (item.note) {
+                    <div class="mt-2 text-sm text-surface-sub truncate">
+                      <i class="pi pi-comment mr-1"></i>
+                      {{ item.note }}
+                    </div>
+                  }
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                  @if (canUpdate && item.status === 'Pending') {
+                    <button
+                      class="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white"
+                      pTooltip="ยืนยัน"
+                      tooltipPosition="top"
+                      (click)="onConfirm(item)"
+                    >
+                      <i class="pi pi-check text-sm"></i>
+                    </button>
+                  }
+                  @if (canUpdate && item.status === 'Confirmed') {
+                    <button
+                      class="w-9 h-9 flex items-center justify-center rounded-full bg-success text-white"
+                      pTooltip="Check-in"
+                      tooltipPosition="top"
+                      (click)="onCheckIn(item)"
+                    >
+                      <i class="pi pi-sign-in text-sm"></i>
+                    </button>
+                  }
+                  @if (canUpdate && (item.status === 'Pending' || item.status === 'Confirmed')) {
+                    <button
+                      class="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white"
+                      pTooltip="แก้ไข"
+                      tooltipPosition="top"
+                      (click)="onEdit(item)"
+                    >
+                      <app-generic-icon name="eye" svgClass="w-5 h-5"></app-generic-icon>
+                    </button>
+                  }
+                  @if (canUpdate && (item.status === 'Pending' || item.status === 'Confirmed')) {
+                    <button
+                      class="w-9 h-9 flex items-center justify-center rounded-full bg-danger text-white"
+                      pTooltip="ยกเลิก"
+                      tooltipPosition="top"
+                      (click)="onCancelReservation(item)"
+                    >
+                      <i class="pi pi-times text-sm"></i>
+                    </button>
+                  }
+                  @if (canUpdate && item.status === 'Confirmed') {
+                    <button
+                      class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-sub text-white"
+                      pTooltip="ไม่มา"
+                      tooltipPosition="top"
+                      (click)="onNoShow(item)"
+                    >
+                      <i class="pi pi-user-minus text-sm"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="bg-surface-card rounded-lg p-12">
+        <app-empty-view message="ไม่มีการจองในวันนี้" />
+      </div>
+    }
+  </div>
+</div>

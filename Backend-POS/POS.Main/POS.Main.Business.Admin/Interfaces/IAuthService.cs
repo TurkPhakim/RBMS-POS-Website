@@ -28,5 +28,15 @@ public interface IAuthService
 
     Task ResetPasswordAsync(ResetPasswordRequestModel request, CancellationToken ct = default);
 
+    Task ChangePasswordAsync(Guid userId, ChangePasswordRequestModel request, CancellationToken ct = default);
+
     Task<bool> VerifyPasswordAsync(Guid userId, string password, CancellationToken ct = default);
+
+    Task SetupPinAsync(Guid userId, string pinCode, CancellationToken ct = default);
+
+    Task ChangePinAsync(Guid userId, string currentPinCode, string newPinCode, CancellationToken ct = default);
+
+    Task<bool> VerifyPinAsync(Guid userId, string pinCode, CancellationToken ct = default);
+
+    Task ResetPinAsync(Guid userId, string password, CancellationToken ct = default);
 }

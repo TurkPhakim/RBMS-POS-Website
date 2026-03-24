@@ -112,6 +112,7 @@ WebAPI → Business.* (Services) → Repositories → Dal (EF Core) → Core
 | [icon-system.md](doc/architecture/icon-system.md) | ระบบจัดการ Icon — GenericIconComponent + PrimeIcons, คู่มือเพิ่ม icon ใหม่ |
 | [file-management.md](doc/architecture/file-management.md) | สถาปัตยกรรมการจัดการไฟล์ — TbFile Entity, S3 Storage, Upload/Download Flow |
 | [database-api-reference.md](doc/architecture/database-api-reference.md) | อ้างอิงฐานข้อมูลและ API — ตารางทั้งหมด, Endpoints, ความสัมพันธ์, Enum |
+| [auto-cleanup.md](doc/architecture/auto-cleanup.md) | ระบบ Auto-Cleanup — Background Service ลบข้อมูลชั่วคราวอัตโนมัติ (Tokens, Sessions, Notifications) |
 | [https-security.md](doc/architecture/https-security.md) | สถาปัตยกรรม HTTPS Security — TLS, HSTS, Security Headers, FR-SECURITY-003 |
 
 ---
@@ -149,6 +150,21 @@ WebAPI → Business.* (Services) → Repositories → Dal (EF Core) → Core
 
 ---
 
+### Business Requirements (`doc/requirements/`)
+
+| เอกสาร | รายละเอียด |
+|--------|------------|
+| [REQ-menu-system.md](doc/requirements/REQ-menu-system.md) | Requirements ระบบจัดการเมนูอาหาร — หมวดหมู่, เมนู, ตัวเลือกเสริม, ช่วงเวลาขาย, Tags |
+| [REQ-order-system.md](doc/requirements/REQ-order-system.md) | Requirements ระบบออเดอร์ — สั่งอาหาร, สถานะ, ตะกร้า, ส่งครัว, Split Bill |
+| [REQ-table-system.md](doc/requirements/REQ-table-system.md) | Requirements ระบบโต๊ะ — Floor Plan, เปิด/ปิดโต๊ะ, QR Code, จอง, เชื่อมโต๊ะ |
+| [REQ-kitchen-system.md](doc/requirements/REQ-kitchen-system.md) | Requirements ระบบครัว (KDS) — หน้าจอครัว, สถานะอาหาร, Timer, Sound, SignalR |
+| [REQ-payment-system.md](doc/requirements/REQ-payment-system.md) | Requirements ระบบชำระเงิน — เงินสด, QR Payment, กะแคชเชียร์, ใบเสร็จ |
+| [REQ-noti-system.md](doc/requirements/REQ-noti-system.md) | Requirements ระบบแจ้งเตือน — SignalR Hubs, Sidebar Drawer, Toast, Filter, Events |
+| [REQ-self-order-system.md](doc/requirements/REQ-self-order-system.md) | Requirements ระบบ QR Self-Order — ลูกค้าสแกน QR สั่งอาหารผ่าน Mobile Web, Guest Token, Nickname, Cart, Order Tracking |
+| [REQ-dashboard-system.md](doc/requirements/REQ-dashboard-system.md) | Requirements ระบบแดชบอร์ด — KPI ยอดขาย, เมนูขายดี, ช่วงเวลาขายดี, รายงานยอดขาย, ng2-charts |
+
+---
+
 ### ติดตาม Task งาน (`doc/tasks/`)
 
 | เอกสาร | รายละเอียด |
@@ -160,6 +176,7 @@ WebAPI → Business.* (Services) → Repositories → Dal (EF Core) → Core
 | [TASK-fe-layout-redesign.md](doc/tasks/TASK-fe-layout-redesign.md) | Task: Frontend Layout Redesign — main-layout, header, sidebar, breadcrumb, welcome (5 Phases) |
 | [TASK-login-redesign.md](doc/tasks/TASK-login-redesign.md) | Task: Login Page Redesign — ปรับหน้า login ให้ตรง design system |
 | [TASK-icon-system.md](doc/tasks/TASK-icon-system.md) | Task: Icon System — GenericIconComponent + PrimeIcons, ย้ายจาก `<img>` CSS filter |
+| [TASK-development-roadmap.md](doc/tasks/TASK-development-roadmap.md) | Development Roadmap — ลำดับการพัฒนาระบบ 6 Phases (Table → Order → Kitchen/Payment → Notification → Self-Order → Dashboard) |
 
 ---
 

@@ -2,7 +2,7 @@
 
 มาตรฐานการเขียนโค้ด Backend (ASP.NET Core 9) พร้อมตัวอย่าง ✅ DO และ ❌ DON'T
 
-> อัพเดตล่าสุด: 2026-03-10
+> อัพเดตล่าสุด: 2026-03-16
 >
 > **Related:** [backend-guide.md](backend-guide.md) | [module-development-workflow.md](module-development-workflow.md)
 
@@ -1133,6 +1133,7 @@ public class ProductService : IProductService
 
 - [ ] Entity inherit `BaseEntity`, ใช้ `Tb` prefix
 - [ ] Entity Configuration ใช้ Fluent API (ไม่ใช้ Data Annotations)
+- [ ] Migration สร้าง + **apply ทันที** (`database update`)
 - [ ] Repository Interface และ Implementation
 - [ ] เพิ่ม Repository ใน UnitOfWork
 - [ ] Service Interface และ Implementation
@@ -1141,6 +1142,7 @@ public class ProductService : IProductService
 - [ ] FluentValidation Validators
 - [ ] Controller ด้วย route `api/{module}` (ระบุ explicit route ทุก Controller)
 - [ ] XML comments + ProducesResponseType บน Controller
+- [ ] **Permission seed data** (ถ้า module มี authorization): constants + seed migration + apply
 
 ### Code Review Checklist
 
@@ -1290,4 +1292,41 @@ product.DeletedBy = userId;              // ❌ ไม่จำเป็น
 
 // ❌ DON'T — hard delete
 _context.Products.Remove(product);
+```
+
+### 14.5 Migration + Seed Data
+
+```csharp
+// ✅ DO — apply migration ทันทีหลังสร้าง (ห้ามข้ามไปทำ step อื่น)
+// dotnet ef migrations add AddProductTable ...
+// dotnet ef database update ...   ← ต้องทำทันที
+
+// ✅ DO — seed permission data ผ่าน Migration (ถ้า module มี authorization)
+protected override void Up(MigrationBuilder migrationBuilder)
+{
+    // 1. Insert Module
+    migrationBuilder.InsertData(table: "TbmModules", ...);
+
+    // 2. Insert AuthorizeMatrix (Module + Permission)
+    migrationBuilder.InsertData(table: "TbmAuthorizeMatrices", ...);
+
+    // 3. Grant Admin position ทุก permission
+    migrationBuilder.Sql(@"INSERT INTO [TbAuthorizeMatrixPositions] ...");
+}
+
+protected override void Down(MigrationBuilder migrationBuilder)
+{
+    // ✅ ต้องมี Down() เสมอ — สำหรับ rollback
+    migrationBuilder.Sql("DELETE FROM [TbAuthorizeMatrixPositions] ...");
+    migrationBuilder.DeleteData(table: "TbmAuthorizeMatrices", ...);
+    migrationBuilder.DeleteData(table: "TbmModules", ...);
+}
+
+// ✅ DO — ใช้ UTC datetime สำหรับ seed data
+new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+
+// ❌ DON'T — ข้าม database update แล้วไปทำ Repository/Service ก่อน
+// ❌ DON'T — ลืม seed permission data แล้วไปทำ Frontend (user จะเข้า endpoint ไม่ได้)
+// ❌ DON'T — ลืม Down() ใน seed migration
+// ❌ DON'T — ใช้ DateTime.Now ใน seed data (ต้องใช้ UTC)
 ```

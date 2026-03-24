@@ -1,0 +1,37 @@
+<app-card-template [headerLabel]="headerLabel">
+  <div class="space-y-4">
+    <div class="text-sm">
+      <span class="text-surface-sub">ย้ายจาก:</span>
+      <span class="font-semibold ml-1">{{ table.tableName }} ({{ table.zoneName }})</span>
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-2">
+        เลือกโต๊ะปลายทาง <span class="text-danger">*</span>
+      </label>
+      <app-available-table-dropdown
+        [ngModel]="selectedTableId()"
+        (ngModelChange)="selectedTableId.set($event)"
+        [excludeTableId]="table.tableId!"
+      ></app-available-table-dropdown>
+    </div>
+  </div>
+
+  <p-footer>
+    <div class="flex justify-center gap-3">
+      <p-button
+        label="ยกเลิก"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="onCancel()"
+      ></p-button>
+      <p-button
+        label="ย้ายโต๊ะ"
+        severity="primary"
+        [disabled]="!selectedTableId()"
+        [loading]="isSubmitting()"
+        (onClick)="onSubmit()"
+      ></p-button>
+    </div>
+  </p-footer>
+</app-card-template>

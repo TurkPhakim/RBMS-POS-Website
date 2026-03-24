@@ -2,21 +2,20 @@ import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-
-import { ChildModuleNode, ModuleNode, PermissionItem } from '@app/core/api/models';
-import { PositionsService } from '@app/core/api/services';
+import {
+  ChildModuleNode,
+  EmployeeResponseModel,
+  ModuleNode,
+  PositionResponseModel,
+} from '@app/core/api/models';
+import { HumanResourceService, PositionsService } from '@app/core/api/services';
+import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
-
 import { markFormDirty } from '@app/shared/utils';
-
 const KEY_BTN_SAVE = 'save-position';
 const KEY_BTN_BACK = 'back';
-
-interface ExpandState {
-  [key: number]: boolean;
-}
 
 @Component({
   selector: 'app-position-manage',
@@ -34,20 +33,69 @@ export class PositionManageComponent implements OnDestroy {
   parentExpanded = signal<ExpandState>({});
   childExpanded = signal<ExpandState>({});
 
+  positionEmployees = signal<EmployeeResponseModel[]>([]);
+  positionData = signal<PositionResponseModel | null>(null);
+  canUpdate: boolean;
+
+  readonly moduleLabelMap: Record<string, string> = {
+    'payment-manage': 'รอบการขาย',
+    'cashier-session': 'ประวัติรอบขาย',
+    'service-charge': 'จัดการค่าบริการ',
+  };
+
+  readonly moduleIconMap: Record<string, string> = {
+    dashboard: 'dashboard',
+    'admin-settings': 'admin-setting',
+    'human-resource': 'human-resource',
+    menu: 'menu-restaurant',
+    order: 'order-dinner',
+    table: 'table-set',
+    payment: 'cashier',
+    'kitchen-display': 'chef-human',
+    'dashboard.view': 'dashboard',
+    'service-charge': 'coin',
+    position: 'lock-protect',
+    'shop-settings': 'restaurant',
+    'user-management': 'user-octagon',
+    employee: 'human',
+    'menu-category': 'category',
+    'menu-food': 'chicken-drumstick',
+    'menu-beverage': 'drinks-glass',
+    'menu-dessert': 'dessert',
+    'menu-option': 'option-extra',
+    'order-manage': 'order-dinner',
+    'table-manage': 'table-restaurant',
+    'floor-plan': 'table-dinner',
+    reservation: 'reservation',
+    'payment-manage': 'bill-rastaurant',
+    'cashier-session': 'bill-invoice',
+    'kitchen-order': 'chef-human',
+    'kitchen-food': 'cook-chef',
+    'kitchen-beverage': 'bartender',
+    'kitchen-dessert': 'pastry-chef',
+  };
+
   constructor(
     private readonly route: ActivatedRoute,
+    private readonly apiConfig: ApiConfiguration,
     private readonly authService: AuthService,
     private readonly breadcrumbService: BreadcrumbService,
     private readonly destroyRef: DestroyRef,
     private readonly fb: FormBuilder,
+    private readonly humanResourceService: HumanResourceService,
     private readonly modalService: ModalService,
     private readonly positionsService: PositionsService,
     private readonly router: Router,
-  ) {}
+  ) {
+    this.canUpdate = this.authService.hasPermission('position.update');
+  }
 
   ngOnInit(): void {
     this.initForm();
     this.checkEditMode();
+    if (this.isEditMode() && !this.canUpdate) {
+      this.form.disable();
+    }
     this.setupBreadcrumbButtons();
   }
 
@@ -68,15 +116,17 @@ export class PositionManageComponent implements OnDestroy {
       },
     });
 
-    this.breadcrumbService.addOrUpdateButton({
-      key: KEY_BTN_SAVE,
-      type: 'button',
-      item: {
+    if (this.canUpdate || !this.isEditMode()) {
+      this.breadcrumbService.addOrUpdateButton({
         key: KEY_BTN_SAVE,
-        label: 'บันทึก',
-        callback: () => this.onSubmit(),
-      },
-    });
+        type: 'button',
+        item: {
+          key: KEY_BTN_SAVE,
+          label: 'บันทึก',
+          callback: () => this.onSubmit(),
+        },
+      });
+    }
   }
 
   initForm(): void {
@@ -98,6 +148,10 @@ export class PositionManageComponent implements OnDestroy {
     }
   }
 
+  getImageUrl(fileId: number): string {
+    return `${this.apiConfig.rootUrl}/api/admin/file/${fileId}`;
+  }
+
   loadPosition(id: number): void {
     this.positionsService
       .positionsGetPositionByIdGet({ positionId: id })
@@ -105,6 +159,7 @@ export class PositionManageComponent implements OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.result) {
+            this.positionData.set(response.result);
             this.form.patchValue({
               positionName: response.result.positionName,
               description: response.result.description,
@@ -112,9 +167,24 @@ export class PositionManageComponent implements OnDestroy {
             });
           }
           this.loadPermissions(id);
+          this.loadPositionEmployees(id);
         },
         error: () => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลตำแหน่งได้' });
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถโหลดข้อมูลตำแหน่งได้',
+          });
+        },
+      });
+  }
+
+  loadPositionEmployees(positionId: number): void {
+    this.humanResourceService
+      .humanResourceGetEmployeesGet({ positionId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.positionEmployees.set(response.results ?? []);
         },
       });
   }
@@ -127,12 +197,16 @@ export class PositionManageComponent implements OnDestroy {
         next: (response) => {
           if (response.result) {
             this.modules.set(response.result.moduleTree?.modules ?? []);
-            this.grantedIds.set(new Set(response.result.grantedAuthorizeMatrixIds ?? []));
-            this.expandAll();
+            this.grantedIds.set(
+              new Set(response.result.grantedAuthorizeMatrixIds ?? []),
+            );
           }
         },
         error: () => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลสิทธิ์ได้' });
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถโหลดข้อมูลสิทธิ์ได้',
+          });
         },
       });
   }
@@ -155,29 +229,18 @@ export class PositionManageComponent implements OnDestroy {
               }
             }
             this.grantedIds.set(allIds);
-            this.expandAll();
           }
         },
         error: () => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: 'ไม่สามารถโหลดข้อมูลโมดูลได้' });
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถโหลดข้อมูลโมดูลได้',
+          });
         },
       });
   }
 
   // === Expand/Collapse ===
-
-  private expandAll(): void {
-    const pState: ExpandState = {};
-    const cState: ExpandState = {};
-    for (const mod of this.modules()) {
-      pState[mod.moduleId!] = true;
-      for (const child of mod.children ?? []) {
-        cState[child.moduleId!] = true;
-      }
-    }
-    this.parentExpanded.set(pState);
-    this.childExpanded.set(cState);
-  }
 
   toggleParent(moduleId: number): void {
     const state = { ...this.parentExpanded() };
@@ -219,7 +282,9 @@ export class PositionManageComponent implements OnDestroy {
   getChildAllState(child: ChildModuleNode): 'all' | 'none' | 'indeterminate' {
     const perms = child.permissions ?? [];
     if (perms.length === 0) return 'none';
-    const checkedCount = perms.filter(p => this.grantedIds().has(p.authorizeMatrixId!)).length;
+    const checkedCount = perms.filter((p) =>
+      this.grantedIds().has(p.authorizeMatrixId!),
+    ).length;
     if (checkedCount === 0) return 'none';
     if (checkedCount === perms.length) return 'all';
     return 'indeterminate';
@@ -241,9 +306,9 @@ export class PositionManageComponent implements OnDestroy {
   getParentAllState(mod: ModuleNode): 'all' | 'none' | 'indeterminate' {
     const children = mod.children ?? [];
     if (children.length === 0) return 'none';
-    const states = children.map(c => this.getChildAllState(c));
-    if (states.every(s => s === 'all')) return 'all';
-    if (states.every(s => s === 'none')) return 'none';
+    const states = children.map((c) => this.getChildAllState(c));
+    if (states.every((s) => s === 'all')) return 'all';
+    if (states.every((s) => s === 'none')) return 'none';
     return 'indeterminate';
   }
 
@@ -305,7 +370,10 @@ export class PositionManageComponent implements OnDestroy {
           }
         },
         error: (error) => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: error.error?.message || 'ไม่สามารถสร้างตำแหน่งได้' });
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: error.error?.message || 'ไม่สามารถสร้างตำแหน่งได้',
+          });
           this.resetSavingState();
         },
       });
@@ -330,7 +398,10 @@ export class PositionManageComponent implements OnDestroy {
           this.savePermissions(id);
         },
         error: (error) => {
-          this.modalService.cancel({ title: 'ผิดพลาด !', message: error.error?.message || 'ไม่สามารถแก้ไขตำแหน่งได้' });
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: error.error?.message || 'ไม่สามารถแก้ไขตำแหน่งได้',
+          });
           this.resetSavingState();
         },
       });
@@ -379,5 +450,8 @@ export class PositionManageComponent implements OnDestroy {
   onCancel(): void {
     this.router.navigate(['/admin-setting/positions']);
   }
+}
 
+interface ExpandState {
+  [key: number]: boolean;
 }

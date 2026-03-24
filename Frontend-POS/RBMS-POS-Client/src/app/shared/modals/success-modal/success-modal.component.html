@@ -1,6 +1,5 @@
-<div class="flex flex-col gap-4 items-center text-center pt-2">
-  <!-- Icon -->
-  <img src="images/success-image.png" alt="success" class="w-20 h-20" />
+<div class="flex flex-col gap-4 items-center text-center">
+  <ng-lottie [options]="lottieOptions" width="120px" height="120px"></ng-lottie>
 
   <!-- Title -->
   <div class="text-2xl font-semibold">{{ config.data?.title }}</div>
@@ -17,7 +16,7 @@
       [style]="{ 'min-width': '120px' }"
       (onClick)="handleConfirm()"
     >
-      {{ config.data?.confirmButtonLabel ?? 'ตกลง' }}
+      {{ config.data?.confirmButtonLabel ?? "ตกลง" }}
     </p-button>
   }
 </div>

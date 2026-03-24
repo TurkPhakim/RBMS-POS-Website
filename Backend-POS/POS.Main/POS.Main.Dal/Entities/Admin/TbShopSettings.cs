@@ -33,6 +33,19 @@ public class TbShopSettings : BaseEntity
     public int? PaymentQrCodeFileId { get; set; }
     public virtual TbFile? PaymentQrCodeFile { get; set; }
 
+    // ข้อมูลบัญชีธนาคาร
+    public string? BankName { get; set; }
+    public string? AccountNumber { get; set; }
+    public string? AccountName { get; set; }
+
+    // WiFi
+    public string? WifiSsid { get; set; }
+    public string? WifiPassword { get; set; }
+
+    // ใบเสร็จ
+    public string? ReceiptHeaderText { get; set; }
+    public string? ReceiptFooterText { get; set; }
+
     // Navigation
     public virtual ICollection<TbShopOperatingHour> OperatingHours { get; set; } = new List<TbShopOperatingHour>();
 }

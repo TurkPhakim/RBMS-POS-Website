@@ -2,6 +2,7 @@ using POS.Main.Business.HumanResource.Models;
 using POS.Main.Business.HumanResource.Models.EmployeeAddress;
 using POS.Main.Business.HumanResource.Models.EmployeeEducation;
 using POS.Main.Business.HumanResource.Models.EmployeeWorkHistory;
+using POS.Main.Business.HumanResource.Models.Profile;
 using POS.Main.Business.HumanResource.Models.UserAccount;
 using POS.Main.Core.Models;
 
@@ -13,6 +14,8 @@ public interface IEmployeeService
     Task<EmployeeResponseModel> GetEmployeeByIdAsync(int employeeId, CancellationToken ct = default);
     Task<EmployeeResponseModel> GetEmployeeByUserIdAsync(Guid userId, CancellationToken ct = default);
     Task<MyProfileResponseModel?> GetMyProfileAsync(int employeeId, CancellationToken ct = default);
+    Task<EmployeeResponseModel> GetMyFullProfileAsync(int employeeId, CancellationToken ct = default);
+    Task<EmployeeResponseModel> UpdateMyProfileAsync(int employeeId, Guid userId, UpdateProfileRequestModel request, int? newImageFileId = null, CancellationToken ct = default);
     Task<EmployeeResponseModel> CreateEmployeeAsync(CreateEmployeeRequestModel request, int? imageFileId = null, CancellationToken ct = default);
     Task<EmployeeResponseModel> UpdateEmployeeAsync(int employeeId, UpdateEmployeeRequestModel request, int? newImageFileId = null, CancellationToken ct = default);
     Task DeleteEmployeeAsync(int employeeId, CancellationToken ct = default);

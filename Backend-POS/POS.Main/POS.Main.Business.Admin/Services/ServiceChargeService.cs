@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using POS.Main.Business.Admin.Models.AdminSettings;
 using POS.Main.Core.Exceptions;
+using POS.Main.Core.Models;
 using POS.Main.Repositories.UnitOfWork;
 
 namespace POS.Main.Business.Admin.Services;
@@ -16,10 +18,37 @@ public class ServiceChargeService : IServiceChargeService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<ServiceChargeResponseModel>> GetAllServiceChargesAsync(CancellationToken ct = default)
+    public async Task<PaginationResult<ServiceChargeResponseModel>> GetAllServiceChargesAsync(PaginationModel param, bool? isActive = null, CancellationToken ct = default)
     {
-        var serviceCharges = await _unitOfWork.ServiceCharges.GetAllActiveAsync(ct);
-        return serviceCharges.Select(ServiceChargeMapper.ToResponse);
+        var query = _unitOfWork.ServiceCharges.QueryNoTracking()
+            .Include(sc => sc.CreatedByEmployee)
+            .Include(sc => sc.UpdatedByEmployee)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(param.Search))
+        {
+            var term = param.Search.Trim().ToLower();
+            query = query.Where(sc => sc.Name.ToLower().Contains(term));
+        }
+
+        if (isActive.HasValue)
+            query = query.Where(sc => sc.IsActive == isActive.Value);
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderBy(sc => sc.Name)
+            .Skip(param.Skip)
+            .Take(param.Take)
+            .ToListAsync(ct);
+
+        return new PaginationResult<ServiceChargeResponseModel>
+        {
+            Results = items.Select(ServiceChargeMapper.ToResponse).ToList(),
+            Page = param.Page,
+            Total = total,
+            ItemPerPage = param.ItemPerPage
+        };
     }
 
     public async Task<ServiceChargeResponseModel> GetServiceChargeByIdAsync(int serviceChargeId, CancellationToken ct = default)

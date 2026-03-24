@@ -27,6 +27,13 @@ public static class ShopSettingsMapper
             LineId = entity.LineId,
             PaymentQrCodeFileId = entity.PaymentQrCodeFileId,
             PaymentQrCodeFileName = entity.PaymentQrCodeFile?.FileName,
+            ReceiptHeaderText = entity.ReceiptHeaderText,
+            ReceiptFooterText = entity.ReceiptFooterText,
+            BankName = entity.BankName,
+            AccountNumber = entity.AccountNumber,
+            AccountName = entity.AccountName,
+            WifiSsid = entity.WifiSsid,
+            WifiPassword = entity.WifiPassword,
             OperatingHours = entity.OperatingHours
                 .OrderBy(h => h.DayOfWeek)
                 .Select(ToOperatingHourModel)
@@ -56,8 +63,10 @@ public static class ShopSettingsMapper
     public static ShopBrandingResponseModel ToBrandingResponse(TbShopSettings entity)
         => new()
         {
+            ShopNameThai = entity.ShopNameThai,
             ShopNameEnglish = entity.ShopNameEnglish,
-            LogoFileId = entity.LogoFileId
+            LogoFileId = entity.LogoFileId,
+            HasTwoPeriods = entity.HasTwoPeriods
         };
 
     public static WelcomeShopInfoResponseModel ToWelcomeResponse(TbShopSettings entity)
@@ -93,6 +102,13 @@ public static class ShopSettingsMapper
         entity.Instagram = request.Instagram;
         entity.Website = request.Website;
         entity.LineId = request.LineId;
+        entity.ReceiptHeaderText = request.ReceiptHeaderText;
+        entity.ReceiptFooterText = request.ReceiptFooterText;
+        entity.BankName = request.BankName;
+        entity.AccountNumber = request.AccountNumber;
+        entity.AccountName = request.AccountName;
+        entity.WifiSsid = request.WifiSsid;
+        entity.WifiPassword = request.WifiPassword;
     }
 
     public static void UpdateOperatingHour(TbShopOperatingHour entity, OperatingHourModel model)

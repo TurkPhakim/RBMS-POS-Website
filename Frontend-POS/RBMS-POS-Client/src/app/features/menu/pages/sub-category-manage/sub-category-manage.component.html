@@ -1,0 +1,153 @@
+<!-- Page Header -->
+<div class="flex items-center gap-3 mb-6">
+  <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center">
+    <app-generic-icon
+      name="category"
+      svgClass="w-10 h-10"
+      class="text-white"
+    ></app-generic-icon>
+  </div>
+  <h1 class="text-page-title">
+    {{ isEditMode() ? "แก้ไขหมวดหมู่" : "เพิ่มหมวดหมู่" }}
+  </h1>
+</div>
+
+<form [formGroup]="form" class="flex flex-col gap-4">
+  <!-- Card 1: ข้อมูลหมวดหมู่ -->
+  <app-section-card
+    headerLabel="ข้อมูลหมวดหมู่"
+    headerIcon="category"
+    contentClass="p-6 grid grid-cols-1 md:grid-cols-3 gap-4"
+  >
+    <!-- ประเภทหลัก (readonly) -->
+    <div>
+      <label class="block font-semibold mb-2">ประเภทหลัก</label>
+      <input
+        pInputText
+        [value]="categoryLabel()"
+        class="w-full"
+        [disabled]="true"
+      />
+    </div>
+
+    <!-- ชื่อหมวดหมู่ -->
+    <div>
+      <label for="name" class="block font-semibold mb-2">
+        ชื่อหมวดหมู่ <span class="text-danger">*</span>
+      </label>
+      <input
+        pInputText
+        id="name"
+        formControlName="name"
+        placeholder="กรอกชื่อหมวดหมู่"
+        class="w-full"
+      />
+      <app-field-error [control]="form.get('name')" type="text" />
+    </div>
+
+    <!-- สถานะการขาย -->
+    <div>
+      <label class="block font-semibold mb-2">สถานะการขาย</label>
+      <div class="flex items-center gap-3 pt-2">
+        <p-inputSwitch
+          formControlName="isActive"
+          inputId="isActive"
+        ></p-inputSwitch>
+        <span
+          [class]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
+        >
+          {{ form.get("isActive")?.value ? "เปิดขาย" : "ปิดขาย" }}
+        </span>
+      </div>
+    </div>
+  </app-section-card>
+
+  <!-- Card 2: เมนูในหมวดหมู่นี้ (edit mode only) -->
+  @if (isEditMode() && menus().length > 0) {
+    <app-section-card headerLabel="เมนูในหมวดหมู่นี้" headerIcon="piggy-bank">
+      <p-table
+        [value]="menus()"
+        [paginator]="true"
+        [rows]="5"
+        [rowsPerPageOptions]="[5, 10, 25]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+
+        styleClass="p-datatable-clean"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="w-[80px] text-center">รหัส</th>
+            <th class="w-[140px] text-center">รูปเมนู</th>
+            <th class="w-[200px]">ชื่อเมนู (ภาษาไทย)</th>
+            <th class="w-[200px]">ชื่อเมนู (ภาษาอังกฤษ)</th>
+            <th class="w-[100px] text-center">ราคาขาย</th>
+            <th class="w-[120px] text-center">ช่วงเวลาขาย</th>
+            <th class="w-[120px] text-center">สถานะการขาย</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td class="text-center">{{ item.menuId }}</td>
+            <td class="text-center">
+              <div class="flex justify-center">
+                @if (getImageUrl(item.imageFileId)) {
+                  <img
+                    [src]="getImageUrl(item.imageFileId)"
+                    alt=""
+                    class="w-20 h-20 rounded-lg object-cover"
+                  />
+                } @else {
+                  <div
+                    class="w-20 h-20 rounded-lg bg-surface-border flex items-center justify-center"
+                  >
+                    <app-generic-icon
+                      name="piggy-bank"
+                      svgClass="w-9 h-9"
+                      class="text-surface-sub opacity-50"
+                    ></app-generic-icon>
+                  </div>
+                }
+              </div>
+            </td>
+            <td>{{ item.nameThai }}</td>
+            <td>{{ item.nameEnglish }}</td>
+            <td class="text-center font-semibold">
+              {{ item.price | number: "1.2-2" }}
+            </td>
+            <td class="text-center">
+              <span
+                class="font-bold"
+                [class]="
+                  getPeriodLabel(item).severity === 'success'
+                    ? 'text-success'
+                    : 'text-primary'
+                "
+              >
+                {{ getPeriodLabel(item).text }}
+              </span>
+            </td>
+            <td class="text-center">
+              @if (item.isAvailable) {
+                <span class="font-bold text-success">เปิดขาย</span>
+              } @else {
+                <span class="font-bold text-danger">ปิดขาย</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </app-section-card>
+  }
+
+  <!-- Audit Footer (edit mode only) -->
+  @if (isEditMode() && subCategoryData()) {
+    <app-audit-footer
+      [createdAt]="subCategoryData()!.createdAt"
+      [createdByName]="subCategoryData()!.createdBy"
+      [updatedAt]="subCategoryData()!.updatedAt"
+      [updatedByName]="subCategoryData()!.updatedBy"
+    />
+  }
+</form>

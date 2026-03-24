@@ -4,9 +4,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '@app/core/api/services';
 import { ModalService } from '@app/core/services/modal.service';
+import { PasswordStrength } from '@app/shared/component-interfaces';
 import { markFormDirty } from '@app/shared/utils';
-
-type PasswordStrength = 'weak' | 'medium' | 'strong';
 
 @Component({
   selector: 'app-reset-password',

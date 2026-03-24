@@ -10,7 +10,6 @@ public class TbMenuConfiguration : IEntityTypeConfiguration<TbMenu>
     {
         builder.ToTable("TbMenus");
 
-        // Primary Key
         builder.HasKey(m => m.MenuId);
 
         builder.Property(m => m.MenuId)
@@ -35,22 +34,44 @@ public class TbMenuConfiguration : IEntityTypeConfiguration<TbMenu>
 
         builder.HasIndex(m => m.ImageFileId);
 
+        builder.HasOne(m => m.SubCategory)
+            .WithMany(sc => sc.Menus)
+            .HasForeignKey(m => m.SubCategoryId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired();
+
         builder.Property(m => m.Price)
             .IsRequired()
             .HasColumnType("decimal(10,2)");
 
-        builder.Property(m => m.Category)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(50);
-
-        builder.Property(m => m.IsActive)
-            .IsRequired()
-            .HasDefaultValue(true);
+        builder.Property(m => m.CostPrice)
+            .HasColumnType("decimal(10,2)");
 
         builder.Property(m => m.IsAvailable)
             .IsRequired()
             .HasDefaultValue(true);
+
+        builder.Property(m => m.IsAvailablePeriod1)
+            .IsRequired()
+            .HasDefaultValue(true);
+
+        builder.Property(m => m.IsAvailablePeriod2)
+            .IsRequired()
+            .HasDefaultValue(true);
+
+        builder.Property(m => m.Tags)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(m => m.Allergens)
+            .HasMaxLength(500);
+
+        builder.Property(m => m.CaloriesPerServing)
+            .HasColumnType("decimal(8,2)");
+
+        builder.Property(m => m.IsPinned)
+            .IsRequired()
+            .HasDefaultValue(false);
 
         builder.Property(m => m.CreatedAt)
             .IsRequired()
@@ -63,14 +84,14 @@ public class TbMenuConfiguration : IEntityTypeConfiguration<TbMenu>
         builder.HasIndex(m => m.NameEnglish)
             .HasDatabaseName("IX_Menus_NameEnglish");
 
-        builder.HasIndex(m => m.Category)
-            .HasDatabaseName("IX_Menus_Category");
-
-        builder.HasIndex(m => m.IsActive)
-            .HasDatabaseName("IX_Menus_IsActive");
+        builder.HasIndex(m => m.SubCategoryId)
+            .HasDatabaseName("IX_Menus_SubCategoryId");
 
         builder.HasIndex(m => m.IsAvailable)
             .HasDatabaseName("IX_Menus_IsAvailable");
+
+        builder.HasIndex(m => m.IsPinned)
+            .HasDatabaseName("IX_Menus_IsPinned");
 
         builder.HasIndex(m => m.DeleteFlag)
             .HasDatabaseName("IX_Menus_DeleteFlag");

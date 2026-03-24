@@ -24,6 +24,13 @@ public class ShopSettingsResponseModel
     public string? LineId { get; set; }
     public int? PaymentQrCodeFileId { get; set; }
     public string? PaymentQrCodeFileName { get; set; }
+    public string? ReceiptHeaderText { get; set; }
+    public string? ReceiptFooterText { get; set; }
+    public string? BankName { get; set; }
+    public string? AccountNumber { get; set; }
+    public string? AccountName { get; set; }
+    public string? WifiSsid { get; set; }
+    public string? WifiPassword { get; set; }
     public List<OperatingHourModel> OperatingHours { get; set; } = new();
 
     // Audit info

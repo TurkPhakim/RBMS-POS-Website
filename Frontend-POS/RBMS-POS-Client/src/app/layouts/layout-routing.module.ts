@@ -55,28 +55,40 @@ const routes: Routes = [
       },
       {
         path: 'menu',
-        data: { breadcrumb: 'เมนูอาหาร', permissions: ['menu-item.read'] },
+        data: {
+          breadcrumb: 'เมนู',
+          permissions: [
+            'menu-food.read',
+            'menu-beverage.read',
+            'menu-dessert.read',
+            'menu-category.read',
+            'menu-option.read',
+          ],
+        },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/menu/menu.module').then((m) => m.MenuModule),
       },
       {
         path: 'order',
-        data: { breadcrumb: 'รายการสั่ง', permissions: ['order-manage.read'] },
+        data: { breadcrumb: 'ออเดอร์', permissions: ['order-manage.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/order/order.module').then((m) => m.OrderModule),
       },
       {
         path: 'table',
-        data: { breadcrumb: 'จัดการโต๊ะ', permissions: ['table-manage.read'] },
+        data: { breadcrumb: 'โต๊ะ', permissions: ['table-manage.read'] },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/table/table.module').then((m) => m.TableModule),
       },
       {
         path: 'payment',
-        data: { breadcrumb: 'ชำระเงิน', permissions: ['payment-manage.read'] },
+        data: {
+          breadcrumb: 'ชำระเงิน',
+          permissions: ['payment-manage.read', 'cashier-session.read'],
+        },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/payment/payment.module').then(
@@ -85,7 +97,14 @@ const routes: Routes = [
       },
       {
         path: 'kitchen-display',
-        data: { breadcrumb: 'ครัว', permissions: ['kitchen-order.read'] },
+        data: {
+          breadcrumb: 'ครัว',
+          permissions: [
+            'kitchen-food.read',
+            'kitchen-beverage.read',
+            'kitchen-dessert.read',
+          ],
+        },
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/kitchen-display/kitchen-display.module').then(
@@ -101,6 +120,15 @@ const routes: Routes = [
           ),
       },
     ],
+  },
+
+  // Customer QR panel — no layout, public
+  {
+    path: 'customer',
+    loadChildren: () =>
+      import('../features/customer/customer.module').then(
+        (m) => m.CustomerModule
+      ),
   },
 
   // Access denied — no layout

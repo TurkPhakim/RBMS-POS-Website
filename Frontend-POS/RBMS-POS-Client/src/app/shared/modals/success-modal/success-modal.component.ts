@@ -1,7 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
+import { AnimationOptions } from 'ngx-lottie';
 import { DialogData } from '@app/core/services/modal.service';
 
 @Component({
@@ -11,6 +10,10 @@ import { DialogData } from '@app/core/services/modal.service';
 })
 export class SuccessModalComponent implements OnInit, OnDestroy {
   private timer?: ReturnType<typeof setTimeout>;
+
+  lottieOptions: AnimationOptions = {
+    path: 'animations/success.json',
+  };
 
   constructor(
     readonly ref: DynamicDialogRef,

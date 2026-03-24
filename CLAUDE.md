@@ -13,23 +13,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - คำศัพท์เทคนิคที่ไม่มีคำแปลที่ดี (Entity, Service, Signal, Controller, Repository, OnPush, ฯลฯ) ใช้ภาษาอังกฤษได้
 - Code, file path, command ใช้ภาษาอังกฤษได้ตามปกติ
 
-### Task Planning — เอกสารต้องมาก่อนเสมอ
+### Task Planning — BLOCKING REQUIREMENT (ห้ามข้าม)
 
-> **กฎเหล็ก**: ห้ามเริ่มเขียนโค้ดก่อนสร้าง Task file — เอกสารต้องมาก่อนการพัฒนาเสมอ
+> **กฎเหล็กสูงสุด — HARD BLOCKER**: ห้ามเขียนโค้ดแม้แต่บรรทัดเดียวก่อนสร้าง Task file
+> ถ้ายังไม่มี Task file → **ต้องหยุดทุกอย่าง** แล้วสร้าง Task file ก่อน
+> กฎนี้ใช้กับงานที่มีความซับซ้อน (แก้หลายไฟล์, ทำทั้ง BE+FE, ออกแบบระบบ, งานที่ต้องตัดสินใจ)
 
-ก่อนลงมือทำ Task ใดๆ ที่มีความซับซ้อน (แก้หลายไฟล์, ออกแบบระบบ, งานที่ต้องตัดสินใจ):
-1. **สร้าง Plan ให้ผู้ใช้อ่านก่อนเสมอ** — อธิบายสิ่งที่จะทำ, ไฟล์ที่จะแก้, ผลลัพธ์ที่คาดหวัง
-2. **รอการยืนยันจากผู้ใช้** ก่อนลงมือทำจริง
-3. **สร้าง `doc/tasks/TASK-{ชื่อ}.md` ทันทีหลังยืนยัน ก่อนเริ่มเขียนโค้ด** — ตามรูปแบบใน [doc/tasks/README.md](doc/tasks/README.md)
-4. **Task file ต้องมีรายละเอียดเพียงพอ** — แบ่ง Phase → Sub-task, ทุก sub-task ต้องระบุ "ปัญหาปัจจุบัน" + "เป้าหมาย" + "class เก่า → ใหม่" (ถ้ามี)
-5. **อัพเดต Task file** ทุกครั้งที่ Phase/Sub-task เสร็จ
-6. **ลำดับบังคับ**: Plan → ยืนยัน → **สร้าง Task file** → เริ่มเขียนโค้ด (ห้ามสลับลำดับ)
-7. **อ้างอิง**: ดูตัวอย่างจริงที่ [TASK-ui-redesign.md](doc/tasks/TASK-ui-redesign.md)
+**ลำดับบังคับ (ห้ามสลับ ห้ามข้าม):**
+
+```
+1. Plan      → สร้าง Plan ให้ผู้ใช้อ่าน (อธิบายสิ่งที่จะทำ, ไฟล์ที่จะแก้, ผลลัพธ์ที่คาดหวัง)
+2. ยืนยัน    → รอผู้ใช้ยืนยัน Plan ก่อน
+3. Task file → สร้าง doc/tasks/TASK-{ชื่อ}.md ทันที (ก่อนเขียนโค้ด!)
+4. โค้ด      → เริ่มเขียนโค้ดได้
+```
+
+**ทำไมต้องทำ**: Task file เป็น "บันทึกความทรงจำ" ที่ทำให้ทำงานต่อเนื่องได้เมื่อ context หลุด — ถ้าไม่มี Task file แล้ว session หลุด จะไม่รู้ว่าทำถึงไหน อะไรเสร็จ อะไรยังไม่เสร็จ
+
+**รายละเอียด Task file — ต้องละเอียดเหมือน Plan:**
+- **ต้องใส่ Design/Plan ที่ตกลงกับผู้ใช้แล้วลงใน Task file ด้วย** — เช่น ASCII mockup, Layout description, API ที่ใช้, Flow การทำงาน, ไฟล์ที่ต้องสร้าง/แก้
+- แบ่ง Phase → Sub-task พร้อมสถานะ (⬜ / ✅)
+- ทุก sub-task ต้องระบุ "ปัญหาปัจจุบัน" + "เป้าหมาย" + "class เก่า → ใหม่" (ถ้ามี)
+- **อัพเดต Task file ทุกครั้งที่ Sub-task เสร็จ** — เปลี่ยน ⬜ → ✅ ทันที
+- **Task file ต้องอ่านแล้วเข้าใจงานทั้งหมดได้โดยไม่ต้องดู chat history** — คนอ่าน Task file ต้องรู้ว่า "ทำอะไร ทำยังไง ทำถึงไหน" ได้ทันที
+- ดูรูปแบบใน [doc/tasks/README.md](doc/tasks/README.md) และตัวอย่างจริงที่ [TASK-ui-redesign.md](doc/tasks/TASK-ui-redesign.md)
+
+**เมื่อผู้ใช้บอกให้ทำงานต่อจาก Task ที่มีอยู่แล้ว:**
+- อ่าน Task file ก่อนเสมอ → ดูว่าถึง Phase/Sub-task ไหนแล้ว → ทำต่อจากจุดที่ค้างไว้
+- ห้ามเริ่มใหม่จากศูนย์ ถ้า Task file มีอยู่แล้ว
 
 ### Frontend Styling — กฎ Tailwind CSS
 
 - **ห้ามเขียนไฟล์ `.css`** เว้นแต่จำเป็นจริงๆ และไม่มีทางทำด้วย Tailwind utility ได้เลย
 - ถ้าจำเป็นต้องเขียน `.css` ต้องบอกผู้ใช้ก่อนว่าทำไมถึงหลีกเลี่ยงไม่ได้
+- **เมื่อแก้ไข `styles.css` (Global) ต้องวาง rule ให้ตรงหมวดหมู่เสมอ** — ห้ามเขียนต่อท้ายไฟล์โดยไม่ดูหมวด:
+  1. `Tailwind Directives` — `@tailwind` directives
+  2. `@layer base` — Global resets (html, body)
+  3. `Browser Overrides` — Scrollbar, Native element resets
+  4. `Form` — Validation states, Focus ring, Dropdown highlights
+  5. `PrimeNG Component Overrides` — เรียงตามชื่อ component A-Z
+  6. `Dialog Overrides` — Alert dialog, Card dialog
+  7. `Custom Components` — App-specific elements ที่ Tailwind ทำไม่ได้
 - **ทุก style เขียนเป็น Tailwind class ใน HTML template** (`class="..."`) เท่านั้น
 - ใช้ CSS token จาก `tailwind.config.js` เสมอ — ห้ามใช้สี raw เช่น `bg-orange-500`, `text-slate-700`
 - **Typography tokens**: ใช้ `text-page-title`, `text-section-title`, `text-card-title` สำหรับหัวข้อ
@@ -41,11 +65,53 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **ห้ามใช้ Emoji เด็ดขาด** — ทั้งใน UI, comments ในโค้ด ใช้ `<app-generic-icon>` หรือ `pi pi-*` แทน (ยกเว้น ✅ ❌ ในเอกสาร `.md` สำหรับ DO/DON'T)
 - **ดูคู่มือ icon ฉบับเต็ม**: [doc/architecture/icon-system.md](doc/architecture/icon-system.md)
 - **ห้ามใส่ shadow / glow โดยไม่ได้สั่ง** — ไม่ว่าจะเป็น `shadow-*`, `ring-*`, `glow`, `box-shadow` ห้ามเพิ่มเองถ้าผู้ใช้ไม่ได้ขอ
+- **ห้ามใส่ class ที่ซ้ำซ้อนกับค่าเริ่มต้นของ body** — `body` ตั้งค่า `text-surface-dark` (สีตัวอักษร) และ `font-size: 1rem` (`text-base`) ไว้แล้ว ดังนั้น:
+  - ห้ามใส่ `text-surface-dark` ซ้ำใน element ใดๆ (ยกเว้น `hover:text-surface-dark` หรือ `[class.text-surface-dark]` ที่เป็น conditional)
+  - ห้ามใส่ `text-base` ซ้ำใน element ใดๆ (เพราะ inherit จาก body อยู่แล้ว)
+  - **ห้ามใช้ `text-md`** — ไม่มี class นี้ใน Tailwind CSS (ใช้ `text-base` = 16px หรือ `text-lg` = 18px แทน)
 
 ### หน้า Test สำหรับปรับแต่งสไตล์
 
 - เมื่อผู้ใช้สั่งให้สร้างหน้า Test สำหรับปรับแต่งดีไซน์/สไตล์ของ Dialog หรือ Component → **สร้างเป็น route ระดับ root** (ไม่ใช่ภายใน feature module) เพื่อเข้าถึงง่ายโดยไม่ต้องผ่าน guard/layout
 - เมื่อปรับแต่งเสร็จแล้ว → **ลบหน้า Test ออกทั้งหมด** พร้อมเคลียร์ import, declaration, route ไม่ให้เหลือ dead code
+
+### gen-api — ห้ามรันเอง + หยุดรอ
+
+- **ห้ามรัน `npm run gen-api` เอง** — ต้องให้ผู้ใช้เป็นคนรัน เพราะต้อง start Backend ก่อนและอาจต้องตรวจสอบ Swagger
+- **เมื่อถึงขั้นตอนที่ต้องรัน gen-api → หยุดการทำงานทั้งหมดทันที** — แจ้งผู้ใช้ให้ไปรันเอง แล้ว **หยุดรอจนกว่าผู้ใช้จะยืนยันว่ารันเสร็จแล้ว** ห้ามทำขั้นตอนอื่นต่อก่อนได้รับยืนยัน
+- หลังผู้ใช้ยืนยันว่ารันเสร็จแล้ว → **ตรวจสอบ generated models/services ที่ได้** (อ่านไฟล์ที่ generate มาจริง) ก่อนเขียนโค้ด Frontend
+
+### Permission — ต้องทำทุกครั้งที่พัฒนา Module/Page ใหม่
+
+> **กฎเหล็ก**: ทุกหน้าและทุก Endpoint ต้องมี Permission control ครบทั้ง Backend และ Frontend
+> **ยกเว้น**: หน้า Profile — เป็นหน้าส่วนตัวที่ทุก user เข้าถึงได้โดยไม่ต้องมี Permission (ใช้แค่ `AuthGuard` ตรวจ login)
+
+**Backend:**
+- ทุก Controller endpoint ต้องมี `[PermissionAuthorize(Permissions.{Module}.{Action})]` — ยกเว้น endpoint สาธารณะ (เช่น login, branding)
+- Permission constants ประกาศใน `Permissions.cs` — format: `"{module}.{action}"` (เช่น `"position.read"`, `"employee.create"`)
+- ถ้าเพิ่ม Module ใหม่ → ต้องเพิ่ม Permission class ใน `Permissions.cs` + seed ใน Migration
+
+**Frontend — Route Guard:**
+- ทุก route ที่ต้อง login ต้องมี `canActivate: [PermissionGuard]` + `data: { permissions: ['...'] }`
+- Route list → ใช้ permission `read` (เช่น `'position.read'`)
+- Route create → ใช้ permission `create` (เช่น `'position.create'`)
+- Route update → ใช้ permission `update` (เช่น `'position.update'`)
+
+**Frontend — Component-level:**
+- ตรวจ permission ใน constructor ด้วย `authService.hasPermission('...')` → เก็บเป็น `canCreate`, `canUpdate`, `canDelete`
+- ปุ่มเพิ่ม (breadcrumb) → แสดงเฉพาะ `if (canCreate)`
+- ปุ่มแก้ไข (ตาราง) → แสดงเฉพาะ `@if (canUpdate)`
+- ปุ่มลบ (ตาราง) → แสดงเฉพาะ `@if (canDelete)`
+- ปุ่มบันทึก (breadcrumb) → แสดงเฉพาะ `if (canUpdate)` หรือ `if (canCreate)` ตาม mode
+- หน้าที่มีแค่ read + update (เช่น settings) → ซ่อนปุ่มบันทึกถ้าไม่มี update permission
+
+### Global Loading — ห้ามสร้าง Local Spinner
+
+- **ห้ามสร้าง local loading spinner เอง** — ระบบมี `LoadingInterceptor` + `GlobalLoadingComponent` (Lottie overlay) ที่จัดการ loading อัตโนมัติทุก HTTP request
+- **ห้ามใช้ `isLoading` signal สำหรับแสดง/ซ่อน spinner** — ไม่ต้องมี `@if (isLoading()) { spinner }` หรือ `[loading]="isLoading()"` บน `p-table`
+- **ห้ามใช้ `pi pi-spin pi-spinner`** สำหรับ page-level / section-level loading — global loading จะแสดง overlay ให้อัตโนมัติ
+- **ยกเว้นที่คงไว้ได้**: Button `[loading]="isSaving()"` (ป้องกัน double-click), `[loading]` บน dropdown (แสดง loading ขณะโหลด options), upload spinner ที่มี contextual text (เช่น "กำลังอัพโหลด...")
+- **โครงสร้าง**: `LoadingService` (`core/services/`), `LoadingInterceptor` (`core/interceptors/`), `GlobalLoadingComponent` (`shared/components/global-loading/`) — อยู่ใน `app.component.html`
 
 ### ห้าม Over-Engineer เด็ดขาด
 
@@ -281,6 +347,8 @@ isLoading = signal(false);
 - **ใช้ constructor injection** เสมอ — ไม่ใช้ `inject()` standalone
 - **ห้ามใช้ `ChangeDetectionStrategy.OnPush`** — ใช้ Angular Signals (`signal<T>()`) สำหรับ state
 - **ห้ามสร้าง Model Interface/Type เอง** — ใช้ generated models จาก `@core/api/models/` เท่านั้น
+- **ต้องรัน `npm run gen-api` ก่อนเขียน Frontend เสมอ** — เมื่อ Backend API เปลี่ยน (เพิ่ม/แก้ endpoint, model) ต้อง gen-api ก่อนเริ่มเขียน Frontend component เพื่อให้ได้ generated models + services ล่าสุด ห้ามเขียนโค้ดที่อ้างอิง API methods/models ที่ยังไม่ generate
+- **ใช้ generated models สำหรับ typed data เสมอ** — ห้ามใช้ `Record<string, unknown>`, `any`, หรือ bracket notation (`obj["prop"]`) สำหรับ data ที่มี generated model ให้ใช้ — signal ต้อง type ด้วย generated model (เช่น `signal<EmployeeAddressResponseModel[]>([])`) ไม่ใช่ `signal<Record<string, unknown>[]>([])` — template ใช้ dot notation (เช่น `addr.houseNumber`) ไม่ใช่ bracket notation (เช่น `addr["houseNumber"]`)
 - **ใช้ `@if/@for/@switch`** แทน `*ngIf/*ngFor` (Modern Angular control flow)
 - **`track` ใน `@for` เสมอ** — `@for (item of items; track item.id)`
 - **ห้ามใช้ `any` type** — ใช้ generated models หรือ specific type
@@ -315,7 +383,9 @@ isLoading = signal(false);
 - **Route path ใช้ `create` / `update`** — ห้ามใช้ `add` / `edit` สำหรับ URL path (เช่น `/employees/create`, `/employees/update/:employeeId`)
 - **Card pattern ห้ามใช้ `overflow-hidden`** — ใช้ `rounded-t-xl` บน gradient header แทน เพื่อป้องกัน popup (datepicker, dropdown) ถูก clip
 - **Dropdown ต้อง extends `DropdownBaseComponent`** — ทุก dropdown อยู่ใน `shared/dropdowns/`, extends base class (ControlValueAccessor), ใช้ `formControlName` binding เสมอ (ห้าม `[value]/(valueChange)`), static options ตั้งใน constructor, API data ใช้ `fetchFn` หรือ load-once ใน `ngOnInit`, `host: { class: 'block' }` เสมอ
-- **ตาราง List ต้องมี Pagination เสมอ** — ทุก `p-table` ในหน้า list ต้องมี attributes ครบชุด: `[paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true" currentPageReportTemplate="{first} - {last} of {totalRecords}" paginatorDropdownAppendTo="body"` — style ของ paginator กำหนดใน `styles.css` (global) ชิดขวา, compact — คอลัมน์สุดท้ายใช้ชื่อ "ตัวเลือก" (ไม่ใช่ "จัดการ")
+- **ตาราง List ต้องใช้ Server-Side Pagination (Lazy Load) เท่านั้น** — ห้ามใช้ `computed()` client-side filtering สำหรับหน้า list — ทุก `p-table` ในหน้า list ต้องมี: `[lazy]="true" [totalRecords]="totalRecords()" (onLazyLoad)="onPageChange({...})" [paginator]="true" [rows]="rows" [rowsPerPageOptions]="[10, 25, 50]" [showCurrentPageReport]="true" currentPageReportTemplate="{first} - {last} of {totalRecords}"` — style ของ paginator กำหนดใน `styles.css` (global) ชิดขวา, compact — คอลัมน์สุดท้ายใช้ชื่อ "ตัวเลือก" (ไม่ใช่ "จัดการ")
+- **List Page Handler Pattern (บังคับ)** — ทุกหน้า list ต้องใช้ pattern นี้: (1) **filter state เป็น plain properties** ไม่ใช่ signal (เช่น `searchTerm = ''`, `statusFilter: string | null = null`, `page = 1`, `rows = 10`) (2) **API response เป็น signals** (เช่น `items = signal<Xxx[]>([])`, `totalRecords = signal(0)`) (3) **`onFilterChange()`** — reset page=1 แล้วเรียก `loadXxx()` ใช้กับทุก filter (search enter, dropdown change) (4) **`onPageChange(event)`** — คำนวณ page จาก event.first/event.rows แล้วเรียก `loadXxx()` (5) **Special handler เฉพาะกรณี dependent filter** เช่น zone→reset table (6) HTML: search ใช้ `[(ngModel)]="searchTerm" (keyup.enter)="onFilterChange()"`, dropdown ใช้ `[(ngModel)]="xxx" (ngModelChange)="onFilterChange()"`
+- **คอลัมน์ตารางต้องกำหนด width เป็น pixel เสมอ** — ทุก `<th>` ต้องมี `class="w-[XXpx]"` (ห้ามใช้ `!w-`, `w-32`, `w-rem` หรือ Tailwind preset) — ขนาดแนะนำ: รหัส/รูปภาพ `w-[80px]`, ชื่อเล่น/สถานะ/ตัวเลข `w-[100px]`, เบอร์โทร/ตำแหน่ง `w-[120px]`, ชื่อ/Username `w-[140-200px]`, วันที่ `w-[160px]`, คำอธิบาย/อีเมล `w-[200px]`
 - **DatePicker คู่ (วันเริ่มต้น–วันสิ้นสุด) ต้องใช้ `[minDate]` เสมอ** — เมื่อมี startDate + endDate คู่กัน ต้อง: (1) สร้าง `minEndDate = signal<Date | null>(null)` (2) เรียก `linkDateRange(this.form, 'startDate', 'endDate', this.minEndDate, this.destroyRef)` จาก `@app/shared/utils` (3) bind `[minDate]="minEndDate()"` บน endDate datepicker — เพื่อป้องกันผู้ใช้เลือกวันสิ้นสุดก่อนวันเริ่มต้น
 
 ---
@@ -391,7 +461,7 @@ POS.Main.Business.HumanResource  → Employee
 ```
 Generated API       → src/app/core/api/services/*.service.ts
 Generated Models    → src/app/core/api/models/*.ts
-API Config          → src/app/core/api/api-config.provider.ts
+API Config          → src/app/core/providers/api-config.provider.ts
 Core Services       → src/app/core/services/{name}.service.ts
 Guards              → src/app/core/guards/{name}.guard.ts
 Interceptors        → src/app/core/interceptors/{name}.interceptor.ts
@@ -461,6 +531,7 @@ ng build                      # Production build
 | Icon system (GenericIcon + PrimeIcons) | [doc/architecture/icon-system.md](doc/architecture/icon-system.md) |
 | File Management (TbFile + S3) | [doc/architecture/file-management.md](doc/architecture/file-management.md) |
 | อ้างอิงฐานข้อมูลและ API (ตาราง, Endpoint, ความสัมพันธ์) | [doc/architecture/database-api-reference.md](doc/architecture/database-api-reference.md) |
+| Auto-Cleanup (ลบข้อมูลชั่วคราวอัตโนมัติ) | [doc/architecture/auto-cleanup.md](doc/architecture/auto-cleanup.md) |
 | **คู่มือพัฒนา** | |
 | Quick Start (รันโปรเจคครั้งแรก) | [doc/development/quick-start.md](doc/development/quick-start.md) |
 | End-to-End Workflow (16 steps) | [doc/development/module-development-workflow.md](doc/development/module-development-workflow.md) |

@@ -546,6 +546,8 @@ dotnet ef migrations remove \
 - Foreign Keys ถูกต้อง
 - ไม่มี data ที่ไม่ต้องการใน `Up()`
 
+> **กฎเหล็ก:** ต้อง `database update` **ทันที** หลังตรวจสอบ Migration file — ห้ามข้ามไปทำ Repository/Service ก่อน เพราะจะทำให้ run backend ไม่ได้
+
 ---
 
 ### Step 6: สร้าง Repository Interface + Implementation
@@ -827,6 +829,98 @@ dotnet run
 cd Frontend-POS/RBMS-POS-Client
 npm run gen-api
 ```
+
+---
+
+### Step 10.5: Permission Constants + Seed Data (ถ้า module มี authorization)
+
+> **กฎเหล็ก:** ถ้า Controller endpoints ใช้ `[HasPermission]` หรือ authorization → **ต้อง** seed permission data ก่อนไปทำ Frontend — ถ้าไม่ seed user จะเข้า endpoint ไม่ได้
+
+**ขั้นตอน:**
+
+**1. เพิ่ม Permission Constants** ใน `POS.Main.Core/Constants/Permissions.cs`:
+
+```csharp
+public static class Inventory
+{
+    public const string Read = "inventory.read";
+    public const string Create = "inventory.create";
+    public const string Update = "inventory.update";
+    public const string Delete = "inventory.delete";
+}
+```
+
+**2. สร้าง Seed Migration** — Empty migration สำหรับใส่ seed data:
+
+```bash
+dotnet ef migrations add SeedInventoryPermissions \
+    --project POS.Main/POS.Main.Dal \
+    --startup-project POS.Main/RBMS.POS.WebAPI
+```
+
+**3. เพิ่ม seed data ใน Migration file:**
+
+```csharp
+protected override void Up(MigrationBuilder migrationBuilder)
+{
+    // 1. Insert Module (ถ้ายังไม่มี)
+    migrationBuilder.InsertData(
+        table: "TbmModules",
+        columns: new[] { "ModuleId", "CreatedAt", "DeleteFlag", "IsActive",
+                         "ModuleCode", "ModuleName", "ParentModuleId", "SortOrder" },
+        values: new object[] { 20, new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                               false, true, "inventory", "คลังสินค้า", null, 5 });
+
+    // 2. Insert AuthorizeMatrix entries (Module + Permission combinations)
+    migrationBuilder.InsertData(
+        table: "TbmAuthorizeMatrices",
+        columns: new[] { "AuthorizeMatrixId", "CreatedAt", "DeleteFlag",
+                         "ModuleId", "PermissionId", "PermissionPath" },
+        values: new object[,]
+        {
+            { 36, new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), false,
+              20, 1, "inventory.read" },
+            { 37, new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), false,
+              20, 2, "inventory.create" },
+            { 38, new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), false,
+              20, 3, "inventory.update" },
+            { 39, new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc), false,
+              20, 4, "inventory.delete" },
+        });
+
+    // 3. Grant Admin position (ID=1) ทุก permission
+    migrationBuilder.Sql(@"
+        INSERT INTO [TbAuthorizeMatrixPositions]
+            ([AuthorizeMatrixId], [PositionId], [CreatedAt], [DeleteFlag])
+        VALUES
+            (36, 1, '2025-01-01T00:00:00Z', 0),
+            (37, 1, '2025-01-01T00:00:00Z', 0),
+            (38, 1, '2025-01-01T00:00:00Z', 0),
+            (39, 1, '2025-01-01T00:00:00Z', 0);
+    ");
+}
+
+protected override void Down(MigrationBuilder migrationBuilder)
+{
+    migrationBuilder.Sql("DELETE FROM [TbAuthorizeMatrixPositions] WHERE [AuthorizeMatrixId] IN (36,37,38,39);");
+    migrationBuilder.DeleteData(table: "TbmAuthorizeMatrices",
+        keyColumn: "AuthorizeMatrixId", keyValues: new object[] { 36, 37, 38, 39 });
+    migrationBuilder.DeleteData(table: "TbmModules",
+        keyColumn: "ModuleId", keyValue: 20);
+}
+```
+
+**4. Apply migration ทันที:**
+
+```bash
+dotnet ef database update \
+    --project POS.Main/POS.Main.Dal \
+    --startup-project POS.Main/RBMS.POS.WebAPI
+```
+
+> **ตัวอย่างจริงในโปรเจค:**
+> - [20260311143050_AddPositionBasedRbac.cs](../../Backend-POS/POS.Main/POS.Main.Dal/Migrations/20260311143050_AddPositionBasedRbac.cs) — seed ทุก module ครั้งแรก
+> - [20260316093337_SeedUserManagementPermissions.cs](../../Backend-POS/POS.Main/POS.Main.Dal/Migrations/20260316093337_SeedUserManagementPermissions.cs) — เพิ่ม module เดียว
 
 ---
 
@@ -1385,6 +1479,7 @@ public async Task<IActionResult> GetProduct(int id, CancellationToken ct = defau
 - [ ] มี Index สำหรับ column ที่ค้นหาบ่อย
 - [ ] เพิ่ม DbSet และ `ApplyConfiguration` ใน DbContext
 - [ ] ตรวจสอบ Migration file ก่อน apply
+- [ ] **`database update` ทันที** — ห้ามข้ามไปทำขั้นตอนอื่นก่อน
 - [ ] ตรวจสอบ Schema ในฐานข้อมูลหลัง apply
 
 ### Repository Layer
@@ -1409,6 +1504,12 @@ public async Task<IActionResult> GetProduct(int id, CancellationToken ct = defau
 - [ ] XML comments ทุก action
 - [ ] `[ProducesResponseType]` ครบทุก status code
 - [ ] ใช้ `return Success(result)` จาก BaseController
+
+### Permission + Seed Data
+- [ ] เพิ่ม Permission constants ใน `Permissions.cs` (ถ้า module มี authorization)
+- [ ] สร้าง Seed Migration — insert Module, AuthorizeMatrix, AuthorizeMatrixPositions
+- [ ] **Apply migration ทันที** (`database update`)
+- [ ] ทดสอบ Login แล้วเข้า endpoint ที่ต้องใช้ permission ได้
 
 ### ทดสอบ
 - [ ] `dotnet build` ผ่าน

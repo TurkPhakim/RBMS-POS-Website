@@ -1,15 +1,22 @@
-import { Component, DestroyRef, OnDestroy, OnInit, ViewChild, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
 import { RecaptchaComponent } from 'ng-recaptcha';
 import { DialogService } from 'primeng/dynamicdialog';
-
-import { LoginRequestModel, LoginResponseModelBaseResponseModel } from '@app/core/api/models';
+import {
+  LoginRequestModel,
+  LoginResponseModelBaseResponseModel,
+} from '@app/core/api/models';
 import { AuthService } from '@app/core/api/services';
 import { AuthService as AppAuthService } from '@app/core/services/auth.service';
 import { ModalService } from '@app/core/services/modal.service';
@@ -74,7 +81,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   togglePasswordVisibility(): void {
-    this.showPassword.update(v => !v);
+    this.showPassword.update((v) => !v);
   }
 
   onCaptchaResolved(token: string | null): void {
@@ -94,15 +101,31 @@ export class LoginComponent implements OnInit, OnDestroy {
       captchaToken: this.captchaToken()!,
     };
 
-    this.authService.authLoginPost({ body: loginRequest })
+    this.authService
+      .authLoginPost({ body: loginRequest })
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        catchError(err => {
+        catchError((err) => {
           this.loading.set(false);
           this.captchaRef?.reset();
           this.captchaToken.set(null);
 
           if (err.status === 423) {
+            const code = err.error?.code;
+            if (code === 'ACCOUNT_LOCKED_BY_ADMIN') {
+              const autoUnlockDate = err.error?.result?.autoUnlockDate;
+              const message: string[] = [
+                'บัญชีนี้ถูกล็อคโดยผู้ดูแลระบบ',
+                'ไม่สามารถรีเซ็ตรหัสผ่านได้ กรุณาติดต่อผู้ดูแลระบบ',
+              ];
+              if (autoUnlockDate) {
+                message.push(
+                  `บัญชีจะถูกปลดล็อคในวันที่ ${new Date(autoUnlockDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+                );
+              }
+              this.modalService.cancel({ title: 'บัญชีถูกล็อค !', message });
+              return throwError(() => err);
+            }
             const lockedUntilStr = err.error?.result?.lockedUntil;
             this.modalService.cancel({
               title: 'บัญชีถูกล็อคชั่วคราว !',
@@ -116,13 +139,15 @@ export class LoginComponent implements OnInit, OnDestroy {
 
           let errorMsg: string;
           if (err.status === 0) {
-            errorMsg = 'ไม่สามารถเชื่อมต่อ Server ได้ กรุณาตรวจสอบการเชื่อมต่อ';
+            errorMsg =
+              'ไม่สามารถเชื่อมต่อ Server ได้\nกรุณาตรวจสอบการเชื่อมต่อ';
           } else if (err.status === 401) {
             errorMsg = err.error?.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
           } else if (err.status === 403) {
-            errorMsg = err.error?.message || 'บัญชีถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ';
+            errorMsg =
+              err.error?.message || 'บัญชีถูกปิดใช้งาน\nกรุณาติดต่อผู้ดูแลระบบ';
           } else if (err.status >= 500) {
-            errorMsg = 'เกิดข้อผิดพลาดที่ Server กรุณาลองใหม่อีกครั้ง';
+            errorMsg = 'เกิดข้อผิดพลาดที่ Server\nกรุณาลองใหม่อีกครั้ง';
           } else {
             errorMsg = err.error?.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ';
           }
@@ -136,9 +161,18 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.loading.set(false);
 
           if (response.result) {
-            localStorage.setItem('access_token', response.result.accessToken || '');
-            localStorage.setItem('refresh_token', response.result.refreshToken || '');
-            localStorage.setItem('current_user', JSON.stringify(response.result.user));
+            localStorage.setItem(
+              'access_token',
+              response.result.accessToken || '',
+            );
+            localStorage.setItem(
+              'refresh_token',
+              response.result.refreshToken || '',
+            );
+            localStorage.setItem(
+              'current_user',
+              JSON.stringify(response.result.user),
+            );
 
             this.appAuthService.updateAuthState();
             this.modalService.commonSuccess();
@@ -159,15 +193,31 @@ export class LoginComponent implements OnInit, OnDestroy {
       modal: true,
     });
 
-    forgotRef.onClose
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((result: { usernameOrEmail: string; maskedEmail: string; otpExpiresInSeconds: number } | undefined) => {
+    forgotRef.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
+      (
+        result:
+          | {
+              usernameOrEmail: string;
+              maskedEmail: string;
+              otpExpiresInSeconds: number;
+            }
+          | undefined,
+      ) => {
         if (!result) return;
-        this.openVerifyOtpDialog(result.usernameOrEmail, result.maskedEmail, result.otpExpiresInSeconds);
-      });
+        this.openVerifyOtpDialog(
+          result.usernameOrEmail,
+          result.maskedEmail,
+          result.otpExpiresInSeconds,
+        );
+      },
+    );
   }
 
-  private openVerifyOtpDialog(usernameOrEmail: string, maskedEmail: string, otpExpiresInSeconds: number): void {
+  private openVerifyOtpDialog(
+    usernameOrEmail: string,
+    maskedEmail: string,
+    otpExpiresInSeconds: number,
+  ): void {
     const otpRef = this.dialogService.open(VerifyOtpDialogComponent, {
       showHeader: false,
       styleClass: 'card-dialog',
@@ -191,11 +241,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.lockoutUntil.set(until);
 
     const tick = () => {
-      const remaining = Math.max(0, Math.floor((until.getTime() - Date.now()) / 1000));
+      const remaining = Math.max(
+        0,
+        Math.floor((until.getTime() - Date.now()) / 1000),
+      );
       const minutes = Math.floor(remaining / 60);
       const seconds = remaining % 60;
       this.lockoutRemaining.set(
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
       );
 
       if (remaining <= 0) {

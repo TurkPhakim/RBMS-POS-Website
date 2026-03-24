@@ -1,18 +1,19 @@
 import {
   Component,
-  computed,
   DestroyRef,
   OnDestroy,
+  OnInit,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
+import { DialogService } from 'primeng/dynamicdialog';
 
 import { ServiceChargeResponseModel } from '@app/core/api/models';
 import { ServiceChargesService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { Icon, ModalService } from '@app/core/services/modal.service';
+import { ServiceChargeDialogComponent } from '../../dialogs/service-charge-dialog/service-charge-dialog.component';
 
 const KEY_BTN_ADD = 'add-service-charge';
 
@@ -20,42 +21,26 @@ const KEY_BTN_ADD = 'add-service-charge';
   selector: 'app-service-charge-list',
   standalone: false,
   templateUrl: './service-charge-list.component.html',
+  providers: [DialogService],
 })
-export class ServiceChargeListComponent implements OnDestroy {
-  private allServiceCharges = signal<ServiceChargeResponseModel[]>([]);
-  statusFilter = signal<string | null>(null);
-  startDateFilter = signal<Date | null>(null);
+export class ServiceChargeListComponent implements OnInit, OnDestroy {
+  serviceCharges = signal<ServiceChargeResponseModel[]>([]);
+  totalRecords = signal(0);
+
+  searchTerm = '';
+  statusFilter: string | null = null;
+  page = 1;
+  rows = 10;
 
   canCreate: boolean;
   canDelete: boolean;
-
-  serviceCharges = computed(() => {
-    const status = this.statusFilter();
-    const startDate = this.startDateFilter();
-    let filtered = this.allServiceCharges();
-
-    if (status === 'active') {
-      filtered = filtered.filter((sc) => sc.isActive === true);
-    } else if (status === 'inactive') {
-      filtered = filtered.filter((sc) => sc.isActive === false);
-    }
-
-    if (startDate) {
-      filtered = filtered.filter((sc) => {
-        if (!sc.startDate) return true;
-        return new Date(sc.startDate) >= startDate;
-      });
-    }
-
-    return filtered;
-  });
 
   constructor(
     private readonly authService: AuthService,
     private readonly breadcrumbService: BreadcrumbService,
     private readonly destroyRef: DestroyRef,
+    private readonly dialogService: DialogService,
     private readonly modalService: ModalService,
-    private readonly router: Router,
     private readonly serviceChargesService: ServiceChargesService,
   ) {
     this.canCreate = this.authService.hasPermission('service-charge.create');
@@ -71,43 +56,23 @@ export class ServiceChargeListComponent implements OnDestroy {
     this.breadcrumbService.clearButtons();
   }
 
-  private setupBreadcrumbButtons(): void {
-    if (this.canCreate) {
-      this.breadcrumbService.addOrUpdateButton({
-        key: KEY_BTN_ADD,
-        type: 'button',
-        item: {
-          key: KEY_BTN_ADD,
-          label: 'เพิ่ม Service Charge',
-          callback: () => this.onAdd(),
-        },
-      });
-    }
+  onFilterChange(): void {
+    this.page = 1;
+    this.loadServiceCharges();
   }
 
-  loadServiceCharges(): void {
-    this.serviceChargesService
-      .serviceChargesGetAllGet()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => {
-          this.allServiceCharges.set(response.results ?? []);
-        },
-        error: () => {
-          this.modalService.cancel({
-            title: 'ผิดพลาด !',
-            message: 'ไม่สามารถโหลดข้อมูล Service Charge ได้',
-          });
-        },
-      });
+  onPageChange(event: { first?: number; rows?: number }): void {
+    this.page = Math.floor((event.first ?? 0) / (event.rows ?? this.rows)) + 1;
+    this.rows = event.rows ?? this.rows;
+    this.loadServiceCharges();
   }
 
   onAdd(): void {
-    this.router.navigate(['/admin-setting/service-charges/create']);
+    this.openDialog('เพิ่มค่าบริการ');
   }
 
-  onEdit(id: number): void {
-    this.router.navigate(['/admin-setting/service-charges/update', id]);
+  onEdit(serviceCharge: ServiceChargeResponseModel): void {
+    this.openDialog('แก้ไขค่าบริการ', serviceCharge);
   }
 
   onDelete(id: number, name: string): void {
@@ -115,7 +80,7 @@ export class ServiceChargeListComponent implements OnDestroy {
       .info({
         icon: Icon.Question,
         title: 'ยืนยันการลบ',
-        message: `คุณต้องการลบ Service Charge "${name}" ?`,
+        message: `คุณต้องการลบค่าบริการ "${name}" ?`,
         confirmButtonLabel: 'ลบ',
         cancelButtonLabel: 'ยกเลิก',
         onConfirm: () =>
@@ -127,6 +92,66 @@ export class ServiceChargeListComponent implements OnDestroy {
       .subscribe((result) => {
         if (result) {
           this.modalService.commonSuccess();
+          this.loadServiceCharges();
+        }
+      });
+  }
+
+  private loadServiceCharges(): void {
+    const isActive =
+      this.statusFilter === 'active' ? true :
+      this.statusFilter === 'inactive' ? false : undefined;
+
+    this.serviceChargesService
+      .serviceChargesGetAllGet({
+        Page: this.page,
+        ItemPerPage: this.rows,
+        Search: this.searchTerm || undefined,
+        isActive,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.serviceCharges.set(response.results ?? []);
+          this.totalRecords.set(response.total ?? 0);
+        },
+        error: () => {
+          this.modalService.cancel({
+            title: 'ผิดพลาด !',
+            message: 'ไม่สามารถโหลดข้อมูลค่าบริการได้',
+          });
+        },
+      });
+  }
+
+  private setupBreadcrumbButtons(): void {
+    if (this.canCreate) {
+      this.breadcrumbService.addOrUpdateButton({
+        key: KEY_BTN_ADD,
+        type: 'button',
+        item: {
+          key: KEY_BTN_ADD,
+          label: 'เพิ่มค่าบริการ',
+          callback: () => this.onAdd(),
+        },
+      });
+    }
+  }
+
+  private openDialog(header: string, serviceCharge?: ServiceChargeResponseModel): void {
+    const ref = this.dialogService.open(ServiceChargeDialogComponent, {
+      header,
+      width: '50vw',
+      styleClass: 'card-dialog',
+      showHeader: false,
+      modal: true,
+      data: { serviceCharge },
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) {
           this.loadServiceCharges();
         }
       });

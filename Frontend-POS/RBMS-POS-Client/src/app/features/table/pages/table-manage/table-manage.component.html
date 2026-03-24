@@ -1,0 +1,115 @@
+<!-- Page Header -->
+<div class="flex items-center gap-3 mb-6">
+  <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center">
+    <app-generic-icon name="table-restaurant" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
+  </div>
+  <h1 class="text-page-title">
+    {{ isEditMode() ? "แก้ไขโต๊ะ" : "เพิ่มโต๊ะ" }}
+  </h1>
+</div>
+
+<form [formGroup]="form" class="flex flex-col gap-4">
+  <!-- Card 1: ข้อมูลโต๊ะ -->
+  <app-section-card
+    headerLabel="ข้อมูลโต๊ะ"
+    headerIcon="tray-plate"
+    contentClass="p-6 grid grid-cols-1 md:grid-cols-3 gap-4"
+  >
+    <!-- ชื่อโต๊ะ -->
+    <div>
+      <label for="tableName" class="block font-semibold mb-2">
+        ชื่อโต๊ะ <span class="text-danger">*</span>
+      </label>
+      <input
+        pInputText
+        id="tableName"
+        formControlName="tableName"
+        placeholder="เช่น A1, VIP-01"
+        class="w-full"
+      />
+      <app-field-error [control]="form.get('tableName')" type="text" />
+    </div>
+
+    <!-- โซน -->
+    <div>
+      <label class="block font-semibold mb-2">
+        โซน <span class="text-danger">*</span>
+      </label>
+      <app-zone-dropdown formControlName="zoneId"></app-zone-dropdown>
+      <app-field-error [control]="form.get('zoneId')" type="select" />
+    </div>
+
+    <!-- ความจุ -->
+    <div>
+      <label for="capacity" class="block font-semibold mb-2">
+        ความจุ (ที่นั่ง) <span class="text-danger">*</span>
+      </label>
+      <p-inputNumber
+        id="capacity"
+        formControlName="capacity"
+        [min]="1"
+        [max]="50"
+        [showButtons]="true"
+        buttonLayout="horizontal"
+        incrementButtonIcon="pi pi-plus"
+        decrementButtonIcon="pi pi-minus"
+        inputStyleClass="w-full"
+        styleClass="w-full"
+      ></p-inputNumber>
+      <app-field-error [control]="form.get('capacity')" type="text" />
+    </div>
+
+    <!-- ขนาด -->
+    <div>
+      <label class="block font-semibold mb-2">
+        ขนาด <span class="text-danger">*</span>
+      </label>
+      <app-table-size-dropdown
+        formControlName="size"
+      ></app-table-size-dropdown>
+    </div>
+  </app-section-card>
+
+  <!-- Info Card (edit mode) — สถานะปัจจุบัน -->
+  @if (isEditMode() && tableData()) {
+    <app-section-card
+      headerLabel="สถานะปัจจุบัน"
+      headerIcon="tray-plate"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-4 gap-4"
+    >
+      <div>
+        <label class="block text-surface-sub text-sm mb-1">สถานะ</label>
+        <span class="font-bold text-lg">{{ tableData()!.status }}</span>
+      </div>
+
+      @if (tableData()!.currentGuests) {
+        <div>
+          <label class="block text-surface-sub text-sm mb-1">จำนวนลูกค้า</label>
+          <span class="font-bold text-lg">{{ tableData()!.currentGuests }} คน</span>
+        </div>
+      }
+
+      @if (tableData()!.linkedTableNames?.length) {
+        <div>
+          <label class="block text-surface-sub text-sm mb-1">โต๊ะที่เชื่อม</label>
+          <span class="font-semibold">{{ tableData()!.linkedTableNames!.join(', ') }}</span>
+        </div>
+      }
+
+      <div>
+        <label class="block text-surface-sub text-sm mb-1">QR Token</label>
+        <span class="font-semibold">{{ tableData()!.hasQrToken ? 'มี' : 'ไม่มี' }}</span>
+      </div>
+    </app-section-card>
+  }
+
+  <!-- Audit Footer (edit mode only) -->
+  @if (isEditMode() && tableData()) {
+    <app-audit-footer
+      [createdAt]="tableData()!.createdAt"
+      [createdByName]="tableData()!.createdBy"
+      [updatedAt]="tableData()!.updatedAt"
+      [updatedByName]="tableData()!.updatedBy"
+    />
+  }
+</form>

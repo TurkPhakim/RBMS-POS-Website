@@ -70,6 +70,20 @@ public class AccountDisabledException : AuthenticationException
 }
 
 /// <summary>
+/// Exception thrown when account is locked by admin
+/// </summary>
+public class AccountLockedByAdminException : AuthenticationException
+{
+    public DateTime? AutoUnlockDate { get; set; }
+
+    public AccountLockedByAdminException(DateTime? autoUnlockDate = null)
+        : base("บัญชีถูกล็อคโดยผู้ดูแลระบบ กรุณาติดต่อผู้ดูแลระบบ")
+    {
+        AutoUnlockDate = autoUnlockDate;
+    }
+}
+
+/// <summary>
 /// Exception thrown when refresh token is invalid
 /// </summary>
 public class InvalidRefreshTokenException : AuthenticationException

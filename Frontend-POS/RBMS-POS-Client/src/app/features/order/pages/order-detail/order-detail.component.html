@@ -1,0 +1,285 @@
+@if (order(); as o) {
+  <div class="space-y-5">
+    <!-- Order Header -->
+    <div class="bg-surface-card rounded-2xl overflow-hidden">
+      <!-- Top: Gradient Banner -->
+      <div
+        class="relative px-6 py-4 flex items-center justify-between transition-all overflow-hidden"
+        [class]="getBannerGradient(o.status)"
+      >
+        <!-- Decorative scattered circles -->
+        <div class="absolute w-32 h-32 rounded-full bg-white/10 -top-12 -left-8"></div>
+        <div class="absolute w-12 h-12 rounded-full bg-white/15 top-2 left-48"></div>
+        <div class="absolute w-20 h-20 rounded-full bg-white/10 -bottom-8 left-80"></div>
+        <div class="absolute w-8 h-8 rounded-full bg-white/20 top-1 right-96"></div>
+        <div class="absolute w-24 h-24 rounded-full bg-white/10 -top-10 right-56"></div>
+        <div class="absolute w-10 h-10 rounded-full bg-white/15 bottom-1 right-36"></div>
+        <div class="absolute w-36 h-36 rounded-full bg-white/10 -bottom-16 -right-10"></div>
+        <div class="absolute w-6 h-6 rounded-full bg-white/20 top-3 left-[30%]"></div>
+
+        <!-- Left: Order Info -->
+        <div class="relative flex items-center gap-5">
+          <div class="w-20 h-20 rounded-xl bg-white flex items-center justify-center">
+            <app-generic-icon
+              name="order-dinner"
+              svgClass="w-14 h-14"
+              [class]="getStatusColor(o.status, true)"
+            ></app-generic-icon>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-white">{{ o.orderNumber }}</h1>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-xl text-white/90 font-medium">โซน{{ o.zoneName }} - โต๊ะ{{ o.tableName }}</span>
+              <span class="text-white/60 mx-1">|</span>
+              <span class="text-xl text-white/90 font-medium">ลูกค้า: {{ o.guestCount }} คน</span>
+            </div>
+          </div>
+        </div>
+        <!-- Right: Status -->
+        <span
+          class="relative text-xl font-bold px-10 py-2 rounded-xl bg-white"
+          [ngClass]="getStatusColor(o.status, true)"
+        >
+          {{ getOrderStatusLabel(o.status) }}
+        </span>
+      </div>
+
+      <!-- Bottom: Stats -->
+      <div class="px-6 py-4 flex items-center justify-end gap-8">
+        @if (o.note) {
+          <div class="flex items-center gap-2 text-lg mr-auto">
+            <app-generic-icon name="information" svgClass="w-6 h-6" class="text-info"></app-generic-icon>
+            <span class="font-semibold text-info">หมายเหตุ:</span> {{ o.note }}
+          </div>
+        }
+        <div class="flex items-center gap-3">
+          <app-generic-icon
+            name="menu-list"
+            svgClass="w-12 h-12"
+            class="text-primary"
+          ></app-generic-icon>
+          <div>
+            <span class="text-surface-sub">จำนวนรายการ</span>
+            <p class="text-2xl font-bold">
+              {{ o.items?.length ?? 0 }}
+              <span class="text-lg font-semibold">รายการ</span>
+            </p>
+          </div>
+        </div>
+        <div class="w-px h-12 bg-surface-border"></div>
+        <div class="flex items-center gap-3">
+          <app-generic-icon
+            name="payment-bath"
+            svgClass="w-12 h-12"
+            class="text-primary"
+          ></app-generic-icon>
+          <div>
+            <span class="text-surface-sub">ยอดรวม</span>
+            <p class="text-2xl font-bold text-primary">
+              {{ o.subTotal | number: "1.2-2" }}
+              <span class="text-lg font-semibold">บาท</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="bg-surface-card rounded-lg">
+      <!-- Section Header + Filter + Action Buttons -->
+      <div class="flex items-center justify-between p-4 border-b border-surface-border">
+        <h2 class="text-2xl font-bold">รายการออเดอร์</h2>
+        <div class="flex items-center gap-3">
+          <div class="w-[200px]">
+            <app-menu-category-dropdown
+              [ngModel]="categoryFilter()"
+              (ngModelChange)="categoryFilter.set($event)"
+            ></app-menu-category-dropdown>
+          </div>
+          @if (o.status === 'Open' && canUpdate && hasPendingItems()) {
+            <button
+              pButton
+              label="ส่งครัว"
+              class="min-w-[120px] text-lg"
+              (click)="onSendToKitchen()"
+            ></button>
+          }
+          @if (o.status === 'Open' && canUpdate && canRequestBill()) {
+            <button
+              pButton
+              label="ขอบิล"
+              class="p-button-warning min-w-[120px] text-lg"
+              (click)="onRequestBill()"
+            ></button>
+          }
+          @if (o.status === 'Billing' && canUpdate) {
+            <button
+              pButton
+              label="แยกบิล"
+              class="p-button-outlined min-w-[120px] text-lg"
+              (click)="onSplitBill()"
+            ></button>
+            <button
+              pButton
+              label="ชำระเงิน"
+              class="p-button-success min-w-[120px] text-lg"
+              (click)="onGoToCheckout()"
+            ></button>
+          }
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="px-4 pb-4 pt-3">
+        <p-table
+          [value]="filteredItems()"
+          [stripedRows]="true"
+          [tableStyle]="{ 'min-width': '80rem' }"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first} - {last} of {totalRecords}"
+          styleClass="p-datatable-clean text-lg"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="w-[200px] whitespace-nowrap">เมนู</th>
+              <th class="w-[140px] whitespace-nowrap">รูป</th>
+              <th class="w-[140px] whitespace-nowrap">หมวดหมู่</th>
+              <th class="w-[80px] whitespace-nowrap">จำนวน</th>
+              <th class="w-[120px] whitespace-nowrap">ราคา/หน่วย</th>
+              <th class="w-[160px] whitespace-nowrap">ตัวเลือกเพิ่ม</th>
+              <th class="w-[120px] whitespace-nowrap">ราคารวม</th>
+              <th class="w-[140px] whitespace-nowrap">สถานะ</th>
+              <th class="w-[140px] whitespace-nowrap">สั่งรายการโดย</th>
+              <th class="w-[100px] whitespace-nowrap" pFrozenColumn alignFrozen="right">ตัวเลือก</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-item>
+            <tr [class]="getItemStatusClass(item.status)" class="text-lg">
+              <!-- ชื่อเมนู (ไทย + อังกฤษ) -->
+              <td>
+                <div class="font-semibold">{{ item.menuNameThai }}</div>
+                @if (item.menuNameEnglish) {
+                  <div class="text-surface-sub">{{ item.menuNameEnglish }}</div>
+                }
+                @if (item.note) {
+                  <div class="text-warning-dark italic mt-0.5">{{ item.note }}</div>
+                }
+              </td>
+              <!-- รูปเมนู -->
+              <td>
+                <div class="flex justify-center">
+                  @if (getImageUrl(item.menuImageFileId)) {
+                    <img
+                      [src]="getImageUrl(item.menuImageFileId)"
+                      alt=""
+                      class="h-24 w-24 rounded-lg object-cover"
+                    />
+                  } @else {
+                    <div class="h-24 w-24 rounded-lg border border-surface-border bg-surface-hover flex items-center justify-center">
+                      <app-generic-icon
+                        [name]="getCategoryIcon(item.categoryType)"
+                        svgClass="w-12 h-12"
+                        class="text-surface-sub"
+                      ></app-generic-icon>
+                    </div>
+                  }
+                </div>
+              </td>
+              <!-- หมวดหมู่ -->
+              <td>
+                <div class="font-medium">{{ getCategoryLabel(item.categoryType) }}</div>
+                @if (item.subCategoryName) {
+                  <div class="text-surface-sub">{{ item.subCategoryName }}</div>
+                }
+              </td>
+              <!-- จำนวน -->
+              <td class="!text-center">{{ item.quantity }}</td>
+              <!-- ราคา/หน่วย -->
+              <td class="!text-right">{{ item.unitPrice | number:'1.2-2' }} บาท</td>
+              <!-- ตัวเลือกเพิ่ม -->
+              <td>
+                @if (item.options?.length) {
+                  <div class="flex flex-col gap-0.5">
+                    @for (opt of item.options; track opt.orderItemOptionId) {
+                      <span class="text-surface-sub">
+                        {{ opt.optionItemName }}
+                        @if (opt.additionalPrice) {
+                          <span class="text-primary">(+{{ opt.additionalPrice }})</span>
+                        }
+                      </span>
+                    }
+                  </div>
+                } @else {
+                  <span class="text-surface-sub">-</span>
+                }
+              </td>
+              <!-- ราคารวม -->
+              <td class="!text-right font-semibold">{{ item.totalPrice | number:'1.2-2' }} บาท</td>
+              <!-- สถานะ -->
+              <td class="!text-center">
+                <span class="font-bold" [ngClass]="getItemStatusBadge(item.status)">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+              </td>
+              <!-- สั่งรายการโดย -->
+              <td>{{ item.orderedBy }}</td>
+              <!-- ตัวเลือก -->
+              <td class="text-center" pFrozenColumn alignFrozen="right">
+                <div class="flex justify-center gap-1">
+                  @if (item.status === 'Pending' && canUpdate) {
+                    <button
+                      (click)="onVoidItem(item)"
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                      pTooltip="ลบรายการ"
+                      tooltipPosition="top"
+                    >
+                      <i class="pi pi-times"></i>
+                    </button>
+                  }
+                  @if ((item.status === 'Sent' || item.status === 'Preparing') && canDelete) {
+                    <button
+                      (click)="onCancelItem(item)"
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-warning text-white"
+                      pTooltip="ยกเลิก"
+                      tooltipPosition="top"
+                    >
+                      <i class="pi pi-ban"></i>
+                    </button>
+                  }
+                  @if (item.status === 'Ready' && canUpdate) {
+                    <button
+                      (click)="onServeItem(item)"
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-success text-white"
+                      pTooltip="เสิร์ฟ"
+                      tooltipPosition="top"
+                    >
+                      <i class="pi pi-check"></i>
+                    </button>
+                  }
+                  @if (item.status === 'Cancelled') {
+                    <span class="text-danger">{{ item.cancelReason }}</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="10">
+                <div class="flex justify-center items-center w-full p-[100px]">
+                  <app-empty-view message="ยังไม่มีรายการออเดอร์" />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  </div>
+}

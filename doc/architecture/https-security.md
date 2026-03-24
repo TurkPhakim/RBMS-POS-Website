@@ -209,4 +209,4 @@ Controller / Endpoint             ← จัดการ request
 | `Frontend-POS/RBMS-POS-Client/src/environments/environment.ts` | API URL (Development) |
 | `Frontend-POS/RBMS-POS-Client/src/environments/environment.prod.ts` | API URL (Production) |
 | `Frontend-POS/RBMS-POS-Client/src/app/core/interceptors/auth.interceptor.ts` | JWT Token attachment |
-| `Frontend-POS/RBMS-POS-Client/src/app/core/api/api-config.provider.ts` | API base URL configuration |
+| `Frontend-POS/RBMS-POS-Client/src/app/core/providers/api-config.provider.ts` | API base URL configuration |

@@ -1,0 +1,84 @@
+<app-card-template [headerLabel]="headerLabel" contentClass="p-5">
+  <!-- Table Identity -->
+  <div class="flex items-center gap-5">
+    <!-- Table Visual (mimics floor plan card) -->
+    <div class="w-24 h-24 rounded-2xl border-2 flex flex-col items-center justify-center shrink-0"
+         [ngClass]="getTableVisualClasses()">
+      <app-generic-icon name="tray-plate" svgClass="w-10 h-10"></app-generic-icon>
+      <span class="text-sm font-bold mt-1">{{ table.capacity }} คน</span>
+    </div>
+    <div>
+      <p class="text-2xl font-bold">{{ table.tableName }}</p>
+      <p class="text-lg text-surface-sub mt-0.5">{{ table.zoneName }}</p>
+      <!-- Status Badge -->
+      <span class="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-lg font-semibold"
+            [ngClass]="getStatusBadgeClasses()">
+        <span class="w-2.5 h-2.5 rounded-full" [ngClass]="getStatusDotClasses()"></span>
+        {{ getStatusLabel() }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Additional Details -->
+  @if ((table.status === 'Occupied' && table.currentGuests) || table.openedAt || table.linkedTableNames?.length || table.note) {
+    <div class="bg-surface rounded-xl p-4 mt-5 space-y-3">
+      @if (table.status === 'Occupied' && table.currentGuests) {
+        <div class="flex items-center justify-between">
+          <span class="text-surface-sub text-lg">จำนวนลูกค้า</span>
+          <span class="text-lg font-semibold">{{ table.currentGuests }} คน</span>
+        </div>
+      }
+      @if (table.openedAt) {
+        <div class="flex items-center justify-between">
+          <span class="text-surface-sub text-lg">เปิดเมื่อ</span>
+          <span class="text-lg font-semibold">{{ table.openedAt | dateFormat }}</span>
+        </div>
+      }
+      @if (table.linkedTableNames?.length) {
+        <div class="flex items-center justify-between">
+          <span class="text-surface-sub text-lg">โต๊ะที่เชื่อม</span>
+          <span class="text-lg font-semibold">{{ table.linkedTableNames!.join(', ') }}</span>
+        </div>
+      }
+      @if (table.note) {
+        <div class="flex items-center justify-between">
+          <span class="text-surface-sub text-lg">หมายเหตุ</span>
+          <span class="text-lg font-semibold">{{ table.note }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <p-footer>
+    <div class="flex flex-wrap justify-center gap-2">
+      @if (canUpdate) {
+        @if (table.status === 'Available') {
+          <p-button label="เปิดโต๊ะ" severity="primary" [style]="{ 'min-width': '120px' }" (onClick)="onOpenTable()"></p-button>
+          <p-button label="ปิดใช้งาน" severity="danger" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onSetUnavailable()"></p-button>
+        }
+        @if (table.status === 'Occupied' || table.status === 'Billing') {
+          <p-button label="ดูออเดอร์" severity="primary" [style]="{ 'min-width': '120px' }" (onClick)="onViewOrder()"></p-button>
+          <p-button label="สั่งอาหาร" severity="primary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onAddItems()"></p-button>
+          <p-button label="QR Code" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onShowQrCode()"></p-button>
+          <p-button label="ย้ายโต๊ะ" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onMoveTable()"></p-button>
+          <p-button label="ปิดโต๊ะ" severity="danger" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onCloseTable()"></p-button>
+          @if (!table.linkedGroupCode) {
+            <p-button label="เชื่อมโต๊ะ" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onLinkTables()"></p-button>
+          } @else {
+            <p-button label="ยกเลิกเชื่อม" severity="warn" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onUnlinkTables()"></p-button>
+          }
+        }
+        @if (table.status === 'Reserved') {
+          <p-button label="เปิดโต๊ะ (Check-in)" severity="primary" [style]="{ 'min-width': '120px' }" (onClick)="onOpenTable()"></p-button>
+        }
+        @if (table.status === 'Cleaning') {
+          <p-button label="ทำความสะอาดเสร็จ" severity="success" [style]="{ 'min-width': '120px' }" (onClick)="onCleanTable()"></p-button>
+        }
+        @if (table.status === 'Unavailable') {
+          <p-button label="เปิดใช้งาน" severity="success" [style]="{ 'min-width': '120px' }" (onClick)="onSetAvailable()"></p-button>
+        }
+      }
+      <p-button label="ปิด" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onClose()"></p-button>
+    </div>
+  </p-footer>
+</app-card-template>

@@ -1,11 +1,10 @@
 <app-card-template
   [headerLabel]="config.header!"
-  headerLabelClass="text-xl font-semibold text-primary-dark"
 >
   <form [formGroup]="form" class="grid grid-cols-3 gap-x-4 gap-y-3">
     <!-- ประเภทที่อยู่ -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >ประเภทที่อยู่ <span class="text-danger">*</span></label
       >
       <app-address-type-dropdown
@@ -19,7 +18,7 @@
 
     <!-- เลขที่ -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >เลขที่ <span class="text-danger">*</span></label
       >
       <input
@@ -36,7 +35,7 @@
 
     <!-- อาคาร/หมู่บ้าน -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >อาคาร/หมู่บ้าน</label
       >
       <input
@@ -49,7 +48,7 @@
 
     <!-- หมู่ -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1">หมู่</label>
+      <label class="block font-semibold mb-1">หมู่</label>
       <input
         pInputText
         formControlName="moo"
@@ -60,7 +59,7 @@
 
     <!-- ซอย -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1">ซอย</label>
+      <label class="block font-semibold mb-1">ซอย</label>
       <input
         pInputText
         formControlName="soi"
@@ -71,7 +70,7 @@
 
     <!-- แยก -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1">แยก</label>
+      <label class="block font-semibold mb-1">แยก</label>
       <input
         pInputText
         formControlName="yaek"
@@ -82,7 +81,7 @@
 
     <!-- ถนน -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1">ถนน</label>
+      <label class="block font-semibold mb-1">ถนน</label>
       <input
         pInputText
         formControlName="road"
@@ -93,7 +92,7 @@
 
     <!-- แขวง/ตำบล -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >แขวง/ตำบล <span class="text-danger">*</span></label
       >
       <input
@@ -110,7 +109,7 @@
 
     <!-- เขต/อำเภอ -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >เขต/อำเภอ <span class="text-danger">*</span></label
       >
       <input
@@ -127,7 +126,7 @@
 
     <!-- จังหวัด -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >จังหวัด <span class="text-danger">*</span></label
       >
       <input
@@ -144,7 +143,7 @@
 
     <!-- รหัสไปรษณีย์ -->
     <div>
-      <label class="block font-semibold text-surface-dark mb-1"
+      <label class="block font-semibold mb-1"
         >รหัสไปรษณีย์ <span class="text-danger">*</span></label
       >
       <input
@@ -152,6 +151,9 @@
         formControlName="postalCode"
         class="w-full"
         placeholder="รหัสไปรษณีย์"
+        maxlength="6"
+        (keypress)="'0123456789'.includes($event.key)"
+        (paste)="$event.preventDefault()"
       />
       <app-field-error
         [control]="form.get('postalCode')"

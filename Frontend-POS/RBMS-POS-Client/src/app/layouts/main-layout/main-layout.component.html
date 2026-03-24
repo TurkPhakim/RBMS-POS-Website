@@ -13,9 +13,67 @@
     </nav>
 
     <main class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-surface">
-      <div class="p-6">
+      <div class="p-6 pb-32">
         <router-outlet></router-outlet>
       </div>
     </main>
   </div>
 </div>
+
+<!-- Notification Toast + Drawer -->
+<p-toast position="top-right" key="noti" styleClass="noti-toast">
+  <ng-template let-message pTemplate="message" let-closeFn="closeFn">
+    <div
+      class="flex items-start gap-3 w-full rounded-2xl bg-info-bg pl-4 pr-3 py-3"
+    >
+      <span
+        class="flex-shrink-0 inline-flex items-center w-6 h-6 mt-0.5"
+        [ngClass]="getToastIcon(message).color"
+      >
+        @if (isPiIcon(message)) {
+          <i [class]="getToastIcon(message).icon + ' text-xl'"></i>
+        } @else {
+          <app-generic-icon
+            [name]="getToastIcon(message).icon"
+            svgClass="w-6 h-6"
+          ></app-generic-icon>
+        }
+      </span>
+      <div class="flex-1 min-w-0">
+        @if (message.data?.eventType === "ORDER_READY") {
+          <p
+            class="text-lg font-semibold truncate"
+            [ngClass]="getToastIcon(message).color"
+          >
+            {{ message.summary }}
+          </p>
+          <p class="text-sm text-surface-sub truncate">{{ message.detail }}</p>
+        } @else {
+          <div class="flex items-center gap-2">
+            <span
+              class="text-lg font-semibold truncate"
+              [ngClass]="getToastIcon(message).color"
+              >{{ message.summary }}</span
+            >
+            <span class="flex-1 text-sm text-surface-sub truncate">{{
+              message.detail
+            }}</span>
+          </div>
+        }
+        @if (message.data?.tableName) {
+          <p class="text-xs text-primary font-medium mt-0.5">
+            โซน{{ message.data.zoneName }} - โต๊ะ{{ message.data.tableName }}
+          </p>
+        }
+      </div>
+      <button
+        class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-surface-sub hover:text-surface-dark hover:bg-black/5 transition-colors"
+        (click)="closeToast()"
+        type="button"
+      >
+        <i class="pi pi-times text-sm"></i>
+      </button>
+    </div>
+  </ng-template>
+</p-toast>
+<app-notification-drawer></app-notification-drawer>

@@ -1,10 +1,7 @@
 import { Component, forwardRef, OnInit } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
-
 import { takeUntil } from 'rxjs';
-
 import { ServiceChargesService } from '@app/core/api/services';
-
 import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component';
 
 @Component({
@@ -26,7 +23,7 @@ export class ServiceChargeDropdownComponent
 {
   constructor(private readonly serviceChargesService: ServiceChargesService) {
     super();
-    this.placeholder = 'เลือก Service Charge';
+    this.placeholder = 'ค่าบริการ';
   }
 
   override ngOnInit(): void {

@@ -1,10 +1,11 @@
 import { Component, OnDestroy } from '@angular/core';
-
 import { finalize, from, isObservable, of, Subject, takeUntil } from 'rxjs';
-
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
-import { DialogData, Icon, ModalService } from '@app/core/services/modal.service';
+import {
+  DialogData,
+  Icon,
+  ModalService,
+} from '@app/core/services/modal.service';
 
 @Component({
   selector: 'app-info-modal',
@@ -48,23 +49,29 @@ export class InfoModalComponent implements OnDestroy {
     }
 
     this.confirmLoading = true;
-    stream$.pipe(
-      takeUntil(this.destroy$),
-      finalize(() => this.confirmLoading = false),
-    ).subscribe({
-      next: (res) => this.ref.close(res ?? true),
-      error: (err) => {
-        if (this.config.data?.customError) {
-          this.ref.close(err);
-        } else {
-          this.modalService.cancel({
-            title: 'ผิดพลาด !',
-            message: err?.error?.message ?? err?.message ?? 'เกิดข้อผิดพลาดในการทำรายการ',
-            confirmButtonLabel: 'ปิด',
-          });
-        }
-      },
-    });
+    stream$
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => (this.confirmLoading = false)),
+      )
+      .subscribe({
+        next: (res) => this.ref.close(res ?? true),
+        error: (err) => {
+          if (this.config.data?.customError) {
+            this.ref.close(err);
+          } else {
+            this.ref.close(false);
+            this.modalService.cancel({
+              title: 'ผิดพลาด !',
+              message:
+                err?.error?.message ??
+                err?.message ??
+                'เกิดข้อผิดพลาดในการทำรายการ',
+              confirmButtonLabel: 'ปิด',
+            });
+          }
+        },
+      });
   }
 
   handleCancel(): void {

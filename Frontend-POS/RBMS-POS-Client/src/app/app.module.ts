@@ -2,21 +2,22 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { MessageService } from 'primeng/api';
 import { definePreset } from '@primeng/themes';
 import Lara from '@primeng/themes/lara';
 import { providePrimeNG } from 'primeng/config';
-
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
-import { apiConfigurationProvider } from './core/api/api-config.provider';
+import { apiConfigurationProvider } from './core/providers/api-config.provider';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 import { SharedModule } from './shared/shared.module';
 import { layoutReducer } from './store/layout/layout.reducer';
+import { TestDialogPageComponent } from './test-dialog-page/test-dialog-page.component';
+import { TestKitchenDisplayComponent } from './test-kitchen-display/test-kitchen-display.component';
 
 const AppPreset = definePreset(Lara, {
   semantic: {
@@ -37,9 +38,7 @@ const AppPreset = definePreset(Lara, {
 });
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
+  declarations: [AppComponent, TestDialogPageComponent, TestKitchenDisplayComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -62,16 +61,44 @@ const AppPreset = definePreset(Lara, {
         },
       },
       translation: {
-        dayNames: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'],
+        dayNames: [
+          'อาทิตย์',
+          'จันทร์',
+          'อังคาร',
+          'พุธ',
+          'พฤหัสบดี',
+          'ศุกร์',
+          'เสาร์',
+        ],
         dayNamesShort: ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'],
         dayNamesMin: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
         monthNames: [
-          'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-          'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+          'มกราคม',
+          'กุมภาพันธ์',
+          'มีนาคม',
+          'เมษายน',
+          'พฤษภาคม',
+          'มิถุนายน',
+          'กรกฎาคม',
+          'สิงหาคม',
+          'กันยายน',
+          'ตุลาคม',
+          'พฤศจิกายน',
+          'ธันวาคม',
         ],
         monthNamesShort: [
-          'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
-          'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.',
+          'ม.ค.',
+          'ก.พ.',
+          'มี.ค.',
+          'เม.ย.',
+          'พ.ค.',
+          'มิ.ย.',
+          'ก.ค.',
+          'ส.ค.',
+          'ก.ย.',
+          'ต.ค.',
+          'พ.ย.',
+          'ธ.ค.',
         ],
         today: 'วันนี้',
         clear: 'ล้าง',
@@ -79,6 +106,8 @@ const AppPreset = definePreset(Lara, {
         firstDayOfWeek: 0,
       },
     }),
+    // PrimeNG MessageService (global singleton for Toast)
+    MessageService,
     // HTTP Interceptors
     {
       provide: HTTP_INTERCEPTORS,

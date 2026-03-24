@@ -2,10 +2,9 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'nationalIdMask',
-  standalone: false
+  standalone: false,
 })
 export class NationalIdMaskPipe implements PipeTransform {
-
   transform(value: string | null | undefined): string {
     if (!value) {
       return 'N/A';
@@ -25,5 +24,4 @@ export class NationalIdMaskPipe implements PipeTransform {
 
     return `${first}-xxxx-xxxxx-xx-${last}`;
   }
-
 }

@@ -1,5 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges,
+} from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -43,9 +50,12 @@ export class GenericIconComponent implements OnInit, OnChanges {
     const path = `icons/${this.name}.svg`;
     this.http.get(path, { responseType: 'text' }).subscribe({
       next: (svgText) => {
-        const cleaned = svgText
-          .replace(/width="[^"]*"/, '')
-          .replace(/height="[^"]*"/, '');
+        const cleaned = svgText.replace(/<svg([^>]*)>/, (_, attrs) => {
+          const stripped = attrs
+            .replace(/\s*width="[^"]*"/, '')
+            .replace(/\s*height="[^"]*"/, '');
+          return `<svg${stripped}>`;
+        });
         GenericIconComponent.svgCache.set(this.name, cleaned);
         this.svgIcon = this.buildSafeHtml(cleaned);
         this.cdr.markForCheck();

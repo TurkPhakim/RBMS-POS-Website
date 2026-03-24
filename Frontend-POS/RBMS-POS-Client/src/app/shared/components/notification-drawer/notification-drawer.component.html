@@ -1,0 +1,190 @@
+@if (notiStore.isDrawerOpen()) {
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 z-[998] bg-black/30 transition-opacity"
+    (click)="notiStore.closeDrawer()"
+  ></div>
+
+  <!-- Drawer Panel -->
+  <div
+    class="fixed top-0 right-0 z-[999] h-full w-[420px] bg-surface flex flex-col animate-slide-in-right"
+  >
+    <!-- Header -->
+    <div class="bg-gradient-to-br from-primary to-primary-dark px-5 py-5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <app-generic-icon
+            name="bell"
+            svgClass="w-8 h-8"
+            class="text-white"
+          ></app-generic-icon>
+          <h3 class="text-2xl font-bold text-white">การแจ้งเตือน</h3>
+          @if (notiStore.unreadCount() > 0) {
+            <span
+              class="bg-white/20 text-white text-sm font-semibold px-3 py-0.5 rounded-full"
+            >
+              {{ notiStore.unreadCount() }} รายการยังไม่อ่าน
+            </span>
+          }
+        </div>
+        <button
+          class="text-white/60 hover:text-white hover:bg-white/10 rounded-lg p-2 transition-colors"
+          (click)="notiStore.closeDrawer()"
+          type="button"
+        >
+          <i class="pi pi-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Chips (2 rows) -->
+    <div
+      class="flex flex-col gap-2 px-4 py-3 border-b border-surface-border bg-surface-card"
+    >
+      <!-- Row 1: 2 items (stretch to match row 2) -->
+      <div class="flex gap-2">
+        @for (chip of filterRow1; track chip.value) {
+          <ng-container
+            *ngTemplateOutlet="chipTpl; context: { $implicit: chip }"
+          ></ng-container>
+        }
+      </div>
+      <!-- Row 2: 3 items -->
+      <div class="flex gap-2">
+        @for (chip of filterRow2; track chip.value) {
+          <ng-container
+            *ngTemplateOutlet="chipTpl; context: { $implicit: chip }"
+          ></ng-container>
+        }
+      </div>
+    </div>
+
+    <ng-template #chipTpl let-chip>
+      <button
+        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap"
+        [ngClass]="
+          notiStore.activeFilter() === chip.value
+            ? chip.activeBg + ' text-white'
+            : 'bg-surface text-surface-sub hover:bg-surface-border border border-surface-border'
+        "
+        (click)="notiStore.setFilter(chip.value)"
+        type="button"
+      >
+        @if (chip.piIcon) {
+          <i [class]="chip.icon + ' text-sm'"></i>
+        } @else {
+          <app-generic-icon
+            [name]="chip.icon"
+            svgClass="w-5 h-5"
+          ></app-generic-icon>
+        }
+        {{ chip.label }}
+      </button>
+    </ng-template>
+
+    <!-- Table Filter + Action Icons -->
+    <div
+      class="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-surface-card"
+    >
+      <div class="flex-1">
+        <app-notification-table-dropdown
+          [tables]="notiStore.availableTables()"
+          [ngModel]="notiStore.tableFilter()"
+          (ngModelChange)="notiStore.setTableFilter($event)"
+        ></app-notification-table-dropdown>
+      </div>
+      <button
+        class="flex-shrink-0 p-2 rounded-lg text-primary hover:bg-primary-subtle transition-colors"
+        (click)="notiStore.markAllRead()"
+        type="button"
+        pTooltip="อ่านทั้งหมด"
+        tooltipPosition="bottom"
+      >
+        <app-generic-icon
+          name="noti-all-read"
+          svgClass="w-7 h-7"
+        ></app-generic-icon>
+      </button>
+      <button
+        class="flex-shrink-0 p-2 rounded-lg text-danger hover:bg-danger-bg transition-colors"
+        (click)="onClearAll()"
+        type="button"
+        pTooltip="เคลียร์ทั้งหมด"
+        tooltipPosition="bottom"
+      >
+        <app-generic-icon
+          name="noti-all-clear"
+          svgClass="w-7 h-7"
+        ></app-generic-icon>
+      </button>
+    </div>
+
+    <!-- Notification List -->
+    <div class="flex-1 overflow-y-auto">
+      @if (notiStore.filteredNotifications().length === 0) {
+        <div class="flex items-center justify-center h-full">
+          <ng-lottie
+            [options]="emptyLottie"
+            width="180px"
+            height="180px"
+          ></ng-lottie>
+        </div>
+      } @else {
+        @for (
+          noti of notiStore.filteredNotifications();
+          track noti.notificationId
+        ) {
+          <button
+            class="relative w-full text-left flex items-start gap-3 pl-5 pr-4 py-3 border-b border-surface-border transition-colors hover:bg-surface-card"
+            (click)="onClickItem(noti)"
+            type="button"
+          >
+            @if (!noti.isRead) {
+              <div
+                class="absolute left-0 top-0 bottom-0 w-[5px] rounded-r-full bg-success-dark"
+              ></div>
+            }
+            <!-- Icon -->
+            <div class="flex-shrink-0 mt-0.5">
+              @if (isPiIcon(noti.eventType)) {
+                <i
+                  [class]="
+                    getIconData(noti.eventType).icon +
+                    ' text-2xl ' +
+                    getIconData(noti.eventType).color
+                  "
+                ></i>
+              } @else {
+                <app-generic-icon
+                  [name]="getIconData(noti.eventType).icon"
+                  svgClass="w-7 h-7"
+                  [class]="getIconData(noti.eventType).color"
+                ></app-generic-icon>
+              }
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <p class="font-semibold text-lg truncate">
+                  {{ noti.title }}
+                </p>
+                <span class="flex-shrink-0 text-xs text-surface-sub">
+                  {{ relativeTime(noti.createdAt) }}
+                </span>
+              </div>
+              <p class="text-surface-sub line-clamp-2">
+                {{ noti.message }}
+              </p>
+              @if (noti.tableName) {
+                <p class="text-primary font-medium mt-0.5">
+                  โซน{{ noti.zoneName }} - โต๊ะ{{ noti.tableName }}
+                </p>
+              }
+            </div>
+          </button>
+        }
+      }
+    </div>
+  </div>
+}

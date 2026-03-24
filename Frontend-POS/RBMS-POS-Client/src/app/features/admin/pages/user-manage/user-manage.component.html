@@ -1,0 +1,191 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="user-octagon"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">แก้ไขข้อมูลผู้ใช้งาน</h1>
+  </div>
+
+  <form [formGroup]="form" class="flex flex-col gap-4">
+    <!-- รูปโปรไฟล์ -->
+    <app-image-upload-card
+      [imageUrl]="serverImageUrl()"
+      label="รูปโปรไฟล์"
+      placeholderIcon="human"
+      [readOnly]="true"
+    ></app-image-upload-card>
+
+    <!-- ข้อมูลผู้ใช้งาน + การตั้งค่าบัญชี (รวม Card เดียว) -->
+    <app-section-card
+      headerLabel="ข้อมูลบัญชีผู้ใช้งาน"
+      headerIcon="human"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      @if (userDetail()) {
+        <!-- Username -->
+        <div>
+          <label class="block font-semibold mb-2">Username</label>
+          <input
+            type="text"
+            pInputText
+            [value]="userDetail()!.username"
+            class="w-full"
+            disabled
+          />
+        </div>
+
+        <!-- ชื่อ-นามสกุล (ไทย) -->
+        <div>
+          <label class="block font-semibold mb-2">ชื่อ-นามสกุล (ภาษาไทย)</label>
+          <input
+            type="text"
+            pInputText
+            [value]="userDetail()!.fullNameThai || '-'"
+            class="w-full"
+            disabled
+          />
+        </div>
+
+        <!-- ชื่อ-นามสกุล (อังกฤษ) -->
+        <div>
+          <label class="block font-semibold mb-2"
+            >ชื่อ-นามสกุล (ภาษาอังกฤษ)</label
+          >
+          <input
+            type="text"
+            pInputText
+            [value]="userDetail()!.fullNameEnglish || '-'"
+            class="w-full"
+            disabled
+          />
+        </div>
+
+        <!-- ตำแหน่งงาน -->
+        <div>
+          <label class="block font-semibold mb-2">ตำแหน่งงาน</label>
+          <input
+            type="text"
+            pInputText
+            [value]="userDetail()!.positionName || '-'"
+            class="w-full"
+            disabled
+          />
+        </div>
+
+        <!-- อีเมล -->
+        <div>
+          <label class="block font-semibold mb-2">อีเมล</label>
+          <input
+            type="text"
+            pInputText
+            [value]="userDetail()!.email"
+            class="w-full"
+            disabled
+          />
+        </div>
+
+        <!-- เบอร์โทรศัพท์ -->
+        <div>
+          <label class="block font-semibold mb-2">เบอร์โทรศัพท์</label>
+          <input
+            type="text"
+            pInputText
+            [value]="
+              userDetail()!.phone ? (userDetail()!.phone | formatPhone) : '-'
+            "
+            class="w-full"
+            disabled
+          />
+        </div>
+
+        <!-- เข้าสู่ระบบล่าสุด -->
+        <div>
+          <label class="block font-semibold mb-2">เข้าสู่ระบบล่าสุด</label>
+          <p-datepicker
+            [ngModel]="lastLoginDate()"
+            [ngModelOptions]="{ standalone: true }"
+            [showTime]="true"
+            [showSeconds]="false"
+            dateFormat="dd/mm/yy"
+            placeholder="ยังไม่เคยเข้าสู่ระบบ"
+            [disabled]="true"
+            styleClass="w-full"
+          />
+        </div>
+
+        <!-- สถานะ + ล็อค + ปลดล็อค รวมครึ่งขวา -->
+        <div class="flex items-start gap-8">
+          <!-- สถานะการใช้งาน -->
+          <div>
+            <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
+            <div class="flex items-center gap-3 pt-2">
+              <p-inputSwitch formControlName="isActive"></p-inputSwitch>
+              <span
+                class="font-semibold mb-2"
+                [class]="
+                  form.get('isActive')?.value ? 'text-success' : 'text-danger'
+                "
+              >
+                {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
+              </span>
+            </div>
+          </div>
+
+          <!-- ล็อคบัญชีผู้ใช้งาน -->
+          <div>
+            <label class="block font-semibold mb-2">ล็อคบัญชีผู้ใช้งาน</label>
+            <div class="flex items-center gap-3 pt-2">
+              <p-inputSwitch formControlName="isLockedByAdmin"></p-inputSwitch>
+              <span
+                class="font-semibold mb-2"
+                [class]="
+                  form.get('isLockedByAdmin')?.value
+                    ? 'text-success'
+                    : 'text-danger'
+                "
+              >
+                {{
+                  form.get("isLockedByAdmin")?.value
+                    ? "เปิดใช้งาน"
+                    : "ปิดใช้งาน"
+                }}
+              </span>
+            </div>
+          </div>
+
+          <!-- วันที่ปลดล็อคอัตโนมัติ (แสดงเมื่อ isLockedByAdmin = true) -->
+          <div class="flex-1" [hidden]="!form.get('isLockedByAdmin')?.value">
+            <label class="block font-semibold mb-2"
+              >วันที่ปลดล็อคอัตโนมัติ</label
+            >
+            <p-datepicker
+              formControlName="autoUnlockDate"
+              dateFormat="dd/mm/yy"
+              placeholder="วันที่ปลดล็อคอัตโนมัติ"
+              [minDate]="tomorrow"
+              [showClear]="true"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+      }
+    </app-section-card>
+
+    <!-- Audit Footer -->
+    @if (userDetail()) {
+      <app-audit-footer
+        [createdByName]="userDetail()!.createdByName"
+        [createdAt]="userDetail()!.createdAt"
+        [updatedByName]="userDetail()!.updatedByName"
+        [updatedAt]="userDetail()!.updatedAt"
+      />
+    }
+  </form>
+</div>

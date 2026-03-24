@@ -1,9 +1,688 @@
-<div class="flex items-center justify-center min-h-[70vh]">
-  <div class="text-center">
-    <div class="mb-4 flex justify-center">
-      <app-generic-icon name="profile" svgClass="h-28 w-28" class="opacity-40"></app-generic-icon>
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="profile"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
     </div>
-    <h1 class="text-page-title text-primary mb-4">โปรไฟล์</h1>
-    <p class="text-xl text-surface-sub">โมดูลนี้อยู่ระหว่างการพัฒนา</p>
+    <h1 class="text-page-title">โปรไฟล์ของฉัน</h1>
   </div>
+
+  <!-- Form -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <!-- รูปโปรไฟล์ -->
+    <app-image-upload-card
+      [imageUrl]="serverImageUrl()"
+      label="รูปโปรไฟล์"
+      placeholderIcon="human"
+      [readOnly]="false"
+      (fileSelected)="onFileSelected($event)"
+      (imageRemoved)="removeImage()"
+    ></app-image-upload-card>
+
+    <!-- Card: ข้อมูลบัญชี -->
+    <app-section-card
+      headerLabel="ข้อมูลบัญชี"
+      headerIcon="profile"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <!-- Username -->
+      <div>
+        <label for="username" class="block font-semibold mb-2">
+          ชื่อผู้ใช้งาน (Username) <span class="text-danger">*</span>
+        </label>
+        <input
+          id="username"
+          type="text"
+          pInputText
+          formControlName="username"
+          placeholder="ชื่อผู้ใช้งาน"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('username')" type="text" />
+      </div>
+
+      <!-- ตำแหน่ง -->
+      <div>
+        <label class="block font-semibold mb-2"> ตำแหน่ง </label>
+        <app-position-dropdown
+          formControlName="positionId"
+          [showClear]="false"
+        ></app-position-dropdown>
+      </div>
+    </app-section-card>
+
+    <!-- Card: ข้อมูลส่วนบุคคล -->
+    <app-section-card
+      headerLabel="ข้อมูลส่วนบุคคล"
+      headerIcon="human"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <!-- คำนำหน้าชื่อ -->
+      <div>
+        <label for="title" class="block font-semibold mb-2">
+          คำนำหน้าชื่อ
+        </label>
+        <app-title-dropdown formControlName="title"></app-title-dropdown>
+      </div>
+
+      <!-- ชื่อเล่น -->
+      <div>
+        <label for="nickname" class="block font-semibold mb-2">
+          ชื่อเล่น
+        </label>
+        <input
+          id="nickname"
+          type="text"
+          pInputText
+          formControlName="nickname"
+          placeholder="ชื่อเล่น"
+          class="w-full"
+        />
+      </div>
+
+      <!-- ชื่อ (ไทย) -->
+      <div>
+        <label for="firstNameThai" class="block font-semibold mb-2">
+          ชื่อ (ภาษาไทย)
+        </label>
+        <input
+          id="firstNameThai"
+          type="text"
+          pInputText
+          formControlName="firstNameThai"
+          placeholder="ชื่อ (ภาษาไทย)"
+          class="w-full"
+        />
+      </div>
+
+      <!-- นามสกุล (ไทย) -->
+      <div>
+        <label for="lastNameThai" class="block font-semibold mb-2">
+          นามสกุล (ภาษาไทย)
+        </label>
+        <input
+          id="lastNameThai"
+          type="text"
+          pInputText
+          formControlName="lastNameThai"
+          placeholder="นามสกุล (ภาษาไทย)"
+          class="w-full"
+        />
+      </div>
+
+      <!-- ชื่อ (อังกฤษ) -->
+      <div>
+        <label for="firstNameEnglish" class="block font-semibold mb-2">
+          ชื่อ (ภาษาอังกฤษ)
+        </label>
+        <input
+          id="firstNameEnglish"
+          type="text"
+          pInputText
+          formControlName="firstNameEnglish"
+          placeholder="ชื่อ (ภาษาอังกฤษ)"
+          class="w-full"
+        />
+      </div>
+
+      <!-- นามสกุล (อังกฤษ) -->
+      <div>
+        <label for="lastNameEnglish" class="block font-semibold mb-2">
+          นามสกุล (ภาษาอังกฤษ)
+        </label>
+        <input
+          id="lastNameEnglish"
+          type="text"
+          pInputText
+          formControlName="lastNameEnglish"
+          placeholder="นามสกุล (ภาษาอังกฤษ)"
+          class="w-full"
+        />
+      </div>
+
+      <!-- เพศ -->
+      <div>
+        <label for="gender" class="block font-semibold mb-2"> เพศ </label>
+        <app-gender-dropdown formControlName="gender"></app-gender-dropdown>
+      </div>
+
+      <!-- เลขประจำตัวประชาชน -->
+      <div>
+        <label for="nationalId" class="block font-semibold mb-2">
+          เลขประจำตัวประชาชน
+        </label>
+        <input
+          id="nationalId"
+          type="text"
+          pInputText
+          formControlName="nationalId"
+          placeholder="เลขประจำตัวประชาชน"
+          maxlength="13"
+          class="w-full"
+        />
+      </div>
+
+      <!-- วัน/เดือน/ปี เกิด -->
+      <div>
+        <label for="dateOfBirth" class="block font-semibold mb-2">
+          วัน/เดือน/ปี เกิด
+        </label>
+        <p-datepicker
+          formControlName="dateOfBirth"
+          dateFormat="dd/mm/yy"
+          placeholder="วัน/เดือน/ปี เกิด"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- อายุ -->
+      <div>
+        <label for="age" class="block font-semibold mb-2">อายุ</label>
+        <input
+          id="age"
+          type="text"
+          pInputText
+          formControlName="age"
+          placeholder="คำนวณอัตโนมัติจากวันเกิด"
+          class="w-full"
+          readonly
+        />
+      </div>
+
+      <!-- สัญชาติ -->
+      <div>
+        <label class="block font-semibold mb-2"> สัญชาติ </label>
+        <app-nationality-dropdown
+          formControlName="nationality"
+        ></app-nationality-dropdown>
+      </div>
+
+      <!-- ศาสนา -->
+      <div>
+        <label class="block font-semibold mb-2"> ศาสนา </label>
+        <app-religion-dropdown
+          formControlName="religion"
+        ></app-religion-dropdown>
+      </div>
+
+      <!-- Line ID -->
+      <div>
+        <label for="lineId" class="block font-semibold mb-2">
+          Line ID <span class="text-danger">*</span>
+        </label>
+        <input
+          id="lineId"
+          type="text"
+          pInputText
+          formControlName="lineId"
+          placeholder="Line ID"
+          class="w-full"
+        />
+      </div>
+
+      <!-- สถานะการใช้งาน -->
+      <div>
+        <label for="isActive" class="block font-semibold mb-2"
+          >สถานะการใช้งาน</label
+        >
+        <div class="flex items-center gap-3 pt-2">
+          <p-inputSwitch
+            formControlName="isActive"
+            inputId="isActive"
+          ></p-inputSwitch>
+          <span
+            class="font-semibold"
+            [class]="
+              form.get('isActive')?.value ? 'text-success' : 'text-danger'
+            "
+            >{{
+              form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน"
+            }}</span
+          >
+        </div>
+      </div>
+    </app-section-card>
+
+    <!-- Card: ข้อมูลการจ้างงาน -->
+    <app-section-card
+      headerLabel="ข้อมูลการจ้างงาน"
+      headerIcon="employee-id"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <!-- ประเภทการจ้างงาน -->
+      <div>
+        <label class="block font-semibold mb-2">ประเภทการจ้างงาน</label>
+        <div class="flex gap-6 h-[2.6rem] items-center">
+          <div class="flex items-center gap-2">
+            <p-radioButton
+              formControlName="isFullTime"
+              [value]="true"
+              inputId="fullTime"
+            ></p-radioButton>
+            <label for="fullTime" class="cursor-pointer font-medium"
+              >Full-Time</label
+            >
+          </div>
+          <div class="flex items-center gap-2">
+            <p-radioButton
+              formControlName="isFullTime"
+              [value]="false"
+              inputId="partTime"
+            ></p-radioButton>
+            <label for="partTime" class="cursor-pointer font-medium"
+              >Part-Time</label
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- เงินเดือน / ค่าจ้าง -->
+      @if (form.get("isFullTime")?.value === true) {
+        <div>
+          <label for="salary" class="block font-semibold mb-2">เงินเดือน</label>
+          <p-inputgroup>
+            <p-inputNumber
+              inputId="salary"
+              formControlName="salary"
+              [min]="0"
+              mode="decimal"
+              placeholder="เงินเดือน"
+              styleClass="w-full"
+            ></p-inputNumber>
+            <p-inputgroup-addon>บาท/เดือน</p-inputgroup-addon>
+          </p-inputgroup>
+        </div>
+      }
+
+      @if (form.get("isFullTime")?.value === false) {
+        <div>
+          <label for="hourlyRate" class="block font-semibold mb-2"
+            >ค่าจ้างรายชั่วโมง</label
+          >
+          <p-inputgroup>
+            <p-inputNumber
+              inputId="hourlyRate"
+              formControlName="hourlyRate"
+              [min]="0"
+              mode="decimal"
+              placeholder="ค่าจ้างรายชั่วโมง"
+              styleClass="w-full"
+            ></p-inputNumber>
+            <p-inputgroup-addon>บาท/ชั่วโมง</p-inputgroup-addon>
+          </p-inputgroup>
+        </div>
+      }
+
+      <!-- วันที่เริ่มทำงาน -->
+      <div>
+        <label for="startDate" class="block font-semibold mb-2">
+          วันที่เริ่มทำงาน
+        </label>
+        <p-datepicker
+          formControlName="startDate"
+          dateFormat="dd/mm/yy"
+          placeholder="วันที่เริ่มทำงาน"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- วันที่สิ้นสุดการทำงาน -->
+      <div>
+        <label for="endDate" class="block font-semibold mb-2"
+          >วันที่สิ้นสุดการทำงาน</label
+        >
+        <p-datepicker
+          formControlName="endDate"
+          dateFormat="dd/mm/yy"
+          placeholder="วันที่สิ้นสุดการทำงาน"
+          [minDate]="minEndDate()"
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- บัญชีธนาคาร -->
+      <div>
+        <label for="bankName" class="block font-semibold mb-2"
+          >บัญชีธนาคาร</label
+        >
+        <input
+          id="bankName"
+          type="text"
+          pInputText
+          formControlName="bankName"
+          placeholder="บัญชีธนาคาร"
+          class="w-full"
+        />
+      </div>
+
+      <!-- เลขที่บัญชี -->
+      <div>
+        <label for="bankAccountNumber" class="block font-semibold mb-2"
+          >เลขที่บัญชี</label
+        >
+        <input
+          id="bankAccountNumber"
+          type="text"
+          pInputText
+          formControlName="bankAccountNumber"
+          placeholder="เลขที่บัญชี"
+          maxlength="20"
+          class="w-full"
+          (keypress)="'0123456789'.includes($event.key)"
+          (paste)="$event.preventDefault()"
+        />
+      </div>
+    </app-section-card>
+
+    <!-- Card: ข้อมูลการติดต่อ -->
+    <app-section-card
+      headerLabel="ข้อมูลการติดต่อ"
+      headerIcon="telephone"
+      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+    >
+      <!-- อีเมล -->
+      <div>
+        <label for="email" class="block font-semibold mb-2"> อีเมล </label>
+        <input
+          id="email"
+          type="email"
+          pInputText
+          formControlName="email"
+          placeholder="อีเมล"
+          class="w-full"
+        />
+      </div>
+
+      <!-- เบอร์โทรศัพท์ -->
+      <div>
+        <label for="phone" class="block font-semibold mb-2">
+          เบอร์โทรศัพท์ <span class="text-danger">*</span>
+        </label>
+        <input
+          id="phone"
+          type="text"
+          pInputText
+          formControlName="phone"
+          placeholder="เบอร์โทรศัพท์"
+          class="w-full"
+          maxlength="10"
+          (keypress)="'0123456789'.includes($event.key)"
+          (paste)="$event.preventDefault()"
+        />
+      </div>
+    </app-section-card>
+
+    <!-- Card: ที่อยู่ -->
+    <app-section-card headerLabel="ที่อยู่" headerIcon="address-location">
+      <button
+        sectionActions
+        type="button"
+        class="px-5 py-2 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-subtle transition-colors"
+        (click)="onAddAddress()"
+      >
+        เพิ่มที่อยู่
+      </button>
+
+      @if (addresses().length === 0) {
+        <app-empty-view></app-empty-view>
+      } @else {
+        <div class="space-y-3">
+          @for (addr of addresses(); track $index) {
+            <div
+              class="py-6 px-4 border border-surface-border rounded-lg border-l-[6px] border-l-primary flex items-start justify-between gap-4"
+            >
+              <div class="flex gap-4">
+                <div
+                  class="w-12 h-12 rounded-lg bg-primary-subtle flex items-center justify-center shrink-0"
+                >
+                  <app-generic-icon
+                    name="address-location"
+                    svgClass="w-8 h-8"
+                    class="text-primary"
+                  ></app-generic-icon>
+                </div>
+                <div>
+                  <span
+                    class="px-3 py-2 rounded-full bg-primary text-white font-semibold opacity-80"
+                    >{{ getAddressTypeLabel(addr.addressType!) }}</span
+                  >
+                  <p class="text-lg mt-4">
+                    เลขที่ {{ addr.houseNumber }}
+                    @if (addr.building) {
+                      {{ addr.building }}
+                    }
+                    @if (addr.moo) {
+                      หมู่ {{ addr.moo }}
+                    }
+                    @if (addr.soi) {
+                      ซอย {{ addr.soi }}
+                    }
+                    @if (addr.yaek) {
+                      แยก {{ addr.yaek }}
+                    }
+                    @if (addr.road) {
+                      ถนน {{ addr.road }}
+                    }
+                  </p>
+                  <p class="text-surface-sub text-lg mt-1">
+                    {{ addr.subDistrict }}
+                    {{ addr.district }}
+                    {{ addr.province }}
+                    {{ addr.postalCode }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button
+                  type="button"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                  pTooltip="แก้ไข"
+                  tooltipPosition="top"
+                  (click)="onEditAddress(addr, $index)"
+                >
+                  <app-generic-icon
+                    name="pen-edit"
+                    svgClass="w-5 h-5"
+                  ></app-generic-icon>
+                </button>
+                <button
+                  type="button"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                  pTooltip="ลบ"
+                  tooltipPosition="top"
+                  (click)="onDeleteAddress($index)"
+                >
+                  <app-generic-icon
+                    name="trash"
+                    svgClass="w-5 h-5"
+                  ></app-generic-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </app-section-card>
+
+    <!-- Card: ประวัติการศึกษา -->
+    <app-section-card headerLabel="ประวัติการศึกษา" headerIcon="graduate">
+      <button
+        sectionActions
+        type="button"
+        class="px-5 py-2 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-subtle transition-colors"
+        (click)="onAddEducation()"
+      >
+        เพิ่มประวัติการศึกษา
+      </button>
+
+      @if (educations().length === 0) {
+        <app-empty-view></app-empty-view>
+      } @else {
+        <div class="space-y-3">
+          @for (edu of educations(); track $index) {
+            <div
+              class="px-4 py-6 border border-surface-border rounded-lg border-l-[6px] border-l-primary flex items-start justify-between gap-4"
+            >
+              <div class="flex gap-4">
+                <div
+                  class="w-12 h-12 rounded-lg bg-primary-subtle flex items-center justify-center shrink-0"
+                >
+                  <app-generic-icon
+                    name="graduate"
+                    svgClass="w-8 h-8"
+                    class="text-primary"
+                  ></app-generic-icon>
+                </div>
+                <div class="gap-1 flex flex-col">
+                  <p class="font-bold text-xl leading-tight">
+                    {{ edu.institution }}
+                  </p>
+                  <p class="text-lg">
+                    {{ edu.educationLevel }}
+                  </p>
+                  <div class="flex items-center gap-2">
+                    <p class="text-surface-sub text-lg">
+                      สาขาวิชา {{ edu.major }}
+                    </p>
+                    @if (edu.gpa) {
+                      <span
+                        class="px-3 py-1 rounded-full bg-primary-subtle text-primary font-semibold"
+                        >GPA {{ edu.gpa }}</span
+                      >
+                    }
+                  </div>
+                  @if (edu.graduationYear) {
+                    <p class="text-surface-sub text-lg">
+                      ปีที่จบการศึกษา {{ edu.graduationYear }}
+                    </p>
+                  }
+                </div>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button
+                  type="button"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                  pTooltip="แก้ไข"
+                  tooltipPosition="top"
+                  (click)="onEditEducation(edu, $index)"
+                >
+                  <app-generic-icon
+                    name="pen-edit"
+                    svgClass="w-5 h-5"
+                  ></app-generic-icon>
+                </button>
+                <button
+                  type="button"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                  pTooltip="ลบ"
+                  tooltipPosition="top"
+                  (click)="onDeleteEducation($index)"
+                >
+                  <app-generic-icon
+                    name="trash"
+                    svgClass="w-5 h-5"
+                  ></app-generic-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </app-section-card>
+
+    <!-- Card: ประวัติการทำงาน -->
+    <app-section-card headerLabel="ประวัติการทำงาน" headerIcon="work-briefcase">
+      <button
+        sectionActions
+        type="button"
+        class="px-5 py-2 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-subtle transition-colors"
+        (click)="onAddWorkHistory()"
+      >
+        เพิ่มประวัติการทำงาน
+      </button>
+
+      @if (workHistories().length === 0) {
+        <app-empty-view></app-empty-view>
+      } @else {
+        <div class="space-y-3">
+          @for (wh of workHistories(); track $index) {
+            <div
+              class="px-4 py-6 border border-surface-border rounded-lg border-l-[6px] border-l-primary flex items-start justify-between gap-4"
+            >
+              <div class="flex gap-4">
+                <div
+                  class="w-12 h-12 rounded-lg bg-primary-subtle flex items-center justify-center shrink-0"
+                >
+                  <app-generic-icon
+                    name="work-briefcase"
+                    svgClass="w-8 h-8"
+                    class="text-primary"
+                  ></app-generic-icon>
+                </div>
+                <div class="gap-1 flex flex-col">
+                  <p class="font-bold text-xl leading-tight">
+                    {{ wh.workplace }}
+                  </p>
+                  <p class="text-lg">ตำแหน่ง {{ wh.position }}</p>
+                  @if (wh.workPhone) {
+                    <p class="text-surface-sub text-lg">
+                      เบอร์โทร {{ wh.workPhone | formatPhone }}
+                    </p>
+                  }
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <p class="text-surface-sub text-lg">
+                      ช่วงเวลาทำงาน {{ wh.startDate | dateFormat }} -
+                      @if (wh.endDate) {
+                        {{ wh.endDate | dateFormat }}
+                      } @else {
+                        ปัจจุบัน
+                      }
+                    </p>
+                    <span
+                      class="px-3 py-1 rounded-full bg-primary-subtle text-primary font-semibold"
+                      >ระยะเวลา
+                      {{ getWorkDuration(wh.startDate, wh.endDate) }}</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button
+                  type="button"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                  pTooltip="แก้ไข"
+                  tooltipPosition="top"
+                  (click)="onEditWorkHistory(wh, $index)"
+                >
+                  <app-generic-icon
+                    name="pen-edit"
+                    svgClass="w-5 h-5"
+                  ></app-generic-icon>
+                </button>
+                <button
+                  type="button"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                  pTooltip="ลบ"
+                  tooltipPosition="top"
+                  (click)="onDeleteWorkHistory($index)"
+                >
+                  <app-generic-icon
+                    name="trash"
+                    svgClass="w-5 h-5"
+                  ></app-generic-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </app-section-card>
+  </form>
 </div>

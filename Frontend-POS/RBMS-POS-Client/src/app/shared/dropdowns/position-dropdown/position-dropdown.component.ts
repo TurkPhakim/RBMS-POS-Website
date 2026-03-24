@@ -26,7 +26,7 @@ export class PositionDropdownComponent
 {
   constructor(private readonly positionsService: PositionsService) {
     super();
-    this.placeholder = 'ตำแหน่งงาน';
+    this.placeholder = 'ตำแหน่ง';
   }
 
   override ngOnInit(): void {

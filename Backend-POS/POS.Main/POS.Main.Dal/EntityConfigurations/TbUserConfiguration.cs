@@ -40,6 +40,13 @@ public class TbUserConfiguration : IEntityTypeConfiguration<TbUser>
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(u => u.IsLockedByAdmin)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(u => u.PinCodeHash)
+            .HasMaxLength(256);
+
         builder.Property(u => u.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");

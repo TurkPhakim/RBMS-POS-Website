@@ -369,9 +369,7 @@ RBMS-POS-Client/
 ├── tailwind.config.js
 ├── ng-openapi-gen.json       ← config สำหรับ generate API client
 ├── swagger.json              ← OpenAPI spec snapshot (input ของ gen-api)
-├── fix-api-exports.js        ← script แก้ export type หลัง gen-api
-└── _templates/
-    └── api-config.provider.ts  ← เก็บไว้ restore หลัง gen-api เขียนทับ
+└── fix-api-exports.js        ← script แก้ export type หลัง gen-api
 ```
 
 ---
@@ -389,11 +387,12 @@ src/app/
 │
 ├── core/                     ← singleton services ใช้ทั่วทั้ง app
 │   ├── api/                  ← AUTO-GENERATED จาก swagger (ห้ามแก้ด้วยมือ)
-│   │   ├── api-config.provider.ts    ← MANUAL: กำหนด rootUrl จาก environment
 │   │   ├── api-configuration.ts
 │   │   ├── models/           ← TypeScript interfaces (generated)
 │   │   ├── services/         ← 7 API services: auth, human-resource, menus, service-charges, positions, shop-settings, file
 │   │   └── fn/               ← function-based API calls (ใช้โดย services)
+│   ├── providers/            ← Manual providers (ไม่ถูก gen-api overwrite)
+│   │   └── api-config.provider.ts  ← กำหนด rootUrl จาก environment
 │   ├── guards/
 │   │   ├── auth.guard.ts         ← redirect ไป login ถ้าไม่มี token
 │   │   ├── guest.guard.ts        ← redirect ไป dashboard ถ้ามี token แล้ว

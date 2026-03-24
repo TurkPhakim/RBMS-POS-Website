@@ -1,0 +1,196 @@
+<app-card-template [headerLabel]="config.header!">
+  <div class="space-y-4">
+    <!-- Bill Selection -->
+    @if (bills().length > 1) {
+      <div>
+        <label class="block font-semibold mb-2">เลือกบิลที่จะชำระ</label>
+        <div class="flex flex-col gap-2">
+          @for (bill of bills(); track bill.orderBillId) {
+            <div
+              class="p-3 border rounded-lg cursor-pointer transition-colors"
+              [ngClass]="{
+                'border-primary bg-primary-subtle': selectedBill()?.orderBillId === bill.orderBillId,
+                'border-surface-border': selectedBill()?.orderBillId !== bill.orderBillId
+              }"
+              (click)="selectBill(bill)"
+            >
+              <div class="flex items-center justify-between">
+                <span class="font-semibold">{{ bill.billNumber }}</span>
+                <span class="text-lg font-bold">{{ bill.grandTotal | number: '1.2-2' }} บาท</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- No bills -->
+    @if (bills().length === 0) {
+      <div class="text-center py-8 text-surface-sub">
+        ไม่มีบิลที่รอชำระเงิน
+      </div>
+    }
+
+    <!-- Payment Form -->
+    @if (selectedBill()) {
+      @let bill = selectedBill()!;
+
+      <!-- Bill Summary -->
+      <div class="bg-surface rounded-lg p-4">
+        <div class="flex items-center justify-between">
+          <span class="font-semibold">{{ bill.billNumber }}</span>
+          <span class="text-2xl font-bold text-primary">{{ bill.grandTotal | number: '1.2-2' }} บาท</span>
+        </div>
+      </div>
+
+      <form [formGroup]="form" class="space-y-4">
+        <!-- Payment Reference -->
+        <div>
+          <label class="block font-semibold mb-2">เลขอ้างอิง (ไม่บังคับ)</label>
+          <input
+            pInputText
+            formControlName="paymentReference"
+            class="w-full"
+            placeholder="เช่น เลขอ้างอิงจากแอปธนาคาร"
+          />
+        </div>
+
+        <!-- Slip Upload -->
+        <div>
+          <label class="block font-semibold mb-2">อัพโหลดสลิป</label>
+          <div class="border-2 border-dashed border-surface-border rounded-lg p-4 text-center">
+            @if (isUploading()) {
+              <div class="py-4">
+                <i class="pi pi-spin pi-spinner text-2xl text-primary"></i>
+                <p class="text-sm text-surface-sub mt-2">กำลังอัพโหลดและตรวจสอบ...</p>
+              </div>
+            } @else if (slipPreviewUrl()) {
+              <img
+                [src]="slipPreviewUrl()"
+                alt="สลิป"
+                class="max-h-[200px] mx-auto rounded-lg mb-3"
+              />
+              <label
+                class="text-sm text-primary cursor-pointer underline"
+              >
+                เปลี่ยนรูป
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="hidden"
+                  (change)="onSlipSelected($event)"
+                />
+              </label>
+            } @else {
+              <label class="cursor-pointer block py-4">
+                <i class="pi pi-upload text-3xl text-surface-sub mb-2"></i>
+                <p class="text-surface-sub">คลิกเพื่อเลือกรูปสลิป</p>
+                <p class="text-xs text-surface-sub mt-1">รองรับ JPG, PNG, WebP (ไม่เกิน 10 MB)</p>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  class="hidden"
+                  (change)="onSlipSelected($event)"
+                />
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- OCR Result -->
+        @if (slipResult()) {
+          @let result = slipResult()!;
+          <div
+            class="rounded-lg p-4"
+            [ngClass]="{
+              'bg-success/10': result.verificationStatus === 'Matched',
+              'bg-warning/10': result.verificationStatus === 'Mismatched',
+              'bg-surface': result.verificationStatus === 'None'
+            }"
+          >
+            <h4 class="font-semibold mb-2">ผลการตรวจสอบสลิป</h4>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p class="text-surface-sub">ยอดบิล</p>
+                <p class="font-semibold">{{ result.billGrandTotal | number: '1.2-2' }} บาท</p>
+              </div>
+              <div>
+                <p class="text-surface-sub">ยอดจาก OCR</p>
+                @if (result.ocrAmount != null) {
+                  <p class="font-semibold">{{ result.ocrAmount | number: '1.2-2' }} บาท</p>
+                } @else {
+                  <p class="text-surface-sub">ไม่สามารถอ่านได้</p>
+                }
+              </div>
+            </div>
+
+            <!-- Status Badge -->
+            <div class="mt-3">
+              @if (result.verificationStatus === 'Matched') {
+                <span class="inline-flex items-center gap-1 text-sm font-semibold text-success">
+                  <i class="pi pi-check-circle"></i> ยอดตรงกัน
+                </span>
+              } @else if (result.verificationStatus === 'Mismatched') {
+                <span class="inline-flex items-center gap-1 text-sm font-semibold text-warning">
+                  <i class="pi pi-exclamation-triangle"></i> ยอดไม่ตรง — ตรวจสอบด้วยตนเอง
+                </span>
+              } @else {
+                <span class="inline-flex items-center gap-1 text-sm text-surface-sub">
+                  <i class="pi pi-info-circle"></i> ไม่สามารถอ่านยอดจากสลิปได้ — กรุณาตรวจสอบด้วยตนเอง
+                </span>
+              }
+            </div>
+          </div>
+
+          <!-- Manual Amount Override (shown when mismatched or none) -->
+          @if (result.verificationStatus !== 'Matched') {
+            <div>
+              <label class="block font-semibold mb-2">ยอดจริง (กรอกเอง)</label>
+              <p-inputNumber
+                formControlName="manualAmount"
+                [minFractionDigits]="2"
+                [maxFractionDigits]="2"
+                [min]="0"
+                mode="decimal"
+                styleClass="w-full"
+                placeholder="กรอกยอดจริงจากสลิป"
+              ></p-inputNumber>
+            </div>
+          }
+        }
+
+        <!-- Note -->
+        <div>
+          <label class="block font-semibold mb-2">หมายเหตุ</label>
+          <textarea
+            pInputTextarea
+            formControlName="note"
+            rows="2"
+            class="w-full"
+            placeholder="หมายเหตุ (ไม่บังคับ)"
+          ></textarea>
+        </div>
+      </form>
+    }
+  </div>
+
+  <p-footer>
+    <button
+      pButton
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      (click)="onCancel()"
+    ></button>
+    @if (selectedBill()) {
+      <button
+        pButton
+        label="ยืนยันชำระเงิน QR"
+        severity="success"
+        [loading]="isSaving()"
+        [disabled]="!slipResult()"
+        (click)="onConfirm()"
+      ></button>
+    }
+  </p-footer>
+</app-card-template>

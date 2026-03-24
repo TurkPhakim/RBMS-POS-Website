@@ -1,0 +1,322 @@
+<div class="space-y-5">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center">
+      <app-generic-icon name="table-restaurant" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">จัดการโซน / โต๊ะ</h1>
+  </div>
+
+  <!-- Segmented Control -->
+  <div class="flex bg-surface-border rounded-xl gap-4">
+    <button
+      class="flex-1 flex items-center justify-center gap-4 py-3 rounded-lg font-semibold transition-all"
+      [class]="
+        activeTab() === 'zone'
+          ? 'bg-surface-card text-primary'
+          : 'text-surface-sub hover:text-primary'
+      "
+      (click)="onTabChange('zone')"
+    >
+      <app-generic-icon name="tray-plate" svgClass="w-8 h-8"></app-generic-icon>
+      โซน
+    </button>
+    <button
+      class="flex-1 flex items-center justify-center gap-4 py-3 rounded-lg font-semibold transition-all"
+      [class]="
+        activeTab() === 'table'
+          ? 'bg-surface-card text-primary'
+          : 'text-surface-sub hover:text-primary'
+      "
+      (click)="onTabChange('table')"
+    >
+      <app-generic-icon name="tray-plate" svgClass="w-8 h-8"></app-generic-icon>
+      โต๊ะ
+    </button>
+  </div>
+
+  <!-- ═══════ Zone Tab Content ═══════ -->
+  @if (activeTab() === 'zone') {
+    <div class="bg-surface-card rounded-lg">
+      <!-- Filter Section -->
+      <div class="p-4">
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="flex-1 min-w-[200px]">
+            <label class="block font-semibold mb-2">ค้นหา</label>
+            <div class="relative">
+              <p-iconField>
+                <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+                <input
+                  #zoneSearchInput
+                  pInputText
+                  placeholder="ค้นหาชื่อโซน..."
+                  class="w-full pr-8"
+                  (keyup.enter)="onZoneSearch($event)"
+                />
+              </p-iconField>
+              @if (zoneSearchTerm()) {
+                <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                   (click)="clearZoneSearch(zoneSearchInput)"></i>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone Table -->
+      <div class="px-4 pb-4">
+        <p-table
+          [value]="zones()"
+          [stripedRows]="true"
+          [scrollable]="true"
+          (onRowReorder)="onRowReorder()"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first} - {last} of {totalRecords}"
+          styleClass="p-datatable-clean"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              @if (canUpdate) {
+                <th class="w-[40px]">ลำดับ</th>
+              }
+              <th class="w-[80px]">รหัส</th>
+              <th class="w-[60px]">สี</th>
+              <th class="w-[200px]">ชื่อโซน</th>
+              <th class="w-[100px]">จำนวนโต๊ะ</th>
+              <th class="w-[120px]">สถานะ</th>
+              <th class="w-[100px]">ตัวเลือก</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-item let-index="rowIndex">
+            <tr [pReorderableRow]="index">
+              @if (canUpdate) {
+                <td class="!text-center cursor-move">
+                  <i class="pi pi-bars text-surface-placeholder" pReorderableRowHandle></i>
+                </td>
+              }
+
+              <td class="!text-center font-semibold">
+                {{ item.zoneId }}
+              </td>
+
+              <td class="!text-center">
+                <span
+                  class="inline-block w-8 h-8 rounded-full border-2 border-surface-border"
+                  [style.background-color]="item.color"
+                ></span>
+              </td>
+
+              <td class="whitespace-nowrap font-semibold">
+                {{ item.zoneName }}
+              </td>
+
+              <td class="!text-center whitespace-nowrap">
+                <span class="font-semibold">{{ item.tableCount ?? 0 }}</span>
+                โต๊ะ
+              </td>
+
+              <td class="!text-center">
+                @if (item.isActive) {
+                  <span class="font-bold text-primary">เปิดใช้งาน</span>
+                } @else {
+                  <span class="font-bold text-danger">ปิดใช้งาน</span>
+                }
+              </td>
+
+              <td class="text-center">
+                <div class="flex justify-center gap-2">
+                  @if (canUpdate) {
+                    <button
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                      pTooltip="ดู/แก้ไข"
+                      tooltipPosition="top"
+                      (click)="openZoneDialog(item)"
+                    >
+                      <app-generic-icon name="eye" svgClass="w-6 h-6"></app-generic-icon>
+                    </button>
+                  }
+                  @if (canDelete) {
+                    <button
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                      pTooltip="ลบ"
+                      tooltipPosition="top"
+                      (click)="onDeleteZone(item.zoneId, item.zoneName)"
+                    >
+                      <app-generic-icon name="trash" svgClass="w-6 h-6"></app-generic-icon>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td [attr.colspan]="canUpdate ? 7 : 6">
+                <div class="flex justify-center items-center w-full p-[100px]">
+                  <app-empty-view message="ไม่พบข้อมูลโซน" />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+
+  <!-- ═══════ Table Tab Content ═══════ -->
+  @if (activeTab() === 'table') {
+    <div class="bg-surface-card rounded-lg">
+      <!-- Filter Section -->
+      <div class="p-4">
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="flex-1 min-w-[200px]">
+            <label class="block font-semibold mb-2">ค้นหา</label>
+            <div class="relative">
+              <p-iconField>
+                <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+                <input
+                  #tableSearchInput
+                  pInputText
+                  placeholder="ค้นหาชื่อโต๊ะ..."
+                  class="w-full pr-8"
+                  (keyup.enter)="onTableSearch($event)"
+                />
+              </p-iconField>
+              @if (tableSearchTerm()) {
+                <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                   (click)="clearTableSearch(tableSearchInput)"></i>
+              }
+            </div>
+          </div>
+
+          <div class="flex-1 min-w-[160px]">
+            <label class="block font-semibold mb-2">โซน</label>
+            <app-zone-dropdown
+              [ngModel]="selectedZoneId()"
+              (ngModelChange)="onZoneFilterChange($event)"
+            ></app-zone-dropdown>
+          </div>
+
+          <div class="flex-1 min-w-[160px]">
+            <label class="block font-semibold mb-2">สถานะ</label>
+            <app-table-status-dropdown
+              [ngModel]="selectedStatus()"
+              (ngModelChange)="onStatusChange($event)"
+            ></app-table-status-dropdown>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table List -->
+      <div class="px-4 pb-4">
+        <p-table
+          [value]="tables()"
+          [stripedRows]="true"
+          [scrollable]="true"
+          [paginator]="true"
+          [rows]="tableRows()"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first} - {last} of {totalRecords}"
+          [totalRecords]="totalRecords()"
+          [lazy]="true"
+          (onLazyLoad)="onTablePageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+          styleClass="p-datatable-clean"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="w-[80px]">รหัส</th>
+              <th class="w-[140px]">ชื่อโต๊ะ</th>
+              <th class="w-[140px]">โซน</th>
+              <th class="w-[100px]">ความจุ</th>
+              <th class="w-[100px]">ขนาด</th>
+              <th class="w-[120px]">สถานะ</th>
+              <th class="w-[100px]">ตัวเลือก</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td class="!text-center font-semibold">
+                {{ item.tableId }}
+              </td>
+
+              <td class="whitespace-nowrap font-semibold">
+                {{ item.tableName }}
+              </td>
+
+              <td class="whitespace-nowrap">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="inline-block w-4 h-4 rounded-full"
+                    [style.background-color]="item.zoneColor"
+                  ></span>
+                  {{ item.zoneName }}
+                </div>
+              </td>
+
+              <td class="!text-center whitespace-nowrap">
+                {{ item.capacity }} ที่นั่ง
+              </td>
+
+              <td class="!text-center whitespace-nowrap">
+                @switch (item.size) {
+                  @case ('Small') { เล็ก }
+                  @case ('Medium') { กลาง }
+                  @case ('Large') { ใหญ่ }
+                  @default { {{ item.size }} }
+                }
+              </td>
+
+              <td class="!text-center">
+                <span class="font-bold" [class]="getStatusColor(item.status)">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+              </td>
+
+              <td class="text-center">
+                <div class="flex justify-center gap-2">
+                  @if (canUpdate) {
+                    <button
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                      pTooltip="ดู/แก้ไข"
+                      tooltipPosition="top"
+                      (click)="onEditTable(item.tableId)"
+                    >
+                      <app-generic-icon name="eye" svgClass="w-6 h-6"></app-generic-icon>
+                    </button>
+                  }
+                  @if (canDelete) {
+                    <button
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                      pTooltip="ลบ"
+                      tooltipPosition="top"
+                      (click)="onDeleteTable(item.tableId, item.tableName)"
+                    >
+                      <app-generic-icon name="trash" svgClass="w-6 h-6"></app-generic-icon>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="8">
+                <div class="flex justify-center items-center w-full p-[100px]">
+                  <app-empty-view message="ไม่พบข้อมูลโต๊ะ" />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+</div>

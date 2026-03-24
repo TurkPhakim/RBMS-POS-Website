@@ -25,7 +25,7 @@ import { Footer } from 'primeng/api';
         }
       </div>
     }
-    <div class="p-6" [ngClass]="contentClass">
+    <div class="p-6 card-template-body" [ngClass]="contentClass">
       <ng-content></ng-content>
     </div>
     @if (hasFooter) {
@@ -40,7 +40,7 @@ export class CardTemplateComponent implements AfterContentInit {
   @ContentChild(Footer) footerContent?: Footer;
 
   @Input() headerLabel = '';
-  @Input() headerLabelClass = 'text-section-title text-surface-dark';
+  @Input() headerLabelClass = 'text-xl font-semibold text-primary-dark';
   @Input() headerClass = '';
   @Input() contentClass = '';
 
