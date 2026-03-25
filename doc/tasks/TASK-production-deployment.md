@@ -51,14 +51,112 @@
 | 2.13 | สร้าง `.dockerignore` (Backend + Frontend x2) | ✅ |
 | 2.14 | สร้าง `nginx/logrotate.conf` | ✅ |
 
-### Phase 3 — ทดสอบ + ปรับแก้ ⬜
+### Phase 3 — ตั้งค่า Server + Deploy ⬜
+
+| # | Sub-task | สถานะ | คำสั่ง |
+|---|----------|-------|--------|
+| 3.1 | ติดตั้ง Docker | ✅ | `Docker v29.3.0, Compose v5.1.1` |
+| 3.2 | ติดตั้ง Git | ✅ | `git v2.43.0` (มีอยู่แล้ว) |
+| 3.3 | Clone โปรเจค | ✅ | `~/www/RBMS-POS/` |
+| 3.4 | สร้าง `.env` | ⬜ | `cp .env.example .env && nano .env` |
+| 3.5 | สร้าง SSL Certificate (Self-signed) | ⬜ | ดูคำสั่งด้านล่าง |
+| 3.6 | Build + Start ทั้งระบบ | ⬜ | `docker compose up -d --build` |
+| 3.7 | ลบ build cache (ประหยัด disk) | ⬜ | `docker builder prune -f` |
+| 3.8 | ตรวจสอบว่าทุก container รัน | ⬜ | `docker compose ps` |
+| 3.9 | ทดสอบเปิดเว็บจากเบราว์เซอร์ | ⬜ | `https://172.16.8.240.nip.io` |
+| 3.10 | ทดสอบ QR Code scan จากมือถือ | ⬜ | `https://172.16.8.240.nip.io/mobile` |
+
+### Phase 4 — ปรับแก้โค้ด (ทำทีหลังได้) ⬜
 
 | # | Sub-task | สถานะ |
 |---|----------|-------|
-| 3.1 | แก้ `Program.cs` — ปิด Swagger ใน Production | ⬜ |
-| 3.2 | ทดสอบ Local Docker build | ⬜ |
-| 3.3 | ทดสอบบน Server จริง | ⬜ |
-| 3.4 | ทดสอบ QR Code scan จากมือถือ | ⬜ |
+| 4.1 | แก้ `Program.cs` — ปิด Swagger ใน Production | ⬜ |
+| 4.2 | ตั้ง Firewall (UFW) | ⬜ |
+| 4.3 | ตั้ง Backup cron | ⬜ |
+
+---
+
+## Checklist — คำสั่งทีละขั้น (Copy วางใน Server)
+
+> ทำตามลำดับ ทำเสร็จแต่ละขั้นให้เช็ค ✅
+
+### ขั้นที่ 1: สร้าง `.env`
+
+```bash
+cd ~/www/RBMS-POS
+cp .env.example .env
+nano .env
+```
+
+**แก้ค่าเหล่านี้ใน `.env`:**
+
+```bash
+DOMAIN=172.16.8.240.nip.io
+CERTBOT_EMAIL=turkphakim@email.com
+MSSQL_SA_PASSWORD=RbmsPos@2026!
+SA_PASSWORD=RbmsPos@2026!
+JWT_SECRET=ใช้คำสั่ง: openssl rand -base64 48
+MINIO_ROOT_USER=rbmsadmin
+MINIO_ROOT_PASSWORD=RbmsMinIO@2026!
+MSSQL_MEMORY_LIMIT_MB=1024
+```
+
+> สร้าง JWT_SECRET ด้วย: `openssl rand -base64 48` แล้ว copy ไปวาง
+
+### ขั้นที่ 2: สร้าง SSL Certificate (Self-signed)
+
+เพราะ Server เป็น Private IP → Let's Encrypt ใช้ไม่ได้ → ใช้ Self-signed แทน
+
+```bash
+cd ~/www/RBMS-POS
+source .env
+docker compose run --rm --entrypoint "" certbot sh -c "\
+  mkdir -p /etc/letsencrypt/live/$DOMAIN && \
+  openssl req -x509 -nodes -newkey rsa:2048 -days 3650 \
+    -keyout /etc/letsencrypt/live/$DOMAIN/privkey.pem \
+    -out /etc/letsencrypt/live/$DOMAIN/fullchain.pem \
+    -subj '/CN=$DOMAIN'"
+```
+
+> Self-signed cert จะแสดง warning ในเบราว์เซอร์ — กด "Advanced" → "Proceed" ได้เลย
+
+### ขั้นที่ 3: Build + Start ทั้งระบบ
+
+```bash
+cd ~/www/RBMS-POS
+docker compose up -d --build
+```
+
+> ครั้งแรกใช้เวลา 5-15 นาที (download images + build)
+
+### ขั้นที่ 4: ลบ build cache (ประหยัด disk)
+
+```bash
+docker builder prune -f
+```
+
+### ขั้นที่ 5: ตรวจสอบ
+
+```bash
+# ดูสถานะทุก container (ต้องขึ้น Up ทุกตัว ยกเว้น frontend-* ที่ Exited 0)
+docker compose ps
+
+# ดู logs ถ้ามีปัญหา
+docker compose logs -f --tail=30
+
+# ทดสอบ API
+curl -k https://localhost/api/health
+```
+
+### ขั้นที่ 6: เปิดเบราว์เซอร์ทดสอบ (ต้องต่อ WiFi มอ.)
+
+| หน้า | URL |
+|------|-----|
+| Client (Admin/พนักงาน) | `https://172.16.8.240.nip.io` |
+| Mobile-Web (ลูกค้าสแกน QR) | `https://172.16.8.240.nip.io/mobile` |
+| API Health | `https://172.16.8.240.nip.io/api/health` |
+
+> Login: `admin` / `P@ssw0rd`
 
 ---
 

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -255,9 +256,13 @@ var app = builder.Build();
 // Middleware pipeline
 app.UseResponseCompression();
 
-// HSTS (Production only — dev ใช้ self-signed cert)
+// Forwarded Headers (Nginx reverse proxy → ให้ Backend รู้ IP/Protocol จริงของ client)
 if (!app.Environment.IsDevelopment())
 {
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
     app.UseHsts();
 }
 
@@ -279,7 +284,9 @@ app.UseCors("dev");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Swagger - Enable for all environments
+// Swagger (Development only — Production ปิดเพื่อความปลอดภัย)
+if (app.Environment.IsDevelopment())
+{
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
@@ -333,6 +340,7 @@ app.UseSwaggerUI(options =>
         </style>
         """;
 });
+}
 
 // Seed test data (Development only)
 if (app.Environment.IsDevelopment())
