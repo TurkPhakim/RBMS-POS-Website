@@ -6,6 +6,8 @@ public class TbTableLink : BaseEntity
 
     public string GroupCode { get; set; } = string.Empty;
 
+    public bool IsPrimary { get; set; }
+
     public int TableId { get; set; }
     public virtual TbTable Table { get; set; } = null!;
 }

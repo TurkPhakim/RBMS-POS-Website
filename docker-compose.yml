@@ -1,41 +1,46 @@
-# RBMS-POS — Development Dependencies
-# ใช้สำหรับ SQL Server + MinIO เท่านั้น (Backend/Frontend รัน local)
+# ═══════════════════════════════════════════════════════════════
+# RBMS-POS — Docker Compose (Production Full Stack)
+# ═══════════════════════════════════════════════════════════════
 #
-# เริ่มใช้งาน:   docker compose up -d
-# หยุด:          docker compose down
-# ลบ data:       docker compose down -v
+# Production (Server):  docker compose up -d --build
+# Local Docker test:    docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+# Dev (SQL+MinIO only): docker compose -f docker-compose.dev.yml up -d
+#
+# หยุด:        docker compose down
+# ดู logs:     docker compose logs -f --tail=50
+# อัพเดต:     git pull && docker compose up -d --build
 
 services:
-  # ─── SQL Server 2022 ───────────────────────────────────────
+
+  # ─── SQL Server 2022 ─────────────────────────────────────────
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: rbms-pos-sqlserver
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
-    ports:
-      - "1433:1433"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
+      MSSQL_MEMORY_LIMIT_MB: ${MSSQL_MEMORY_LIMIT_MB:-1024}
     volumes:
       - sqlserver-data:/var/opt/mssql
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -C -Q "SELECT 1" || exit 1
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 60s
+    networks:
+      - rbms-network
     restart: unless-stopped
+    # Production: ไม่เปิด port ออกนอก (เข้าผ่าน Docker network เท่านั้น)
 
-  # ─── MinIO (S3-compatible storage) ─────────────────────────
+  # ─── MinIO (S3-compatible storage) ───────────────────────────
   minio:
     image: minio/minio:latest
     container_name: rbms-pos-minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-    ports:
-      - "9000:9000"
-      - "9001:9001"
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio-data:/data
     healthcheck:
@@ -44,9 +49,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - rbms-network
     restart: unless-stopped
 
-  # ─── MinIO Init (สร้าง bucket อัตโนมัติ) ───────────────────
+  # ─── MinIO Init (สร้าง bucket อัตโนมัติ) ─────────────────────
   minio-init:
     image: minio/mc:latest
     container_name: rbms-pos-minio-init
@@ -61,12 +68,132 @@ services:
       echo 'Bucket $${MINIO_BUCKET_NAME} is ready';
       "
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-rbms-pos-files}
+    networks:
+      - rbms-network
 
+  # ─── Backend (.NET 9 API + SignalR) ──────────────────────────
+  backend:
+    build:
+      context: ./Backend-POS
+      dockerfile: Dockerfile
+    container_name: rbms-pos-backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: "http://+:5000"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=RBMS_POS;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true"
+      Jwt__Secret: "${JWT_SECRET}"
+      Jwt__Issuer: "RBMS.POS.API"
+      Jwt__Audience: "RBMS.POS.Client"
+      Jwt__ExpirationMinutes: "480"
+      S3__ServiceUrl: "http://minio:9000"
+      S3__AccessKey: "${MINIO_ROOT_USER}"
+      S3__SecretKey: "${MINIO_ROOT_PASSWORD}"
+      S3__BucketName: "${MINIO_BUCKET_NAME:-rbms-pos-files}"
+      S3__ForcePathStyle: "true"
+      Cors__AllowedOrigins__0: "https://${DOMAIN}"
+      Cors__AllowedOrigins__1: "http://${DOMAIN}"
+      Smtp__Host: "${SMTP_HOST:-smtp.gmail.com}"
+      Smtp__Port: "${SMTP_PORT:-587}"
+      Smtp__UseSsl: "true"
+      Smtp__Username: "${SMTP_USERNAME:-}"
+      Smtp__Password: "${SMTP_PASSWORD:-}"
+      Smtp__FromEmail: "${SMTP_USERNAME:-noreply@rbms-pos.com}"
+      Smtp__FromName: "RBMS POS System"
+      ReCaptcha__Enabled: "false"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - rbms-network
+    restart: unless-stopped
+
+  # ─── Frontend Client (Admin/Staff) — Init Container ─────────
+  frontend-client:
+    build:
+      context: ./Frontend-POS/RBMS-POS-Client
+      dockerfile: Dockerfile
+    container_name: rbms-pos-frontend-client
+    volumes:
+      - client-dist:/output
+    networks:
+      - rbms-network
+
+  # ─── Frontend Mobile-Web (Customer QR) — Init Container ─────
+  frontend-mobile:
+    build:
+      context: ./Frontend-POS/RBMS-POS-Mobile-Web
+      dockerfile: Dockerfile
+    container_name: rbms-pos-frontend-mobile
+    volumes:
+      - mobile-dist:/output
+    networks:
+      - rbms-network
+
+  # ─── Nginx (Reverse Proxy + SSL + Static Files) ─────────────
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: rbms-pos-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - client-dist:/usr/share/nginx/html/client:ro
+      - mobile-dist:/usr/share/nginx/html/mobile:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      frontend-client:
+        condition: service_completed_successfully
+      frontend-mobile:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+    networks:
+      - rbms-network
+    restart: unless-stopped
+
+  # ─── Certbot (Auto-renew SSL ทุก 12 ชม.) ────────────────────
+  certbot:
+    image: certbot/certbot:latest
+    container_name: rbms-pos-certbot
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 43200; done'"
+    networks:
+      - rbms-network
+    restart: unless-stopped
+
+# ─── Volumes (ข้อมูลคงอยู่แม้ rebuild container) ─────────────
 volumes:
   sqlserver-data:
     name: rbms-pos-sqlserver-data
   minio-data:
     name: rbms-pos-minio-data
+  client-dist:
+    name: rbms-pos-client-dist
+  mobile-dist:
+    name: rbms-pos-mobile-dist
+  certbot-conf:
+    name: rbms-pos-certbot-conf
+  certbot-www:
+    name: rbms-pos-certbot-www
+  nginx-logs:
+    name: rbms-pos-nginx-logs
+
+# ─── Network ─────────────────────────────────────────────────
+networks:
+  rbms-network:
+    name: rbms-pos-network
+    driver: bridge

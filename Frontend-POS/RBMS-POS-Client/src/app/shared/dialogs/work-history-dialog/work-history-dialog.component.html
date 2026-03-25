@@ -55,6 +55,7 @@
         formControlName="startDate"
         dateFormat="dd/mm/yy"
         placeholder="วันที่เริ่มทำงาน"
+        [showClear]="true"
         appendTo="body"
         styleClass="w-full"
       />
@@ -73,6 +74,7 @@
         formControlName="endDate"
         dateFormat="dd/mm/yy"
         placeholder="วันที่สิ้นสุด"
+        [showClear]="true"
         [minDate]="minEndDate()"
         appendTo="body"
         styleClass="w-full"

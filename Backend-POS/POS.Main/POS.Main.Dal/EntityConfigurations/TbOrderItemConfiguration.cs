@@ -85,6 +85,18 @@ public class TbOrderItemConfiguration : IEntityTypeConfiguration<TbOrderItem>
             .OnDelete(DeleteBehavior.Restrict)
             .IsRequired(false);
 
+        builder.HasOne(oi => oi.OrderBill)
+            .WithMany(ob => ob.OrderItems)
+            .HasForeignKey(oi => oi.OrderBillId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        builder.HasOne(oi => oi.SourceTable)
+            .WithMany()
+            .HasForeignKey(oi => oi.SourceTableId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+
         // Indexes
         builder.HasIndex(oi => oi.OrderId)
             .HasDatabaseName("IX_OrderItems_OrderId");
@@ -97,6 +109,9 @@ public class TbOrderItemConfiguration : IEntityTypeConfiguration<TbOrderItem>
 
         builder.HasIndex(oi => oi.CategoryType)
             .HasDatabaseName("IX_OrderItems_CategoryType");
+
+        builder.HasIndex(oi => oi.SourceTableId)
+            .HasDatabaseName("IX_OrderItems_SourceTableId");
 
         builder.HasIndex(oi => oi.DeleteFlag)
             .HasDatabaseName("IX_OrderItems_DeleteFlag");

@@ -25,7 +25,6 @@ export class OrderStatusDropdownComponent extends DropdownBaseComponent {
       { value: 'Open', label: 'เปิด' },
       { value: 'Billing', label: 'รอชำระ' },
       { value: 'Completed', label: 'เสร็จสิ้น' },
-      { value: 'Cancelled', label: 'ยกเลิก' },
     ];
   }
 }

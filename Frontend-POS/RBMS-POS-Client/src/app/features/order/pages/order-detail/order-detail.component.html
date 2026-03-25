@@ -108,17 +108,11 @@
             <button
               pButton
               label="ขอบิล"
-              class="p-button-warning min-w-[120px] text-lg"
+              class="!bg-billing !border-billing hover:!bg-billing-dark hover:!border-billing-dark min-w-[120px] text-lg"
               (click)="onRequestBill()"
             ></button>
           }
           @if (o.status === 'Billing' && canUpdate) {
-            <button
-              pButton
-              label="แยกบิล"
-              class="p-button-outlined min-w-[120px] text-lg"
-              (click)="onSplitBill()"
-            ></button>
             <button
               pButton
               label="ชำระเงิน"

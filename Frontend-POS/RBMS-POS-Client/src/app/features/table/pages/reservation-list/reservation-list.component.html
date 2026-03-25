@@ -1,10 +1,16 @@
 <div class="space-y-5">
   <!-- Page Header -->
   <div class="flex items-center gap-3">
-    <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center">
-      <app-generic-icon name="reservation" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="reservation"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
     </div>
-    <h1 class="text-page-title">จัดการการจอง</h1>
+    <h1 class="text-page-title">จัดการจองโต๊ะ</h1>
   </div>
 
   <!-- Calendar Card -->
@@ -22,7 +28,9 @@
         >
           <i class="pi pi-chevron-left"></i>
         </button>
-        <h2 class="text-3xl font-extrabold min-w-[300px] text-center tracking-tight">
+        <h2
+          class="text-3xl font-extrabold min-w-[300px] text-center tracking-tight"
+        >
           {{ formatMonthYear() }}
         </h2>
         <button
@@ -67,7 +75,11 @@
             [class.bg-primary]="isSelectedDate(day)"
             [class.text-white]="isSelectedDate(day)"
             [class.opacity-40]="!day.isCurrentMonth"
-            [style.background-color]="!isSelectedDate(day) && day.isCurrentMonth ? getDayCellBg(day) : null"
+            [style.background-color]="
+              !isSelectedDate(day) && day.isCurrentMonth
+                ? getDayCellBg(day)
+                : null
+            "
             (click)="onSelectDate(day)"
           >
             <!-- Day Number -->
@@ -81,10 +93,14 @@
 
             <!-- Today Label -->
             @if (day.isToday && !isSelectedDate(day)) {
-              <span class="text-[10px] font-bold text-primary mt-0.5">วันนี้</span>
+              <span class="text-[10px] font-bold text-primary mt-0.5"
+                >วันนี้</span
+              >
             }
             @if (day.isToday && isSelectedDate(day)) {
-              <span class="text-[10px] font-bold text-white mt-0.5">วันนี้</span>
+              <span class="text-[10px] font-bold text-white mt-0.5"
+                >วันนี้</span
+              >
             }
 
             <!-- Status Dots -->
@@ -136,7 +152,11 @@
     <!-- Timeline Reservation Cards -->
     @if (selectedDayReservations().length > 0) {
       <div class="relative">
-        @for (item of selectedDayReservations(); track item.reservationId; let last = $last) {
+        @for (
+          item of selectedDayReservations();
+          track item.reservationId;
+          let last = $last
+        ) {
           <div class="flex gap-4" [class.opacity-50]="isPastReservation(item)">
             <!-- Timeline Left: Time + Line -->
             <div class="flex flex-col items-center w-[70px] shrink-0">
@@ -153,7 +173,7 @@
               class="flex-1 rounded-lg border-l-4 p-4 mb-3"
               [ngClass]="[
                 getStatusBorderColor(item.status),
-                isPastReservation(item) ? 'bg-surface' : 'bg-surface-card'
+                isPastReservation(item) ? 'bg-surface' : 'bg-surface-card',
               ]"
             >
               <div class="flex items-start justify-between gap-3">
@@ -163,15 +183,22 @@
                   <div class="flex items-center gap-2.5 mb-2">
                     <span
                       class="px-2.5 py-0.5 rounded-full text-xs font-bold"
-                      [ngClass]="[getStatusColor(item.status), getStatusBgColor(item.status)]"
+                      [ngClass]="[
+                        getStatusColor(item.status),
+                        getStatusBgColor(item.status),
+                      ]"
                     >
                       {{ getStatusLabel(item.status) }}
                     </span>
-                    <span class="font-bold text-lg truncate">{{ item.customerName }}</span>
+                    <span class="font-bold text-lg truncate">{{
+                      item.customerName
+                    }}</span>
                   </div>
 
                   <!-- Details Row -->
-                  <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
+                  <div
+                    class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm"
+                  >
                     <span class="flex items-center gap-1.5">
                       <i class="pi pi-phone text-surface-sub"></i>
                       {{ item.customerPhone }}
@@ -181,8 +208,12 @@
                       {{ item.guestCount }} คน
                     </span>
                     <span class="flex items-center gap-1.5">
-                      <app-generic-icon name="tray-plate" svgClass="w-4 h-4" class="text-surface-sub"></app-generic-icon>
-                      {{ item.tableName ?? 'ยังไม่ระบุโต๊ะ' }}
+                      <app-generic-icon
+                        name="tray-plate"
+                        svgClass="w-4 h-4"
+                        class="text-surface-sub"
+                      ></app-generic-icon>
+                      {{ item.tableName ?? "ยังไม่ระบุโต๊ะ" }}
                     </span>
                   </div>
 
@@ -196,7 +227,7 @@
 
                 <!-- Actions -->
                 <div class="flex items-center gap-1.5 shrink-0">
-                  @if (canUpdate && item.status === 'Pending') {
+                  @if (canUpdate && item.status === "Pending") {
                     <button
                       class="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white"
                       pTooltip="ยืนยัน"
@@ -206,7 +237,7 @@
                       <i class="pi pi-check text-sm"></i>
                     </button>
                   }
-                  @if (canUpdate && item.status === 'Confirmed') {
+                  @if (canUpdate && item.status === "Confirmed") {
                     <button
                       class="w-9 h-9 flex items-center justify-center rounded-full bg-success text-white"
                       pTooltip="Check-in"
@@ -216,17 +247,26 @@
                       <i class="pi pi-sign-in text-sm"></i>
                     </button>
                   }
-                  @if (canUpdate && (item.status === 'Pending' || item.status === 'Confirmed')) {
+                  @if (
+                    canUpdate &&
+                    (item.status === "Pending" || item.status === "Confirmed")
+                  ) {
                     <button
                       class="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white"
                       pTooltip="แก้ไข"
                       tooltipPosition="top"
                       (click)="onEdit(item)"
                     >
-                      <app-generic-icon name="eye" svgClass="w-5 h-5"></app-generic-icon>
+                      <app-generic-icon
+                        name="eye"
+                        svgClass="w-5 h-5"
+                      ></app-generic-icon>
                     </button>
                   }
-                  @if (canUpdate && (item.status === 'Pending' || item.status === 'Confirmed')) {
+                  @if (
+                    canUpdate &&
+                    (item.status === "Pending" || item.status === "Confirmed")
+                  ) {
                     <button
                       class="w-9 h-9 flex items-center justify-center rounded-full bg-danger text-white"
                       pTooltip="ยกเลิก"
@@ -236,7 +276,7 @@
                       <i class="pi pi-times text-sm"></i>
                     </button>
                   }
-                  @if (canUpdate && item.status === 'Confirmed') {
+                  @if (canUpdate && item.status === "Confirmed") {
                     <button
                       class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-sub text-white"
                       pTooltip="ไม่มา"

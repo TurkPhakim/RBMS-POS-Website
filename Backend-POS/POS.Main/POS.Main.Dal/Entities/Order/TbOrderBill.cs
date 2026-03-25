@@ -19,6 +19,9 @@ public class TbOrderBill : BaseEntity
 
     public decimal NetAmount { get; set; }
 
+    public int? ServiceChargeId { get; set; }
+    public virtual TbServiceCharge? ServiceCharge { get; set; }
+
     public decimal ServiceChargeRate { get; set; }
 
     public decimal ServiceChargeAmount { get; set; }
@@ -29,7 +32,13 @@ public class TbOrderBill : BaseEntity
 
     public decimal GrandTotal { get; set; }
 
+    public int SplitCount { get; set; }
+
+    public int SplitIndex { get; set; }
+
     public EBillStatus Status { get; set; } = EBillStatus.Pending;
 
     public DateTime? PaidAt { get; set; }
+
+    public virtual ICollection<TbOrderItem> OrderItems { get; set; } = new List<TbOrderItem>();
 }

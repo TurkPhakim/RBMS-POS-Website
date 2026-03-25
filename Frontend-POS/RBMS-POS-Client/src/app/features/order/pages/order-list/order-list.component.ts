@@ -94,8 +94,6 @@ export class OrderListComponent implements OnInit {
         return 'รอชำระ';
       case 'Completed':
         return 'เสร็จสิ้น';
-      case 'Cancelled':
-        return 'ยกเลิก';
       default:
         return status ?? '-';
     }
@@ -106,11 +104,9 @@ export class OrderListComponent implements OnInit {
       case 'Open':
         return 'text-primary font-bold';
       case 'Billing':
-        return 'text-warning font-bold';
+        return 'text-billing font-bold';
       case 'Completed':
         return 'text-success font-bold';
-      case 'Cancelled':
-        return 'text-danger font-bold';
       default:
         return '';
     }

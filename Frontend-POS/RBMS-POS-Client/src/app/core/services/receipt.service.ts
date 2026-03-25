@@ -44,6 +44,17 @@ export class ReceiptService {
     );
   }
 
+  downloadConsolidatedReceipt(orderId: number): Observable<void> {
+    return this.ensureLogo().pipe(
+      switchMap(() => this.paymentsService.paymentsGetConsolidatedReceiptGet({ orderId })),
+      map((res) => {
+        if (res.result) {
+          this.generatePdf(res.result);
+        }
+      }),
+    );
+  }
+
   private ensureLogo(): Observable<void> {
     if (!this.shopBranding.hasCustomLogo()) {
       this.logoBase64 = null;
@@ -149,25 +160,168 @@ export class ReceiptService {
     content.push(this.thickLine(W));
 
     // ═══════════════ BILL INFO ═══════════════
-    const paymentMethodText =
-      d.paymentMethod === 'Cash' ? 'เงินสด' :
-      d.paymentMethod === 'QrCode' ? 'QR Code' :
-      (d.paymentMethod ?? '-');
+    if (d.isConsolidated) {
+      content.push(this.infoRow('ใบเสร็จรวม', d.orderNumber ?? '-'));
+    } else {
+      const paymentMethodText =
+        d.paymentMethod === 'Cash' ? 'เงินสด' :
+        d.paymentMethod === 'QrCode' ? 'QR Code' :
+        (d.paymentMethod ?? '-');
 
-    content.push(this.infoRow('บิล', d.billNumber ?? '-', 'ออเดอร์', d.orderNumber ?? '-'));
-    content.push(this.infoRow('โต๊ะ', d.tableName ?? '-', 'ชำระ', paymentMethodText));
+      content.push(this.infoRow('บิล', d.billNumber ?? '-', 'ออเดอร์', d.orderNumber ?? '-'));
+      content.push(this.infoRow('โต๊ะ', d.tableName ?? '-', 'ชำระ', paymentMethodText));
 
-    if (d.paidAt) {
-      content.push(this.infoRow('วันที่', this.formatDate(d.paidAt)));
+      if (d.paidAt) {
+        content.push(this.infoRow('วันที่', this.formatDate(d.paidAt)));
+      }
+
+      if (d.cashierName) {
+        content.push(this.infoRow('แคชเชียร์', d.cashierName));
+      }
     }
 
-    if (d.cashierName) {
-      content.push(this.infoRow('แคชเชียร์', d.cashierName));
-    }
-
-    // ═══════════════ ITEMS ═══════════════
+    // ═══════════════ ITEMS / SPLIT INFO ═══════════════
     content.push(this.thinLine(W));
 
+    if (d.billType === 'ByAmount' && d.splitCount && d.splitCount > 0) {
+      // หารเท่า — ไม่แสดงตารางรายการ แสดงข้อความแทน
+      content.push({
+        text: `หารเท่า ${d.splitCount} ส่วน`,
+        fontSize: 12,
+        bold: true,
+        alignment: 'center',
+        margin: [0, 8, 0, 2],
+      });
+      content.push({
+        text: `ส่วนที่ ${d.splitIndex} จาก ${d.splitCount}`,
+        fontSize: 10,
+        alignment: 'center',
+        color: '#555',
+        margin: [0, 0, 0, 8],
+      });
+    } else {
+      // Full / ByItem / Consolidated — แสดงตารางรายการ
+      this.pushItemsTable(content, d);
+    }
+
+    // ═══════════════ SUMMARY ═══════════════
+    content.push(this.thinLine(W));
+
+    content.push(this.summaryRow('ยอดรวมอาหาร', this.fmt(d.subTotal)));
+
+    if (d.totalDiscountAmount && d.totalDiscountAmount > 0) {
+      content.push(this.summaryRow('ส่วนลด', '-' + this.fmt(d.totalDiscountAmount)));
+    }
+
+    if (d.serviceChargeAmount && d.serviceChargeAmount > 0) {
+      content.push(this.summaryRow(
+        `ค่าบริการ (${this.fmt(d.serviceChargeRate)}%)`,
+        this.fmt(d.serviceChargeAmount),
+      ));
+    }
+
+    if (d.vatAmount && d.vatAmount > 0) {
+      content.push(this.summaryRow(
+        `ภาษีมูลค่าเพิ่ม (${this.fmt(d.vatRate)}%)`,
+        this.fmt(d.vatAmount),
+      ));
+    }
+
+    // ═══════════════ GRAND TOTAL ═══════════════
+    content.push(this.thickLine(W));
+
+    content.push({
+      columns: [
+        { text: 'ยอดชำระสุทธิ', fontSize: 14, bold: true, width: '*' },
+        { text: this.fmt(d.grandTotal), fontSize: 14, bold: true, alignment: 'right', width: 'auto' },
+      ],
+      margin: [0, 4, 0, 4],
+    });
+
+    content.push(this.thickLine(W));
+
+    // ═══════════════ PAYMENT INFO ═══════════════
+    if (d.isConsolidated && d.payments && d.payments.length > 0) {
+      // Consolidated — แสดงรายละเอียดการชำระแต่ละบิล
+      content.push({
+        text: 'รายละเอียดการชำระเงิน',
+        fontSize: 9,
+        bold: true,
+        margin: [0, 2, 0, 4],
+      });
+      d.payments.forEach((p) => {
+        const method = p.paymentMethod === 'Cash' ? 'เงินสด' :
+          p.paymentMethod === 'QrCode' ? 'QR Code' : (p.paymentMethod ?? '-');
+        content.push({
+          columns: [
+            { text: `${p.billNumber}  ${method}`, fontSize: 8, width: '*' },
+            { text: this.fmt(p.amountPaid), fontSize: 8, alignment: 'right', width: 'auto' },
+          ],
+          margin: [0, 1, 0, 1],
+        });
+      });
+    } else if (!d.isConsolidated) {
+      content.push(this.summaryRow('รับเงิน', this.fmt(d.amountReceived)));
+
+      if (d.changeAmount && d.changeAmount > 0) {
+        content.push({
+          columns: [
+            { text: 'เงินทอน', fontSize: 10, bold: true, width: '*' },
+            { text: this.fmt(d.changeAmount), fontSize: 10, bold: true, alignment: 'right', width: 'auto' },
+          ],
+          margin: [0, 1, 0, 1],
+        });
+      }
+    }
+
+    // ═══════════════ FOOTER ═══════════════
+    content.push(this.thinLine(W));
+
+    // Custom footer text
+    if (d.receiptFooterText) {
+      content.push({
+        text: d.receiptFooterText,
+        fontSize: 7,
+        alignment: 'center',
+        color: '#666',
+        margin: [0, 3, 0, 0],
+      });
+    }
+
+    // Shop address + phone (footer)
+    const footerContact: string[] = [];
+    if (d.address) footerContact.push(d.address);
+    if (d.phoneNumber) footerContact.push(`โทร ${d.phoneNumber}`);
+    if (footerContact.length > 0) {
+      content.push({
+        text: footerContact.join('\n'),
+        fontSize: 7,
+        alignment: 'center',
+        color: '#666',
+        lineHeight: 1.3,
+        margin: [0, 3, 0, 0],
+      });
+    }
+
+    content.push({
+      text: 'ขอบคุณที่ใช้บริการ',
+      fontSize: 11,
+      bold: true,
+      alignment: 'center',
+      margin: [0, 6, 0, 4],
+    });
+
+    content.push(this.thickLine(W));
+
+    return {
+      pageSize: { width: 226.77, height: 'auto' },
+      pageMargins: [10, 10, 10, 10],
+      content,
+      defaultStyle: { font: 'Sarabun' },
+    };
+  }
+
+  private pushItemsTable(content: any[], d: ReceiptDataModel): void {
     const items = d.items ?? [];
     const itemRows: any[][] = [];
 
@@ -230,86 +384,6 @@ export class ReceiptService {
       },
       margin: [0, 2, 0, 2],
     });
-
-    // ═══════════════ SUMMARY ═══════════════
-    content.push(this.thinLine(W));
-
-    content.push(this.summaryRow('ยอดรวมอาหาร', this.fmt(d.subTotal)));
-
-    if (d.totalDiscountAmount && d.totalDiscountAmount > 0) {
-      content.push(this.summaryRow('ส่วนลด', '-' + this.fmt(d.totalDiscountAmount)));
-    }
-
-    if (d.serviceChargeAmount && d.serviceChargeAmount > 0) {
-      content.push(this.summaryRow(
-        `ค่าบริการ (${this.fmt(d.serviceChargeRate)}%)`,
-        this.fmt(d.serviceChargeAmount),
-      ));
-    }
-
-    if (d.vatAmount && d.vatAmount > 0) {
-      content.push(this.summaryRow(
-        `ภาษีมูลค่าเพิ่ม (${this.fmt(d.vatRate)}%)`,
-        this.fmt(d.vatAmount),
-      ));
-    }
-
-    // ═══════════════ GRAND TOTAL ═══════════════
-    content.push(this.thickLine(W));
-
-    content.push({
-      columns: [
-        { text: 'ยอดชำระสุทธิ', fontSize: 14, bold: true, width: '*' },
-        { text: this.fmt(d.grandTotal), fontSize: 14, bold: true, alignment: 'right', width: 'auto' },
-      ],
-      margin: [0, 4, 0, 4],
-    });
-
-    content.push(this.thickLine(W));
-
-    // ═══════════════ PAYMENT INFO ═══════════════
-    content.push(this.summaryRow('รับเงิน', this.fmt(d.amountReceived)));
-
-    if (d.changeAmount && d.changeAmount > 0) {
-      content.push({
-        columns: [
-          { text: 'เงินทอน', fontSize: 10, bold: true, width: '*' },
-          { text: this.fmt(d.changeAmount), fontSize: 10, bold: true, alignment: 'right', width: 'auto' },
-        ],
-        margin: [0, 1, 0, 1],
-      });
-    }
-
-    // ═══════════════ FOOTER ═══════════════
-    content.push(this.thinLine(W));
-
-    // Custom footer text
-    if (d.receiptFooterText) {
-      content.push({
-        text: d.receiptFooterText,
-        fontSize: 7,
-        alignment: 'center',
-        color: '#666',
-        margin: [0, 3, 0, 0],
-      });
-    }
-
-    content.push({
-      text: 'ขอบคุณที่ใช้บริการ',
-      fontSize: 11,
-      bold: true,
-      alignment: 'center',
-      margin: [0, 6, 0, 4],
-    });
-
-    content.push(this.thickLine(W));
-
-    return {
-      pageSize: { width: 226.77, height: 'auto' },
-      pageMargins: [10, 10, 10, 10],
-      content,
-      defaultStyle: { font: 'Sarabun' },
-    };
   }
 
   // ── Layout helpers ──

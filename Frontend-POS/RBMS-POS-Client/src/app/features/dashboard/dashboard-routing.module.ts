@@ -1,12 +1,19 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { DashboardOverviewComponent } from './pages/dashboard-overview/dashboard-overview.component';
+import { SalesReportComponent } from './pages/sales-report/sales-report.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: DashboardComponent,
+    component: DashboardOverviewComponent,
+    data: { breadcrumb: 'ภาพรวม' },
+  },
+  {
+    path: 'sales',
+    component: SalesReportComponent,
+    data: { breadcrumb: 'รายงานยอดขาย' },
   },
 ];
 

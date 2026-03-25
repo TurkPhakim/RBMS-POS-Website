@@ -29,6 +29,8 @@ public interface IOrderService
 
     Task<OrderDetailResponseModel> RequestBillAsync(int orderId, CancellationToken ct = default);
 
+    Task<OrderDetailResponseModel> VoidBillAsync(int orderId, CancellationToken ct = default);
+
     Task<List<OrderBillResponseModel>> SplitBillByItemAsync(int orderId, SplitByItemRequestModel request, CancellationToken ct = default);
 
     Task<List<OrderBillResponseModel>> SplitBillByAmountAsync(int orderId, SplitByAmountRequestModel request, CancellationToken ct = default);
@@ -36,6 +38,4 @@ public interface IOrderService
     Task<List<OrderBillResponseModel>> GetOrderBillsAsync(int orderId, CancellationToken ct = default);
 
     Task<OrderBillResponseModel> UpdateBillChargesAsync(int orderBillId, UpdateBillChargesRequestModel request, CancellationToken ct = default);
-
-    Task<List<ServiceChargeOptionModel>> GetServiceChargeOptionsAsync(CancellationToken ct = default);
 }

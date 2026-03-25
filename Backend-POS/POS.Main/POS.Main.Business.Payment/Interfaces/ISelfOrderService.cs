@@ -17,4 +17,5 @@ public interface ISelfOrderService
     Task RequestCashPaymentAsync(int sessionId, int tableId, CancellationToken ct = default);
     Task RequestSplitBillAsync(int sessionId, int tableId, RequestSplitBillModel request, CancellationToken ct = default);
     Task<ReceiptDataModel> GetCustomerReceiptAsync(int tableId, int orderBillId, CancellationToken ct = default);
+    Task<ReceiptDataModel> GetCustomerConsolidatedReceiptAsync(int tableId, CancellationToken ct = default);
 }

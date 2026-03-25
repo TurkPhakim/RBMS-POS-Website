@@ -6,9 +6,12 @@ public class OrderBillResponseModel
     public int OrderId { get; set; }
     public string BillNumber { get; set; } = string.Empty;
     public string BillType { get; set; } = string.Empty;
+    public int SplitCount { get; set; }
+    public int SplitIndex { get; set; }
     public decimal SubTotal { get; set; }
     public decimal TotalDiscountAmount { get; set; }
     public decimal NetAmount { get; set; }
+    public int? ServiceChargeId { get; set; }
     public decimal ServiceChargeRate { get; set; }
     public decimal ServiceChargeAmount { get; set; }
     public decimal VatRate { get; set; }

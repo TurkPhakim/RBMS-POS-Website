@@ -1,315 +1,507 @@
-<!-- Page Header -->
-<div class="flex items-center gap-3 mb-6">
-  <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center">
-    <app-generic-icon [name]="pageIcon" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
-  </div>
-  <h1 class="text-page-title">{{ pageTitle }}</h1>
-</div>
-
-<!-- View Mode Segmented Control -->
-<div class="flex bg-surface-border rounded-xl gap-4 mb-6">
-  @for (tab of viewTabs; track tab.mode) {
-    <button
-      class="flex-1 flex items-center justify-center gap-4 py-3 rounded-lg font-semibold transition-all"
-      [class]="viewMode() === tab.mode
-        ? 'bg-surface-card text-primary'
-        : 'text-surface-sub hover:text-primary'"
-      (click)="toggleViewMode(tab.mode)">
-      <app-generic-icon [name]="tab.icon" svgClass="w-8 h-8"></app-generic-icon>
-      {{ tab.label }}
-    </button>
-  }
-</div>
-
-<!-- Pending Section -->
-<div class="mb-8">
-  <h2 class="text-2xl font-bold mb-4 border-l-4 border-primary pl-3">รายการรอทำ</h2>
-
-  @if (viewMode() === 'order') {
-    <!-- ========== Order View ========== -->
-    @if (pendingOrders().length === 0) {
-      <div class="text-center py-12">
-        <app-generic-icon name="chef" svgClass="w-20 h-20 mx-auto" class="text-surface-sub opacity-40"></app-generic-icon>
-        <p class="text-lg text-surface-sub mt-4">ไม่มีรายการรอทำ</p>
+<div class="p-6">
+  <!-- Page Header + View Toggle -->
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center shrink-0">
+        <app-generic-icon [name]="pageIcon" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
       </div>
-    } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        @for (order of pendingOrders(); track order.orderId) {
-          <div class="bg-white rounded-xl border border-surface-border">
-            <!-- Order Header -->
-            <div class="px-4 py-3 rounded-t-xl flex items-center justify-between bg-primary-light">
-              <div>
-                <span class="font-bold text-lg">{{ order.tableName }}</span>
-                <span class="text-sm text-surface-sub ml-2">#{{ order.orderNumber }}</span>
-              </div>
-              <div class="flex gap-1">
-                @if (canUpdate && hasSentItems(order)) {
-                  <button pButton type="button" label="เริ่มทำทั้งหมด"
-                    severity="info" [text]="true" size="small"
-                    (click)="startPreparingAll(order)">
-                  </button>
-                }
-                @if (canUpdate && hasPreparingItems(order)) {
-                  <button pButton type="button" label="เสร็จทั้งหมด"
-                    severity="success" [text]="true" size="small"
-                    (click)="markReadyAll(order)">
-                  </button>
-                }
-              </div>
-            </div>
+      <h1 class="text-page-title">{{ pageTitle }}</h1>
+    </div>
 
-            <!-- Order Items -->
-            <div class="divide-y divide-surface-border">
-              @for (item of getPendingItems(order); track item.orderItemId) {
-                <div class="px-4 py-3 flex items-center gap-3">
-                  <!-- Status indicator -->
-                  <div class="w-2 h-2 rounded-full shrink-0"
-                    [ngClass]="item.status === 'Preparing' ? 'bg-warning' : 'bg-info'">
-                  </div>
-
-                  <!-- Item info -->
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                      <span class="font-semibold">{{ item.quantity }}x</span>
-                      <span class="truncate">{{ item.menuNameThai }}</span>
-                    </div>
-                    @if (item.options && item.options.length > 0) {
-                      <div class="text-sm text-surface-sub mt-0.5">
-                        @for (opt of item.options; track $index) {
-                          <span>{{ opt.optionItemName }}@if (!$last) {, }</span>
-                        }
-                      </div>
-                    }
-                    @if (item.note) {
-                      <div class="text-sm text-danger mt-0.5">
-                        <i class="pi pi-info-circle mr-1"></i>{{ item.note }}
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Time badge -->
-                  <div class="shrink-0">
-                    @if (item.sentToKitchenAt) {
-                      <span class="text-xs px-2 py-1 rounded-full font-medium"
-                        [ngClass]="getTimeBadgeClass(getElapsedMinutes(item.sentToKitchenAt))">
-                        {{ getElapsedMinutes(item.sentToKitchenAt) }} นาที
-                      </span>
-                    }
-                  </div>
-
-                  <!-- Action buttons -->
-                  @if (canUpdate) {
-                    <div class="shrink-0">
-                      @if (item.status === 'Sent') {
-                        <button pButton type="button" icon="pi pi-play"
-                          [rounded]="true" severity="info" [text]="true" size="small"
-                          pTooltip="เริ่มทำ" tooltipPosition="top"
-                          (click)="startPreparing(item)">
-                        </button>
-                      } @else if (item.status === 'Preparing') {
-                        <button pButton type="button" icon="pi pi-check"
-                          [rounded]="true" severity="success" [text]="true" size="small"
-                          pTooltip="พร้อมเสิร์ฟ" tooltipPosition="top"
-                          (click)="markReady(item)">
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- Cancelled Items -->
-            @if (hasCancelledItems(order)) {
-              <div class="border-t-2 border-dashed border-danger/30 bg-danger/5">
-                <div class="px-4 py-2 flex items-center gap-2">
-                  <i class="pi pi-ban text-danger text-sm"></i>
-                  <span class="text-sm font-semibold text-danger">รายการที่ยกเลิก</span>
-                </div>
-                <div class="divide-y divide-danger/10">
-                  @for (item of getCancelledItems(order); track item.orderItemId) {
-                    <div class="px-4 py-2.5 flex items-center gap-3 opacity-60">
-                      <div class="w-2 h-2 rounded-full shrink-0 bg-danger"></div>
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                          <span class="font-semibold">{{ item.quantity }}x</span>
-                          <span class="line-through">{{ item.menuNameThai }}</span>
-                          <span class="text-xs px-2 py-0.5 rounded-full bg-danger text-white font-medium">
-                            {{ item.status === 'Voided' ? 'Void' : 'ยกเลิก' }}
-                          </span>
-                        </div>
-                        @if (item.options && item.options.length > 0) {
-                          <div class="text-sm text-surface-sub mt-0.5 line-through">
-                            @for (opt of item.options; track $index) {
-                              <span>{{ opt.optionItemName }}@if (!$last) {, }</span>
-                            }
-                          </div>
-                        }
-                        @if (item.cancelReason) {
-                          <div class="text-sm text-danger mt-0.5">
-                            <i class="pi pi-info-circle mr-1"></i>{{ item.cancelReason }}
-                          </div>
-                        }
-                      </div>
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
-    }
-  } @else {
-    <!-- ========== Menu View ========== -->
-    @if (pendingMenuGroups().length === 0) {
-      <div class="text-center py-12">
-        <app-generic-icon name="chef" svgClass="w-20 h-20 mx-auto" class="text-surface-sub opacity-40"></app-generic-icon>
-        <p class="text-lg text-surface-sub mt-4">ไม่มีรายการรอทำ</p>
-      </div>
-    } @else {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        @for (group of pendingMenuGroups(); track group.groupKey) {
-          <div class="bg-white rounded-xl border border-surface-border">
-            <!-- Group Header -->
-            <div class="px-4 py-3 rounded-t-xl bg-primary-light">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-lg">{{ group.menuNameThai }}</span>
-              </div>
-              @if (group.options.length > 0) {
-                <div class="text-sm text-surface-sub mt-0.5">
-                  @for (opt of group.options; track $index) {
-                    <span>{{ opt.optionItemName }}@if (!$last) {, }</span>
-                  }
-                </div>
-              }
-              <div class="flex items-center gap-3 mt-1 text-sm">
-                <span class="text-info font-medium">รอทำ: {{ getSentCount(group) }} จาน</span>
-                @if (getPreparingCount(group) > 0) {
-                  <span class="text-warning font-medium">กำลังทำ: {{ getPreparingCount(group) }} จาน</span>
-                }
-              </div>
-            </div>
-
-            <!-- Item Rows -->
-            <div class="divide-y divide-surface-border">
-              @for (item of group.items; track item.orderItemId) {
-                <div class="px-4 py-3 flex items-center gap-3">
-                  <!-- Status indicator -->
-                  <div class="w-2 h-2 rounded-full shrink-0"
-                    [ngClass]="item.status === 'Preparing' ? 'bg-warning' : 'bg-info'">
-                  </div>
-
-                  <!-- Table name -->
-                  <span class="font-medium text-sm w-[50px] shrink-0">{{ item.tableName }}</span>
-
-                  <!-- Quantity -->
-                  <span class="font-semibold shrink-0">{{ item.quantity }}x</span>
-
-                  <!-- Note -->
-                  <div class="flex-1 min-w-0">
-                    @if (item.note) {
-                      <span class="text-sm text-danger italic truncate">
-                        <i class="pi pi-info-circle mr-1"></i>{{ item.note }}
-                      </span>
-                    }
-                  </div>
-
-                  <!-- Time badge -->
-                  <div class="shrink-0">
-                    @if (item.sentToKitchenAt) {
-                      <span class="text-xs px-2 py-1 rounded-full font-medium"
-                        [ngClass]="getTimeBadgeClass(getElapsedMinutes(item.sentToKitchenAt))">
-                        {{ getElapsedMinutes(item.sentToKitchenAt) }} นาที
-                      </span>
-                    }
-                  </div>
-
-                  <!-- Action button -->
-                  @if (canUpdate) {
-                    <div class="shrink-0">
-                      @if (item.status === 'Sent') {
-                        <button pButton type="button" icon="pi pi-play"
-                          [rounded]="true" severity="info" [text]="true" size="small"
-                          pTooltip="เริ่มทำ" tooltipPosition="top"
-                          (click)="startPreparingItem(item)">
-                        </button>
-                      } @else if (item.status === 'Preparing') {
-                        <button pButton type="button" icon="pi pi-check"
-                          [rounded]="true" severity="success" [text]="true" size="small"
-                          pTooltip="พร้อมเสิร์ฟ" tooltipPosition="top"
-                          (click)="markReadyItem(item)">
-                        </button>
-                      }
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- Batch Actions -->
-            @if (canUpdate) {
-              <div class="px-4 py-3 border-t border-surface-border flex gap-2 justify-end">
-                @if (hasSentGroupItems(group)) {
-                  <button pButton type="button" label="เริ่มทำทั้งหมด"
-                    severity="info" [text]="true" size="small"
-                    (click)="startPreparingGroup(group)">
-                  </button>
-                }
-                @if (hasPreparingGroupItems(group)) {
-                  <button pButton type="button" label="เสร็จทั้งหมด"
-                    severity="success" [text]="true" size="small"
-                    (click)="markReadyGroup(group)">
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        }
-      </div>
-    }
-  }
-</div>
-
-<!-- Ready Section -->
-@if (readyOrders().length > 0) {
-  <div>
-    <h2 class="text-2xl font-bold text-success mb-4 border-l-4 border-success pl-3">พร้อมเสิร์ฟ</h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      @for (order of readyOrders(); track order.orderId) {
-        <div class="bg-success/10 rounded-xl border border-success/30">
-          <!-- Order Header -->
-          <div class="px-4 py-3 rounded-t-xl bg-success/20 flex items-center justify-between">
-            <div>
-              <span class="font-bold text-lg text-success">{{ order.tableName }}</span>
-              <span class="text-sm text-surface-sub ml-2">#{{ order.orderNumber }}</span>
-            </div>
-          </div>
-
-          <!-- Ready Items -->
-          <div class="divide-y divide-success/20">
-            @for (item of getReadyItems(order); track item.orderItemId) {
-              <div class="px-4 py-3 flex items-center gap-3">
-                <i class="pi pi-check-circle text-success"></i>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <span class="font-semibold">{{ item.quantity }}x</span>
-                    <span class="truncate">{{ item.menuNameThai }}</span>
-                  </div>
-                  @if (item.options && item.options.length > 0) {
-                    <div class="text-sm text-surface-sub mt-0.5">
-                      @for (opt of item.options; track $index) {
-                        <span>{{ opt.optionItemName }}@if (!$last) {, }</span>
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        </div>
+    <div class="flex bg-surface-card rounded-xl p-1.5 border border-surface-border">
+      @for (tab of viewTabs; track tab.mode) {
+        <button
+          class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-base font-semibold transition-all"
+          [class]="viewMode() === tab.mode
+            ? 'bg-primary text-white'
+            : 'text-surface-sub hover:text-primary'"
+          (click)="toggleViewMode(tab.mode)">
+          <app-generic-icon [name]="tab.icon" svgClass="w-6 h-6"></app-generic-icon>
+          {{ tab.label }}
+        </button>
       }
     </div>
   </div>
-}
+
+  <!-- KPI Summary Bar -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Queue -->
+    <div class="rounded-xl overflow-hidden border border-primary/20 flex">
+      <div class="w-3 bg-primary shrink-0"></div>
+      <div class="flex-1 bg-primary/5 p-4 flex items-center gap-4">
+        <div class="flex items-center justify-center shrink-0">
+          <app-generic-icon name="thunder" svgClass="w-16 h-16" class="text-primary"></app-generic-icon>
+        </div>
+        <div>
+          <span class="text-xl font-semibold text-surface-sub">Queue</span>
+          <div class="flex items-baseline gap-2">
+            <span class="text-4xl font-bold text-primary">{{ totalSent() }}</span>
+            <span class="text-lg text-surface-sub">รายการ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cooking -->
+    <div class="rounded-xl overflow-hidden border border-info/20 flex">
+      <div class="w-3 bg-info shrink-0"></div>
+      <div class="flex-1 bg-info/5 p-4 flex items-center gap-4">
+        <div class="flex items-center justify-center shrink-0">
+          <app-generic-icon name="chef" svgClass="w-16 h-16" class="text-info"></app-generic-icon>
+        </div>
+        <div>
+          <span class="text-xl font-semibold text-surface-sub">Cooking</span>
+          <div class="flex items-baseline gap-2">
+            <span class="text-4xl font-bold text-info">{{ totalPreparing() }}</span>
+            <span class="text-lg text-surface-sub">รายการ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ready -->
+    <div class="rounded-xl overflow-hidden border border-success/20 flex">
+      <div class="w-3 bg-success shrink-0"></div>
+      <div class="flex-1 bg-success/5 p-4 flex items-center gap-4">
+        <div class="flex items-center justify-center shrink-0">
+          <app-generic-icon name="food" svgClass="w-16 h-16" class="text-success"></app-generic-icon>
+        </div>
+        <div>
+          <span class="text-xl font-semibold text-surface-sub">Ready</span>
+          <div class="flex items-baseline gap-2">
+            <span class="text-4xl font-bold text-success">{{ totalReady() }}</span>
+            <span class="text-lg text-surface-sub">รายการ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancelled -->
+    <div class="rounded-xl overflow-hidden border border-danger/20 flex">
+      <div class="w-3 bg-danger shrink-0"></div>
+      <div class="flex-1 bg-danger/5 p-4 flex items-center gap-4">
+        <div class="flex items-center justify-center shrink-0">
+          <app-generic-icon name="cancel" svgClass="w-16 h-16" class="text-danger"></app-generic-icon>
+        </div>
+        <div>
+          <span class="text-xl font-semibold text-surface-sub">Cancelled</span>
+          <div class="flex items-baseline gap-2">
+            <span class="text-4xl font-bold text-danger">{{ totalCancelled() }}</span>
+            <span class="text-lg text-surface-sub">รายการ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Pending Section ==================== -->
+  <div class="mb-8">
+    <!-- Section Header -->
+    <div class="flex items-center gap-4 mb-5">
+      <div class="w-14 h-14 rounded-xl bg-primary flex items-center justify-center shrink-0">
+        <app-generic-icon name="thunder" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
+      </div>
+      <h2 class="text-3xl font-bold text-primary">Queue</h2>
+      <div class="flex-1 h-px bg-primary/20"></div>
+    </div>
+
+    @if (viewMode() === 'order') {
+      <!-- ========== Order View ========== -->
+      @if (pendingOrders().length === 0) {
+        <div class="py-16">
+          <app-empty-view message="ไม่มีออเดอร์ในคิว"></app-empty-view>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          @for (order of pendingOrders(); track order.orderId) {
+            <app-gradient-card color="primary">
+              <!-- Header -->
+              <div cardHeader class="flex items-center justify-between">
+                <div>
+                  <span class="text-xl font-bold text-white">โต๊ะ{{ order.tableName }}</span>
+                  <span class="text-white/60 block">#{{ order.orderNumber }}</span>
+                </div>
+                <div class="flex gap-2">
+                  @if (canUpdate && hasSentItems(order)) {
+                    <button
+                      class="flex items-center gap-1 px-4 py-2 rounded-xl border-2 border-white/50 text-white font-semibold hover:bg-white/15 transition-colors"
+                      pTooltip="เริ่มทำทั้งหมด" tooltipPosition="bottom"
+                      (click)="startPreparingAll(order)">
+                      <app-generic-icon name="play" svgClass="w-6 h-6"></app-generic-icon>
+                      เริ่มทำ
+                    </button>
+                  }
+                  @if (canUpdate && hasPreparingItems(order)) {
+                    <button
+                      class="flex items-center gap-1 px-4 py-2 rounded-xl border-2 border-white/50 text-white font-semibold hover:bg-white/15 transition-colors"
+                      pTooltip="เสร็จทั้งหมด" tooltipPosition="bottom"
+                      (click)="markReadyAll(order)">
+                      <app-generic-icon name="correct-check" svgClass="w-6 h-6"></app-generic-icon>
+                      เสร็จสิ้น
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Item Rows -->
+              <div class="divide-y divide-surface-border">
+                @for (item of getPendingItems(order); track item.orderItemId) {
+                  <div class="p-3 flex items-center gap-3">
+                    <!-- Status Badge -->
+                    <span
+                      class="inline-flex items-center font-semibold min-w-[70px] text-center justify-center whitespace-nowrap"
+                      [ngClass]="item.status === 'Preparing'
+                        ? 'bg-info/15 text-info'
+                        : 'bg-primary/10 text-primary'">
+                      {{ item.status === 'Preparing' ? 'Cooking' : 'Queue' }}
+                    </span>
+
+                    <div class="w-px h-8 bg-surface-border shrink-0"></div>
+
+                    <!-- Quantity -->
+                    <span
+                      class="text-lg font-bold shrink-0"
+                      [ngClass]="item.status === 'Preparing' ? 'text-info' : 'text-primary'">
+                      {{ item.quantity }}x
+                    </span>
+
+                    <!-- Item Info -->
+                    <div class="flex-1 min-w-0">
+                      <span class="text-lg font-semibold truncate block">{{ item.menuNameThai }}</span>
+                      @if (item.options && item.options.length > 0) {
+                        <div class="text-surface-sub mt-0.5">
+                          @for (opt of item.options; track $index) {
+                            <span>{{ opt.optionItemName }}@if (!$last) { , }</span>
+                          }
+                        </div>
+                      }
+                      @if (item.note) {
+                        <div class="text-sm text-primary-badge font-medium mt-0.5">
+                          <app-generic-icon name="information" svgClass="w-3 h-3"
+                            class="inline-block mr-1 align-text-bottom"></app-generic-icon>{{ item.note }}
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Time Badge -->
+                    <div class="shrink-0">
+                      @if (item.sentToKitchenAt) {
+                        <span
+                          class="inline-flex items-center gap-1 text-sm px-4 py-2 rounded-full font-semibold"
+                          [ngClass]="getTimeBadgeClass(getElapsedMinutes(item.sentToKitchenAt))">
+                          <app-generic-icon name="time-tag" svgClass="w-4 h-4"></app-generic-icon>
+                          {{ getElapsedMinutes(item.sentToKitchenAt) }} น.
+                        </span>
+                      }
+                    </div>
+
+                    <!-- Action Button -->
+                    @if (canUpdate) {
+                      <div class="shrink-0">
+                        @if (item.status === 'Sent') {
+                          <button
+                            class="w-11 h-11 flex items-center justify-center text-primary hover:text-primary/70 transition-colors"
+                            pTooltip="เริ่มทำ" tooltipPosition="top"
+                            (click)="startPreparing(item)">
+                            <app-generic-icon name="play" svgClass="w-9 h-9"></app-generic-icon>
+                          </button>
+                        } @else if (item.status === 'Preparing') {
+                          <button
+                            class="w-11 h-11 flex items-center justify-center text-success hover:text-success/70 transition-colors"
+                            pTooltip="พร้อมเสิร์ฟ" tooltipPosition="top"
+                            (click)="markReady(item)">
+                            <app-generic-icon name="correct-check" svgClass="w-9 h-9"></app-generic-icon>
+                          </button>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Cancelled Items (Footer) -->
+              @if (hasCancelledItems(order)) {
+                <div cardFooter class="border-t-2 border-dashed border-danger/30 bg-danger/5">
+                  <div class="px-5 py-3 flex items-center gap-2">
+                    <app-generic-icon name="cancel" svgClass="w-5 h-5" class="text-danger"></app-generic-icon>
+                    <span class="text-base font-bold text-danger">
+                      รายการที่ยกเลิก ({{ getCancelledItems(order).length }})
+                    </span>
+                  </div>
+                  <div class="divide-y divide-danger/10">
+                    @for (item of getCancelledItems(order); track item.orderItemId) {
+                      <div class="px-5 py-3 flex items-center gap-3">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-danger text-white whitespace-nowrap shrink-0">
+                          ยกเลิก
+                        </span>
+                        <span class="text-lg font-bold text-danger shrink-0">{{ item.quantity }}x</span>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-baseline gap-2">
+                            <span class="text-base font-semibold line-through">{{ item.menuNameThai }}</span>
+                            @if (item.cancelReason) {
+                              <span class="text-sm text-danger">{{ item.cancelReason }}</span>
+                            }
+                          </div>
+                          @if (item.options && item.options.length > 0) {
+                            <div class="text-surface-sub mt-0.5">
+                              @for (opt of item.options; track $index) {
+                                <span>{{ opt.optionItemName }}@if (!$last) { , }</span>
+                              }
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </app-gradient-card>
+          }
+        </div>
+      }
+    } @else {
+      <!-- ========== Menu View ========== -->
+      @if (pendingMenuGroups().length === 0) {
+        <div class="py-16">
+          <app-empty-view message="ไม่มีรายการในคิว"></app-empty-view>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          @for (group of pendingMenuGroups(); track group.groupKey) {
+            <app-gradient-card color="primary">
+              <!-- Header -->
+              <div cardHeader>
+                <div class="flex items-center gap-3">
+                  <span class="text-xl font-bold text-white">{{ group.menuNameThai }}</span>
+                  <div class="flex-1"></div>
+                  <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-white text-primary">
+                    Queue {{ getSentCount(group) }}
+                  </span>
+                  @if (getPreparingCount(group) > 0) {
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-white text-info">
+                      Cooking {{ getPreparingCount(group) }}
+                    </span>
+                  }
+                </div>
+                @if (group.options.length > 0) {
+                  <div class="text-sm text-white/60 mt-1">
+                    @for (opt of group.options; track $index) {
+                      <span>{{ opt.optionItemName }}@if (!$last) { , }</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Item Rows -->
+              <div class="divide-y divide-surface-border">
+                @for (item of group.items; track item.orderItemId) {
+                  <div class="p-3">
+                    <div class="flex items-center gap-3">
+                      <!-- Status Badge -->
+                      <span
+                        class="inline-flex items-center font-semibold min-w-[70px] text-center justify-center whitespace-nowrap"
+                        [ngClass]="item.status === 'Preparing'
+                          ? 'bg-info/15 text-info'
+                          : 'bg-primary/10 text-primary'">
+                        {{ item.status === 'Preparing' ? 'Cooking' : 'Queue' }}
+                      </span>
+
+                      <div class="w-px h-8 bg-surface-border shrink-0"></div>
+
+                      <!-- Quantity -->
+                      <span
+                        class="text-lg font-bold shrink-0"
+                        [ngClass]="item.status === 'Preparing' ? 'text-info' : 'text-primary'">
+                        {{ item.quantity }}x
+                      </span>
+
+                      <!-- Table name -->
+                      <span class="text-base font-semibold shrink-0">โต๊ะ{{ item.tableName }}</span>
+
+                      <div class="flex-1"></div>
+
+                      <!-- Time badge -->
+                      <div class="shrink-0">
+                        @if (item.sentToKitchenAt) {
+                          <span
+                            class="inline-flex items-center gap-1 text-sm px-4 py-2 rounded-full font-semibold"
+                            [ngClass]="getTimeBadgeClass(getElapsedMinutes(item.sentToKitchenAt))">
+                            <app-generic-icon name="time-tag" svgClass="w-5 h-5"></app-generic-icon>
+                            {{ getElapsedMinutes(item.sentToKitchenAt) }} น.
+                          </span>
+                        }
+                      </div>
+
+                      <!-- Action button -->
+                      @if (canUpdate) {
+                        <div class="shrink-0">
+                          @if (item.status === 'Sent') {
+                            <button
+                              class="w-11 h-11 flex items-center justify-center text-primary hover:text-primary/70 transition-colors"
+                              pTooltip="เริ่มทำ" tooltipPosition="top"
+                              (click)="startPreparingItem(item)">
+                              <app-generic-icon name="play" svgClass="w-9 h-9"></app-generic-icon>
+                            </button>
+                          } @else if (item.status === 'Preparing') {
+                            <button
+                              class="w-11 h-11 flex items-center justify-center text-success hover:text-success/70 transition-colors"
+                              pTooltip="พร้อมเสิร์ฟ" tooltipPosition="top"
+                              (click)="markReadyItem(item)">
+                              <app-generic-icon name="correct-check" svgClass="w-9 h-9"></app-generic-icon>
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                    @if (item.note) {
+                      <div class="flex items-center gap-2 text-sm text-primary-badge font-medium mt-1 pl-24">
+                        <app-generic-icon name="information" svgClass="w-4 h-4" class="shrink-0"></app-generic-icon>
+                        <span>{{ item.note }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Batch Actions (Footer) -->
+              @if (canUpdate) {
+                <div cardFooter class="px-5 py-3 border-t border-surface-border flex gap-3 justify-end">
+                  @if (hasSentGroupItems(group)) {
+                    <button
+                      class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-primary/30 text-primary font-bold text-base hover:bg-primary/5 transition-colors"
+                      pTooltip="เริ่มทำทั้งหมด" tooltipPosition="bottom"
+                      (click)="startPreparingGroup(group)">
+                      <app-generic-icon name="play" svgClass="w-6 h-6"></app-generic-icon>
+                      เริ่มทำ
+                    </button>
+                  }
+                  @if (hasPreparingGroupItems(group)) {
+                    <button
+                      class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-success/30 text-success font-bold text-base hover:bg-success/5 transition-colors"
+                      pTooltip="เสร็จทั้งหมด" tooltipPosition="bottom"
+                      (click)="markReadyGroup(group)">
+                      <app-generic-icon name="correct-check" svgClass="w-6 h-6"></app-generic-icon>
+                      เสร็จ
+                    </button>
+                  }
+                </div>
+              }
+            </app-gradient-card>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Divider -->
+  <div class="border-t-[3px] border-dashed border-primary/30 my-5"></div>
+
+  <!-- ==================== Ready Section ==================== -->
+  @if (readyOrders().length > 0) {
+    <div>
+      <!-- Section Header -->
+      <div class="flex items-center gap-4 mb-5">
+        <div class="w-14 h-14 rounded-xl bg-success flex items-center justify-center shrink-0">
+          <app-generic-icon name="food" svgClass="w-10 h-10" class="text-white"></app-generic-icon>
+        </div>
+        <h2 class="text-3xl font-bold text-success">Ready</h2>
+        <div class="flex-1 h-px bg-success/20"></div>
+      </div>
+
+      @if (viewMode() === 'order') {
+        <!-- ========== Order View ========== -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          @for (order of readyOrders(); track order.orderId) {
+            <app-gradient-card color="success">
+              <div cardHeader>
+                <span class="text-xl font-bold text-white">โต๊ะ{{ order.tableName }}</span>
+                <span class="text-white/60 block">#{{ order.orderNumber }}</span>
+              </div>
+
+              <!-- Ready Items -->
+              <div class="divide-y divide-surface-border">
+                @for (item of getReadyItems(order); track item.orderItemId) {
+                  <div class="p-3 flex items-center gap-3">
+                    <!-- Status Badge -->
+                    <span class="inline-flex items-center font-semibold min-w-[70px] text-center justify-center whitespace-nowrap bg-success/15 text-success">
+                      Ready
+                    </span>
+
+                    <div class="w-px h-8 bg-surface-border shrink-0"></div>
+
+                    <!-- Quantity -->
+                    <span class="text-lg font-bold text-success shrink-0">{{ item.quantity }}x</span>
+
+                    <!-- Item Info -->
+                    <div class="flex-1 min-w-0">
+                      <span class="text-lg font-semibold truncate block">{{ item.menuNameThai }}</span>
+                      @if (item.options && item.options.length > 0) {
+                        <div class="text-surface-sub mt-0.5">
+                          @for (opt of item.options; track $index) {
+                            <span>{{ opt.optionItemName }}@if (!$last) { , }</span>
+                          }
+                        </div>
+                      }
+                      @if (item.note) {
+                        <div class="text-sm text-primary-badge font-medium mt-0.5">
+                          <app-generic-icon name="information" svgClass="w-3 h-3"
+                            class="inline-block mr-1 align-text-bottom"></app-generic-icon>{{ item.note }}
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </app-gradient-card>
+          }
+        </div>
+      } @else {
+        <!-- ========== Menu View ========== -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          @for (group of readyMenuGroups(); track group.groupKey) {
+            <app-gradient-card color="success">
+              <div cardHeader>
+                <span class="text-xl font-bold text-white">{{ group.menuNameThai }}</span>
+                @if (group.options.length > 0) {
+                  <div class="text-sm text-white/60 mt-1">
+                    @for (opt of group.options; track $index) {
+                      <span>{{ opt.optionItemName }}@if (!$last) { , }</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Item Rows -->
+              <div class="divide-y divide-surface-border">
+                @for (item of group.items; track item.orderItemId) {
+                  <div class="p-3">
+                    <div class="flex items-center gap-3">
+                      <!-- Status Badge -->
+                      <span class="inline-flex items-center font-semibold min-w-[70px] text-center justify-center whitespace-nowrap bg-success/15 text-success">
+                        Ready
+                      </span>
+
+                      <div class="w-px h-8 bg-surface-border shrink-0"></div>
+
+                      <!-- Quantity -->
+                      <span class="text-lg font-bold text-success shrink-0">{{ item.quantity }}x</span>
+
+                      <!-- Table name -->
+                      <span class="text-base font-semibold shrink-0">โต๊ะ{{ item.tableName }}</span>
+                    </div>
+                    @if (item.note) {
+                      <div class="flex items-center gap-2 text-sm text-primary-badge font-medium mt-1 pl-24">
+                        <app-generic-icon name="information" svgClass="w-4 h-4" class="shrink-0"></app-generic-icon>
+                        <span>{{ item.note }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </app-gradient-card>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

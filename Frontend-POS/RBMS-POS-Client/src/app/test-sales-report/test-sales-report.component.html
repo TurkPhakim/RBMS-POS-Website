@@ -1,0 +1,159 @@
+<div class="h-screen overflow-y-auto p-6 bg-surface space-y-6">
+  <!-- Period Filter -->
+  <div class="bg-surface-card rounded-xl p-5">
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="text-sm text-surface-sub">ช่วงเวลา:</span>
+      <div class="flex gap-2">
+        @for (
+          p of [
+            { key: 'today', label: 'วันนี้' },
+            { key: 'week', label: 'สัปดาห์นี้' },
+            { key: 'month', label: 'เดือนนี้' },
+            { key: 'quarter', label: 'ไตรมาสนี้' },
+          ];
+          track p.key
+        ) {
+          <button
+            pButton
+            type="button"
+            [label]="p.label"
+            [class]="
+              activePreset === p.key
+                ? 'p-button-sm'
+                : 'p-button-sm p-button-outlined p-button-secondary'
+            "
+            (click)="setPreset(p.key)"
+          ></button>
+        }
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 mt-3">
+      <span class="text-sm text-surface-sub">กำหนดเอง:</span>
+      <p-datepicker
+        [(ngModel)]="dateFrom"
+        (ngModelChange)="onDateFromChange()"
+        dateFormat="dd/mm/yy"
+        styleClass="w-[170px]"
+      ></p-datepicker>
+      <span class="text-sm text-surface-sub">ถึง</span>
+      <p-datepicker
+        [(ngModel)]="dateTo"
+        dateFormat="dd/mm/yy"
+        [minDate]="minEndDate()!"
+        styleClass="w-[170px]"
+      ></p-datepicker>
+      <button
+        pButton
+        type="button"
+        label="ค้นหา"
+        icon="pi pi-search"
+        class="p-button-sm"
+        (click)="onSearch()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- KPI Summary -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    @for (card of kpiCards; track card.label) {
+      <app-kpi-card
+        [label]="card.label"
+        [value]="card.value"
+        [icon]="card.icon"
+        [accentColor]="card.accentColor"
+        [showComparison]="false"
+      ></app-kpi-card>
+    }
+  </div>
+
+  <!-- Pie Chart + Kitchen Breakdown -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <!-- Category Pie -->
+    <div class="bg-surface-card rounded-xl p-5">
+      <h3 class="text-section-title mb-4">สัดส่วนยอดขายตามหมวดหมู่</h3>
+      <div class="h-[280px] flex items-center justify-center">
+        <canvas
+          baseChart
+          type="pie"
+          [data]="categoryPieData()"
+          [options]="categoryPieOptions"
+        ></canvas>
+      </div>
+    </div>
+
+    <!-- Kitchen Breakdown -->
+    <div class="bg-surface-card rounded-xl p-5">
+      <h3 class="text-section-title mb-4">รายการแยกครัว</h3>
+      <div class="space-y-4 pt-2">
+        @for (item of kitchenItems; track item.categoryName) {
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-medium">{{
+                item.categoryName
+              }}</span>
+              <span class="text-sm text-surface-sub"
+                >{{ item.itemCount | number }} ชิ้น ({{
+                  item.percentage | number: '1.1-1'
+                }}%)</span
+              >
+            </div>
+            <div class="w-full bg-surface rounded-full h-3">
+              <div
+                class="h-3 rounded-full transition-all duration-300"
+                [ngClass]="item.barColor"
+                [style.width.%]="item.percentage"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Breakdown Table -->
+  <div class="bg-surface-card rounded-xl p-5">
+    <h3 class="text-section-title mb-4">ยอดขายรายวัน</h3>
+    <p-table
+      [value]="dailyBreakdown"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first} - {last} of {totalRecords}"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="w-[120px]">วันที่</th>
+          <th class="w-[140px] text-right">ยอดขาย</th>
+          <th class="w-[120px] text-center">จำนวนออเดอร์</th>
+          <th class="w-[120px] text-center">จำนวนลูกค้า</th>
+          <th class="w-[140px] text-right">เฉลี่ย/ออเดอร์</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td class="w-[120px]">{{ formatDate(row.date) }}</td>
+          <td class="w-[140px] text-right">
+            {{ formatCurrency(row.totalSales) }}
+          </td>
+          <td class="w-[120px] text-center">
+            {{ row.orderCount | number }}
+          </td>
+          <td class="w-[120px] text-center">
+            {{ row.guestCount | number }}
+          </td>
+          <td class="w-[140px] text-right">
+            {{ formatCurrency(row.averagePerOrder) }}
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="text-center py-8 text-surface-sub">
+            ยังไม่มีข้อมูล
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

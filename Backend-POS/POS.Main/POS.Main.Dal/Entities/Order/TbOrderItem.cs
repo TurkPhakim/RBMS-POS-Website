@@ -47,5 +47,11 @@ public class TbOrderItem : BaseEntity
 
     public decimal? CostPrice { get; set; }
 
+    public int? OrderBillId { get; set; }
+    public virtual TbOrderBill? OrderBill { get; set; }
+
+    public int? SourceTableId { get; set; }
+    public virtual TbTable? SourceTable { get; set; }
+
     public virtual ICollection<TbOrderItemOption> OrderItemOptions { get; set; } = new List<TbOrderItemOption>();
 }

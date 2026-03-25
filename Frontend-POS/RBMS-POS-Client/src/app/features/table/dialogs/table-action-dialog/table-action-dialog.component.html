@@ -58,10 +58,13 @@
         }
         @if (table.status === 'Occupied' || table.status === 'Billing') {
           <p-button label="ดูออเดอร์" severity="primary" [style]="{ 'min-width': '120px' }" (onClick)="onViewOrder()"></p-button>
-          <p-button label="สั่งอาหาร" severity="primary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onAddItems()"></p-button>
           <p-button label="QR Code" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onShowQrCode()"></p-button>
-          <p-button label="ย้ายโต๊ะ" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onMoveTable()"></p-button>
-          <p-button label="ปิดโต๊ะ" severity="danger" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onCloseTable()"></p-button>
+          @if (!table.linkedGroupCode) {
+            <p-button label="ย้ายโต๊ะ" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onMoveTable()"></p-button>
+          }
+          @if (canCloseTable() && !table.linkedGroupCode) {
+            <p-button label="ปิดโต๊ะ" severity="danger" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onCloseTable()"></p-button>
+          }
           @if (!table.linkedGroupCode) {
             <p-button label="เชื่อมโต๊ะ" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onLinkTables()"></p-button>
           } @else {

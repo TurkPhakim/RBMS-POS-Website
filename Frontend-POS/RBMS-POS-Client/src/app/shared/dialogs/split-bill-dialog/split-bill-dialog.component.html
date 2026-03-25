@@ -221,17 +221,15 @@
                     >{{ ig.totalPrice | number: "1.2-2" }} บาท</span
                   >
                 </div>
-                <p-dropdown
+                <app-dropdown-base
                   [options]="groupOptions"
-                  optionLabel="label"
-                  optionValue="value"
                   [(ngModel)]="ig.groupIndex"
-                  [style]="{ width: '100px' }"
-                  [panelStyle]="{ 'min-width': '100px' }"
-                  styleClass="compact-dropdown"
+                  [showClear]="false"
+                  [filter]="false"
+                  styleClass="compact-dropdown w-[100px]"
                   panelStyleClass="compact-dropdown-panel"
                   appendTo="body"
-                ></p-dropdown>
+                ></app-dropdown-base>
               </div>
             }
           </div>

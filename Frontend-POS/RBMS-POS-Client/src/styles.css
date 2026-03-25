@@ -163,6 +163,28 @@ textarea:user-invalid {
    ║ 5. PRIMENG COMPONENT OVERRIDES — เรียงตามชื่อ component A-Z             ║
    ╚═══════════════════════════════════════════════════════════════════════════╝ */
 
+/* ─── Button — severity colors ให้ตรง design tokens ──────────────────────── */
+
+.p-button.p-button-success {
+  background: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+}
+
+.p-button.p-button-success:not(:disabled):hover {
+  background: var(--color-success-dark) !important;
+  border-color: var(--color-success-dark) !important;
+}
+
+.p-button.p-button-warning {
+  background: var(--color-warning) !important;
+  border-color: var(--color-warning) !important;
+}
+
+.p-button.p-button-warning:not(:disabled):hover {
+  background: var(--color-warning-dark) !important;
+  border-color: var(--color-warning-dark) !important;
+}
+
 /* ─── Compact Dropdown (ลดความสูง ใช้ใน split-bill) ─────────────────────── */
 
 .compact-dropdown .p-dropdown-label {

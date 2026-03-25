@@ -31,6 +31,8 @@ export class DropdownBaseComponent
   @Input() disabled = false;
   @Input() invalid = false;
   @Input() styleClass = 'w-full';
+  @Input() appendTo = 'body';
+  @Input() panelStyleClass = '';
 
   // === Lazy Load Inputs ===
   @Input() fetchFn?: (
@@ -41,8 +43,8 @@ export class DropdownBaseComponent
   @Input() pageSize = 20;
   @Input() defaultFilter: any = {};
 
-  // === Options (child set ค่าใน constructor หรือ ngOnInit) ===
-  options: any[] = [];
+  // === Options (child set ค่าใน constructor/ngOnInit หรือ parent ส่งผ่าน @Input) ===
+  @Input() options: any[] = [];
 
   // === Internal State ===
   selectedValue: any = null;

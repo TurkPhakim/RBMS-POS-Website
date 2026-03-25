@@ -1,5 +1,6 @@
 import { Component, DestroyRef, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Router } from '@angular/router';
 import { TableLazyLoadEvent } from 'primeng/table';
 
 import { CashierSessionResponseModel } from '@app/core/api/models/cashier-session-response-model';
@@ -24,6 +25,7 @@ export class SessionHistoryComponent implements OnInit {
   constructor(
     private cashierSessionsService: CashierSessionsService,
     private shopBrandingService: ShopBrandingService,
+    private router: Router,
     private destroyRef: DestroyRef
   ) {
     this.hasTwoPeriods = this.shopBrandingService.hasTwoPeriods;
@@ -57,5 +59,9 @@ export class SessionHistoryComponent implements OnInit {
 
   onFilterChange(): void {
     this.loadHistory();
+  }
+
+  onViewDetail(session: CashierSessionResponseModel): void {
+    this.router.navigate(['/payment', 'session-history', session.cashierSessionId]);
   }
 }

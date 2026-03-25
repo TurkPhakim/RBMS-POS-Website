@@ -46,12 +46,21 @@ import { SignalRService } from '@core/services/signalr.service';
                 <span class="text-surface-sub">โซน - โต๊ะ</span>
                 <span class="font-medium">{{ receipt()!.tableName }}</span>
               </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-surface-sub">จำนวนรายการ</span>
-                <span class="font-medium"
-                  >{{ receipt()!.items?.length ?? 0 }} รายการ</span
-                >
-              </div>
+              @if (receipt()!.billType === 'ByAmount') {
+                <div class="flex justify-between text-sm">
+                  <span class="text-surface-sub">ประเภท</span>
+                  <span class="font-medium">หารเท่า {{ receipt()!.splitCount }} ส่วน</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                  <span class="text-surface-sub">ส่วนที่</span>
+                  <span class="font-medium">{{ receipt()!.splitIndex }} จาก {{ receipt()!.splitCount }}</span>
+                </div>
+              } @else {
+                <div class="flex justify-between text-sm">
+                  <span class="text-surface-sub">จำนวนรายการ</span>
+                  <span class="font-medium">{{ receipt()!.items?.length ?? 0 }} รายการ</span>
+                </div>
+              }
               <div class="flex justify-between text-sm">
                 <span class="text-surface-sub">วิธีการชำระเงิน</span>
                 <span class="font-medium">{{ paymentMethodLabel() }}</span>

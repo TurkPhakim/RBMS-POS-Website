@@ -1,0 +1,47 @@
+<div class="bg-surface-card rounded-xl p-5 border-l-4"
+  [ngClass]="{
+    'border-primary': accentColor === 'primary',
+    'border-success': accentColor === 'success',
+    'border-warning': accentColor === 'warning',
+    'border-info': accentColor === 'info'
+  }">
+  <div class="flex items-center gap-3 mb-3">
+    <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+      [ngClass]="{
+        'bg-primary-subtle': accentColor === 'primary',
+        'bg-success-bg': accentColor === 'success',
+        'bg-warning-bg': accentColor === 'warning',
+        'bg-info-bg': accentColor === 'info'
+      }">
+      <app-generic-icon
+        [name]="icon"
+        svgClass="w-5 h-5"
+        [ngClass]="{
+          'text-primary': accentColor === 'primary',
+          'text-success': accentColor === 'success',
+          'text-warning-dark': accentColor === 'warning',
+          'text-info': accentColor === 'info'
+        }"
+      ></app-generic-icon>
+    </div>
+    <span class="text-sm text-surface-sub">{{ label }}</span>
+  </div>
+  <div class="text-2xl font-bold mb-1">{{ value }}</div>
+  @if (showComparison) {
+    @if (changePercent !== null) {
+      <div
+        class="flex items-center gap-1 text-sm"
+        [ngClass]="changePercent >= 0 ? 'text-success' : 'text-danger'"
+      >
+        <i
+          [class]="
+            changePercent >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'
+          "
+        ></i>
+        <span>{{ changePercent >= 0 ? '+' : '' }}{{ changePercent | number: '1.1-1' }}%</span>
+      </div>
+    } @else {
+      <div class="text-sm text-surface-sub">ไม่มีข้อมูลเปรียบเทียบ</div>
+    }
+  }
+</div>

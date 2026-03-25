@@ -21,11 +21,7 @@ export class KitchenStateService {
   ) {}
 
   connect(destroyRef: DestroyRef): void {
-    if (this.connected) return;
-    this.connected = true;
-
-    this.orderHubService.start('kitchen');
-
+    // Always subscribe (previous subscriptions auto-cleaned by takeUntilDestroyed)
     this.orderHubService.newOrderItems$
       .pipe(takeUntilDestroyed(destroyRef))
       .subscribe(() => this.loadItems());
@@ -37,12 +33,17 @@ export class KitchenStateService {
     this.orderHubService.itemCancelled$
       .pipe(takeUntilDestroyed(destroyRef))
       .subscribe(() => this.loadItems());
+
+    // Start SignalR connection once (persists across kitchen pages)
+    if (!this.connected) {
+      this.connected = true;
+      this.orderHubService.start('kitchen');
+    }
   }
 
   disconnect(): void {
-    if (!this.connected) return;
-    this.connected = false;
-    this.orderHubService.leaveGroup('kitchen');
+    // Only clear data; keep SignalR connection alive to avoid race condition
+    // when navigating between kitchen pages (food/beverage/dessert)
     this.orders.set([]);
   }
 

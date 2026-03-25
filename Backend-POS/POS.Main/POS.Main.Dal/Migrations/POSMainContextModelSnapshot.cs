@@ -1428,8 +1428,17 @@ namespace POS.Main.Dal.Migrations
                     b.Property<decimal>("ServiceChargeAmount")
                         .HasColumnType("decimal(12,2)");
 
+                    b.Property<int?>("ServiceChargeId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("ServiceChargeRate")
                         .HasColumnType("decimal(5,2)");
+
+                    b.Property<int>("SplitCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SplitIndex")
+                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1471,6 +1480,8 @@ namespace POS.Main.Dal.Migrations
 
                     b.HasIndex("OrderId")
                         .HasDatabaseName("IX_OrderBills_OrderId");
+
+                    b.HasIndex("ServiceChargeId");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_OrderBills_Status");
@@ -1543,6 +1554,9 @@ namespace POS.Main.Dal.Migrations
                         .HasColumnType("decimal(10,2)")
                         .HasDefaultValue(0m);
 
+                    b.Property<int?>("OrderBillId")
+                        .HasColumnType("int");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -1562,6 +1576,9 @@ namespace POS.Main.Dal.Migrations
 
                     b.Property<DateTime?>("ServedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("SourceTableId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1597,8 +1614,13 @@ namespace POS.Main.Dal.Migrations
                     b.HasIndex("MenuId")
                         .HasDatabaseName("IX_OrderItems_MenuId");
 
+                    b.HasIndex("OrderBillId");
+
                     b.HasIndex("OrderId")
                         .HasDatabaseName("IX_OrderItems_OrderId");
+
+                    b.HasIndex("SourceTableId")
+                        .HasDatabaseName("IX_OrderItems_SourceTableId");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_OrderItems_Status");
@@ -2504,6 +2526,11 @@ namespace POS.Main.Dal.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsPrimary")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<int>("TableId")
                         .HasColumnType("int");
@@ -3969,6 +3996,11 @@ namespace POS.Main.Dal.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("POS.Main.Dal.Entities.TbServiceCharge", "ServiceCharge")
+                        .WithMany()
+                        .HasForeignKey("ServiceChargeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("POS.Main.Dal.Entities.TbEmployee", "UpdatedByEmployee")
                         .WithMany()
                         .HasForeignKey("UpdatedBy")
@@ -3977,6 +4009,8 @@ namespace POS.Main.Dal.Migrations
                     b.Navigation("CreatedByEmployee");
 
                     b.Navigation("Order");
+
+                    b.Navigation("ServiceCharge");
 
                     b.Navigation("UpdatedByEmployee");
                 });
@@ -3999,11 +4033,21 @@ namespace POS.Main.Dal.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("POS.Main.Dal.Entities.TbOrderBill", "OrderBill")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderBillId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("POS.Main.Dal.Entities.TbOrder", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("POS.Main.Dal.Entities.TbTable", "SourceTable")
+                        .WithMany()
+                        .HasForeignKey("SourceTableId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("POS.Main.Dal.Entities.TbEmployee", "UpdatedByEmployee")
                         .WithMany()
@@ -4017,6 +4061,10 @@ namespace POS.Main.Dal.Migrations
                     b.Navigation("Menu");
 
                     b.Navigation("Order");
+
+                    b.Navigation("OrderBill");
+
+                    b.Navigation("SourceTable");
 
                     b.Navigation("UpdatedByEmployee");
                 });
@@ -4442,6 +4490,11 @@ namespace POS.Main.Dal.Migrations
                 {
                     b.Navigation("OrderBills");
 
+                    b.Navigation("OrderItems");
+                });
+
+            modelBuilder.Entity("POS.Main.Dal.Entities.TbOrderBill", b =>
+                {
                     b.Navigation("OrderItems");
                 });
 

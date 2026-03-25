@@ -1,0 +1,44 @@
+# ═══════════════════════════════════════════════════════════════
+# RBMS-POS — Docker Compose Local Override (HTTP, เปิด ports)
+# ═══════════════════════════════════════════════════════════════
+#
+# ใช้ร่วมกับ docker-compose.yml:
+# docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+#
+# ความแตกต่างจาก Production:
+# - HTTP only (ไม่มี SSL)
+# - เปิด DB port (1433) + MinIO Console (9001)
+# - Certbot ปิด (sleep)
+# - Nginx ใช้ nginx.local.conf
+
+services:
+  # เปิด SQL Server port ให้เข้าจาก host ได้
+  sqlserver:
+    ports:
+      - "1433:1433"
+
+  # เปิด MinIO ports ให้เข้าจาก host ได้
+  minio:
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  # Nginx: ใช้ local config (HTTP only)
+  nginx:
+    volumes:
+      - client-dist:/usr/share/nginx/html/client:ro
+      - mobile-dist:/usr/share/nginx/html/mobile:ro
+      - nginx-logs:/var/log/nginx
+      # ไม่ mount certbot volumes (ไม่มี SSL)
+    environment:
+      DOMAIN: localhost
+    # Override: ใช้ nginx.local.conf แทน
+    command: >
+      /bin/sh -c "
+        cp /etc/nginx/nginx.local.conf /etc/nginx/nginx.conf &&
+        nginx -g 'daemon off;'
+      "
+
+  # Certbot: ปิดใน local (ไม่ต้อง SSL)
+  certbot:
+    entrypoint: "/bin/sh -c 'echo Certbot disabled in local mode && sleep infinity'"

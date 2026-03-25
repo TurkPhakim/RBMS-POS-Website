@@ -5,7 +5,7 @@
       class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
     >
       <app-generic-icon
-        name="floor-cashier"
+        name="bill-invoice"
         svgClass="w-10 h-10"
         class="text-white"
       ></app-generic-icon>
@@ -24,10 +24,10 @@
           <p-datepicker
             [(ngModel)]="dateFrom"
             (ngModelChange)="onFilterChange()"
-            [showIcon]="true"
             dateFormat="dd/mm/yy"
-            placeholder="เลือกวันที่"
-            [style]="{ width: '100%' }"
+            placeholder="วันที่เริ่มต้น"
+            [showClear]="true"
+            styleClass="w-full"
           ></p-datepicker>
         </div>
 
@@ -37,11 +37,11 @@
           <p-datepicker
             [(ngModel)]="dateTo"
             (ngModelChange)="onFilterChange()"
-            [showIcon]="true"
             dateFormat="dd/mm/yy"
-            placeholder="เลือกวันที่"
+            placeholder="วันที่สิ้นสุด"
+            [showClear]="true"
             [minDate]="dateFrom!"
-            [style]="{ width: '100%' }"
+            styleClass="w-full"
           ></p-datepicker>
         </div>
 
@@ -69,7 +69,6 @@
         [rowsPerPageOptions]="[10, 25, 50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-
         (onLazyLoad)="loadHistory($event)"
         [stripedRows]="true"
         styleClass="p-datatable-clean"
@@ -87,6 +86,7 @@
             <th class="w-[120px]">ยอด QR</th>
             <th class="w-[100px]">จำนวนบิล</th>
             <th class="w-[120px]">ผลต่าง</th>
+            <th class="w-[80px]">ตัวเลือก</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-session>
@@ -95,27 +95,43 @@
             <td>{{ session.userName }}</td>
             <td>
               @if (session.shiftPeriod) {
-                <span class="font-semibold">ช่วงที่ {{ session.shiftPeriod }}</span>
+                <span class="font-semibold"
+                  >ช่วงที่ {{ session.shiftPeriod }}</span
+                >
               } @else {
                 <span class="text-surface-sub">-</span>
               }
             </td>
-            <td>{{ session.openedAt | dateFormat: 'DATE_TIME' }}</td>
-            <td>{{ session.closedAt ? (session.closedAt | dateFormat: 'DATE_TIME') : '-' }}</td>
+            <td>{{ session.openedAt | dateFormat: "DATE_TIME" }}</td>
             <td>
-              @if (session.status === 'Open') {
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-success/10 text-success">
+              {{
+                session.closedAt
+                  ? (session.closedAt | dateFormat: "DATE_TIME")
+                  : "-"
+              }}
+            </td>
+            <td>
+              @if (session.status === "Open") {
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-success/10 text-success"
+                >
                   เปิดอยู่
                 </span>
               } @else {
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-surface text-surface-sub">
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-surface text-surface-sub"
+                >
                   ปิดแล้ว
                 </span>
               }
             </td>
-            <td>{{ session.openingCash | number: '1.2-2' }}</td>
-            <td class="text-success font-semibold">{{ session.totalCashSales | number: '1.2-2' }}</td>
-            <td class="text-info font-semibold">{{ session.totalQrSales | number: '1.2-2' }}</td>
+            <td>{{ session.openingCash | number: "1.2-2" }}</td>
+            <td class="text-success font-semibold">
+              {{ session.totalCashSales | number: "1.2-2" }}
+            </td>
+            <td class="text-info font-semibold">
+              {{ session.totalQrSales | number: "1.2-2" }}
+            </td>
             <td>{{ session.billCount }} รายการ</td>
             <td>
               @if (session.variance != null) {
@@ -124,17 +140,31 @@
                   [class.text-success]="session.variance >= 0"
                   [class.text-danger]="session.variance < 0"
                 >
-                  {{ session.variance | number: '1.2-2' }}
+                  {{ session.variance | number: "1.2-2" }}
                 </span>
               } @else {
                 <span>-</span>
               }
             </td>
+            <td>
+              <div class="flex items-center justify-center">
+                <button
+                  pButton
+                  icon="pi pi-eye"
+                  severity="info"
+                  [rounded]="true"
+                  [text]="true"
+                  (click)="onViewDetail(session)"
+                  pTooltip="ดูรายละเอียด"
+                  tooltipPosition="left"
+                ></button>
+              </div>
+            </td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="11" class="text-center py-8 text-surface-sub">
+            <td colspan="12" class="text-center py-8 text-surface-sub">
               ไม่มีประวัติรอบขาย
             </td>
           </tr>

@@ -6,6 +6,7 @@ import { PaymentComponent } from './pages/payment/payment.component';
 import { CheckoutComponent } from './pages/checkout/checkout.component';
 import { SessionHistoryComponent } from './pages/session-history/session-history.component';
 import { PaymentHistoryComponent } from './pages/payment-history/payment-history.component';
+import { SessionDetailComponent } from './pages/session-detail/session-detail.component';
 
 const routes: Routes = [
   {
@@ -23,6 +24,12 @@ const routes: Routes = [
     component: SessionHistoryComponent,
     canActivate: [PermissionGuard],
     data: { breadcrumb: 'ประวัติรอบขาย', permissions: ['cashier-session.read'] },
+  },
+  {
+    path: 'session-history/:cashierSessionId',
+    component: SessionDetailComponent,
+    canActivate: [PermissionGuard],
+    data: { breadcrumb: 'รายละเอียดรอบขาย', permissions: ['cashier-session.read'] },
   },
   {
     path: 'payment-history',

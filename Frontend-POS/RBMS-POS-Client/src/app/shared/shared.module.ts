@@ -41,6 +41,7 @@ import { GradientCardComponent } from './cards/gradient-card/gradient-card.compo
 import { EmptyViewComponent } from './cards/empty-view/empty-view.component';
 import { ImageUploadCardComponent } from './cards/image-upload-card/image-upload-card.component';
 import { SectionCardComponent } from './cards/section-card/section-card.component';
+import { SectionMiniCardComponent } from './cards/section-mini-card/section-mini-card.component';
 import { FieldErrorComponent } from './cards/field-error/field-error.component';
 import { GenericIconComponent } from './components/generic-icon/generic-icon.component';
 import { PinKeypadComponent } from './components/pin-keypad/pin-keypad.component';
@@ -85,6 +86,7 @@ import { VerifyPasswordDialogComponent } from './dialogs/verify-password/verify-
 import { VerifyPinDialogComponent } from './dialogs/verify-pin/verify-pin-dialog.component';
 import { ChangePasswordDialogComponent } from './dialogs/change-password/change-password-dialog.component';
 import { SplitBillDialogComponent } from './dialogs/split-bill-dialog/split-bill-dialog.component';
+import { KpiCardComponent } from '../features/dashboard/components/kpi-card/kpi-card.component';
 import { AccessDeniedComponent } from './pages/access-denied/access-denied.component';
 import { WelcomeComponent } from './pages/welcome/welcome.component';
 import { DateFormatPipe } from './pipes/date-format.pipe';
@@ -186,6 +188,8 @@ const PRIMENG_MODULES = [
     ImageUploadCardComponent,
     AuditFooterComponent,
     SplitBillDialogComponent,
+    KpiCardComponent,
+    SectionMiniCardComponent,
   ],
   imports: [
     ...PRIMENG_MODULES,
@@ -250,6 +254,8 @@ const PRIMENG_MODULES = [
     EmptyViewComponent,
     ImageUploadCardComponent,
     AuditFooterComponent,
+    KpiCardComponent,
+    SectionMiniCardComponent,
     LottieComponent,
   ],
   providers: [

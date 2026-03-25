@@ -1,4 +1,4 @@
-import { Component, DestroyRef } from '@angular/core';
+import { Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { DynamicDialogConfig, DynamicDialogRef, DialogService } from 'primeng/dynamicdialog';
@@ -12,6 +12,8 @@ import { MoveTableDialogComponent } from '../move-table-dialog/move-table-dialog
 import { LinkTableDialogComponent } from '../link-table-dialog/link-table-dialog.component';
 import { QrCodeDialogComponent } from '../qr-code-dialog/qr-code-dialog.component';
 
+const KITCHEN_STATUSES = ['Sent', 'Preparing', 'Ready', 'Served'];
+
 @Component({
   selector: 'app-table-action-dialog',
   standalone: false,
@@ -22,6 +24,7 @@ export class TableActionDialogComponent {
   table: TableResponseModel;
   headerLabel: string;
   canUpdate: boolean;
+  canCloseTable = signal(false);
 
   constructor(
     private readonly ref: DynamicDialogRef,
@@ -37,6 +40,22 @@ export class TableActionDialogComponent {
     this.table = this.config.data.table;
     this.headerLabel = this.config.header!;
     this.canUpdate = this.authService.hasPermission('table-manage.update');
+    this.checkCanCloseTable();
+  }
+
+  private checkCanCloseTable(): void {
+    if (this.table.status !== 'Occupied' && this.table.status !== 'Billing') return;
+
+    this.ordersService.ordersGetActiveOrderByTableGet({ tableId: this.table.tableId! })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const items = res.result?.items ?? [];
+          const hasKitchenItems = items.some(i => KITCHEN_STATUSES.includes(i.status!));
+          this.canCloseTable.set(!hasKitchenItems);
+        },
+        error: () => this.canCloseTable.set(true),
+      });
   }
 
   getStatusLabel(): string {
@@ -180,7 +199,7 @@ export class TableActionDialogComponent {
     this.modalService.info({
       icon: Icon.Question,
       title: 'ยกเลิกการเชื่อม',
-      message: `ยกเลิกการเชื่อมโต๊ะกลุ่มนี้?`,
+      message: ['ยกเลิกการเชื่อมโต๊ะกลุ่มนี้?', 'ออเดอร์จะถูกแยกกลับตามโต๊ะเดิม'],
       onConfirm: () => {
         this.tablesService
           .tablesUnlinkTablesDelete({ groupCode: this.table.linkedGroupCode! })
@@ -278,25 +297,6 @@ export class TableActionDialogComponent {
           }
           this.ref.close();
           this.router.navigate(['/order', orderId]);
-        },
-        error: () =>
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถดึงข้อมูลออเดอร์ได้' }),
-      });
-  }
-
-  onAddItems(): void {
-    this.ordersService
-      .ordersGetActiveOrderByTableGet({ tableId: this.table.tableId! })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (res) => {
-          const orderId = res.result?.orderId;
-          if (!orderId) {
-            this.modalService.cancel({ title: 'ไม่พบออเดอร์', message: 'โต๊ะนี้ยังไม่มีออเดอร์' });
-            return;
-          }
-          this.ref.close();
-          this.router.navigate(['/order', orderId, 'add-items']);
         },
         error: () =>
           this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถดึงข้อมูลออเดอร์ได้' }),

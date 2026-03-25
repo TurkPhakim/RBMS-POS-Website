@@ -274,9 +274,12 @@ public class SelfOrderService : ISelfOrderService
         if (table.Status != ETableStatus.Occupied)
             throw new BusinessException("โต๊ะถูกปิดแล้ว ไม่สามารถสั่งอาหารได้");
 
-        // Get or find active order
+        // Get active order via table's ActiveOrderId (supports linked tables)
+        if (!table.ActiveOrderId.HasValue)
+            throw new BusinessException("ไม่พบออเดอร์ที่เปิดอยู่ กรุณาแจ้งพนักงาน");
+
         var order = await _unitOfWork.Orders.GetAll()
-            .FirstOrDefaultAsync(o => o.TableId == tableId && o.Status == EOrderStatus.Open, ct)
+            .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value, ct)
             ?? throw new BusinessException("ไม่พบออเดอร์ที่เปิดอยู่ กรุณาแจ้งพนักงาน");
 
         var orderedBy = $"customer:{sessionId}";
@@ -305,7 +308,8 @@ public class SelfOrderService : ISelfOrderService
                 Note = itemReq.Note,
                 OrderedBy = orderedBy,
                 Status = EOrderItemStatus.Sent,
-                SentToKitchenAt = DateTime.UtcNow
+                SentToKitchenAt = DateTime.UtcNow,
+                SourceTableId = tableId
             };
 
             decimal optionsTotal = 0;
@@ -386,9 +390,16 @@ public class SelfOrderService : ISelfOrderService
 
     public async Task<CustomerOrderTrackingResponseModel> GetOrdersAsync(int tableId, CancellationToken ct = default)
     {
+        // Find order via table's ActiveOrderId (supports linked tables)
+        var table = await _unitOfWork.Tables.QueryNoTracking()
+            .FirstOrDefaultAsync(t => t.TableId == tableId, ct);
+
+        if (table?.ActiveOrderId == null)
+            return new CustomerOrderTrackingResponseModel();
+
         var order = await _unitOfWork.Orders.QueryNoTracking()
             .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided))
-            .FirstOrDefaultAsync(o => o.TableId == tableId && o.Status == EOrderStatus.Open, ct);
+            .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value, ct);
 
         if (order == null)
         {
@@ -446,16 +457,38 @@ public class SelfOrderService : ISelfOrderService
         if (table.Status != ETableStatus.Occupied)
             throw new BusinessException("โต๊ะไม่ได้อยู่ในสถานะใช้งาน");
 
+        // Find order via ActiveOrderId (supports linked tables)
+        if (!table.ActiveOrderId.HasValue)
+            throw new BusinessException("ไม่พบออเดอร์ที่เปิดอยู่");
+
         var order = await _unitOfWork.Orders.GetAll()
-            .FirstOrDefaultAsync(o => o.TableId == tableId && o.Status == EOrderStatus.Open, ct)
+            .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value, ct)
             ?? throw new BusinessException("ไม่พบออเดอร์ที่เปิดอยู่");
+
+        if (order.Status != EOrderStatus.Open)
+            throw new BusinessException("ออเดอร์ไม่ได้อยู่ในสถานะเปิด");
 
         // Change status to Billing
         order.Status = EOrderStatus.Billing;
         _unitOfWork.Orders.Update(order);
 
+        // Update table + linked tables to Billing
         table.Status = ETableStatus.Billing;
         _unitOfWork.Tables.Update(table);
+
+        var linkedTableIds = await GetLinkedTableIdsAsync(tableId, ct);
+        if (linkedTableIds != null)
+        {
+            foreach (var ltId in linkedTableIds.Where(id => id != tableId))
+            {
+                var lt = await _unitOfWork.Tables.GetByIdAsync(ltId, ct);
+                if (lt != null)
+                {
+                    lt.Status = ETableStatus.Billing;
+                    _unitOfWork.Tables.Update(lt);
+                }
+            }
+        }
 
         await _unitOfWork.CommitAsync(ct);
 
@@ -464,6 +497,12 @@ public class SelfOrderService : ISelfOrderService
 
         await _orderNotificationService.NotifyOrderUpdatedAsync(order.OrderId, "Billing", ct);
         await _orderNotificationService.NotifyTableStatusChangedAsync(tableId, "Billing", ct);
+
+        if (linkedTableIds != null)
+        {
+            foreach (var ltId in linkedTableIds.Where(id => id != tableId))
+                await _orderNotificationService.NotifyTableStatusChangedAsync(ltId, "Billing", ct);
+        }
 
         await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
         {
@@ -483,8 +522,11 @@ public class SelfOrderService : ISelfOrderService
             .FirstOrDefaultAsync(t => t.TableId == tableId && !t.DeleteFlag, ct)
             ?? throw new EntityNotFoundException("Table", tableId);
 
+        if (!table.ActiveOrderId.HasValue)
+            throw new BusinessException("ไม่พบบิลที่กำลังรอชำระ");
+
         var order = await _unitOfWork.Orders.QueryNoTracking()
-            .FirstOrDefaultAsync(o => o.TableId == tableId && o.Status == EOrderStatus.Billing, ct)
+            .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value && o.Status == EOrderStatus.Billing, ct)
             ?? throw new BusinessException("ไม่พบบิลที่กำลังรอชำระ");
 
         _logger.LogInformation("Customer {SessionId} requested cash payment for Table {TableId}, Order {OrderId}",
@@ -508,8 +550,11 @@ public class SelfOrderService : ISelfOrderService
             .FirstOrDefaultAsync(t => t.TableId == tableId && !t.DeleteFlag, ct)
             ?? throw new EntityNotFoundException("Table", tableId);
 
+        if (!table.ActiveOrderId.HasValue)
+            throw new BusinessException("ไม่พบบิลที่กำลังรอชำระ");
+
         var order = await _unitOfWork.Orders.QueryNoTracking()
-            .FirstOrDefaultAsync(o => o.TableId == tableId && o.Status == EOrderStatus.Billing, ct)
+            .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value && o.Status == EOrderStatus.Billing, ct)
             ?? throw new BusinessException("ไม่พบบิลที่กำลังรอชำระ");
 
         var dailyNo = order.OrderNumber.Split('-').Last();
@@ -553,6 +598,19 @@ public class SelfOrderService : ISelfOrderService
         return await _paymentService.GetReceiptDataAsync(payment.PaymentId, ct);
     }
 
+    public async Task<ReceiptDataModel> GetCustomerConsolidatedReceiptAsync(int tableId, CancellationToken ct = default)
+    {
+        // Find active order for this table
+        var table = await _unitOfWork.Tables.QueryNoTracking()
+            .FirstOrDefaultAsync(t => t.TableId == tableId, ct)
+            ?? throw new EntityNotFoundException("Table", tableId);
+
+        if (table.ActiveOrderId == null)
+            throw new BusinessException("โต๊ะนี้ไม่มีออเดอร์ที่กำลังใช้งาน");
+
+        return await _paymentService.GetConsolidatedReceiptDataAsync(table.ActiveOrderId.Value, ct);
+    }
+
     private (int tableId, string nonce) DecodeQrToken(string qrToken)
     {
         var secret = _configuration["Jwt:Secret"] ?? "";
@@ -592,5 +650,18 @@ public class SelfOrderService : ISelfOrderService
             return "ลูกค้า";
 
         return orderedBy;
+    }
+
+    private async Task<List<int>?> GetLinkedTableIdsAsync(int tableId, CancellationToken ct)
+    {
+        var link = await _unitOfWork.TableLinks.QueryNoTracking()
+            .FirstOrDefaultAsync(tl => tl.TableId == tableId, ct);
+
+        if (link == null) return null;
+
+        return await _unitOfWork.TableLinks.QueryNoTracking()
+            .Where(tl => tl.GroupCode == link.GroupCode)
+            .Select(tl => tl.TableId)
+            .ToListAsync(ct);
     }
 }

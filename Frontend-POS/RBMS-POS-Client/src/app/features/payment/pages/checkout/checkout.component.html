@@ -60,7 +60,12 @@
             </div>
             <h2 class="text-2xl font-bold text-success mb-2">ชำระเงินครบทุกบิลแล้ว</h2>
             <p class="text-surface-sub mb-6">ออเดอร์ {{ order?.orderNumber }} เสร็จสมบูรณ์</p>
-            <button pButton label="กลับหน้าชำระเงิน" severity="success" (click)="goBack()"></button>
+            <div class="flex items-center gap-3">
+              <button pButton label="กลับหน้าชำระเงิน" severity="success" (click)="goBack()"></button>
+              @if (allBills().length > 1) {
+                <button pButton label="ดาวน์โหลดใบเสร็จรวม" severity="secondary" [outlined]="true" (click)="onDownloadConsolidatedReceipt()"></button>
+              }
+            </div>
           </div>
         </div>
       } @else {
@@ -126,18 +131,13 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                   <span class="text-lg font-semibold">ค่าบริการ</span>
-                  <p-dropdown
-                    [options]="scOptions()"
+                  <app-service-charge-dropdown
                     [ngModel]="selectedScId()"
                     (ngModelChange)="onScChange($event)"
-                    optionLabel="name"
-                    optionValue="serviceChargeId"
-                    [showClear]="true"
                     placeholder="ไม่คิดค่าบริการ"
-                    appendTo="body"
-                    [loading]="isUpdatingSc()"
+                    [disabled]="isUpdatingSc()"
                     styleClass="w-[200px]"
-                  ></p-dropdown>
+                  ></app-service-charge-dropdown>
                 </div>
                 <span class="text-xl font-semibold">{{ bill.serviceChargeAmount | number: '1.2-2' }}</span>
               </div>
@@ -200,6 +200,16 @@
             <i class="pi pi-check-circle text-4xl text-success mb-3"></i>
             <p class="font-semibold">{{ bill.billNumber }} ชำระแล้ว</p>
             <p class="text-sm mt-1">กรุณาเลือกบิลอื่นที่ยังไม่ชำระ</p>
+            <button
+              pButton
+              label="ดาวน์โหลดใบเสร็จ"
+              severity="secondary"
+              [outlined]="true"
+              class="mt-4"
+              (click)="onDownloadBillReceipt(bill)"
+            >
+              <i class="pi pi-download mr-1"></i>
+            </button>
           </div>
         </div>
       } @else if (bill) {
@@ -313,11 +323,11 @@
             </button>
             <button
               type="button"
-              class="w-full h-[44px] rounded-xl font-medium border border-danger/30 text-danger/50 flex items-center justify-center gap-2 opacity-50 cursor-not-allowed"
-              [disabled]="true"
+              class="w-full h-[44px] rounded-xl font-medium border border-danger/30 text-danger flex items-center justify-center gap-2 transition-colors hover:bg-danger/10"
+              (click)="onVoidBill()"
             >
               <i class="pi pi-ban"></i>
-              Void Bill
+              ยกเลิกบิล
             </button>
           </div>
         </div>

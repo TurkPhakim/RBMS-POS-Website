@@ -10,7 +10,10 @@ export interface OrderBillResponseModel {
   orderId?: number;
   paidAt?: string | null;
   serviceChargeAmount?: number;
+  serviceChargeId?: number | null;
   serviceChargeRate?: number;
+  splitCount?: number;
+  splitIndex?: number;
   status?: string | null;
   subTotal?: number;
   totalDiscountAmount?: number;

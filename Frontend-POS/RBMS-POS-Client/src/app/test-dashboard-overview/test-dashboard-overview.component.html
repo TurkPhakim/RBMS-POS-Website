@@ -1,0 +1,247 @@
+<div class="h-screen overflow-y-auto p-6 bg-surface space-y-6">
+  <!-- Header: Date + Refresh -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-surface-sub">วันที่:</span>
+      <p-datepicker
+        [(ngModel)]="selectedDate"
+        (ngModelChange)="onDateChange()"
+        dateFormat="dd/mm/yy"
+        [maxDate]="selectedDate"
+        styleClass="w-[180px]"
+      ></p-datepicker>
+    </div>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-refresh"
+      label="รีเฟรช"
+      class="p-button-outlined p-button-secondary"
+      (click)="onRefresh()"
+    ></button>
+  </div>
+
+  <!-- Row 1: KPI Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    @for (card of kpiCards; track card.label) {
+      <app-kpi-card
+        [label]="card.label"
+        [value]="card.value"
+        [icon]="card.icon"
+        [accentColor]="card.accentColor"
+        [changePercent]="card.changePercent"
+      ></app-kpi-card>
+    }
+  </div>
+
+  <!-- Row 2: Kitchen Breakdown -->
+  <div class="grid grid-cols-3 gap-4">
+    @for (k of kitchenCards; track k.categoryName) {
+      <div
+        class="bg-surface-card rounded-xl p-5 flex items-center gap-4 border-l-4"
+        [ngClass]="k.borderColor"
+      >
+        <div
+          class="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center"
+          [ngClass]="k.bgColor"
+        >
+          <app-generic-icon
+            [name]="k.iconName"
+            svgClass="w-7 h-7"
+            [class]="k.color"
+          ></app-generic-icon>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm text-surface-sub">{{ k.categoryName }}</span>
+          <div class="flex items-baseline gap-1">
+            <span class="text-2xl font-bold">{{ k.itemCount | number }}</span>
+            <span class="text-sm text-surface-sub">ชิ้น</span>
+          </div>
+          <span class="text-xs" [class]="k.color">{{ k.percent }}% ของทั้งหมด</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Row 3: Revenue Trend -->
+  <div class="bg-surface-card rounded-xl p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-section-title">ยอดขายย้อนหลัง</h3>
+      <div class="flex gap-2">
+        <button
+          pButton
+          type="button"
+          label="7 วัน"
+          [class]="
+            trendDays === 7
+              ? 'p-button-sm'
+              : 'p-button-sm p-button-outlined p-button-secondary'
+          "
+          (click)="onTrendToggle(7)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="30 วัน"
+          [class]="
+            trendDays === 30
+              ? 'p-button-sm'
+              : 'p-button-sm p-button-outlined p-button-secondary'
+          "
+          (click)="onTrendToggle(30)"
+        ></button>
+      </div>
+    </div>
+    <div class="h-[300px]">
+      <canvas
+        baseChart
+        type="line"
+        [data]="revenueTrendData()"
+        [options]="revenueTrendOptions"
+      ></canvas>
+    </div>
+  </div>
+
+  <!-- Row 4: Top Selling — Podium -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Food -->
+    <ng-container
+      *ngTemplateOutlet="podiumCard; context: { $implicit: topSellingFood, title: 'อาหารขายดี Top 5', icon: 'food', gradient: 'bg-gradient-to-r from-primary to-primary-dark' }"
+    ></ng-container>
+    <!-- Beverage -->
+    <ng-container
+      *ngTemplateOutlet="podiumCard; context: { $implicit: topSellingBeverage, title: 'เครื่องดื่มขายดี Top 5', icon: 'drinks-glass', gradient: 'bg-gradient-to-r from-success to-success-dark' }"
+    ></ng-container>
+    <!-- Dessert -->
+    <ng-container
+      *ngTemplateOutlet="podiumCard; context: { $implicit: topSellingDessert, title: 'ของหวานขายดี Top 5', icon: 'dessert', gradient: 'bg-gradient-to-r from-warning to-warning-dark' }"
+    ></ng-container>
+  </div>
+
+  <!-- Podium Card Template -->
+  <ng-template #podiumCard let-items let-title="title" let-icon="icon" let-gradient="gradient">
+    <app-section-mini-card
+      [headerLabel]="title"
+      [headerIcon]="icon"
+      [headerClass]="gradient"
+    >
+
+      <!-- Podium: 2nd | 1st | 3rd -->
+      <div class="flex items-end justify-center gap-3 mb-4">
+        <!-- 2nd Place -->
+        <div class="flex flex-col items-center w-[90px]">
+          <div class="relative mb-2">
+            <img
+              [src]="items[1].image"
+              [alt]="items[1].name"
+              class="w-16 h-16 rounded-full object-cover border-2 border-surface-sub"
+            />
+            <div
+              class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#a0aec0] flex items-center justify-center"
+            >
+              <span class="text-xs font-bold text-white">2</span>
+            </div>
+          </div>
+          <span class="text-xs text-center leading-tight line-clamp-2">{{
+            items[1].name
+          }}</span>
+          <span class="text-sm font-bold mt-1">{{ items[1].qty }} ชิ้น</span>
+          <div class="w-full h-14 rounded-t-lg mt-2 bg-surface"></div>
+        </div>
+
+        <!-- 1st Place -->
+        <div class="flex flex-col items-center w-[100px]">
+          <div class="relative mb-2">
+            <i class="pi pi-crown text-warning text-lg absolute -top-5 left-1/2 -translate-x-1/2"></i>
+            <img
+              [src]="items[0].image"
+              [alt]="items[0].name"
+              class="w-20 h-20 rounded-full object-cover border-3 border-warning"
+            />
+            <div
+              class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-warning flex items-center justify-center"
+            >
+              <span class="text-xs font-bold text-white">1</span>
+            </div>
+          </div>
+          <span class="text-sm text-center font-semibold leading-tight line-clamp-2">{{
+            items[0].name
+          }}</span>
+          <span class="text-sm font-bold mt-1">{{ items[0].qty }} ชิ้น</span>
+          <div class="w-full h-20 rounded-t-lg mt-2 bg-warning-bg"></div>
+        </div>
+
+        <!-- 3rd Place -->
+        <div class="flex flex-col items-center w-[90px]">
+          <div class="relative mb-2">
+            <img
+              [src]="items[2].image"
+              [alt]="items[2].name"
+              class="w-14 h-14 rounded-full object-cover border-2 border-primary-light"
+            />
+            <div
+              class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-primary-badge flex items-center justify-center"
+            >
+              <span class="text-xs font-bold text-white">3</span>
+            </div>
+          </div>
+          <span class="text-xs text-center leading-tight line-clamp-2">{{
+            items[2].name
+          }}</span>
+          <span class="text-sm font-bold mt-1">{{ items[2].qty }} ชิ้น</span>
+          <div class="w-full h-10 rounded-t-lg mt-2 bg-primary-subtle"></div>
+        </div>
+      </div>
+
+      <!-- 4th & 5th — List -->
+      <div class="border-t border-surface pt-3 space-y-2">
+        @for (item of items.slice(3); track item.rank) {
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-bold text-surface-sub w-5 text-center">{{
+              item.rank
+            }}</span>
+            <img
+              [src]="item.image"
+              [alt]="item.name"
+              class="w-9 h-9 rounded-full object-cover"
+            />
+            <span class="text-sm flex-1 truncate">{{ item.name }}</span>
+            <span class="text-sm font-semibold">{{ item.qty }} ชิ้น</span>
+          </div>
+        }
+      </div>
+    </app-section-mini-card>
+  </ng-template>
+
+  <!-- Row 5: Peak Hours -->
+  <div class="bg-surface-card rounded-xl p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-section-title">ช่วงเวลาขายดี</h3>
+      <div class="flex items-center gap-2 text-xs text-surface-sub">
+        <div class="w-3 h-3 rounded-sm bg-primary"></div>
+        <span>ออเดอร์</span>
+        <div class="w-3 h-3 rounded-sm bg-danger ml-2"></div>
+        <span>ช่วงพีค</span>
+      </div>
+    </div>
+    <div class="flex items-end gap-1 h-[140px]">
+      @for (h of peakHours; track h.hour) {
+        <div class="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+          <span
+            class="text-xs font-semibold"
+            [ngClass]="h.isPeak ? 'text-danger' : 'text-surface-sub'"
+          >
+            {{ h.count }}
+          </span>
+          <div
+            class="w-full rounded-t-md transition-all duration-300 min-h-[4px]"
+            [style.backgroundColor]="h.isPeak ? 'var(--color-danger)' : 'var(--color-primary)'"
+            [style.opacity]="h.isPeak ? 1 : 0.7"
+            [style.height.%]="h.heightPercent"
+          ></div>
+          <span class="text-[10px] text-surface-sub leading-none mt-1">{{ h.label }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</div>

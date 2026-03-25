@@ -11,6 +11,7 @@ import { CashDrawerDialogComponent } from './dialogs/cash-drawer-dialog/cash-dra
 import { CashPaymentDialogComponent } from './dialogs/cash-payment-dialog/cash-payment-dialog.component';
 import { QrPaymentDialogComponent } from './dialogs/qr-payment-dialog/qr-payment-dialog.component';
 import { PaymentHistoryComponent } from './pages/payment-history/payment-history.component';
+import { SessionDetailComponent } from './pages/session-detail/session-detail.component';
 import { PaymentRoutingModule } from './payment-routing.module';
 
 @NgModule({
@@ -19,6 +20,7 @@ import { PaymentRoutingModule } from './payment-routing.module';
     CheckoutComponent,
     SessionHistoryComponent,
     PaymentHistoryComponent,
+    SessionDetailComponent,
     OpenSessionDialogComponent,
     CloseSessionDialogComponent,
     CashDrawerDialogComponent,

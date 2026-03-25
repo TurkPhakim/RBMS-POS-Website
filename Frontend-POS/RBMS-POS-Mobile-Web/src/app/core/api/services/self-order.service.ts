@@ -21,6 +21,8 @@ import { selfOrderAuthenticatePost } from '../fn/self-order/self-order-authentic
 import { SelfOrderAuthenticatePost$Params } from '../fn/self-order/self-order-authenticate-post';
 import { selfOrderCallWaiterPost } from '../fn/self-order/self-order-call-waiter-post';
 import { SelfOrderCallWaiterPost$Params } from '../fn/self-order/self-order-call-waiter-post';
+import { selfOrderGetConsolidatedReceiptGet } from '../fn/self-order/self-order-get-consolidated-receipt-get';
+import { SelfOrderGetConsolidatedReceiptGet$Params } from '../fn/self-order/self-order-get-consolidated-receipt-get';
 import { selfOrderGetMenuCategoriesGet } from '../fn/self-order/self-order-get-menu-categories-get';
 import { SelfOrderGetMenuCategoriesGet$Params } from '../fn/self-order/self-order-get-menu-categories-get';
 import { selfOrderGetMenuDetailGet } from '../fn/self-order/self-order-get-menu-detail-get';
@@ -344,6 +346,31 @@ export class SelfOrderService extends BaseService {
    */
   selfOrderGetReceiptGet(params: SelfOrderGetReceiptGet$Params, context?: HttpContext): Observable<ReceiptDataModelBaseResponseModel> {
     return this.selfOrderGetReceiptGet$Response(params, context).pipe(
+      map((r: StrictHttpResponse<ReceiptDataModelBaseResponseModel>): ReceiptDataModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `selfOrderGetConsolidatedReceiptGet()` */
+  static readonly SelfOrderGetConsolidatedReceiptGetPath = '/api/customer/consolidated-receipt';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `selfOrderGetConsolidatedReceiptGet()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  selfOrderGetConsolidatedReceiptGet$Response(params?: SelfOrderGetConsolidatedReceiptGet$Params, context?: HttpContext): Observable<StrictHttpResponse<ReceiptDataModelBaseResponseModel>> {
+    return selfOrderGetConsolidatedReceiptGet(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `selfOrderGetConsolidatedReceiptGet$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  selfOrderGetConsolidatedReceiptGet(params?: SelfOrderGetConsolidatedReceiptGet$Params, context?: HttpContext): Observable<ReceiptDataModelBaseResponseModel> {
+    return this.selfOrderGetConsolidatedReceiptGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<ReceiptDataModelBaseResponseModel>): ReceiptDataModelBaseResponseModel => r.body)
     );
   }

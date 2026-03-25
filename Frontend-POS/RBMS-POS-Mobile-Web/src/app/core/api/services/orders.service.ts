@@ -27,8 +27,6 @@ import { ordersGetOrderGet } from '../fn/orders/orders-get-order-get';
 import { OrdersGetOrderGet$Params } from '../fn/orders/orders-get-order-get';
 import { ordersGetOrdersGet } from '../fn/orders/orders-get-orders-get';
 import { OrdersGetOrdersGet$Params } from '../fn/orders/orders-get-orders-get';
-import { ordersGetServiceChargeOptionsGet } from '../fn/orders/orders-get-service-charge-options-get';
-import { OrdersGetServiceChargeOptionsGet$Params } from '../fn/orders/orders-get-service-charge-options-get';
 import { ordersRequestBillPost } from '../fn/orders/orders-request-bill-post';
 import { OrdersRequestBillPost$Params } from '../fn/orders/orders-request-bill-post';
 import { ordersSendToKitchenPost } from '../fn/orders/orders-send-to-kitchen-post';
@@ -43,7 +41,6 @@ import { ordersUpdateBillChargesPut } from '../fn/orders/orders-update-bill-char
 import { OrdersUpdateBillChargesPut$Params } from '../fn/orders/orders-update-bill-charges-put';
 import { ordersVoidItemPut } from '../fn/orders/orders-void-item-put';
 import { OrdersVoidItemPut$Params } from '../fn/orders/orders-void-item-put';
-import { ServiceChargeOptionModelListBaseResponseModel } from '../models/service-charge-option-model-list-base-response-model';
 
 @Injectable({ providedIn: 'root' })
 export class OrdersService extends BaseService {
@@ -398,31 +395,6 @@ export class OrdersService extends BaseService {
   ordersUpdateBillChargesPut(params: OrdersUpdateBillChargesPut$Params, context?: HttpContext): Observable<OrderBillResponseModelBaseResponseModel> {
     return this.ordersUpdateBillChargesPut$Response(params, context).pipe(
       map((r: StrictHttpResponse<OrderBillResponseModelBaseResponseModel>): OrderBillResponseModelBaseResponseModel => r.body)
-    );
-  }
-
-  /** Path part for operation `ordersGetServiceChargeOptionsGet()` */
-  static readonly OrdersGetServiceChargeOptionsGetPath = '/api/order/orders/service-charge-options';
-
-  /**
-   * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `ordersGetServiceChargeOptionsGet()` instead.
-   *
-   * This method doesn't expect any request body.
-   */
-  ordersGetServiceChargeOptionsGet$Response(params?: OrdersGetServiceChargeOptionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<ServiceChargeOptionModelListBaseResponseModel>> {
-    return ordersGetServiceChargeOptionsGet(this.http, this.rootUrl, params, context);
-  }
-
-  /**
-   * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `ordersGetServiceChargeOptionsGet$Response()` instead.
-   *
-   * This method doesn't expect any request body.
-   */
-  ordersGetServiceChargeOptionsGet(params?: OrdersGetServiceChargeOptionsGet$Params, context?: HttpContext): Observable<ServiceChargeOptionModelListBaseResponseModel> {
-    return this.ordersGetServiceChargeOptionsGet$Response(params, context).pipe(
-      map((r: StrictHttpResponse<ServiceChargeOptionModelListBaseResponseModel>): ServiceChargeOptionModelListBaseResponseModel => r.body)
     );
   }
 

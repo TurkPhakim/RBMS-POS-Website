@@ -1,6 +1,7 @@
 export { AuthService } from './services/auth.service';
 export { CashierSessionsService } from './services/cashier-sessions.service';
 export { CustomerService } from './services/customer.service';
+export { DashboardService } from './services/dashboard.service';
 export { FileService } from './services/file.service';
 export { FloorObjectsService } from './services/floor-objects.service';
 export { HumanResourceService } from './services/human-resource.service';

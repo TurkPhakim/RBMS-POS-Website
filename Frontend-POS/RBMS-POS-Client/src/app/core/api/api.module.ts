@@ -7,6 +7,7 @@ import { ApiConfiguration, ApiConfigurationParams } from './api-configuration';
 import { AuthService } from './services/auth.service';
 import { CashierSessionsService } from './services/cashier-sessions.service';
 import { CustomerService } from './services/customer.service';
+import { DashboardService } from './services/dashboard.service';
 import { FileService } from './services/file.service';
 import { FloorObjectsService } from './services/floor-objects.service';
 import { HumanResourceService } from './services/human-resource.service';
@@ -37,6 +38,7 @@ import { ZonesService } from './services/zones.service';
     AuthService,
     CashierSessionsService,
     CustomerService,
+    DashboardService,
     FileService,
     FloorObjectsService,
     HumanResourceService,

@@ -256,7 +256,56 @@ public class TableService : ITableService
         if (entity.Status != ETableStatus.Occupied && entity.Status != ETableStatus.Billing)
             throw new BusinessException("โต๊ะนี้ไม่สามารถปิดได้");
 
-        entity.Status = ETableStatus.Cleaning;
+        var hasLinkClose = await _unitOfWork.TableLinks.QueryNoTracking()
+            .AnyAsync(tl => tl.TableId == tableId, ct);
+        if (hasLinkClose)
+            throw new BusinessException("ไม่สามารถปิดโต๊ะที่เชื่อมอยู่ — กรุณายกเลิกการเชื่อมก่อน");
+
+        // ตรวจสอบว่า Order มี item ที่ส่งครัวแล้วหรือไม่
+        if (entity.ActiveOrderId.HasValue)
+        {
+            var orderId = entity.ActiveOrderId.Value;
+
+            var blockedStatuses = new[]
+            {
+                EOrderItemStatus.Sent,
+                EOrderItemStatus.Preparing,
+                EOrderItemStatus.Ready,
+                EOrderItemStatus.Served
+            };
+
+            var hasKitchenItems = await _unitOfWork.OrderItems.QueryNoTracking()
+                .AnyAsync(i => i.OrderId == orderId
+                    && blockedStatuses.Contains(i.Status), ct);
+
+            if (hasKitchenItems)
+                throw new BusinessException("ไม่สามารถปิดโต๊ะได้ เนื่องจากมีรายการที่ส่งครัวแล้ว");
+
+            // Clear FK ก่อน delete Order
+            entity.ActiveOrderId = null;
+            _unitOfWork.Tables.Update(entity);
+            await _unitOfWork.CommitAsync(ct);
+
+            // Hard delete: OrderItems (cascade ลบ OrderItemOptions) → OrderBills → Order
+            var orderItems = await _unitOfWork.OrderItems.GetAll()
+                .Where(i => i.OrderId == orderId)
+                .ToListAsync(ct);
+            if (orderItems.Count > 0)
+                _unitOfWork.OrderItems.DeleteRange(orderItems);
+
+            var orderBills = await _unitOfWork.OrderBills.GetAll()
+                .Where(b => b.OrderId == orderId)
+                .ToListAsync(ct);
+            if (orderBills.Count > 0)
+                _unitOfWork.OrderBills.DeleteRange(orderBills);
+
+            var order = await _unitOfWork.Orders.GetByIdAsync(orderId, ct);
+            if (order != null)
+                _unitOfWork.Orders.Delete(order);
+        }
+
+        // เปลี่ยนเป็น Available โดยตรง (ข้าม Cleaning)
+        entity.Status = ETableStatus.Available;
         entity.CurrentGuests = null;
         entity.GuestType = null;
         entity.OpenedAt = null;
@@ -264,26 +313,15 @@ public class TableService : ITableService
         entity.QrToken = null;
         entity.QrTokenExpiresAt = null;
         entity.QrTokenNonce = null;
+        entity.ActiveOrderId = null;
 
         _unitOfWork.Tables.Update(entity);
-
-        // Remove table links
-        var links = await _unitOfWork.TableLinks.QueryNoTracking()
-            .Where(tl => tl.TableId == tableId)
-            .ToListAsync(ct);
-
-        foreach (var link in links)
-        {
-            var linkEntity = await _unitOfWork.TableLinks.GetByIdAsync(link.TableLinkId, ct);
-            if (linkEntity != null)
-                _unitOfWork.TableLinks.Delete(linkEntity);
-        }
 
         await _unitOfWork.CommitAsync(ct);
 
         _logger.LogInformation("Closed Table {TableId}", tableId);
 
-        await _notificationService.NotifyTableStatusChangedAsync(tableId, ETableStatus.Cleaning.ToString(), ct);
+        await _notificationService.NotifyTableStatusChangedAsync(tableId, ETableStatus.Available.ToString(), ct);
 
         return await GetTableByIdAsync(tableId, ct);
     }
@@ -316,6 +354,11 @@ public class TableService : ITableService
         if (source.Status != ETableStatus.Occupied)
             throw new BusinessException("โต๊ะต้นทางต้องมีลูกค้านั่งอยู่");
 
+        var hasLinkMove = await _unitOfWork.TableLinks.QueryNoTracking()
+            .AnyAsync(tl => tl.TableId == tableId, ct);
+        if (hasLinkMove)
+            throw new BusinessException("ไม่สามารถย้ายโต๊ะที่เชื่อมอยู่ — กรุณายกเลิกการเชื่อมก่อน");
+
         var target = await _unitOfWork.Tables.GetByIdAsync(request.TargetTableId, ct)
             ?? throw new EntityNotFoundException("Table", request.TargetTableId);
 
@@ -328,6 +371,7 @@ public class TableService : ITableService
         target.GuestType = source.GuestType;
         target.OpenedAt = source.OpenedAt;
         target.Note = source.Note;
+        target.ActiveOrderId = source.ActiveOrderId;
 
         // Generate new QR for target
         var nonce = GenerateNonce();
@@ -335,8 +379,20 @@ public class TableService : ITableService
         target.QrToken = GenerateQrToken(request.TargetTableId, nonce);
         target.QrTokenExpiresAt = DateTime.UtcNow.AddHours(12);
 
-        // Clear source → CLEANING
-        source.Status = ETableStatus.Cleaning;
+        // Update Order.TableId to point to the new table
+        if (source.ActiveOrderId.HasValue)
+        {
+            var order = await _unitOfWork.Orders.GetByIdAsync(source.ActiveOrderId.Value, ct);
+            if (order != null)
+            {
+                order.TableId = request.TargetTableId;
+                _unitOfWork.Orders.Update(order);
+            }
+        }
+
+        // Clear source → Available (skip Cleaning)
+        source.Status = ETableStatus.Available;
+        source.ActiveOrderId = null;
         source.CurrentGuests = null;
         source.GuestType = null;
         source.OpenedAt = null;
@@ -351,7 +407,7 @@ public class TableService : ITableService
 
         _logger.LogInformation("Moved Table {SourceTableId} → {TargetTableId}", tableId, request.TargetTableId);
 
-        await _notificationService.NotifyTableStatusChangedAsync(tableId, ETableStatus.Cleaning.ToString(), ct);
+        await _notificationService.NotifyTableStatusChangedAsync(tableId, ETableStatus.Available.ToString(), ct);
         await _notificationService.NotifyTableStatusChangedAsync(request.TargetTableId, ETableStatus.Occupied.ToString(), ct);
 
         return await GetTableByIdAsync(request.TargetTableId, ct);
@@ -362,54 +418,205 @@ public class TableService : ITableService
         if (request.TableIds.Count < 2)
             throw new ValidationException("ต้องเลือกอย่างน้อย 2 โต๊ะ");
 
-        var groupCode = Guid.NewGuid().ToString("N")[..8];
-
+        // Validate all tables
+        var tables = new List<TbTable>();
         foreach (var tid in request.TableIds)
         {
-            var table = await _unitOfWork.Tables.QueryNoTracking()
-                .FirstOrDefaultAsync(t => t.TableId == tid, ct)
+            var table = await _unitOfWork.Tables.GetByIdAsync(tid, ct)
                 ?? throw new EntityNotFoundException("Table", tid);
 
             if (table.Status != ETableStatus.Occupied)
                 throw new BusinessException($"โต๊ะ {table.TableName} ต้องมีลูกค้านั่งอยู่");
+
+            if (!table.ActiveOrderId.HasValue)
+                throw new BusinessException($"โต๊ะ {table.TableName} ไม่มีออเดอร์ที่เปิดอยู่");
 
             var existingLink = await _unitOfWork.TableLinks.QueryNoTracking()
                 .AnyAsync(tl => tl.TableId == tid, ct);
             if (existingLink)
                 throw new BusinessException($"โต๊ะ {table.TableName} เชื่อมกับกลุ่มอื่นอยู่แล้ว");
 
+            tables.Add(table);
+        }
+
+        // Validate all orders are Open
+        foreach (var table in tables)
+        {
+            var order = await _unitOfWork.Orders.QueryNoTracking()
+                .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId!.Value, ct);
+            if (order == null || order.Status != EOrderStatus.Open)
+                throw new BusinessException($"โต๊ะ {table.TableName} ออเดอร์ไม่ได้อยู่ในสถานะเปิด");
+        }
+
+        var primaryTable = tables[0];
+        var primaryOrderId = primaryTable.ActiveOrderId!.Value;
+
+        // Set SourceTableId for existing items in primary order
+        var existingItems = await _unitOfWork.OrderItems.GetAll()
+            .Where(i => i.OrderId == primaryOrderId && i.SourceTableId == null)
+            .ToListAsync(ct);
+        foreach (var item in existingItems)
+        {
+            item.SourceTableId = primaryTable.TableId;
+            _unitOfWork.OrderItems.Update(item);
+        }
+
+        // Merge secondary orders into primary
+        for (var i = 1; i < tables.Count; i++)
+        {
+            var secondaryTable = tables[i];
+            var secondaryOrderId = secondaryTable.ActiveOrderId!.Value;
+
+            // Move items to primary order
+            var secondaryItems = await _unitOfWork.OrderItems.GetAll()
+                .Where(it => it.OrderId == secondaryOrderId)
+                .ToListAsync(ct);
+            foreach (var item in secondaryItems)
+            {
+                item.OrderId = primaryOrderId;
+                item.SourceTableId = secondaryTable.TableId;
+                _unitOfWork.OrderItems.Update(item);
+            }
+
+            // Point secondary table to primary order
+            secondaryTable.ActiveOrderId = primaryOrderId;
+            _unitOfWork.Tables.Update(secondaryTable);
+
+            // Delete secondary order's bills and order
+            var secondaryBills = await _unitOfWork.OrderBills.GetAll()
+                .Where(b => b.OrderId == secondaryOrderId)
+                .ToListAsync(ct);
+            if (secondaryBills.Count > 0)
+                _unitOfWork.OrderBills.DeleteRange(secondaryBills);
+
+            var secondaryOrder = await _unitOfWork.Orders.GetByIdAsync(secondaryOrderId, ct);
+            if (secondaryOrder != null)
+                _unitOfWork.Orders.Delete(secondaryOrder);
+        }
+
+        // Recalculate primary order SubTotal
+        var primaryOrder = await _unitOfWork.Orders.GetByIdAsync(primaryOrderId, ct)!;
+        var allItems = await _unitOfWork.OrderItems.QueryNoTracking()
+            .Where(it => it.OrderId == primaryOrderId
+                && it.Status != EOrderItemStatus.Voided
+                && it.Status != EOrderItemStatus.Cancelled)
+            .ToListAsync(ct);
+        primaryOrder!.SubTotal = allItems.Sum(it => it.TotalPrice);
+        _unitOfWork.Orders.Update(primaryOrder);
+
+        // Create TbTableLink records
+        var groupCode = Guid.NewGuid().ToString("N")[..8];
+        for (var i = 0; i < tables.Count; i++)
+        {
             await _unitOfWork.TableLinks.AddAsync(new TbTableLink
             {
                 GroupCode = groupCode,
-                TableId = tid
+                TableId = tables[i].TableId,
+                IsPrimary = i == 0
             }, ct);
         }
 
         await _unitOfWork.CommitAsync(ct);
 
-        _logger.LogInformation("Linked tables {TableIds} with GroupCode={GroupCode}",
-            string.Join(",", request.TableIds), groupCode);
+        _logger.LogInformation("Linked tables {TableIds} with GroupCode={GroupCode}, PrimaryOrderId={OrderId}",
+            string.Join(",", request.TableIds), groupCode, primaryOrderId);
+
+        // Notify all tables
+        foreach (var table in tables)
+            await _notificationService.NotifyTableStatusChangedAsync(table.TableId, ETableStatus.Occupied.ToString(), ct);
     }
 
     public async Task UnlinkTablesAsync(string groupCode, CancellationToken ct = default)
     {
-        var links = await _unitOfWork.TableLinks.QueryNoTracking()
+        var links = await _unitOfWork.TableLinks.GetAll()
             .Where(tl => tl.GroupCode == groupCode)
             .ToListAsync(ct);
 
         if (links.Count == 0)
             throw new EntityNotFoundException("TableLink group", groupCode);
 
-        foreach (var link in links)
+        // Find primary
+        var primaryLink = links.FirstOrDefault(l => l.IsPrimary)
+            ?? throw new BusinessException("ไม่พบโต๊ะหลักในกลุ่ม");
+
+        var primaryTable = await _unitOfWork.Tables.GetByIdAsync(primaryLink.TableId, ct)
+            ?? throw new EntityNotFoundException("Table", primaryLink.TableId);
+
+        if (!primaryTable.ActiveOrderId.HasValue)
+            throw new BusinessException("ไม่พบออเดอร์ที่เปิดอยู่");
+
+        var primaryOrder = await _unitOfWork.Orders.GetByIdAsync(primaryTable.ActiveOrderId.Value, ct)
+            ?? throw new EntityNotFoundException("Order", primaryTable.ActiveOrderId.Value);
+
+        if (primaryOrder.Status != EOrderStatus.Open)
+            throw new BusinessException("ไม่สามารถยกเลิกเชื่อมได้ — ออเดอร์ต้องอยู่ในสถานะเปิด (ถ้ากำลังรอชำระ ให้ยกเลิกบิลก่อน)");
+
+        var secondaryLinks = links.Where(l => !l.IsPrimary).ToList();
+
+        // Split items back to secondary tables
+        foreach (var secLink in secondaryLinks)
         {
-            var entity = await _unitOfWork.TableLinks.GetByIdAsync(link.TableLinkId, ct);
-            if (entity != null)
-                _unitOfWork.TableLinks.Delete(entity);
+            var secTable = await _unitOfWork.Tables.GetByIdAsync(secLink.TableId, ct)!;
+
+            // Find items belonging to this secondary table
+            var secItems = await _unitOfWork.OrderItems.GetAll()
+                .Where(i => i.OrderId == primaryOrder.OrderId && i.SourceTableId == secLink.TableId)
+                .ToListAsync(ct);
+
+            // Create new order for secondary table
+            var newOrder = new TbOrder
+            {
+                TableId = secLink.TableId,
+                OrderNumber = await GenerateOrderNumberAsync(ct),
+                Status = EOrderStatus.Open,
+                GuestCount = secTable!.CurrentGuests ?? 0,
+                SubTotal = secItems
+                    .Where(i => i.Status != EOrderItemStatus.Voided && i.Status != EOrderItemStatus.Cancelled)
+                    .Sum(i => i.TotalPrice)
+            };
+            await _unitOfWork.Orders.AddAsync(newOrder, ct);
+            await _unitOfWork.CommitAsync(ct);
+
+            // Move items to new order
+            foreach (var item in secItems)
+            {
+                item.OrderId = newOrder.OrderId;
+                item.SourceTableId = null;
+                _unitOfWork.OrderItems.Update(item);
+            }
+
+            // Update secondary table
+            secTable.ActiveOrderId = newOrder.OrderId;
+            _unitOfWork.Tables.Update(secTable);
         }
+
+        // Clear SourceTableId on primary items
+        var primaryItems = await _unitOfWork.OrderItems.GetAll()
+            .Where(i => i.OrderId == primaryOrder.OrderId)
+            .ToListAsync(ct);
+        foreach (var item in primaryItems)
+        {
+            item.SourceTableId = null;
+            _unitOfWork.OrderItems.Update(item);
+        }
+
+        // Recalculate primary SubTotal
+        primaryOrder.SubTotal = primaryItems
+            .Where(i => i.Status != EOrderItemStatus.Voided && i.Status != EOrderItemStatus.Cancelled)
+            .Sum(i => i.TotalPrice);
+        _unitOfWork.Orders.Update(primaryOrder);
+
+        // Delete TbTableLink records
+        _unitOfWork.TableLinks.DeleteRange(links);
 
         await _unitOfWork.CommitAsync(ct);
 
         _logger.LogInformation("Unlinked tables GroupCode={GroupCode}", groupCode);
+
+        // Notify all tables
+        var allTableIds = links.Select(l => l.TableId).ToList();
+        foreach (var tid in allTableIds)
+            await _notificationService.NotifyTableStatusChangedAsync(tid, ETableStatus.Occupied.ToString(), ct);
     }
 
     public async Task<TableResponseModel> SetUnavailableAsync(int tableId, CancellationToken ct = default)

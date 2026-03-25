@@ -8,7 +8,7 @@ import { OrdersService } from '@app/core/api/services/orders.service';
 import { PaymentsService } from '@app/core/api/services/payments.service';
 import { OrderDetailResponseModel } from '@app/core/api/models/order-detail-response-model';
 import { OrderBillResponseModel } from '@app/core/api/models/order-bill-response-model';
-import { ServiceChargeOptionModel } from '@app/core/api/models/service-charge-option-model';
+import { PaymentResponseModel } from '@app/core/api/models/payment-response-model';
 import { ModalService } from '@app/core/services/modal.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ReceiptService } from '@app/core/services/receipt.service';
@@ -28,8 +28,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   orderDetail = signal<OrderDetailResponseModel | null>(null);
   allBills = signal<OrderBillResponseModel[]>([]);
   selectedBillIndex = signal(0);
-  scOptions = signal<ServiceChargeOptionModel[]>([]);
   selectedScId = signal<number | null>(null);
+  payments = signal<PaymentResponseModel[]>([]);
   isSaving = signal(false);
   isUpdatingSc = signal(false);
 
@@ -116,12 +116,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       });
 
     this.loadBills();
-
-    this.ordersService.ordersGetServiceChargeOptionsGet()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (res) => this.scOptions.set(res.result ?? []),
-      });
   }
 
   private loadBills(): void {
@@ -135,6 +129,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.syncScDropdown();
         },
       });
+
+    this.paymentsService.paymentsGetByOrderGet({ orderId: this.orderId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => this.payments.set(res.result ?? []),
+      });
   }
 
   private autoSelectPendingBill(bills: OrderBillResponseModel[]): void {
@@ -145,13 +145,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   private syncScDropdown(): void {
     const bill = this.currentBill();
-    const options = this.scOptions();
-    if (bill && bill.serviceChargeRate && options.length) {
-      const matched = options.find(sc => sc.percentageRate === bill.serviceChargeRate);
-      this.selectedScId.set(matched?.serviceChargeId ?? null);
-    } else {
-      this.selectedScId.set(null);
-    }
+    this.selectedScId.set(bill?.serviceChargeId ?? null);
   }
 
   onSelectBill(index: number): void {
@@ -250,17 +244,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.isSaving.set(false);
           const paymentId = res.result?.paymentId;
           const change = this.changeAmount();
-          const messages: string[] = [];
-          if (change > 0) {
-            messages.push(`เงินทอน ${change.toFixed(2)} บาท`);
-          }
-          messages.push('ต้องการดาวน์โหลดใบเสร็จหรือไม่?');
 
           const dialogRef = this.modalService.info({
             title: 'ชำระเงินสำเร็จ',
-            message: messages,
+            message: change > 0 ? `เงินทอน ${change.toFixed(2)} บาท` : undefined,
             confirmButtonLabel: 'ดาวน์โหลดใบเสร็จ',
-            cancelButtonLabel: 'ข้าม',
+            cancelButtonLabel: 'ปิด',
             onConfirm: () =>
               paymentId
                 ? this.receiptService.downloadReceipt(paymentId)
@@ -294,6 +283,23 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       });
   }
 
+  onVoidBill(): void {
+    this.modalService.info({
+      title: 'ยกเลิกบิล',
+      message: 'ต้องการยกเลิกบิลและกลับไปหน้าออเดอร์หรือไม่?',
+      onConfirm: () => {
+        this.ordersService.ordersVoidBillPost({ orderId: this.orderId })
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.modalService.commonSuccess();
+              this.router.navigate(['/order', this.orderId]);
+            },
+          });
+      },
+    });
+  }
+
   onSplitBill(): void {
     const order = this.orderDetail();
     if (!order) return;
@@ -310,28 +316,66 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result: { mode: string; numberOfSplits?: number; groups?: { orderItemIds: number[] }[] } | undefined) => {
         if (!result) return;
-        if (result.mode === 'by-amount') {
-          this.ordersService
-            .ordersSplitByAmountPost({
+        const apiCall = result.mode === 'by-amount'
+          ? this.ordersService.ordersSplitByAmountPost({
               orderId: this.orderId,
               body: { numberOfSplits: result.numberOfSplits! },
             })
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({ next: () => this.loadBills() });
-        } else {
-          this.ordersService
-            .ordersSplitByItemPost({
+          : this.ordersService.ordersSplitByItemPost({
               orderId: this.orderId,
               body: { groups: result.groups! },
-            })
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({ next: () => this.loadBills() });
-        }
+            });
+
+        apiCall
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.modalService.commonSuccess();
+              this.loadBills();
+            },
+            error: () => {
+              this.modalService.cancel({
+                title: 'แยกบิลไม่สำเร็จ',
+                message: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+              });
+            },
+          });
       });
   }
 
+  onDownloadBillReceipt(bill: OrderBillResponseModel): void {
+    const payment = this.payments().find(p => p.orderBillId === bill.orderBillId);
+    if (!payment) return;
+    this.receiptService.downloadReceipt(payment.paymentId!)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
+
+  onDownloadConsolidatedReceipt(): void {
+    this.receiptService.downloadConsolidatedReceipt(this.orderId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
+
   private afterPayment(): void {
-    this.loadBills();
+    this.ordersService.ordersGetBillsGet({ orderId: this.orderId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const bills = res.result ?? [];
+          const allPaid = bills.length > 0 && bills.every(b => b.status === 'Paid');
+          if (allPaid) {
+            this.router.navigate(['/payment']);
+          } else {
+            this.allBills.set(bills);
+            this.autoSelectPendingBill(bills);
+            this.syncScDropdown();
+            this.paymentsService.paymentsGetByOrderGet({ orderId: this.orderId })
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({ next: (pr) => this.payments.set(pr.result ?? []) });
+          }
+        },
+      });
   }
 
   goBack(): void {

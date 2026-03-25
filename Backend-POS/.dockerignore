@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+**/.vs/
+**/.vscode/
+*.user
+*.suo
+*.log
+.env
+appsettings.Development.json
+appsettings.Production.json

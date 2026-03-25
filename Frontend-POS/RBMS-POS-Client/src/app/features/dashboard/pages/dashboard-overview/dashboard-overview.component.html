@@ -1,0 +1,190 @@
+<div class="space-y-6">
+  <!-- Header: Date + Refresh -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-3">
+      <span class="text-sm text-surface-sub">วันที่:</span>
+      <p-datepicker
+        [(ngModel)]="selectedDate"
+        (ngModelChange)="onDateChange()"
+        dateFormat="dd/mm/yy"
+        [maxDate]="selectedDate"
+        styleClass="w-[180px]"
+      ></p-datepicker>
+    </div>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-refresh"
+      label="รีเฟรช"
+      class="p-button-outlined p-button-secondary"
+      (click)="onRefresh()"
+    ></button>
+  </div>
+
+  <!-- Row 1: KPI Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    @for (card of kpiCards; track card.label) {
+      <app-kpi-card
+        [label]="card.label"
+        [value]="card.value"
+        [icon]="card.icon"
+        [changePercent]="card.changePercent"
+      ></app-kpi-card>
+    }
+  </div>
+
+  <!-- Row 2: Kitchen Breakdown -->
+  @if (kitchenCards.length > 0) {
+    <div class="bg-surface-card rounded-xl p-5">
+      <h3 class="text-section-title mb-4">รายการแยกครัว</h3>
+      <div class="grid grid-cols-3 gap-4">
+        @for (k of kitchenCards; track k.categoryName) {
+          <div
+            class="flex flex-col items-center gap-2 rounded-lg p-4"
+            [ngClass]="k.bgColor"
+          >
+            <div
+              class="w-10 h-10 rounded-full flex items-center justify-center"
+              [ngClass]="k.bgColor"
+            >
+              <i [class]="k.icon + ' text-lg ' + k.color"></i>
+            </div>
+            <span class="text-sm text-surface-sub">{{ k.categoryName }}</span>
+            <span class="text-2xl font-bold">{{ k.itemCount | number }}</span>
+            <span class="text-xs text-surface-sub">ชิ้น</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Row 3: Revenue Trend -->
+  <div class="bg-surface-card rounded-xl p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-section-title">ยอดขายย้อนหลัง</h3>
+      <div class="flex gap-2">
+        <button
+          pButton
+          type="button"
+          label="7 วัน"
+          [class]="
+            trendDays === 7
+              ? 'p-button-sm'
+              : 'p-button-sm p-button-outlined p-button-secondary'
+          "
+          (click)="onTrendToggle(7)"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="30 วัน"
+          [class]="
+            trendDays === 30
+              ? 'p-button-sm'
+              : 'p-button-sm p-button-outlined p-button-secondary'
+          "
+          (click)="onTrendToggle(30)"
+        ></button>
+      </div>
+    </div>
+    @if ((overview()?.revenueTrend?.length ?? 0) > 0) {
+      <div class="h-[300px]">
+        <canvas
+          baseChart
+          type="line"
+          [data]="revenueTrendData()"
+          [options]="revenueTrendOptions"
+        ></canvas>
+      </div>
+    } @else {
+      <div class="h-[300px] flex items-center justify-center text-surface-sub">
+        ยังไม่มีข้อมูล
+      </div>
+    }
+  </div>
+
+  <!-- Row 4: Top Selling -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Food -->
+    <div class="bg-surface-card rounded-xl p-5">
+      <h3 class="text-section-title mb-4">อาหารขายดี Top 5</h3>
+      @if ((topSelling()?.food?.length ?? 0) > 0) {
+        <div class="h-[250px]">
+          <canvas
+            baseChart
+            type="bar"
+            [data]="foodChartData()"
+            [options]="topSellingOptions"
+          ></canvas>
+        </div>
+      } @else {
+        <div
+          class="h-[250px] flex items-center justify-center text-surface-sub"
+        >
+          ยังไม่มีข้อมูล
+        </div>
+      }
+    </div>
+
+    <!-- Beverage -->
+    <div class="bg-surface-card rounded-xl p-5">
+      <h3 class="text-section-title mb-4">เครื่องดื่มขายดี Top 5</h3>
+      @if ((topSelling()?.beverage?.length ?? 0) > 0) {
+        <div class="h-[250px]">
+          <canvas
+            baseChart
+            type="bar"
+            [data]="beverageChartData()"
+            [options]="topSellingOptions"
+          ></canvas>
+        </div>
+      } @else {
+        <div
+          class="h-[250px] flex items-center justify-center text-surface-sub"
+        >
+          ยังไม่มีข้อมูล
+        </div>
+      }
+    </div>
+
+    <!-- Dessert -->
+    <div class="bg-surface-card rounded-xl p-5">
+      <h3 class="text-section-title mb-4">ของหวานขายดี Top 5</h3>
+      @if ((topSelling()?.dessert?.length ?? 0) > 0) {
+        <div class="h-[250px]">
+          <canvas
+            baseChart
+            type="bar"
+            [data]="dessertChartData()"
+            [options]="topSellingOptions"
+          ></canvas>
+        </div>
+      } @else {
+        <div
+          class="h-[250px] flex items-center justify-center text-surface-sub"
+        >
+          ยังไม่มีข้อมูล
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Row 5: Peak Hours -->
+  <div class="bg-surface-card rounded-xl p-5">
+    <h3 class="text-section-title mb-4">ช่วงเวลาขายดี</h3>
+    @if ((peakHours()?.hours?.length ?? 0) > 0) {
+      <div class="h-[300px]">
+        <canvas
+          baseChart
+          type="bar"
+          [data]="peakHoursData()"
+          [options]="peakHoursOptions"
+        ></canvas>
+      </div>
+    } @else {
+      <div class="h-[300px] flex items-center justify-center text-surface-sub">
+        ยังไม่มีข้อมูล
+      </div>
+    }
+  </div>
+</div>

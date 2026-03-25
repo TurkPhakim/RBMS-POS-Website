@@ -21,8 +21,21 @@ export class SideBarComponent {
     {
       label: 'แดชบอร์ด',
       icon: 'dashboard',
-      route: '/dashboard',
       permissions: ['dashboard.view.read'],
+      children: [
+        {
+          label: 'ภาพรวม',
+          icon: 'dashboard',
+          route: '/dashboard',
+          permissions: ['dashboard.view.read'],
+        },
+        {
+          label: 'รายงานยอดขาย',
+          icon: 'coin',
+          route: '/dashboard/sales',
+          permissions: ['dashboard.view.read'],
+        },
+      ],
     },
     {
       label: 'ออเดอร์',

@@ -325,6 +325,30 @@ public class PaymentService : IPaymentService
         var order = bill.Order;
         var cashierEmployee = payment.CashierSession?.User?.Employee;
 
+        // Filter items based on BillType
+        var receiptItems = new List<ReceiptItemModel>();
+        if (bill.BillType == EBillType.ByItem)
+        {
+            // ByItem: show only items linked to this bill
+            receiptItems = order.OrderItems
+                .Where(oi => oi.Status != EOrderItemStatus.Cancelled && oi.OrderBillId == bill.OrderBillId)
+                .Select(oi => MapToReceiptItem(oi))
+                .ToList();
+        }
+        else if (bill.BillType == EBillType.ByAmount)
+        {
+            // ByAmount: no items — show split info instead
+            receiptItems = new List<ReceiptItemModel>();
+        }
+        else
+        {
+            // Full: show all items
+            receiptItems = order.OrderItems
+                .Where(oi => oi.Status != EOrderItemStatus.Cancelled)
+                .Select(oi => MapToReceiptItem(oi))
+                .ToList();
+        }
+
         return new ReceiptDataModel
         {
             ShopNameThai = shop.ShopNameThai,
@@ -338,6 +362,9 @@ public class PaymentService : IPaymentService
             PaymentMethod = payment.PaymentMethod.ToString(),
             PaidAt = payment.PaidAt,
             BillNumber = bill.BillNumber,
+            BillType = bill.BillType.ToString(),
+            SplitCount = bill.SplitCount,
+            SplitIndex = bill.SplitIndex,
             OrderNumber = order.OrderNumber,
             TableName = order.Table?.TableName,
             SubTotal = bill.SubTotal,
@@ -352,19 +379,85 @@ public class PaymentService : IPaymentService
             CashierName = cashierEmployee != null
                 ? $"{cashierEmployee.FirstNameThai} {cashierEmployee.LastNameThai}"
                 : null,
+            Items = receiptItems,
+        };
+    }
+
+    public async Task<ReceiptDataModel> GetConsolidatedReceiptDataAsync(int orderId, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.QueryNoTracking()
+            .Include(o => o.Table)
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.OrderItemOptions)
+            .FirstOrDefaultAsync(o => o.OrderId == orderId, ct)
+            ?? throw new EntityNotFoundException("Order", orderId);
+
+        var bills = await _unitOfWork.OrderBills.QueryNoTracking()
+            .Where(b => b.OrderId == orderId && b.Status == EBillStatus.Paid)
+            .ToListAsync(ct);
+
+        if (bills.Count == 0)
+            throw new BusinessException("ยังไม่มีบิลที่ชำระเงินแล้ว");
+
+        var billIds = bills.Select(b => b.OrderBillId).ToList();
+        var payments = await _unitOfWork.Payments.QueryNoTracking()
+            .Where(p => billIds.Contains(p.OrderBillId))
+            .ToListAsync(ct);
+
+        var shop = await _unitOfWork.ShopSettings.QueryNoTracking()
+            .FirstOrDefaultAsync(ct)
+            ?? throw new BusinessException("ไม่พบข้อมูลร้านค้า");
+
+        return new ReceiptDataModel
+        {
+            ShopNameThai = shop.ShopNameThai,
+            ShopNameEnglish = shop.ShopNameEnglish,
+            Address = shop.Address,
+            PhoneNumber = shop.PhoneNumber,
+            TaxId = shop.TaxId,
+            ReceiptHeaderText = shop.ReceiptHeaderText,
+            ReceiptFooterText = shop.ReceiptFooterText,
+            BillNumber = $"รวม-{order.OrderNumber}",
+            BillType = "Consolidated",
+            OrderNumber = order.OrderNumber,
+            TableName = order.Table?.TableName,
+            SubTotal = bills.Sum(b => b.SubTotal),
+            ServiceChargeRate = bills.FirstOrDefault()?.ServiceChargeRate ?? 0,
+            ServiceChargeAmount = bills.Sum(b => b.ServiceChargeAmount),
+            VatRate = bills.FirstOrDefault()?.VatRate ?? 0,
+            VatAmount = bills.Sum(b => b.VatAmount),
+            TotalDiscountAmount = bills.Sum(b => b.TotalDiscountAmount),
+            GrandTotal = bills.Sum(b => b.GrandTotal),
+            IsConsolidated = true,
             Items = order.OrderItems
                 .Where(oi => oi.Status != EOrderItemStatus.Cancelled)
-                .Select(oi => new ReceiptItemModel
+                .Select(oi => MapToReceiptItem(oi))
+                .ToList(),
+            Payments = payments.Select(p =>
+            {
+                var bill = bills.First(b => b.OrderBillId == p.OrderBillId);
+                return new ConsolidatedPaymentInfo
                 {
-                    MenuName = oi.MenuNameThai,
-                    Quantity = oi.Quantity,
-                    UnitPrice = oi.UnitPrice,
-                    TotalPrice = oi.TotalPrice,
-                    Note = oi.Note,
-                    Options = oi.OrderItemOptions
-                        .Select(o => $"{o.OptionGroupName}: {o.OptionItemName}")
-                        .ToList(),
-                })
+                    BillNumber = bill.BillNumber,
+                    PaymentMethod = p.PaymentMethod.ToString(),
+                    AmountPaid = bill.GrandTotal,
+                    PaidAt = p.PaidAt,
+                };
+            }).ToList(),
+        };
+    }
+
+    private static ReceiptItemModel MapToReceiptItem(TbOrderItem oi)
+    {
+        return new ReceiptItemModel
+        {
+            MenuName = oi.MenuNameThai,
+            Quantity = oi.Quantity,
+            UnitPrice = oi.UnitPrice,
+            TotalPrice = oi.TotalPrice,
+            Note = oi.Note,
+            Options = oi.OrderItemOptions
+                .Select(o => $"{o.OptionGroupName}: {o.OptionItemName}")
                 .ToList(),
         };
     }
@@ -381,6 +474,39 @@ public class PaymentService : IPaymentService
             _unitOfWork.Orders.Update(order);
 
             var table = order.Table;
+
+            // Find linked tables before clearing
+            var link = await _unitOfWork.TableLinks.QueryNoTracking()
+                .FirstOrDefaultAsync(tl => tl.TableId == table.TableId, ct);
+
+            var linkedTableIds = new List<int>();
+            if (link != null)
+            {
+                var allLinks = await _unitOfWork.TableLinks.GetAll()
+                    .Where(tl => tl.GroupCode == link.GroupCode)
+                    .ToListAsync(ct);
+                linkedTableIds = allLinks.Select(tl => tl.TableId).ToList();
+
+                // Close all linked tables
+                foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
+                {
+                    var lt = await _unitOfWork.Tables.GetByIdAsync(ltId, ct);
+                    if (lt != null)
+                    {
+                        lt.Status = ETableStatus.Cleaning;
+                        lt.ActiveOrderId = null;
+                        lt.CurrentGuests = 0;
+                        lt.GuestType = null;
+                        lt.Note = null;
+                        _unitOfWork.Tables.Update(lt);
+                    }
+                }
+
+                // Auto-unlink
+                _unitOfWork.TableLinks.DeleteRange(allLinks);
+            }
+
+            // Close primary table
             table.Status = ETableStatus.Cleaning;
             table.ActiveOrderId = null;
             table.CurrentGuests = 0;
@@ -394,6 +520,9 @@ public class PaymentService : IPaymentService
 
             await _notificationService.NotifyOrderUpdatedAsync(order.OrderId, "Completed", ct);
             await _notificationService.NotifyTableStatusChangedAsync(table.TableId, "Cleaning", ct);
+
+            foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
+                await _notificationService.NotifyTableStatusChangedAsync(ltId, "Cleaning", ct);
         }
 
         await _notificationService.NotifyPaymentCompletedAsync(bill.Order.TableId, bill.OrderBillId, ct);

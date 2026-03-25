@@ -1,13 +1,25 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import {
+  BaseChartDirective,
+  provideCharts,
+  withDefaultRegisterables,
+} from 'ng2-charts';
 
 import { SharedModule } from '@app/shared/shared.module';
 
 import { DashboardRoutingModule } from './dashboard-routing.module';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { DashboardOverviewComponent } from './pages/dashboard-overview/dashboard-overview.component';
+import { SalesReportComponent } from './pages/sales-report/sales-report.component';
 
 @NgModule({
-  declarations: [DashboardComponent],
-  imports: [CommonModule, DashboardRoutingModule, SharedModule],
+  declarations: [DashboardOverviewComponent, SalesReportComponent],
+  imports: [
+    CommonModule,
+    DashboardRoutingModule,
+    SharedModule,
+    BaseChartDirective,
+  ],
+  providers: [provideCharts(withDefaultRegisterables())],
 })
 export class DashboardModule {}

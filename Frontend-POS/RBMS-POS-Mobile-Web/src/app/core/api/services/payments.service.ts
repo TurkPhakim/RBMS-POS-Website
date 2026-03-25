@@ -18,6 +18,8 @@ import { paymentsGetByIdGet } from '../fn/payments/payments-get-by-id-get';
 import { PaymentsGetByIdGet$Params } from '../fn/payments/payments-get-by-id-get';
 import { paymentsGetByOrderGet } from '../fn/payments/payments-get-by-order-get';
 import { PaymentsGetByOrderGet$Params } from '../fn/payments/payments-get-by-order-get';
+import { paymentsGetConsolidatedReceiptGet } from '../fn/payments/payments-get-consolidated-receipt-get';
+import { PaymentsGetConsolidatedReceiptGet$Params } from '../fn/payments/payments-get-consolidated-receipt-get';
 import { paymentsGetHistoryGet } from '../fn/payments/payments-get-history-get';
 import { PaymentsGetHistoryGet$Params } from '../fn/payments/payments-get-history-get';
 import { paymentsGetReceiptDataGet } from '../fn/payments/payments-get-receipt-data-get';
@@ -181,6 +183,31 @@ export class PaymentsService extends BaseService {
    */
   paymentsGetReceiptDataGet(params: PaymentsGetReceiptDataGet$Params, context?: HttpContext): Observable<ReceiptDataModelBaseResponseModel> {
     return this.paymentsGetReceiptDataGet$Response(params, context).pipe(
+      map((r: StrictHttpResponse<ReceiptDataModelBaseResponseModel>): ReceiptDataModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `paymentsGetConsolidatedReceiptGet()` */
+  static readonly PaymentsGetConsolidatedReceiptGetPath = '/api/payment/payments/order/{orderId}/consolidated-receipt';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `paymentsGetConsolidatedReceiptGet()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  paymentsGetConsolidatedReceiptGet$Response(params: PaymentsGetConsolidatedReceiptGet$Params, context?: HttpContext): Observable<StrictHttpResponse<ReceiptDataModelBaseResponseModel>> {
+    return paymentsGetConsolidatedReceiptGet(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `paymentsGetConsolidatedReceiptGet$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  paymentsGetConsolidatedReceiptGet(params: PaymentsGetConsolidatedReceiptGet$Params, context?: HttpContext): Observable<ReceiptDataModelBaseResponseModel> {
+    return this.paymentsGetConsolidatedReceiptGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<ReceiptDataModelBaseResponseModel>): ReceiptDataModelBaseResponseModel => r.body)
     );
   }

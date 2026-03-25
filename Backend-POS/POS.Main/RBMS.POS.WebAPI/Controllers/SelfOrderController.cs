@@ -136,6 +136,15 @@ public class SelfOrderController : BaseController
         return Success(await _selfOrderService.GetCustomerReceiptAsync(tableId, orderBillId, ct));
     }
 
+    [HttpGet("consolidated-receipt")]
+    [CustomerAuthorize]
+    [ProducesResponseType(typeof(BaseResponseModel<ReceiptDataModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetConsolidatedReceipt(CancellationToken ct = default)
+    {
+        var tableId = GetCustomerTableId();
+        return Success(await _selfOrderService.GetCustomerConsolidatedReceiptAsync(tableId, ct));
+    }
+
     private int GetCustomerSessionId()
         => (int)HttpContext.Items["CustomerSessionId"]!;
 

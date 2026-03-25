@@ -8,9 +8,8 @@ import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { OrdersService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
-import { Icon, ModalService } from '@app/core/services/modal.service';
+import { ModalService } from '@app/core/services/modal.service';
 import { CancelReasonDialogComponent } from '../../dialogs/cancel-reason-dialog/cancel-reason-dialog.component';
-import { SplitBillDialogComponent } from '@app/shared/dialogs/split-bill-dialog/split-bill-dialog.component';
 
 const KEY_BTN_BACK = 'back-order';
 const KEY_BTN_ADD_ITEMS = 'add-items-order';
@@ -153,7 +152,6 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
       case 'Open': return 'bg-gradient-to-r from-primary to-primary-badge';
       case 'Billing': return 'bg-gradient-to-r from-billing to-billing';
       case 'Completed': return 'bg-gradient-to-r from-success to-success-text';
-      case 'Cancelled': return 'bg-gradient-to-r from-danger to-danger-dark';
       default: return 'bg-gradient-to-r from-primary to-primary-badge';
     }
   }
@@ -164,7 +162,6 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
       case 'Open': return prefix + 'primary';
       case 'Billing': return prefix + 'billing';
       case 'Completed': return prefix + 'success';
-      case 'Cancelled': return prefix + 'danger';
       default: return prefix + 'primary';
     }
   }
@@ -272,49 +269,6 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
     this.router.navigate(['/payment', 'checkout', this.orderId]);
   }
 
-  onSplitBill(): void {
-    const o = this.order();
-    if (!o) return;
-    const ref = this.dialogService.open(SplitBillDialogComponent, {
-      header: 'แยกบิลชำระเงิน',
-      showHeader: false,
-      styleClass: 'card-dialog',
-      width: '55vw',
-      data: { items: o.items },
-    });
-    ref.onClose
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((result: { mode: string; numberOfSplits?: number; groups?: { orderItemIds: number[] }[] } | undefined) => {
-        if (!result) return;
-        if (result.mode === 'by-amount') {
-          this.ordersService
-            .ordersSplitByAmountPost({
-              orderId: this.orderId,
-              body: { numberOfSplits: result.numberOfSplits! },
-            })
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: () => {
-                this.modalService.commonSuccess();
-                this.loadOrder();
-              },
-            });
-        } else {
-          this.ordersService
-            .ordersSplitByItemPost({
-              orderId: this.orderId,
-              body: { groups: result.groups! },
-            })
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: () => {
-                this.modalService.commonSuccess();
-                this.loadOrder();
-              },
-            });
-        }
-      });
-  }
 
   onServeItem(item: OrderItemResponseModel): void {
     this.ordersService
@@ -359,18 +313,8 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
       case 'Open': return 'เปิด';
       case 'Billing': return 'รอชำระ';
       case 'Completed': return 'เสร็จสิ้น';
-      case 'Cancelled': return 'ยกเลิก';
       default: return status ?? '-';
     }
   }
 
-  getOrderStatusClass(status: string | null | undefined): string {
-    switch (status) {
-      case 'Open': return 'text-primary';
-      case 'Billing': return 'text-warning';
-      case 'Completed': return 'text-success';
-      case 'Cancelled': return 'text-danger';
-      default: return '';
-    }
-  }
 }

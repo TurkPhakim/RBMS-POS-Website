@@ -63,6 +63,13 @@ public class PaymentsController : BaseController
     public async Task<IActionResult> GetReceiptData(int paymentId, CancellationToken ct = default)
         => Success(await _paymentService.GetReceiptDataAsync(paymentId, ct));
 
+    /// <summary>ใบเสร็จรวมทุกบิลของออเดอร์</summary>
+    [HttpGet("order/{orderId}/consolidated-receipt")]
+    [PermissionAuthorize(Permissions.Payment.Read)]
+    [ProducesResponseType(typeof(BaseResponseModel<ReceiptDataModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetConsolidatedReceipt(int orderId, CancellationToken ct = default)
+        => Success(await _paymentService.GetConsolidatedReceiptDataAsync(orderId, ct));
+
     /// <summary>ประวัติการชำระเงิน</summary>
     [HttpGet("history")]
     [PermissionAuthorize(Permissions.Payment.Read)]

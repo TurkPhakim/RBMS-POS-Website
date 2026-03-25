@@ -4,6 +4,5 @@ public enum EOrderStatus
 {
     Open = 0,
     Billing = 1,
-    Completed = 2,
-    Cancelled = 3
+    Completed = 2
 }

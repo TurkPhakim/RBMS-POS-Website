@@ -228,6 +228,7 @@ builder.Services.AddScoped<ISelfOrderService, SelfOrderService>();
 builder.Services.AddScoped<ISlipOcrService, SlipOcrService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<INotificationBroadcaster, NotificationBroadcaster>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Background Services
 builder.Services.AddHostedService<ReservationReminderService>();

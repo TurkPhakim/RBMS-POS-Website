@@ -68,6 +68,12 @@ public class OrdersController : BaseController
     public async Task<IActionResult> RequestBill(int orderId, CancellationToken ct = default)
         => Success(await _orderService.RequestBillAsync(orderId, ct));
 
+    [HttpPost("{orderId}/void-bill")]
+    [PermissionAuthorize(Permissions.Order.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<OrderDetailResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> VoidBill(int orderId, CancellationToken ct = default)
+        => Success(await _orderService.VoidBillAsync(orderId, ct));
+
     [HttpPut("items/{orderItemId}/void")]
     [PermissionAuthorize(Permissions.Order.Update)]
     public async Task<IActionResult> VoidItem(int orderItemId, CancellationToken ct = default)
@@ -120,9 +126,4 @@ public class OrdersController : BaseController
         int orderBillId, [FromBody] UpdateBillChargesRequestModel request, CancellationToken ct = default)
         => Success(await _orderService.UpdateBillChargesAsync(orderBillId, request, ct));
 
-    [HttpGet("service-charge-options")]
-    [PermissionAuthorize(Permissions.Payment.Create)]
-    [ProducesResponseType(typeof(BaseResponseModel<List<ServiceChargeOptionModel>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetServiceChargeOptions(CancellationToken ct = default)
-        => Success(await _orderService.GetServiceChargeOptionsAsync(ct));
 }

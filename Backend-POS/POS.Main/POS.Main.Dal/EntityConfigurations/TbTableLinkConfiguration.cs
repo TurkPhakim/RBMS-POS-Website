@@ -19,6 +19,10 @@ public class TbTableLinkConfiguration : IEntityTypeConfiguration<TbTableLink>
             .IsRequired()
             .HasMaxLength(50);
 
+        builder.Property(tl => tl.IsPrimary)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(tl => tl.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");

@@ -81,10 +81,10 @@ public class CashierSessionService : ICashierSessionService
             .AsQueryable();
 
         if (dateFrom.HasValue)
-            query = query.Where(cs => cs.OpenedAt >= dateFrom.Value);
+            query = query.Where(cs => cs.OpenedAt >= dateFrom.Value.Date);
 
         if (dateTo.HasValue)
-            query = query.Where(cs => cs.OpenedAt <= dateTo.Value);
+            query = query.Where(cs => cs.OpenedAt < dateTo.Value.Date.AddDays(1));
 
         if (shiftPeriod.HasValue)
             query = query.Where(cs => cs.ShiftPeriod == shiftPeriod.Value);

@@ -14,6 +14,8 @@
   [virtualScrollItemSize]="virtualScrollItemSize"
   [virtualScrollOptions]="virtualScrollOptions"
   [styleClass]="styleClass"
+  [panelStyleClass]="panelStyleClass"
+  [appendTo]="appendTo || null"
   [class]="invalid ? 'ng-invalid ng-dirty' : ''"
   (ngModelChange)="onValueChange($event)"
   (onFilter)="onFilterChange($event)">

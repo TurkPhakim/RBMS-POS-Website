@@ -18,6 +18,9 @@ public class ReceiptDataModel
 
     // Bill info
     public string BillNumber { get; set; } = string.Empty;
+    public string BillType { get; set; } = string.Empty;
+    public int SplitCount { get; set; }
+    public int SplitIndex { get; set; }
     public string? OrderNumber { get; set; }
     public string? TableName { get; set; }
     public decimal SubTotal { get; set; }
@@ -37,6 +40,10 @@ public class ReceiptDataModel
 
     // Items
     public List<ReceiptItemModel> Items { get; set; } = new();
+
+    // Consolidated receipt
+    public bool IsConsolidated { get; set; }
+    public List<ConsolidatedPaymentInfo>? Payments { get; set; }
 }
 
 public class ReceiptItemModel
@@ -47,4 +54,12 @@ public class ReceiptItemModel
     public decimal TotalPrice { get; set; }
     public string? Note { get; set; }
     public List<string> Options { get; set; } = new();
+}
+
+public class ConsolidatedPaymentInfo
+{
+    public string BillNumber { get; set; } = string.Empty;
+    public string PaymentMethod { get; set; } = string.Empty;
+    public decimal AmountPaid { get; set; }
+    public DateTime PaidAt { get; set; }
 }

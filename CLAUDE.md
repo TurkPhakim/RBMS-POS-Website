@@ -56,6 +56,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   7. `Custom Components` — App-specific elements ที่ Tailwind ทำไม่ได้
 - **ทุก style เขียนเป็น Tailwind class ใน HTML template** (`class="..."`) เท่านั้น
 - ใช้ CSS token จาก `tailwind.config.js` เสมอ — ห้ามใช้สี raw เช่น `bg-orange-500`, `text-slate-700`
+- **ห้ามใช้ Tailwind opacity modifier (`/XX`) กับสี custom** — เช่น `bg-primary/10`, `text-danger/50`, `border-success/20` ใช้ไม่ได้ เพราะสีใน config ใช้ CSS variables (`var(--color-primary)`) ซึ่ง Tailwind แปลง opacity ไม่ได้ → **ใช้ color variant tokens แทน**: `bg-primary-subtle` (แทน `bg-primary/10`), `bg-success-bg` (แทน `bg-success/10`), `bg-warning-bg` (แทน `bg-warning/10`), `bg-danger-bg` (แทน `bg-danger/10`), `border-primary-light` (แทน `border-primary/50`) — ถ้าไม่มี variant ที่ตรง ใช้ `[style.backgroundColor]="'rgba(R,G,B,A)'"` — opacity modifier ใช้ได้เฉพาะ built-in colors (เช่น `bg-black/5`, `bg-white/10`)
 - **Typography tokens**: ใช้ `text-page-title`, `text-section-title`, `text-card-title` สำหรับหัวข้อ
 - **Icon: ใช้ `<app-generic-icon name="xxx">` สำหรับ custom icon** — ห้ามใช้ `<img>` สำหรับ icon (ใช้ `<img>` ได้เฉพาะ logo/รูปภาพจริง)
 - **Icon: ใช้ `<i class="pi pi-xxx">` สำหรับ icon ทั่วไป** (plus, search, chevron, close)

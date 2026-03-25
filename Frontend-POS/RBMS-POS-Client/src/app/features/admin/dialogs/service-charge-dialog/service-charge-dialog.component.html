@@ -1,9 +1,9 @@
 <app-card-template [headerLabel]="config.header!">
   <form [formGroup]="form" class="space-y-5">
     <!-- ชื่อ + อัตรา + สถานะ -->
-    <div class="grid grid-cols-3 gap-5">
+    <div class="grid grid-cols-4 gap-5">
       <!-- ชื่อค่าบริการ -->
-      <div>
+      <div class="col-span-2">
         <label for="name" class="block font-semibold mb-2">
           ชื่อค่าบริการ <span class="text-danger">*</span>
         </label>
@@ -17,10 +17,10 @@
         <app-field-error [control]="form.get('name')" type="text" />
       </div>
 
-      <!-- อัตรา (%) -->
+      <!-- อัตราค่าบริการ -->
       <div>
         <label for="percentageRate" class="block font-semibold mb-2">
-          อัตรา (%) <span class="text-danger">*</span>
+          อัตราค่าบริการ <span class="text-danger">*</span>
         </label>
         <p-inputgroup>
           <p-inputNumber
@@ -31,7 +31,7 @@
             [maxFractionDigits]="2"
             [min]="0"
             [max]="100"
-            placeholder="0"
+            placeholder="อัตราค่าบริการ"
             styleClass="w-full"
           ></p-inputNumber>
           <p-inputgroup-addon>%</p-inputgroup-addon>
@@ -41,15 +41,17 @@
 
       <!-- สถานะการใช้งาน -->
       <div>
-        <label class="block font-semibold mb-2">สถานะ</label>
-        <div class="flex items-center gap-3 h-[46px]">
+        <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
+        <div class="flex items-center gap-2 h-[45px]">
           <p-inputSwitch
             formControlName="isActive"
             inputId="isActive"
           ></p-inputSwitch>
           <span
-            class="font-semibold"
-            [class]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
+            class="font-semibold mb-2"
+            [class]="
+              form.get('isActive')?.value ? 'text-success' : 'text-danger'
+            "
           >
             {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
           </span>
@@ -84,6 +86,7 @@
           formControlName="startDate"
           dateFormat="dd/mm/yy"
           placeholder="วันที่เริ่มต้นใช้งาน"
+          [showClear]="true"
           styleClass="w-full"
         />
       </div>
@@ -97,6 +100,7 @@
           formControlName="endDate"
           dateFormat="dd/mm/yy"
           placeholder="วันที่สิ้นสุดใช้งาน"
+          [showClear]="true"
           [minDate]="minEndDate()"
           styleClass="w-full"
         />

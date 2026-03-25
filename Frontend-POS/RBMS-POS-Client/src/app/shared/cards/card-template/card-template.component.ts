@@ -6,7 +6,6 @@ import {
   Input,
 } from '@angular/core';
 import { Footer } from 'primeng/api';
-
 @Component({
   selector: 'app-card-template',
   standalone: false,

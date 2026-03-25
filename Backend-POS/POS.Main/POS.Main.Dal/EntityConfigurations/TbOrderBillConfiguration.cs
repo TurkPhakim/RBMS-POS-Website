@@ -76,6 +76,12 @@ public class TbOrderBillConfiguration : IEntityTypeConfiguration<TbOrderBill>
             .OnDelete(DeleteBehavior.Restrict)
             .IsRequired();
 
+        builder.HasOne(ob => ob.ServiceCharge)
+            .WithMany()
+            .HasForeignKey(ob => ob.ServiceChargeId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
         // Indexes
         builder.HasIndex(ob => ob.BillNumber)
             .IsUnique()

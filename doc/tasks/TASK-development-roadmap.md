@@ -28,6 +28,8 @@
 | **Phase 2 — Order System** (Order CRUD, POS, Split Bill, SignalR OrderHub) | ✅ เสร็จ | REQ-order-system |
 | **Phase 3A — Kitchen (KDS)** (Order View, Menu View, Batch, Timer) | ✅ เสร็จ | REQ-kitchen-system |
 | **Phase 3B — Payment System** (Billing, Cashier Session, Receipt, Slip) | ✅ เสร็จ | REQ-payment-system |
+| **Phase 4 — Notification System** (NotificationHub, Drawer, Toast, Background Services) | ✅ เสร็จ | REQ-noti-system |
+| **Phase 5 — Self-Order System (QR)** (Mobile Web, Customer Auth, Menu, Cart, Bill) | ✅ เสร็จ | REQ-self-order-system |
 
 ---
 
@@ -48,13 +50,13 @@
                     │                    │
                     └─────────┬──────────┘
                               ▼
-                       Phase 4: NOTIFICATION SYSTEM ◄── ถัดไป
+                       Phase 4: NOTIFICATION SYSTEM ✅
                               │
                               ▼
-                       Phase 5: SELF-ORDER SYSTEM (QR)
+                       Phase 5: SELF-ORDER SYSTEM (QR) ✅
                               │
                               ▼
-                       Phase 6: DASHBOARD
+                       Phase 6: DASHBOARD ◄── ถัดไป
 ```
 
 ---
@@ -435,33 +437,36 @@
 
 ### เช็คลิสต์
 
-- [ ] อ่าน Pre-flight docs
-- [ ] **Backend — Entity + Migration**
-  - [ ] สร้าง Entities (TbNotification, TbNotificationRead)
-  - [ ] สร้าง EntityConfigurations
-  - [ ] อัพเดต DbContext
-  - [ ] สร้าง Migration + Seed permissions
-  - [ ] รัน `dotnet ef database update`
-- [ ] **Backend — Hub + Service + Controller**
-  - [ ] สร้าง NotificationHub
-  - [ ] สร้าง NotificationService (send, query, mark read, clear)
-  - [ ] สร้าง NotificationsController (5 endpoints)
-  - [ ] สร้าง ReservationReminderService (IHostedService)
-  - [ ] สร้าง CleanupBackgroundService (IHostedService)
-  - [ ] Register DI + Hubs ใน Program.cs
-  - [ ] **Integrate events** — เพิ่ม notification triggers ใน OrderService, KitchenService, PaymentService
-  - [ ] ทดสอบ API + SignalR ผ่าน Swagger
-- [ ] **Frontend — gen-api + Components**
-  - [ ] Restart Backend + ตรวจ Swagger + gen-api
-  - [ ] สร้าง NotiStore (Angular Signals)
-  - [ ] สร้าง NotificationSignalRService
-  - [ ] สร้าง NotificationDrawerComponent
-  - [ ] เพิ่ม Toast ใน main-layout
-  - [ ] แก้ไข Header (bell → toggleDrawer)
-  - [ ] ลบ notification-panel skeleton เดิม
-  - [ ] ลบ layout NgRx state เกี่ยวกับ notification
-- [ ] อัพเดต database-api-reference.md
-- [ ] อัพเดต Task file สถานะ
+- [x] อ่าน Pre-flight docs
+- [x] **Backend — Entity + Migration**
+  - [x] สร้าง Entities (TbNotification, TbNotificationRead)
+  - [x] สร้าง EntityConfigurations (2 ไฟล์)
+  - [x] อัพเดต DbContext
+  - [x] สร้าง Migration (`20260321060423_AddNotificationSystem`) + Seed permissions
+  - [x] รัน `dotnet ef database update`
+- [x] **Backend — Hub + Service + Controller**
+  - [x] สร้าง NotificationHub (`Hubs/NotificationHub.cs`)
+  - [x] สร้าง NotificationService (send, query, mark read, clear)
+  - [x] สร้าง NotificationBroadcaster (`Services/NotificationBroadcaster.cs`)
+  - [x] สร้าง OrderNotificationService (`Services/OrderNotificationService.cs`)
+  - [x] สร้าง NotificationsController (5 endpoints)
+  - [x] สร้าง ReservationReminderService (IHostedService)
+  - [x] สร้าง CleanupBackgroundService (IHostedService)
+  - [x] Register DI + Hubs ใน Program.cs
+  - [x] **Integrate events** — เพิ่ม notification triggers ใน OrderService, KitchenService, PaymentService
+  - [x] ทดสอบ API + SignalR ผ่าน Swagger
+- [x] **Frontend — gen-api + Components**
+  - [x] Restart Backend + ตรวจ Swagger + gen-api
+  - [x] สร้าง NotiStore (Angular Signals) (`core/services/noti-store.service.ts`)
+  - [x] สร้าง NotificationSignalRService (`core/services/notification-signalr.service.ts`)
+  - [x] สร้าง NotificationDrawerComponent (`shared/components/notification-drawer/`)
+  - [x] สร้าง NotificationTableDropdown (`shared/dropdowns/notification-table-dropdown/`)
+  - [x] เพิ่ม Toast ใน main-layout
+  - [x] แก้ไข Header (bell → toggleDrawer)
+  - [x] ลบ notification-panel skeleton เดิม
+  - [x] ลบ layout NgRx state เกี่ยวกับ notification
+- [x] อัพเดต database-api-reference.md
+- [x] อัพเดต Task file สถานะ
 
 ---
 
@@ -491,54 +496,65 @@
 | `POS.Main.Dal/Entities/Customer/TbCustomerSession.cs` | Entity ใหม่ |
 | EntityConfigurations | Config |
 | `POS.Main.Repositories/` | CustomerSessionRepository |
-| `POS.Main.Business.Customer/` | Business module ใหม่ (CustomerService, CustomerAuthService) |
-| `RBMS.POS.WebAPI/Controllers/CustomerController.cs` | 9 endpoints `/api/customer/*` |
-| `RBMS.POS.WebAPI/Attributes/CustomerAuthorizeAttribute.cs` | Auth attribute ใหม่ |
-| Migration | สร้างตาราง TbCustomerSession |
+| `POS.Main.Business.Payment/Services/SelfOrderService.cs` | SelfOrderService (667 บรรทัด, 13 methods) |
+| `POS.Main.Business.Payment/Models/SelfOrder/` | 8 models (Auth, Menu, Order, Tracking, SubmitOrder) |
+| `POS.Main.Business.Payment/Models/Customer/` | 2 models (BillResponse, UploadSlip) |
+| `RBMS.POS.WebAPI/Controllers/CustomerController.cs` | Customer auth endpoints |
+| `RBMS.POS.WebAPI/Controllers/SelfOrderController.cs` | Self-order endpoints (menu, cart, bill) |
+| `RBMS.POS.WebAPI/Attributes/CustomerAuthorizeAttribute.cs` | Auth attribute (guest JWT) |
+| Migration `20260321193417_AddCustomerSessionTable` | สร้างตาราง TbCustomerSession |
 
 ### Frontend (Project ใหม่ — Mobile Web)
 
 | Component | หมายเหตุ |
 |-----------|----------|
-| **Project setup** | Angular 19.1 + Tailwind + PrimeNG (new project) |
-| QR Landing page | Validate token → redirect |
+| **Project setup** | Angular 19.1 + Tailwind + PrimeNG (port 4400) |
+| **5 Feature Modules** | `menu/`, `cart/`, `orders/`, `bill/`, `actions/` |
+| QR Landing page (`/auth`) | Validate token → redirect |
 | Nickname page | ตั้งชื่อเล่น |
 | Menu Browse page | Category tabs → Sub-category chips → Menu cards |
 | Menu Detail (bottom sheet) | Options, quantity, note |
 | Cart page | รายการ + แก้ไข + ยืนยัน |
 | Order Tracking page | สถานะ real-time (SignalR) |
+| Actions page | Call Waiter + Request Bill |
 | Bill Waiting page | "รอพนักงานจัดเตรียมบิล..." |
 | Bill Summary page | ยอดชำระ + QR Code ร้าน + Upload สลิป |
+| Slip Upload page | อัพโหลดสลิป |
 | Payment Complete page | "ชำระเสร็จ" + ดูใบเสร็จ |
-| Session Expired page | แจ้งว่า session หมดอายุ |
+| Session Expired page (`/expired`) | แจ้งว่า session หมดอายุ |
+| **Core Services (6)** | customer-auth, cart, signalr, loading, receipt, receipt-fonts |
+| **Guards + Interceptors** | customer-auth.guard, customer-token.interceptor, loading.interceptor |
+| **Layout** | customer-layout (sticky header + fixed bottom nav) |
 
 ### เช็คลิสต์
 
-- [ ] อ่าน Pre-flight docs
-- [ ] **Backend**
-  - [ ] สร้าง TbCustomerSession Entity + Config
-  - [ ] สร้าง Migration
-  - [ ] รัน `dotnet ef database update`
-  - [ ] สร้าง CustomerAuthorizeAttribute (guest token auth)
-  - [ ] สร้าง Business module (CustomerService, CustomerAuthService)
-  - [ ] สร้าง CustomerController (9 endpoints)
-  - [ ] เพิ่ม customer SignalR events ใน OrderHub
-  - [ ] Register DI
-  - [ ] ทดสอบ API ผ่าน Swagger
-- [ ] **Frontend — Project ใหม่**
-  - [ ] สร้าง Angular project (RBMS-POS-Mobile-Web)
-  - [ ] Setup Tailwind + PrimeNG + gen-api config
-  - [ ] สร้าง QR Landing page
-  - [ ] สร้าง Nickname page
-  - [ ] สร้าง Menu Browse page
-  - [ ] สร้าง Menu Detail (bottom sheet)
-  - [ ] สร้าง Cart page
-  - [ ] สร้าง Order Tracking page (SignalR)
-  - [ ] สร้าง Bill Waiting + Bill Summary pages
-  - [ ] สร้าง Payment Complete page
-  - [ ] สร้าง Session Expired page
-- [ ] อัพเดต database-api-reference.md
-- [ ] อัพเดต Task file สถานะ
+- [x] อ่าน Pre-flight docs
+- [x] **Backend**
+  - [x] สร้าง TbCustomerSession Entity + Config
+  - [x] สร้าง Migration (`20260321193417_AddCustomerSessionTable`)
+  - [x] รัน `dotnet ef database update`
+  - [x] สร้าง CustomerAuthorizeAttribute (guest JWT auth)
+  - [x] สร้าง SelfOrderService (13 methods: Auth, Menu, Cart, Order, Bill)
+  - [x] สร้าง CustomerController + SelfOrderController
+  - [x] เพิ่ม customer SignalR events ใน OrderHub
+  - [x] Register DI ใน Program.cs
+  - [x] ทดสอบ API ผ่าน Swagger
+- [x] **Frontend — Project ใหม่ (RBMS-POS-Mobile-Web)**
+  - [x] สร้าง Angular project (port 4400)
+  - [x] Setup Tailwind + PrimeNG + gen-api config
+  - [x] สร้าง Customer Layout (sticky header + bottom nav)
+  - [x] สร้าง QR Landing page (`/auth`)
+  - [x] สร้าง Menu Browse page + Menu Card + Menu Detail (bottom sheet)
+  - [x] สร้าง Cart page
+  - [x] สร้าง Order Tracking page (SignalR)
+  - [x] สร้าง Actions page (Call Waiter + Request Bill)
+  - [x] สร้าง Bill Waiting + Bill Summary + Slip Upload pages
+  - [x] สร้าง Payment Complete page
+  - [x] สร้าง Session Expired page (`/expired`)
+  - [x] สร้าง Core Services (customer-auth, cart, signalr, loading, receipt)
+  - [x] สร้าง Guards + Interceptors (customer-auth.guard, customer-token.interceptor)
+- [x] อัพเดต database-api-reference.md
+- [x] อัพเดต Task file สถานะ
 
 ---
 
@@ -606,10 +622,10 @@
 | 2 | Order | 4 | OrderHub (สร้าง) | ใหญ่ | ✅ เสร็จ |
 | 3A | Kitchen (KDS) | 0 (+1 field) | OrderHub (ใช้) | เล็ก | ✅ เสร็จ |
 | 3B | Payment | 4 | - | ใหญ่ | ✅ เสร็จ |
-| 4 | Notification | 2 | NotificationHub (สร้าง) | กลาง | ⬜ ถัดไป |
-| 5 | Self-Order (QR) | 1 | OrderHub (ใช้) | ใหญ่มาก | ⬜ รอ |
-| 6 | Dashboard | 0 | - | เล็ก | ⬜ รอ |
-| **รวม** | | **15 entities** | **2 hubs** | | **4/6 เสร็จ** |
+| 4 | Notification | 2 | NotificationHub (สร้าง) | กลาง | ✅ เสร็จ |
+| 5 | Self-Order (QR) | 1 | OrderHub (ใช้) | ใหญ่มาก | ✅ เสร็จ |
+| 6 | Dashboard | 0 | - | เล็ก | ⬜ ถัดไป |
+| **รวม** | | **15 entities** | **2 hubs** | | **6/7 เสร็จ** |
 
 ---
 

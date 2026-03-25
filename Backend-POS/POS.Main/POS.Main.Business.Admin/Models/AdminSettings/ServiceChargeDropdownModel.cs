@@ -14,6 +14,6 @@ public class ServiceChargeDropdownModel
     /// <summary>
     /// Service charge label in format "{Name} ({Rate}%)"
     /// </summary>
-    /// <example>Service Charge ทั่วไป (10.50%)</example>
+    /// <example>ค่าบริการทั่วไป (10.50%)</example>
     public string Label { get; set; } = string.Empty;
 }

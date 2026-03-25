@@ -22,11 +22,18 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
   readonly pendingOrders: Signal<KitchenOrderModel[]>;
   readonly readyOrders: Signal<KitchenOrderModel[]>;
   readonly pendingMenuGroups: Signal<MenuGroup[]>;
+  readonly readyMenuGroups: Signal<MenuGroup[]>;
   readonly viewTabs = VIEW_TABS;
 
   readonly viewMode = signal<'order' | 'menu'>(
     (localStorage.getItem(LS_VIEW_MODE_KEY) as 'order' | 'menu') || 'order',
   );
+
+  // KPI computed signals
+  readonly totalSent: Signal<number>;
+  readonly totalPreparing: Signal<number>;
+  readonly totalReady: Signal<number>;
+  readonly totalCancelled: Signal<number>;
 
   pageTitle: string;
   pageIcon: string;
@@ -46,17 +53,51 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
     this.canUpdate = this.authService.hasPermission(data['updatePermission'] ?? 'kitchen-food.update');
 
     this.orders = this.kitchenState.orders;
+
     this.pendingOrders = computed(() =>
       this.orders().filter((o) =>
-        o.items?.some(
-          (i) => i.status === 'Sent' || i.status === 'Preparing' || i.status === 'Cancelled' || i.status === 'Voided',
-        ),
+        o.items?.some((i) => i.status === 'Sent' || i.status === 'Preparing'),
       ),
     );
+
     this.readyOrders = computed(() =>
-      this.orders().filter((o) => o.items?.some((i) => i.status === 'Ready')),
+      this.orders().filter(
+        (o) =>
+          o.items?.some((i) => i.status === 'Ready') &&
+          !o.items?.some((i) => i.status === 'Sent' || i.status === 'Preparing'),
+      ),
     );
-    this.pendingMenuGroups = computed(() => this.buildMenuGroups());
+
+    this.pendingMenuGroups = computed(() => this.buildMenuGroups('pending'));
+    this.readyMenuGroups = computed(() => this.buildMenuGroups('ready'));
+
+    this.totalSent = computed(() =>
+      this.orders().reduce(
+        (sum, o) => sum + (o.items ?? []).filter((i) => i.status === 'Sent').length,
+        0,
+      ),
+    );
+
+    this.totalPreparing = computed(() =>
+      this.orders().reduce(
+        (sum, o) => sum + (o.items ?? []).filter((i) => i.status === 'Preparing').length,
+        0,
+      ),
+    );
+
+    this.totalReady = computed(() =>
+      this.orders().reduce(
+        (sum, o) => sum + (o.items ?? []).filter((i) => i.status === 'Ready').length,
+        0,
+      ),
+    );
+
+    this.totalCancelled = computed(() =>
+      this.orders().reduce(
+        (sum, o) => sum + (o.items ?? []).filter((i) => i.status === 'Cancelled').length,
+        0,
+      ),
+    );
   }
 
   ngOnInit(): void {
@@ -94,11 +135,11 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
   }
 
   getCancelledItems(order: KitchenOrderModel): KitchenOrderItemModel[] {
-    return (order.items ?? []).filter((i) => i.status === 'Cancelled' || i.status === 'Voided');
+    return (order.items ?? []).filter((i) => i.status === 'Cancelled');
   }
 
   hasCancelledItems(order: KitchenOrderModel): boolean {
-    return (order.items ?? []).some((i) => i.status === 'Cancelled' || i.status === 'Voided');
+    return (order.items ?? []).some((i) => i.status === 'Cancelled');
   }
 
   startPreparing(item: KitchenOrderItemModel): void {
@@ -147,6 +188,10 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
     return group.items.filter((i) => i.status === 'Preparing').reduce((sum, i) => sum + i.quantity, 0);
   }
 
+  getReadyCount(group: MenuGroup): number {
+    return group.items.filter((i) => i.status === 'Ready').reduce((sum, i) => sum + i.quantity, 0);
+  }
+
   startPreparingGroup(group: MenuGroup): void {
     const ids = group.items.filter((i) => i.status === 'Sent').map((i) => i.orderItemId);
     if (ids.length === 0) return;
@@ -171,24 +216,28 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
 
   getElapsedMinutes(dateStr: string | null | undefined): number {
     if (!dateStr) return 0;
-    const diff = Date.now() - new Date(dateStr).getTime();
-    return Math.floor(diff / 60000);
+    return Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
   }
 
   getTimeBadgeClass(minutes: number): string {
     if (minutes >= 15) return 'bg-danger text-white';
-    if (minutes >= 10) return 'bg-warning text-white';
-    return 'bg-surface-light text-surface-dark';
+    if (minutes >= 10) return 'bg-warning-dark text-white';
+    return 'bg-surface-hover text-surface-sub';
   }
 
   // --- Private ---
 
-  private buildMenuGroups(): MenuGroup[] {
+  private buildMenuGroups(mode: 'pending' | 'ready'): MenuGroup[] {
+    const statusFilter =
+      mode === 'pending'
+        ? (s: string) => s === 'Sent' || s === 'Preparing'
+        : (s: string) => s === 'Ready';
+
     const groups = new Map<string, MenuGroup>();
 
     for (const order of this.orders()) {
       for (const item of order.items ?? []) {
-        if (item.status !== 'Sent' && item.status !== 'Preparing') continue;
+        if (!statusFilter(item.status!)) continue;
 
         const key = this.getMenuGroupKey(item);
         if (!groups.has(key)) {
@@ -212,7 +261,6 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
       }
     }
 
-    // Sort items within each group by sentToKitchenAt (oldest first)
     for (const group of groups.values()) {
       group.items.sort((a, b) => {
         const aTime = a.sentToKitchenAt ? new Date(a.sentToKitchenAt).getTime() : 0;
@@ -221,7 +269,6 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Sort groups by oldest item's sentToKitchenAt (FIFO)
     return Array.from(groups.values()).sort((a, b) => {
       const aOldest = a.items[0]?.sentToKitchenAt ? new Date(a.items[0].sentToKitchenAt).getTime() : 0;
       const bOldest = b.items[0]?.sentToKitchenAt ? new Date(b.items[0].sentToKitchenAt).getTime() : 0;

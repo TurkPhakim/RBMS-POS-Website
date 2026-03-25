@@ -172,7 +172,8 @@ public class OrderService : IOrderService
                 CostPrice = menu.CostPrice,
                 Note = itemReq.Note,
                 OrderedBy = orderedByName,
-                Status = EOrderItemStatus.Pending
+                Status = EOrderItemStatus.Pending,
+                SourceTableId = order.TableId
             };
 
             decimal optionsTotal = 0;
@@ -370,10 +371,24 @@ public class OrderService : IOrderService
         order.Status = EOrderStatus.Billing;
         _unitOfWork.Orders.Update(order);
 
-        // Update table status to Billing
+        // Update table status to Billing (+ linked tables)
         var table = order.Table;
         table.Status = ETableStatus.Billing;
         _unitOfWork.Tables.Update(table);
+
+        var linkedTableIds = await GetLinkedTableIdsAsync(table.TableId, ct);
+        if (linkedTableIds != null)
+        {
+            foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
+            {
+                var lt = await _unitOfWork.Tables.GetByIdAsync(ltId, ct);
+                if (lt != null)
+                {
+                    lt.Status = ETableStatus.Billing;
+                    _unitOfWork.Tables.Update(lt);
+                }
+            }
+        }
 
         // Create Full Bill automatically
         var servedItems = order.OrderItems
@@ -420,12 +435,74 @@ public class OrderService : IOrderService
             TargetGroup = "Cashier"
         }, ct);
 
+        if (linkedTableIds != null)
+        {
+            foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
+                await _notificationService.NotifyTableStatusChangedAsync(ltId, ETableStatus.Billing.ToString(), ct);
+        }
+
+        return await GetOrderByIdAsync(orderId, ct);
+    }
+
+    public async Task<OrderDetailResponseModel> VoidBillAsync(int orderId, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.GetAll()
+            .Include(o => o.Table)
+            .FirstOrDefaultAsync(o => o.OrderId == orderId, ct)
+            ?? throw new EntityNotFoundException("Order", orderId);
+
+        if (order.Status != EOrderStatus.Billing)
+            throw new BusinessException("ไม่สามารถยกเลิกบิลได้ — ออเดอร์ไม่ได้อยู่ในสถานะรอชำระ");
+
+        // Hard delete OrderBills ที่ยัง Pending
+        var pendingBills = await _unitOfWork.OrderBills.GetAll()
+            .Where(b => b.OrderId == orderId && b.Status == EBillStatus.Pending)
+            .ToListAsync(ct);
+
+        if (pendingBills.Count > 0)
+            _unitOfWork.OrderBills.DeleteRange(pendingBills);
+
+        // Revert Order → Open
+        order.Status = EOrderStatus.Open;
+        _unitOfWork.Orders.Update(order);
+
+        // Revert Table → Occupied (+ linked tables)
+        var table = order.Table;
+        table.Status = ETableStatus.Occupied;
+        _unitOfWork.Tables.Update(table);
+
+        var linkedTableIds = await GetLinkedTableIdsAsync(table.TableId, ct);
+        if (linkedTableIds != null)
+        {
+            foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
+            {
+                var lt = await _unitOfWork.Tables.GetByIdAsync(ltId, ct);
+                if (lt != null)
+                {
+                    lt.Status = ETableStatus.Occupied;
+                    _unitOfWork.Tables.Update(lt);
+                }
+            }
+        }
+
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Voided bill for Order {OrderId}, Table {TableId} → Open/Occupied", orderId, table.TableId);
+
+        await _notificationService.NotifyOrderUpdatedAsync(orderId, "Open", ct);
+        await _notificationService.NotifyTableStatusChangedAsync(table.TableId, ETableStatus.Occupied.ToString(), ct);
+        if (linkedTableIds != null)
+        {
+            foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
+                await _notificationService.NotifyTableStatusChangedAsync(ltId, ETableStatus.Occupied.ToString(), ct);
+        }
+
         return await GetOrderByIdAsync(orderId, ct);
     }
 
     public async Task<List<OrderBillResponseModel>> SplitBillByItemAsync(int orderId, SplitByItemRequestModel request, CancellationToken ct = default)
     {
-        var order = await _unitOfWork.Orders.QueryNoTracking()
+        var order = await _unitOfWork.Orders.GetAll()
             .Include(o => o.OrderItems)
             .FirstOrDefaultAsync(o => o.OrderId == orderId, ct)
             ?? throw new EntityNotFoundException("Order", orderId);
@@ -450,6 +527,10 @@ public class OrderService : IOrderService
         if (!allServedItemIds.IsSubsetOf(requestedIds))
             throw new BusinessException("ต้องจัดกลุ่มรายการที่เสิร์ฟแล้วทั้งหมด");
 
+        // Clear existing OrderBillId on items
+        foreach (var item in order.OrderItems)
+            item.OrderBillId = null;
+
         // Delete existing bills
         var existingBills = await _unitOfWork.OrderBills.GetAll()
             .Where(b => b.OrderId == orderId)
@@ -458,7 +539,7 @@ public class OrderService : IOrderService
         _unitOfWork.OrderBills.UpdateRange(existingBills);
 
         var bills = new List<TbOrderBill>();
-        var billDate = DateTime.UtcNow.ToString("yyyyMMdd");
+        var nextSeq = await GetNextBillSequenceAsync(ct);
 
         for (int i = 0; i < request.Groups.Count; i++)
         {
@@ -472,7 +553,7 @@ public class OrderService : IOrderService
             var bill = new TbOrderBill
             {
                 OrderId = orderId,
-                BillNumber = await GenerateBillNumberAsync(ct),
+                BillNumber = FormatBillNumber(nextSeq + i),
                 BillType = EBillType.ByItem,
                 SubTotal = subTotal,
                 TotalDiscountAmount = 0,
@@ -482,11 +563,17 @@ public class OrderService : IOrderService
                 VatRate = vatRate,
                 VatAmount = vatAmount,
                 GrandTotal = subTotal + serviceChargeAmount + vatAmount,
+                SplitCount = request.Groups.Count,
+                SplitIndex = i + 1,
                 Status = EBillStatus.Pending
             };
 
             await _unitOfWork.OrderBills.AddAsync(bill, ct);
             bills.Add(bill);
+
+            // Link items to this bill
+            foreach (var item in groupItems)
+                item.OrderBillId = bill.OrderBillId;
         }
 
         await _unitOfWork.CommitAsync(ct);
@@ -523,6 +610,8 @@ public class OrderService : IOrderService
         foreach (var b in existingBills) b.DeleteFlag = true;
         _unitOfWork.OrderBills.UpdateRange(existingBills);
 
+        var nextSeq = await GetNextBillSequenceAsync(ct);
+
         for (int i = 0; i < request.NumberOfSplits; i++)
         {
             var subTotal = i == 0 ? splitAmount + remainder : splitAmount;
@@ -532,7 +621,7 @@ public class OrderService : IOrderService
             var bill = new TbOrderBill
             {
                 OrderId = orderId,
-                BillNumber = await GenerateBillNumberAsync(ct),
+                BillNumber = FormatBillNumber(nextSeq + i),
                 BillType = EBillType.ByAmount,
                 SubTotal = subTotal,
                 TotalDiscountAmount = 0,
@@ -542,6 +631,8 @@ public class OrderService : IOrderService
                 VatRate = vatRate,
                 VatAmount = vatAmount,
                 GrandTotal = subTotal + serviceChargeAmount + vatAmount,
+                SplitCount = request.NumberOfSplits,
+                SplitIndex = i + 1,
                 Status = EBillStatus.Pending
             };
 
@@ -584,6 +675,7 @@ public class OrderService : IOrderService
             serviceChargeRate = sc.PercentageRate;
         }
 
+        bill.ServiceChargeId = request.ServiceChargeId;
         bill.ServiceChargeRate = serviceChargeRate;
         bill.ServiceChargeAmount = Math.Round(bill.SubTotal * serviceChargeRate / 100, 2);
         bill.VatAmount = Math.Round((bill.SubTotal + bill.ServiceChargeAmount) * bill.VatRate / 100, 2);
@@ -596,24 +688,6 @@ public class OrderService : IOrderService
             orderBillId, serviceChargeRate, bill.GrandTotal);
 
         return OrderBillMapper.ToResponse(bill);
-    }
-
-    public async Task<List<ServiceChargeOptionModel>> GetServiceChargeOptionsAsync(CancellationToken ct = default)
-    {
-        var now = DateTime.UtcNow;
-        var items = await _unitOfWork.ServiceCharges.QueryNoTracking()
-            .Where(s => s.IsActive
-                && (!s.StartDate.HasValue || s.StartDate.Value <= now)
-                && (!s.EndDate.HasValue || s.EndDate.Value >= now))
-            .OrderBy(s => s.PercentageRate)
-            .ToListAsync(ct);
-
-        return items.Select(s => new ServiceChargeOptionModel
-        {
-            ServiceChargeId = s.ServiceChargeId,
-            Name = s.Name,
-            PercentageRate = s.PercentageRate
-        }).ToList();
     }
 
     // ─── Private Helpers ──────────────────────────────
@@ -668,6 +742,12 @@ public class OrderService : IOrderService
 
     private async Task<string> GenerateBillNumberAsync(CancellationToken ct)
     {
+        var nextSeq = await GetNextBillSequenceAsync(ct);
+        return FormatBillNumber(nextSeq);
+    }
+
+    private async Task<int> GetNextBillSequenceAsync(CancellationToken ct)
+    {
         var today = DateTime.UtcNow.Date;
         var prefix = $"BILL-{today:yyyyMMdd}-";
 
@@ -676,15 +756,19 @@ public class OrderService : IOrderService
             .OrderByDescending(b => b.BillNumber)
             .FirstOrDefaultAsync(ct);
 
-        var nextNumber = 1;
         if (lastBill != null)
         {
             var lastPart = lastBill.BillNumber.Split('-').Last();
             if (int.TryParse(lastPart, out var lastNum))
-                nextNumber = lastNum + 1;
+                return lastNum + 1;
         }
 
-        return $"{prefix}{nextNumber:D3}";
+        return 1;
+    }
+
+    private static string FormatBillNumber(int sequence)
+    {
+        return $"BILL-{DateTime.UtcNow:yyyyMMdd}-{sequence:D3}";
     }
 
     private async Task<decimal> GetActiveServiceChargeRateAsync(CancellationToken ct)
@@ -715,5 +799,18 @@ public class OrderService : IOrderService
     {
         var claim = _httpContextAccessor.HttpContext?.User?.FindFirst("employee_id")?.Value;
         return claim != null && int.TryParse(claim, out var id) ? id : null;
+    }
+
+    private async Task<List<int>?> GetLinkedTableIdsAsync(int tableId, CancellationToken ct)
+    {
+        var link = await _unitOfWork.TableLinks.QueryNoTracking()
+            .FirstOrDefaultAsync(tl => tl.TableId == tableId, ct);
+
+        if (link == null) return null;
+
+        return await _unitOfWork.TableLinks.QueryNoTracking()
+            .Where(tl => tl.GroupCode == link.GroupCode)
+            .Select(tl => tl.TableId)
+            .ToListAsync(ct);
     }
 }

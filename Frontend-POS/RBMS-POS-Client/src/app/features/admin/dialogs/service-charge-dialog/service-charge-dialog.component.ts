@@ -75,9 +75,9 @@ export class ServiceChargeDialogComponent implements OnInit {
   private initForm(): void {
     const sc = this.serviceCharge;
     this.form = this.fb.group({
-      name: [sc?.name ?? '', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      percentageRate: [sc?.percentageRate ?? null, [Validators.required, Validators.min(0), Validators.max(100)]],
-      description: [sc?.description ?? '', [Validators.maxLength(500)]],
+      name: [sc?.name ?? '', [Validators.required, Validators.maxLength(100)]],
+      percentageRate: [sc?.percentageRate ?? null, [Validators.required]],
+      description: [sc?.description ?? ''],
       isActive: [sc?.isActive ?? true],
       startDate: [sc?.startDate ? new Date(sc.startDate) : null],
       endDate: [sc?.endDate ? new Date(sc.endDate) : null],
@@ -97,11 +97,11 @@ export class ServiceChargeDialogComponent implements OnInit {
           this.modalService.commonSuccess();
           this.ref.close(true);
         },
-        error: (error) => {
+        error: () => {
           this.isSubmitting.set(false);
           this.modalService.cancel({
             title: 'ผิดพลาด !',
-            message: error.error?.message || 'ไม่สามารถสร้างค่าบริการได้',
+            message: 'ไม่สามารถสร้างค่าบริการได้',
           });
         },
       });
@@ -119,11 +119,11 @@ export class ServiceChargeDialogComponent implements OnInit {
           this.modalService.commonSuccess();
           this.ref.close(true);
         },
-        error: (error) => {
+        error: () => {
           this.isSubmitting.set(false);
           this.modalService.cancel({
             title: 'ผิดพลาด !',
-            message: error.error?.message || 'ไม่สามารถอัปเดตค่าบริการได้',
+            message: 'ไม่สามารถอัปเดตค่าบริการได้',
           });
         },
       });

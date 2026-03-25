@@ -10,7 +10,7 @@
           class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center shrink-0"
         >
           <app-generic-icon
-            name="cashier"
+            name="bill-rastaurant"
             svgClass="w-10 h-10"
             class="text-white"
           ></app-generic-icon>
@@ -151,7 +151,9 @@
             class="text-white"
           ></app-generic-icon>
         </div>
-        <span class="text-lg font-semibold text-warning-dark">เงินสดคงเหลือ</span>
+        <span class="text-lg font-semibold text-warning-dark"
+          >เงินสดคงเหลือ</span
+        >
         <p class="text-3xl font-bold tracking-tight text-warning-dark mt-3">
           {{ calculatedExpectedCash() | number: "1.2-2" }}
         </p>
@@ -218,7 +220,6 @@
         [rowsPerPageOptions]="[5, 10, 25]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-
         [stripedRows]="true"
         styleClass="p-datatable-clean"
       >
@@ -282,7 +283,6 @@
         [rowsPerPageOptions]="[5, 10, 25]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-
         [stripedRows]="true"
         styleClass="p-datatable-clean"
       >
@@ -377,7 +377,6 @@
           [rowsPerPageOptions]="[5, 10, 25]"
           [showCurrentPageReport]="true"
           currentPageReportTemplate="{first} - {last} of {totalRecords}"
-  
           [stripedRows]="true"
           styleClass="p-datatable-clean"
         >

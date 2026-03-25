@@ -116,7 +116,7 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
     if (this.isEditMode()) return;
 
     const ref = this.dialogService.open(TableActionDialogComponent, {
-      header: `โต๊ะ ${table.tableName}`,
+      header: `โซน${table.zoneName} - โต๊ะ${table.tableName}`,
       showHeader: false,
       modal: true,
       styleClass: 'card-dialog',

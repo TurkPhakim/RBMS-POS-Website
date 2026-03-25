@@ -37,7 +37,7 @@ public class ServiceChargeService : IServiceChargeService
         var total = await query.CountAsync(ct);
 
         var items = await query
-            .OrderBy(sc => sc.Name)
+            .OrderBy(sc => sc.ServiceChargeId)
             .Skip(param.Skip)
             .Take(param.Take)
             .ToListAsync(ct);

@@ -13,4 +13,5 @@ public interface IPaymentService
     Task<PaymentResponseModel> GetPaymentByIdAsync(int paymentId, CancellationToken ct = default);
     Task<PaginationResult<PaymentResponseModel>> GetPaymentHistoryAsync(PaginationModel param, CancellationToken ct = default);
     Task<ReceiptDataModel> GetReceiptDataAsync(int paymentId, CancellationToken ct = default);
+    Task<ReceiptDataModel> GetConsolidatedReceiptDataAsync(int orderId, CancellationToken ct = default);
 }
