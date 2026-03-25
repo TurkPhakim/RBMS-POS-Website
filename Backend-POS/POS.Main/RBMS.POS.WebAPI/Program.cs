@@ -342,6 +342,13 @@ app.UseSwaggerUI(options =>
 });
 }
 
+// Auto-migrate database (สร้าง DB + รัน migrations อัตโนมัติ)
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<POSMainContext>();
+    await context.Database.MigrateAsync();
+}
+
 // Seed test data (Development only)
 if (app.Environment.IsDevelopment())
 {
