@@ -119,6 +119,8 @@ services:
     build:
       context: ./Frontend-POS/RBMS-POS-Client
       dockerfile: Dockerfile
+      args:
+        RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
     container_name: rbms-pos-frontend-client
     volumes:
       - client-dist:/output

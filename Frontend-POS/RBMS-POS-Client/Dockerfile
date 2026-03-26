@@ -18,11 +18,12 @@ COPY . .
 # Override environment สำหรับ Docker deployment
 # apiUrl = '' (relative) เพราะ nginx proxy /api → backend
 # selfOrderUrl = '/mobile' (same domain, behind nginx)
+ARG RECAPTCHA_SITE_KEY=""
 RUN printf "export const environment = {\n\
   production: true,\n\
   apiUrl: '',\n\
   selfOrderUrl: '/mobile',\n\
-  recaptchaSiteKey: ''\n\
+  recaptchaSiteKey: '${RECAPTCHA_SITE_KEY}'\n\
 };\n" > src/environments/environment.prod.ts
 
 RUN npx ng build --configuration=production
