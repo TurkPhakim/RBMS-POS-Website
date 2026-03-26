@@ -19,12 +19,13 @@ COPY . .
 # apiUrl = '' (relative) เพราะ nginx proxy /api → backend
 # selfOrderUrl = '/mobile' (same domain, behind nginx)
 ARG RECAPTCHA_SITE_KEY=""
-RUN printf "export const environment = {\n\
-  production: true,\n\
-  apiUrl: '',\n\
-  selfOrderUrl: '/mobile',\n\
-  recaptchaSiteKey: '${RECAPTCHA_SITE_KEY}'\n\
-};\n" > src/environments/environment.prod.ts
+RUN echo "export const environment = {" > src/environments/environment.prod.ts && \
+    echo "  production: true," >> src/environments/environment.prod.ts && \
+    echo "  apiUrl: ''," >> src/environments/environment.prod.ts && \
+    echo "  selfOrderUrl: '/mobile'," >> src/environments/environment.prod.ts && \
+    echo "  recaptchaSiteKey: '$RECAPTCHA_SITE_KEY'" >> src/environments/environment.prod.ts && \
+    echo "};" >> src/environments/environment.prod.ts && \
+    echo "=== environment.prod.ts ===" && cat src/environments/environment.prod.ts
 
 RUN npx ng build --configuration=production
 

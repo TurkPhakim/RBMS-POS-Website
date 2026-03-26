@@ -28,10 +28,11 @@ services:
       timeout: 5s
       retries: 10
       start_period: 60s
+    ports:
+      - "1433:1433"
     networks:
       - rbms-network
     restart: unless-stopped
-    # Production: ไม่เปิด port ออกนอก (เข้าผ่าน Docker network เท่านั้น)
 
   # ─── MinIO (S3-compatible storage) ───────────────────────────
   minio:

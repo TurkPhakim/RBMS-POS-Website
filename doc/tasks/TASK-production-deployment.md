@@ -5,7 +5,6 @@
 **วันที่เสร็จ**: -
 
 > เตรียมระบบ deployment สำหรับ RBMS-POS ให้รันบน Server มหาวิทยาลัย (Ubuntu)
-> อ้างอิง pattern จากโปรเจค GAMS ที่เคย deploy สำเร็จแล้ว
 > รองรับ 2 โหมด: Local Development + Production Server
 
 ### สเปค Server จริง (2026-03-25)
@@ -20,6 +19,12 @@
 | Disk | 15 GB (ว่าง 9.4 GB) — **ค่อนข้างน้อย** |
 | Swap | 2 GB |
 | เครือข่าย | Internal มอ. (ต้องต่อ WiFi มอ.) |
+
+### ข้อจำกัดที่พบ
+
+- **nip.io ถูก firewall มอ. บล็อก** → ใช้ IP ตรง `172.16.8.240` แทน
+- **Let's Encrypt ใช้ไม่ได้** → ใช้ Self-signed SSL Certificate (เพราะ Private IP)
+- **Docker Hub อาจช้า/timeout** → อาจต้อง retry หลายครั้ง
 
 ---
 
@@ -45,153 +50,164 @@
 | 2.7 | สร้าง `nginx/nginx.conf` (Production — HTTPS + 2 Frontend + WebSocket) | ✅ |
 | 2.8 | สร้าง `nginx/nginx.local.conf` (Local — HTTP only) | ✅ |
 | 2.9 | สร้าง `nginx/Dockerfile` (envsubst template) | ✅ |
-| 2.10 | อัพเดต `.env.example` (เพิ่ม DOMAIN, JWT, SMTP) | ✅ |
+| 2.10 | อัพเดต `.env.example` (เพิ่ม DOMAIN, JWT, SMTP, reCAPTCHA) | ✅ |
 | 2.11 | สร้าง `scripts/init-letsencrypt.sh` (SSL bootstrap) | ✅ |
 | 2.12 | สร้าง `scripts/backup.sh` (auto-backup cron) | ✅ |
 | 2.13 | สร้าง `.dockerignore` (Backend + Frontend x2) | ✅ |
 | 2.14 | สร้าง `nginx/logrotate.conf` | ✅ |
 
-### Phase 3 — ตั้งค่า Server + Deploy ⬜
+### Phase 3 — ตั้งค่า Server + Deploy
 
-| # | Sub-task | สถานะ | คำสั่ง |
-|---|----------|-------|--------|
+| # | Sub-task | สถานะ | หมายเหตุ |
+|---|----------|-------|----------|
 | 3.1 | ติดตั้ง Docker | ✅ | `Docker v29.3.0, Compose v5.1.1` |
 | 3.2 | ติดตั้ง Git | ✅ | `git v2.43.0` (มีอยู่แล้ว) |
 | 3.3 | Clone โปรเจค | ✅ | `~/www/RBMS-POS/` |
-| 3.4 | สร้าง `.env` | ⬜ | `cp .env.example .env && nano .env` |
-| 3.5 | สร้าง SSL Certificate (Self-signed) | ⬜ | ดูคำสั่งด้านล่าง |
-| 3.6 | Build + Start ทั้งระบบ | ⬜ | `docker compose up -d --build` |
+| 3.4 | สร้าง `.env` | ✅ | ดูค่าด้านล่าง |
+| 3.5 | สร้าง SSL Certificate (Self-signed) | ✅ | openssl บน host → copy เข้า Docker volume |
+| 3.6 | Build + Start ทั้งระบบ | ✅ | ทุก container รันปกติ |
 | 3.7 | ลบ build cache (ประหยัด disk) | ⬜ | `docker builder prune -f` |
-| 3.8 | ตรวจสอบว่าทุก container รัน | ⬜ | `docker compose ps` |
-| 3.9 | ทดสอบเปิดเว็บจากเบราว์เซอร์ | ⬜ | `https://172.16.8.240.nip.io` |
-| 3.10 | ทดสอบ QR Code scan จากมือถือ | ⬜ | `https://172.16.8.240.nip.io/mobile` |
+| 3.8 | ตรวจสอบว่าทุก container รัน | ✅ | backend healthy, nginx up |
+| 3.9 | ทดสอบเปิดเว็บจากเบราว์เซอร์ | ✅ | หน้า Login โหลดได้ |
+| 3.10 | แก้ reCAPTCHA domain (เปลี่ยนจาก nip.io → IP) | ✅ | เพิ่ม `172.16.8.240` ใน Google Console |
+| 3.11 | แก้ Dockerfile ส่ง reCAPTCHA Site Key ตอน build | ✅ | ใช้ Docker ARG |
+| 3.12 | Rebuild frontend-client + nginx | ⬜ | รอ push + rebuild |
+| 3.13 | ทดสอบ Login สำเร็จ | ⬜ | `admin` / `P@ssw0rd` |
+| 3.14 | ทดสอบ Mobile-Web | ⬜ | `https://172.16.8.240/mobile` |
+| 3.15 | ทดสอบ SMTP ส่งเมลจริง | ⬜ | ลืมรหัสผ่าน → OTP → email |
 
-### Phase 4 — ปรับแก้โค้ด (ทำทีหลังได้) ⬜
+### Phase 4 — Security + โค้ดที่แก้ไข ✅
 
-| # | Sub-task | สถานะ |
-|---|----------|-------|
-| 4.1 | แก้ `Program.cs` — ปิด Swagger ใน Production | ⬜ |
-| 4.2 | ตั้ง Firewall (UFW) | ⬜ |
-| 4.3 | ตั้ง Backup cron | ⬜ |
+| # | Sub-task | สถานะ | หมายเหตุ |
+|---|----------|-------|----------|
+| 4.1 | ปิด Swagger ใน Production | ✅ | `Program.cs` — wrap ด้วย `IsDevelopment()` |
+| 4.2 | เพิ่ม ForwardedHeaders middleware | ✅ | `Program.cs` — สำหรับ Nginx reverse proxy |
+| 4.3 | เพิ่ม Auto-Migration | ✅ | `Program.cs` — `Database.MigrateAsync()` ก่อน seed |
+| 4.4 | ล้าง credentials จาก `appsettings.json` | ✅ | SMTP username/password ย้ายไป env vars |
+| 4.5 | อัพเดต SMTP App Password ใน dev | ✅ | `appsettings.Development.json` |
+| 4.6 | ตั้ง Firewall (UFW) | ⬜ | ยังไม่ได้ทำ |
+| 4.7 | ตั้ง Backup cron | ⬜ | ยังไม่ได้ทำ |
 
 ---
 
-## Checklist — คำสั่งทีละขั้น (Copy วางใน Server)
-
-> ทำตามลำดับ ทำเสร็จแต่ละขั้นให้เช็ค ✅
-
-### ขั้นที่ 1: สร้าง `.env`
+## Production .env — ค่าปัจจุบัน (2026-03-26)
 
 ```bash
-cd ~/www/RBMS-POS
-cp .env.example .env
-nano .env
-```
+# === Domain ===
+DOMAIN=172.16.8.240
+CERTBOT_EMAIL=turkphakim@gmail.com
 
-**แก้ค่าเหล่านี้ใน `.env`:**
-
-```bash
-DOMAIN=172.16.8.240.nip.io
-CERTBOT_EMAIL=turkphakim@email.com
+# === SQL Server ===
 MSSQL_SA_PASSWORD=RbmsPos@2026!
+MSSQL_MEMORY_LIMIT_MB=2048
 SA_PASSWORD=RbmsPos@2026!
-JWT_SECRET=ใช้คำสั่ง: openssl rand -base64 48
+
+# === JWT ===
+JWT_SECRET=1RbH2Sxq+H6KurI/ObL6Km43arVcPRMGID54evs0wGrm6LQqR6R5tomiBuQFx+bL
+
+# === MinIO (S3 Storage) ===
 MINIO_ROOT_USER=rbmsadmin
 MINIO_ROOT_PASSWORD=RbmsMinIO@2026!
-MSSQL_MEMORY_LIMIT_MB=1024
+MINIO_BUCKET_NAME=rbms-pos-files
+
+# === SMTP (Gmail App Password) ===
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=turk.phakim.sgn@gmail.com
+SMTP_PASSWORD="yykt oijb vwpv zggq"
+
+# === Google reCAPTCHA v2 ===
+RECAPTCHA_ENABLED=true
+RECAPTCHA_SITE_KEY=6LeGqZcsAAAAADzfA0Iy-W8n7YG_JlG_D8Jezt6c
+RECAPTCHA_SECRET_KEY=6LeGqZcsAAAAAFIqCgrSuJA0bJzDJ_BxLH31w3YS
 ```
 
-> สร้าง JWT_SECRET ด้วย: `openssl rand -base64 48` แล้ว copy ไปวาง
+> **หมายเหตุ**: SMTP_PASSWORD ต้องอยู่ในเครื่องหมาย `"..."` เพราะมีช่องว่าง
 
-### ขั้นที่ 2: สร้าง SSL Certificate (Self-signed)
+---
 
-เพราะ Server เป็น Private IP → Let's Encrypt ใช้ไม่ได้ → ใช้ Self-signed แทน
+## reCAPTCHA Keys
 
-```bash
-cd ~/www/RBMS-POS
-source .env
-docker compose run --rm --entrypoint "" certbot sh -c "\
-  mkdir -p /etc/letsencrypt/live/$DOMAIN && \
-  openssl req -x509 -nodes -newkey rsa:2048 -days 3650 \
-    -keyout /etc/letsencrypt/live/$DOMAIN/privkey.pem \
-    -out /etc/letsencrypt/live/$DOMAIN/fullchain.pem \
-    -subj '/CN=$DOMAIN'"
-```
+| ชุด | Site Key | Domain |
+|-----|----------|--------|
+| **Production** | `6LeGqZcsAAAAADzfA0Iy-W8n7YG_JlG_D8Jezt6c` | `172.16.8.240` |
+| **Development** | `6LcWEIosAAAAAImvdkgyCTpnjZ1lDGeXcjth3JAD` | `localhost` |
 
-> Self-signed cert จะแสดง warning ในเบราว์เซอร์ — กด "Advanced" → "Proceed" ได้เลย
+- Production Secret Key: `6LeGqZcsAAAAAFIqCgrSuJA0bJzDJ_BxLH31w3YS`
+- Development Secret Key: `6LcWEIosAAAAAP2ImdqHjW7IP2ItqKoXFwU_A49g`
 
-### ขั้นที่ 3: Build + Start ทั้งระบบ
+---
 
-```bash
-cd ~/www/RBMS-POS
-docker compose up -d --build
-```
+## SSL Certificate
 
-> ครั้งแรกใช้เวลา 5-15 นาที (download images + build)
+| รายการ | ค่า |
+|--------|-----|
+| ประเภท | Self-signed (เพราะ Private IP) |
+| อายุ | 10 ปี (3650 วัน) |
+| ที่อยู่ cert | Docker volume `rbms-pos-certbot-conf` → `/live/172.16.8.240/` |
+| ไฟล์ | `fullchain.pem` + `privkey.pem` |
 
-### ขั้นที่ 4: ลบ build cache (ประหยัด disk)
+> เบราว์เซอร์จะแสดง warning "Not Secure" — กด Advanced → Proceed ได้เลย (ปกติสำหรับ self-signed)
 
-```bash
-docker builder prune -f
-```
+---
 
-### ขั้นที่ 5: ตรวจสอบ
-
-```bash
-# ดูสถานะทุก container (ต้องขึ้น Up ทุกตัว ยกเว้น frontend-* ที่ Exited 0)
-docker compose ps
-
-# ดู logs ถ้ามีปัญหา
-docker compose logs -f --tail=30
-
-# ทดสอบ API
-curl -k https://localhost/api/health
-```
-
-### ขั้นที่ 6: เปิดเบราว์เซอร์ทดสอบ (ต้องต่อ WiFi มอ.)
+## URL ทดสอบ
 
 | หน้า | URL |
 |------|-----|
-| Client (Admin/พนักงาน) | `https://172.16.8.240.nip.io` |
-| Mobile-Web (ลูกค้าสแกน QR) | `https://172.16.8.240.nip.io/mobile` |
-| API Health | `https://172.16.8.240.nip.io/api/health` |
+| Client (Admin/พนักงาน) | `https://172.16.8.240` |
+| Mobile-Web (ลูกค้าสแกน QR) | `https://172.16.8.240/mobile` |
+| Login credentials | `admin` / `P@ssw0rd` |
 
-> Login: `admin` / `P@ssw0rd`
+> ต้องต่อ WiFi มหาวิทยาลัยถึงจะเข้าถึงได้ (Private network)
 
 ---
 
-## คำสั่งใช้งาน 3 โหมด
+## คำสั่ง Deploy ที่ใช้บ่อย
 
 ```bash
-# Dev (SQL+MinIO เดิม — Backend/Frontend รัน native)
-docker compose -f docker-compose.dev.yml up -d
-
-# Local Docker test (full stack, HTTP)
-docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
-
-# Production server (full stack, HTTPS)
-docker compose up -d --build
-
-# อัพเดตโค้ด (ข้อมูลไม่หาย)
+# อัพเดตโค้ดแล้ว rebuild
 git pull && docker compose up -d --build
+
+# Rebuild เฉพาะ frontend-client + nginx
+docker compose up -d --build frontend-client nginx
+
+# ดู logs
+docker compose logs -f --tail=50
+
+# ดู logs เฉพาะ backend
+docker compose logs -f --tail=50 backend
+
+# ดูสถานะทุก container
+docker compose ps
+
+# Restart ทั้งระบบ
+docker compose down && docker compose up -d
+
+# ลบ build cache ประหยัด disk
+docker builder prune -f
 ```
 
 ---
 
-## ไฟล์ที่สร้างทั้งหมด
+## ไฟล์ที่สร้าง/แก้ไขทั้งหมด
 
 ```
 RBMS-POS/
-├── docker-compose.yml              ← Production (full stack)
+├── docker-compose.yml              ← Production (+ reCAPTCHA site key ARG)
 ├── docker-compose.local.yml        ← Local override (HTTP, open ports)
 ├── docker-compose.dev.yml          ← Dev เดิม (SQL+MinIO only)
-├── .env.example                    ← Template (อัพเดตแล้ว)
+├── .env.example                    ← Template (SMTP + reCAPTCHA)
 ├── Backend-POS/
 │   ├── Dockerfile                  ← .NET 9 multi-stage build
-│   └── .dockerignore
+│   ├── .dockerignore
+│   └── POS.Main/RBMS.POS.WebAPI/
+│       ├── Program.cs              ← +ForwardedHeaders, +Swagger dev-only, +MigrateAsync
+│       ├── appsettings.json        ← ล้าง SMTP credentials (ใช้ env vars)
+│       └── appsettings.Development.json ← อัพเดต SMTP App Password
 ├── Frontend-POS/
 │   ├── RBMS-POS-Client/
-│   │   ├── Dockerfile              ← Angular 19 init container
+│   │   ├── Dockerfile              ← +ARG RECAPTCHA_SITE_KEY
 │   │   └── .dockerignore
 │   └── RBMS-POS-Mobile-Web/
 │       ├── Dockerfile              ← Angular 19 init container
