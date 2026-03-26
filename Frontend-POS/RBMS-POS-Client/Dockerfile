@@ -15,15 +15,16 @@ RUN npm ci --legacy-peer-deps
 
 COPY . .
 
-# Override URLs สำหรับ Docker deployment
-# apiUrl = '' (relative) เพราะ nginx proxy /api → backend
-# selfOrderUrl = '/mobile' (same domain, behind nginx)
-# recaptchaSiteKey ใช้ค่าจาก source โดยตรง (ไม่ต้องแก้)
+# Override environment.ts สำหรับ Docker deployment
+# หมายเหตุ: โปรเจคไม่มี fileReplacements ใน angular.json
+# ดังนั้น production build ใช้ environment.ts โดยตรง (ไม่ใช่ environment.prod.ts)
 RUN sed -i \
+    -e "s|production: false|production: true|" \
     -e "s|apiUrl: '.*'|apiUrl: ''|" \
     -e "s|selfOrderUrl: '.*'|selfOrderUrl: '/mobile'|" \
-    src/environments/environment.prod.ts && \
-    echo "=== environment.prod.ts ===" && cat src/environments/environment.prod.ts
+    -e "s|recaptchaSiteKey: '.*'|recaptchaSiteKey: '6LeGqZcsAAAAADzfA0Iy-W8n7YG_JlG_D8Jezt6c'|" \
+    src/environments/environment.ts && \
+    echo "=== environment.ts ===" && cat src/environments/environment.ts
 
 RUN npx ng build --configuration=production
 
