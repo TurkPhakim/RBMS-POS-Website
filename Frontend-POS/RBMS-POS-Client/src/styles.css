@@ -185,6 +185,14 @@ textarea:user-invalid {
   border-color: var(--color-warning-dark) !important;
 }
 
+/* ─── Dropdown — host element full-width ──────────────────────────────────── */
+
+p-dropdown,
+p-select {
+  display: block;
+  width: 100%;
+}
+
 /* ─── Compact Dropdown (ลดความสูง ใช้ใน split-bill) ─────────────────────── */
 
 .compact-dropdown .p-dropdown-label {

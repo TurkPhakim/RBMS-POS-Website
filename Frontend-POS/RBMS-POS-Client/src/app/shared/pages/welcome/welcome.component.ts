@@ -62,6 +62,11 @@ export class WelcomeComponent implements OnInit, OnDestroy {
       'User',
   );
 
+  hasShopData = computed(() => {
+    const info = this.shopInfo();
+    return !!info && !!(info.shopNameThai || info.shopNameEnglish);
+  });
+
   profileImageUrl = computed(() => {
     const fileId =
       this.myProfile()?.imageFileId || this.currentUser()?.profileImageFileId;

@@ -26,6 +26,8 @@ export class QrCodeDialogComponent implements AfterViewInit, OnDestroy {
   shopNameThai: string;
   logoUrl: string;
   openedDate: string;
+  qrUrl = '';
+  isDev = !environment.production;
 
   private qrCode!: QRCodeStyling;
 
@@ -55,15 +57,15 @@ export class QrCodeDialogComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    const qrUrl = `${environment.selfOrderUrl}/auth?token=${encodeURIComponent(this.qrToken)}`;
-
-    // TODO: ลบก่อนขึ้น Production
-    console.log('[DEV] Self-Order URL:', qrUrl);
+    const selfOrderBase = environment.selfOrderUrl.startsWith('http')
+      ? environment.selfOrderUrl
+      : `${window.location.origin}${environment.selfOrderUrl}`;
+    this.qrUrl = `${selfOrderBase}/auth?token=${encodeURIComponent(this.qrToken)}`;
 
     this.qrCode = new QRCodeStyling({
       width: 240,
       height: 240,
-      data: qrUrl,
+      data: this.qrUrl,
       dotsOptions: {
         type: 'rounded',
         color: '#1e293b',

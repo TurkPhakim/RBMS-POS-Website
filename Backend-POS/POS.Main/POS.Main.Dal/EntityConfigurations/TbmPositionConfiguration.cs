@@ -43,9 +43,7 @@ public class TbmPositionConfiguration : IEntityTypeConfiguration<TbmPosition>
         // Seed Data
         var seedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         builder.HasData(
-            new TbmPosition { PositionId = 1, PositionName = "ผู้ดูแลระบบ", Description = "ดูแลระบบทั้งหมด สิทธิ์เข้าถึงทุกฟังก์ชัน", IsActive = true, CreatedAt = seedDate },
-            new TbmPosition { PositionId = 2, PositionName = "ผู้จัดการ", Description = "จัดการร้านค้า ดูรายงาน จัดการพนักงาน", IsActive = true, CreatedAt = seedDate },
-            new TbmPosition { PositionId = 3, PositionName = "แคชเชียร์", Description = "รับออเดอร์ ชำระเงิน", IsActive = true, CreatedAt = seedDate }
+            new TbmPosition { PositionId = 1, PositionName = "ผู้ดูแลระบบ", Description = "ดูแลระบบทั้งหมด สิทธิ์เข้าถึงทุกฟังก์ชัน", IsActive = true, CreatedAt = seedDate }
         );
     }
 }

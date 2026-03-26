@@ -1,8 +1,8 @@
 <div class="flex items-center justify-center h-full p-6">
   <div
     class="w-full"
-    [class.max-w-5xl]="shopInfo()"
-    [class.max-w-3xl]="!shopInfo()"
+    [class.max-w-5xl]="hasShopData()"
+    [class.max-w-3xl]="!hasShopData()"
   >
     <!-- Main Card -->
     <div class="bg-surface-card rounded-2xl border border-primary-light">
@@ -83,8 +83,8 @@
       <!-- Body -->
       <div
         class="divide-x divide-surface-border"
-        [class.grid]="shopInfo()"
-        [class.grid-cols-2]="shopInfo()"
+        [class.grid]="hasShopData()"
+        [class.grid-cols-2]="hasShopData()"
       >
         <!-- คอลัมน์ซ้าย: นาฬิกา -->
         <div class="flex flex-col items-center justify-start p-6 gap-6">
@@ -124,7 +124,7 @@
         </div>
 
         <!-- คอลัมน์ขวา: Tabs ข้อมูลร้าน -->
-        @if (shopInfo()) {
+        @if (hasShopData()) {
           <div class="p-6">
             <p-tabs [value]="0" (valueChange)="activeTab.set(+$event)">
               <p-tablist>
