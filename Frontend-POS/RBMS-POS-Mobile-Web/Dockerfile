@@ -21,7 +21,7 @@ RUN printf "export const environment = {\n\
   apiUrl: ''\n\
 };\n" > src/environments/environment.prod.ts
 
-RUN npx ng build --configuration=production
+RUN npx ng build --configuration=production --base-href=/mobile/
 
 # --- Stage 2: Init container ---
 FROM alpine:3.19

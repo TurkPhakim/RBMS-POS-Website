@@ -13,6 +13,10 @@ namespace POS.Main.Dal.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // ลบ FK references ก่อน (TbAuthorizeMatrixPositions, TbEmployees)
+            migrationBuilder.Sql("DELETE FROM TbAuthorizeMatrixPositions WHERE PositionId IN (2, 3)");
+            migrationBuilder.Sql("UPDATE TbEmployees SET PositionId = NULL WHERE PositionId IN (2, 3)");
+
             migrationBuilder.DeleteData(
                 table: "TbmPositions",
                 keyColumn: "PositionId",
