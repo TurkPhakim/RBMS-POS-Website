@@ -15,16 +15,14 @@ RUN npm ci --legacy-peer-deps
 
 COPY . .
 
-# Override environment สำหรับ Docker deployment
+# Override URLs สำหรับ Docker deployment
 # apiUrl = '' (relative) เพราะ nginx proxy /api → backend
 # selfOrderUrl = '/mobile' (same domain, behind nginx)
-ARG RECAPTCHA_SITE_KEY=""
-RUN echo "export const environment = {" > src/environments/environment.prod.ts && \
-    echo "  production: true," >> src/environments/environment.prod.ts && \
-    echo "  apiUrl: ''," >> src/environments/environment.prod.ts && \
-    echo "  selfOrderUrl: '/mobile'," >> src/environments/environment.prod.ts && \
-    echo "  recaptchaSiteKey: '$RECAPTCHA_SITE_KEY'" >> src/environments/environment.prod.ts && \
-    echo "};" >> src/environments/environment.prod.ts && \
+# recaptchaSiteKey ใช้ค่าจาก source โดยตรง (ไม่ต้องแก้)
+RUN sed -i \
+    -e "s|apiUrl: '.*'|apiUrl: ''|" \
+    -e "s|selfOrderUrl: '.*'|selfOrderUrl: '/mobile'|" \
+    src/environments/environment.prod.ts && \
     echo "=== environment.prod.ts ===" && cat src/environments/environment.prod.ts
 
 RUN npx ng build --configuration=production
