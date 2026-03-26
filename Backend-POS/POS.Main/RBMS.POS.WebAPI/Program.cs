@@ -349,11 +349,8 @@ using (var scope = app.Services.CreateScope())
     await context.Database.MigrateAsync();
 }
 
-// Seed test data (Development only)
-if (app.Environment.IsDevelopment())
-{
-    await TestDataSeeder.SeedTestUsersAsync(app.Services);
-}
+// Seed admin user (ทุก environment — สร้างเฉพาะเมื่อยังไม่มี)
+await TestDataSeeder.SeedTestUsersAsync(app.Services);
 
 // Endpoints
 app.MapControllers();
