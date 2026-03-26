@@ -163,20 +163,56 @@ RECAPTCHA_SECRET_KEY=6LeGqZcsAAAAAFIqCgrSuJA0bJzDJ_BxLH31w3YS
 
 ---
 
+## ปัญหาที่เจอระหว่าง Deploy (2026-03-26)
+
+### 1. QR Code URL เป็น relative path — มือถือกดลิงค์ไม่ได้
+- **สาเหตุ**: `environment.selfOrderUrl = '/mobile'` (Production) → QR แสดง `/mobile/auth?token=...` ซึ่งไม่ใช่ full URL
+- **แก้**: เพิ่มตรวจ `startsWith('http')` → ถ้าไม่มี ให้ prepend `window.location.origin`
+- **ไฟล์**: `qr-code-dialog.component.ts`
+
+### 2. Dropdown ไม่เต็มความกว้าง
+- **สาเหตุ**: PrimeNG `<p-dropdown>` host element เป็น `display: inline` โดย default
+- **แก้**: เพิ่ม global CSS: `p-dropdown, p-select { display: block; width: 100%; }`
+- **ไฟล์**: `styles.css`
+
+### 3. หน้า Welcome แสดง Section ร้านค้าทั้งที่ไม่มีข้อมูล
+- **สาเหตุ**: ShopSettings ถูก seed ด้วย HasData (empty values) → API return object ว่าง → `@if (shopInfo())` เป็น truthy เสมอ
+- **แก้**: สร้าง `hasShopData` computed ตรวจว่ามี shopName จริงหรือไม่
+- **ไฟล์**: `welcome.component.ts`, `welcome.component.html`
+
+### 4. Backend fail: PendingModelChangesWarning ⚠️
+- **สาเหตุ**: ลบ HasData seed positions (2,3) ออกจาก `TbmPositionConfiguration.cs` โดยไม่ได้สร้าง migration ใหม่
+- **Error**: `The model for context 'POSMainContext' has pending changes`
+- **แก้**: Revert กลับมาเป็น 3 positions เหมือนเดิม (ตรงกับ migration snapshot)
+- **ไฟล์**: `TbmPositionConfiguration.cs`
+- **บทเรียน**: ถ้าแก้ Entity/HasData/EntityConfiguration → **ต้องสร้าง migration ใหม่** (ด้วย `dotnet ef migrations add`) ก่อน push ขึ้น server เสมอ
+
+---
+
 ## คำสั่ง Deploy ที่ใช้บ่อย
 
+### อัพเดตหลัง push โค้ดใหม่
+
+| สถานการณ์ | คำสั่ง |
+|-----------|--------|
+| **แก้อะไรก็ได้ (ปลอดภัยสุด)** | `git pull && docker compose up -d --build` |
+| **แก้แค่ Backend** | `git pull && docker compose up -d --build backend` |
+| **แก้แค่ Frontend Client** | `git pull && docker compose up -d --build frontend-client nginx` |
+| **แก้แค่ Frontend Mobile** | `git pull && docker compose up -d --build frontend-mobile nginx` |
+| **แก้ Frontend ทั้ง 2** | `git pull && docker compose up -d --build frontend-client frontend-mobile nginx` |
+| **แก้ Nginx config** | `git pull && docker compose up -d --build nginx` |
+| **แก้ .env บน server** | `nano .env && docker compose down && docker compose up -d` |
+
+> **สำคัญ**: rebuild Frontend ต้อง restart nginx ด้วยเสมอ (เพราะ Frontend เป็น init container ที่ copy ไฟล์ไป shared volume)
+
+### คำสั่งทั่วไป
+
 ```bash
-# อัพเดตโค้ดแล้ว rebuild
-git pull && docker compose up -d --build
-
-# Rebuild เฉพาะ frontend-client + nginx
-docker compose up -d --build frontend-client nginx
-
 # ดู logs
 docker compose logs -f --tail=50
 
 # ดู logs เฉพาะ backend
-docker compose logs -f --tail=50 backend
+docker compose logs backend --tail=50
 
 # ดูสถานะทุก container
 docker compose ps
@@ -186,6 +222,9 @@ docker compose down && docker compose up -d
 
 # ลบ build cache ประหยัด disk
 docker builder prune -f
+
+# ดู disk ที่เหลือ
+df -h
 ```
 
 ---

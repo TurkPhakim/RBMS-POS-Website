@@ -447,6 +447,12 @@ curl -k https://localhost/api/health
 
 > ใช้ทุกครั้งที่แก้โค้ดบนเครื่อง dev แล้วต้องการอัพเดต server
 
+### สิ่งสำคัญที่ต้องเข้าใจ
+
+- **`git pull` อย่างเดียวไม่พอ** — `git pull` แค่ดึงโค้ดใหม่มาที่ server แต่ตัวแอพยังทำงานจาก Docker image เดิม
+- **ต้อง `docker compose up -d --build` ทุกครั้ง** — เพื่อให้ Docker สร้าง image ใหม่จากโค้ดที่ pull มา
+- **Frontend เป็น init container** — build Angular → copy static files ไป shared volume → Nginx serve จาก volume นั้น ดังนั้นเมื่อ rebuild frontend ต้อง **restart nginx ด้วย** เพื่อให้ใช้ไฟล์ใหม่
+
 ### วิธีอัพเดต (ข้อมูลไม่หาย)
 
 ```bash
@@ -466,32 +472,58 @@ docker compose logs -f --tail=20
 > `--build` จะ rebuild เฉพาะ image ที่ Dockerfile/source code เปลี่ยน
 > Container ที่ไม่เปลี่ยน (เช่น sqlserver, minio) จะไม่ถูก restart
 
-### อัพเดตเฉพาะบางส่วน
+### แก้ตรงไหน → ต้อง rebuild อะไร
+
+| แก้โค้ดตรงไหน | คำสั่งที่ต้องรัน | หมายเหตุ |
+|---------------|-----------------|---------|
+| **แก้อะไรก็ได้ (ไม่แน่ใจ)** | `git pull && docker compose up -d --build` | ปลอดภัยที่สุด — rebuild ทุกอย่าง |
+| **Backend** (.NET code) | `git pull && docker compose up -d --build backend` | auto-migrate ตอน startup |
+| **Frontend Client** (Angular) | `git pull && docker compose up -d --build frontend-client nginx` | ต้อง restart nginx ด้วย เพราะ init container copy ไฟล์ไป shared volume |
+| **Frontend Mobile-Web** (Angular) | `git pull && docker compose up -d --build frontend-mobile nginx` | เหมือนกัน — ต้อง restart nginx |
+| **Frontend ทั้ง 2 ตัว** | `git pull && docker compose up -d --build frontend-client frontend-mobile nginx` | |
+| **Nginx config** (`nginx/`) | `git pull && docker compose up -d --build nginx` | |
+| **Backend + Frontend ทั้งหมด** | `git pull && docker compose up -d --build backend frontend-client frontend-mobile nginx` | |
+| **docker-compose.yml** | `git pull && docker compose up -d --build` | เปลี่ยน compose config ต้อง rebuild ทั้งหมด |
+| **แก้ `.env` บน server** | `nano .env && docker compose down && docker compose up -d` | ต้อง down ก่อนเพื่อให้อ่าน env ใหม่ |
+
+### ข้อผิดพลาดที่พบบ่อย
+
+| ทำอะไร | ผลลัพธ์ | ทำไม |
+|--------|---------|------|
+| `git pull` อย่างเดียว | แอพยังเป็นเวอร์ชันเดิม | Docker image ไม่ได้ build ใหม่ |
+| `git pull` + restart nginx | Frontend เดิม, Backend เดิม | Nginx serve ไฟล์จาก volume เดิม ต้อง rebuild frontend container |
+| rebuild frontend ไม่ restart nginx | อาจได้ไฟล์เก่า | Init container copy ไฟล์ไป volume แต่ nginx อาจ cache ไว้ |
+| ลบ HasData seed ใน EF แล้ว build | Backend fail (PendingModelChangesWarning) | ต้องสร้าง migration ใหม่ก่อน หรือ revert การเปลี่ยน |
+
+### ขั้นตอนมาตรฐานหลังอัพเดต
 
 ```bash
-# อัพเดตแค่ Backend
-docker compose up -d --build backend
+cd ~/www/RBMS-POS
 
-# อัพเดตแค่ Frontend Client
-docker compose up -d --build frontend-client
+# 1. ดึงโค้ดใหม่
+git pull origin main
 
-# อัพเดตแค่ Frontend Mobile
-docker compose up -d --build frontend-mobile
+# 2. Rebuild ทุกอย่าง
+docker compose up -d --build
 
-# อัพเดตแค่ Nginx config
-docker compose up -d --build nginx
+# 3. ตรวจสอบสถานะ
+docker compose ps
+
+# 4. ถ้า backend unhealthy → ดู logs
+docker compose logs backend --tail=50
+
+# 5. ลบ build cache (ประหยัด disk — server มี disk น้อย)
+docker builder prune -f
+
+# 6. ตรวจสอบ disk ที่เหลือ
+df -h
 ```
 
 ### กรณีต้องรัน Database Migration
 
-```bash
-# ถ้ามี migration ใหม่ ต้องรัน EF migration ก่อน
-docker compose exec backend dotnet ef database update \
-    --project /app/POS.Main.Dal/POS.Main.Dal.csproj \
-    --startup-project /app/RBMS.POS.WebAPI/RBMS.POS.WebAPI.csproj
-```
+Backend มี **auto-migrate** (`Database.MigrateAsync()`) ตอน startup อยู่แล้ว — ไม่ต้องรัน migration ด้วยมือ
 
-> หรือออกแบบให้ Backend auto-migrate ตอน startup (เพิ่มใน Program.cs)
+> **ข้อควรระวัง**: ถ้าแก้ Entity/HasData แล้วไม่ได้สร้าง migration ใหม่ (ด้วย `dotnet ef migrations add`) → Backend จะ fail ด้วย `PendingModelChangesWarning` เพราะ model ไม่ตรงกับ migration snapshot ล่าสุด — **ต้องสร้าง migration บนเครื่อง dev ก่อน push ขึ้น server**
 
 ### กรณีต้องเปลี่ยน `.env`
 
@@ -691,6 +723,24 @@ docker compose ps
 # Restart container เดียว
 docker compose restart backend
 ```
+
+### Backend fail: PendingModelChangesWarning
+
+```
+Unhandled exception. System.InvalidOperationException:
+The model for context 'POSMainContext' has pending changes.
+Add a new migration before updating the database.
+```
+
+**สาเหตุ**: แก้ Entity, HasData, หรือ EntityConfiguration บน dev แล้ว push ขึ้น server โดยไม่ได้สร้าง migration ใหม่
+
+**วิธีแก้**:
+1. กลับไปเครื่อง dev
+2. สร้าง migration: `dotnet ef migrations add {Name} --project POS.Main/POS.Main.Dal --startup-project POS.Main/RBMS.POS.WebAPI`
+3. Push ขึ้น git
+4. ที่ server: `git pull && docker compose up -d --build`
+
+**หรือ**: ถ้าไม่ต้องการสร้าง migration → revert การเปลี่ยน Entity/HasData ให้ตรงกับ migration snapshot ล่าสุด
 
 ### Database ไม่ connect
 

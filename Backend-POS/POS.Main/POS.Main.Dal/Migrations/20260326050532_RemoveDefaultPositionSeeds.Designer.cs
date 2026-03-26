@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using POS.Main.Dal;
 
@@ -11,9 +12,11 @@ using POS.Main.Dal;
 namespace POS.Main.Dal.Migrations
 {
     [DbContext(typeof(POSMainContext))]
-    partial class POSMainContextModelSnapshot : ModelSnapshot
+    [Migration("20260326050532_RemoveDefaultPositionSeeds")]
+    partial class RemoveDefaultPositionSeeds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

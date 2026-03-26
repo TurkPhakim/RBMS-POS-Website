@@ -17,6 +17,7 @@ import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 import { SharedModule } from './shared/shared.module';
 import { layoutReducer } from './store/layout/layout.reducer';
 import { TestDialogPageComponent } from './test-dialog-page/test-dialog-page.component';
+import { TestQrDownloadComponent } from './test-dialog-page/test-qr-download/test-qr-download.component';
 import { TestDashboardOverviewComponent } from './test-dashboard-overview/test-dashboard-overview.component';
 import { TestSalesReportComponent } from './test-sales-report/test-sales-report.component';
 import {
@@ -47,6 +48,7 @@ const AppPreset = definePreset(Lara, {
   declarations: [
     AppComponent,
     TestDialogPageComponent,
+    TestQrDownloadComponent,
     TestDashboardOverviewComponent,
     TestSalesReportComponent,
   ],

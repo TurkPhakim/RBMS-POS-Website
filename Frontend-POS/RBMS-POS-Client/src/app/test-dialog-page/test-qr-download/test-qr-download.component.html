@@ -1,0 +1,39 @@
+<div class="p-6 space-y-8">
+  <h1 class="text-page-title">Preview QR Code Download</h1>
+
+  <!-- Hidden QR canvases (ใช้เป็น source วาดลง preview) -->
+  <div class="hidden">
+    <div #qrCanvas1></div>
+    <div #qrCanvas2></div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-8">
+    <!-- แบบมีข้อมูลร้าน -->
+    <div class="space-y-3">
+      <h2 class="text-section-title">มีข้อมูลร้าน</h2>
+      <p class="text-sm text-surface-sub">shopName = "RBMS POS", shopNameThai = "ร้านอาหาร RBMS", table = "A1", zone = "ชั้น 1"</p>
+      <div #previewWithShop class="flex justify-center"></div>
+      <button
+        pButton
+        label="ดาวน์โหลด"
+        icon="pi pi-download"
+        class="p-button-sm p-button-outlined p-button-secondary"
+        (click)="onDownload(previewWithShop)"
+      ></button>
+    </div>
+
+    <!-- แบบไม่มีข้อมูลร้าน -->
+    <div class="space-y-3">
+      <h2 class="text-section-title">ไม่มีข้อมูลร้าน</h2>
+      <p class="text-sm text-surface-sub">shopName = "", shopNameThai = "", table = "B3", zone = "ดาดฟ้า"</p>
+      <div #previewNoShop class="flex justify-center"></div>
+      <button
+        pButton
+        label="ดาวน์โหลด"
+        icon="pi pi-download"
+        class="p-button-sm p-button-outlined p-button-secondary"
+        (click)="onDownload(previewNoShop)"
+      ></button>
+    </div>
+  </div>
+</div>
