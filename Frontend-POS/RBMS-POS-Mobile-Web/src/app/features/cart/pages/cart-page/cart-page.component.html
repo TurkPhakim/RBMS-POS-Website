@@ -1,0 +1,138 @@
+@if (cartService.itemCount() > 0) {
+  <!-- Cart Header -->
+  <div class="bg-gradient-to-r from-primary to-primary-dark mx-4 mt-4 rounded-xl p-4">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center">
+        <app-generic-icon name="basket-shopping" svgClass="w-7 h-7" class="text-white"></app-generic-icon>
+      </div>
+      <div class="flex-1">
+        <h2 class="text-lg font-bold text-white">ตะกร้าของคุณ</h2>
+        @if (orderNumber()) {
+          <p class="text-sm text-white/80">ออเดอร์ #{{ orderNumber() }}</p>
+        }
+      </div>
+      <p-tag [value]="cartService.itemCount() + ' รายการ'" [rounded]="true" severity="contrast"></p-tag>
+    </div>
+  </div>
+
+  <!-- Cart Items -->
+  <div class="space-y-2 px-4 mt-3">
+    @for (item of cartService.items(); track $index) {
+      <div class="rounded-xl bg-white border border-surface-border overflow-hidden">
+        <!-- Menu Name + Actions -->
+        <div class="px-4 pt-3 pb-1 flex items-start justify-between gap-2">
+          <div class="flex gap-3 flex-1 min-w-0">
+            <!-- Thumbnail -->
+            <div class="w-14 h-14 rounded-lg bg-surface overflow-hidden shrink-0">
+              @if (item.imageFileId) {
+                <img [src]="getImageUrl(item.imageFileId)" [alt]="item.name" class="w-full h-full object-cover">
+              } @else {
+                <div class="w-full h-full flex items-center justify-center">
+                  <app-generic-icon name="food" svgClass="w-6 h-6" class="text-surface-muted"></app-generic-icon>
+                </div>
+              }
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-sm truncate">{{ item.name }}</div>
+              @if (item.selectedOptions.length > 0) {
+                <div class="text-xs text-surface-sub mt-0.5">
+                  @for (opt of item.selectedOptions; track opt.optionItemId) {
+                    <span>{{ opt.name }}@if (opt.additionalPrice) { (+{{ opt.additionalPrice }})}</span>@if (!$last) {<span>, </span>}
+                  }
+                </div>
+              }
+              @if (item.note) {
+                <div class="text-xs text-warning-dark italic mt-0.5">{{ item.note }}</div>
+              }
+              @if (item.allergens) {
+                <div class="text-xs text-danger-soft mt-0.5 flex items-center gap-1">
+                  <app-generic-icon name="shield-warning" svgClass="w-3.5 h-3.5" class="text-danger-soft shrink-0"></app-generic-icon>
+                  {{ item.allergens }}
+                </div>
+              }
+            </div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            @if (!item.selectedOptions.length) {
+              <button
+                class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                [class.text-warning-dark]="item.note || noteEditIndex === $index"
+                [class.bg-warning-bg]="item.note || noteEditIndex === $index"
+                [class.text-surface-muted]="!item.note && noteEditIndex !== $index"
+                (click)="toggleNote($index)"
+              >
+                <app-generic-icon name="chat-message" svgClass="w-4 h-4"></app-generic-icon>
+              </button>
+            }
+            <button
+              class="w-8 h-8 rounded-lg text-danger hover:bg-danger-bg flex items-center justify-center transition-colors"
+              (click)="removeItem($index)"
+            >
+              <i class="pi pi-trash text-sm"></i>
+            </button>
+          </div>
+        </div>
+        <!-- Inline Note Input (เฉพาะเมนูไม่มี options) -->
+        @if (!item.selectedOptions.length && noteEditIndex === $index) {
+          <div class="px-4 pt-1">
+            <input
+              type="text"
+              placeholder="ระบุหมายเหตุ เช่น ไม่ใส่ผัก, เผ็ดน้อย"
+              class="w-full text-xs border border-warning rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-warning"
+              [value]="item.note || ''"
+              (change)="updateNote($index, $any($event.target).value)"
+            />
+          </div>
+        }
+        <!-- Quantity + Price -->
+        <div class="px-4 pb-3 pt-1 flex items-center justify-between">
+          <div class="flex items-center border border-surface-border rounded-full overflow-hidden">
+            <button
+              class="w-9 h-8 bg-surface hover:bg-surface-border flex items-center justify-center transition-colors"
+              (click)="decreaseQty($index)"
+              [disabled]="item.quantity <= 1"
+            >
+              <i class="pi pi-minus text-[10px] font-bold text-surface-sub"></i>
+            </button>
+            <span class="font-bold text-sm w-9 text-center bg-white">{{ item.quantity }}</span>
+            <button
+              class="w-9 h-8 bg-surface hover:bg-surface-border flex items-center justify-center transition-colors"
+              (click)="increaseQty($index)"
+            >
+              <i class="pi pi-plus text-[10px] font-bold text-primary"></i>
+            </button>
+          </div>
+          <span class="font-bold text-lg text-primary">{{ item.itemTotal | number:'1.0-0' }} บาท</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Spacer for fixed footer -->
+  <div class="h-36"></div>
+
+  <!-- Fixed Footer: Total + Submit -->
+  <div class="fixed bottom-[74px] left-0 right-0 bg-white border-t border-surface-border px-4 py-3 z-10">
+    <div class="bg-primary-subtle rounded-xl p-3 flex justify-between items-center mb-3">
+      <span class="font-bold">รวมทั้งหมด</span>
+      <span class="text-xl font-bold text-primary">{{ cartService.totalPrice() | number:'1.0-0' }} บาท</span>
+    </div>
+    <button
+      pButton
+      label="สั่งอาหาร"
+      class="w-full py-3"
+      (click)="submitOrder()"
+      [loading]="isSubmitting()"
+    ></button>
+  </div>
+} @else {
+  <!-- Empty State -->
+  <div class="flex flex-col items-center justify-center px-6 min-h-[calc(100vh-140px)]">
+    <ng-lottie [options]="lottieOptions" width="200px" height="200px"></ng-lottie>
+    <p class="text-2xl font-bold mb-4">ตะกร้าว่าง</p>
+    <button pButton class="px-8 gap-2" routerLink="/menu">
+      <app-generic-icon name="menu-restaurant" svgClass="w-6 h-6" class="text-white"></app-generic-icon>
+      <span class="text-base font-semibold">ออเดอร์เมนู</span>
+    </button>
+  </div>
+}

@@ -1,59 +1,52 @@
-import { Component, DestroyRef, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AnimationOptions } from 'ngx-lottie';
 import { SelfOrderService } from '@core/api/services/self-order.service';
 import { SignalRService } from '@core/services/signalr.service';
 import { CustomerTrackingItemModel } from '@core/api/models/customer-tracking-item-model';
 import { CustomerOrderTrackingResponseModelBaseResponseModel } from '@core/api/models/customer-order-tracking-response-model-base-response-model';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-order-tracking',
   standalone: false,
-  template: `
-    @if (items().length > 0) {
-      <div class="divide-y divide-surface-border">
-        @for (item of items(); track item.orderItemId) {
-          <div class="bg-white p-4">
-            <div class="flex items-start justify-between">
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-sm">{{ item.menuName }}</p>
-                <div class="flex items-center gap-2 mt-1">
-                  <span class="text-xs text-surface-sub">x{{ item.quantity }}</span>
-                  <span class="text-xs text-surface-sub">฿{{ item.totalPrice }}</span>
-                </div>
-                @if (item.orderedBy) {
-                  <p class="text-xs text-surface-sub mt-0.5">สั่งโดย {{ item.orderedBy }}</p>
-                }
-              </div>
-              <span class="shrink-0 ml-2 text-xs font-medium px-2 py-1 rounded-full"
-                    [class]="getStatusClass(item.status!)">
-                {{ getStatusLabel(item.status!) }}
-              </span>
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- Summary -->
-      <div class="bg-white border-t border-surface-border p-4 mt-2">
-        <div class="flex justify-between items-center">
-          <span class="font-medium">ยอดรวม</span>
-          <span class="text-lg font-semibold text-primary">฿{{ subTotal() }}</span>
-        </div>
-        <p class="text-xs text-surface-sub mt-1">{{ orderNumber() }}</p>
-      </div>
-    } @else {
-      <div class="flex flex-col items-center justify-center py-20 px-6">
-        <app-generic-icon name="order-dinner" svgClass="w-16 h-16" class="text-surface-muted"></app-generic-icon>
-        <p class="text-surface-sub mt-4 text-sm">ยังไม่มีออเดอร์</p>
-        <button pButton label="สั่งอาหาร" severity="secondary" [outlined]="true" class="mt-4" routerLink="/menu"></button>
-      </div>
-    }
-  `,
+  templateUrl: './order-tracking.component.html',
 })
 export class OrderTrackingComponent implements OnInit {
   items = signal<CustomerTrackingItemModel[]>([]);
   subTotal = signal(0);
   orderNumber = signal('');
+  lottieOptions: AnimationOptions = { path: 'animations/order-waiting.json' };
+
+  // Filter signals
+  sourceTableFilter = signal<string | null>(null);
+  orderedByFilter = signal<string | null>(null);
+
+  sourceTableNames = computed(() => {
+    const names = new Set(this.items().map(i => i.sourceTableName).filter(Boolean) as string[]);
+    return Array.from(names);
+  });
+
+  hasMultipleTables = computed(() => this.sourceTableNames().length > 1);
+
+  orderedByNames = computed(() => {
+    let items = this.items();
+    const st = this.sourceTableFilter();
+    if (st) items = items.filter(i => i.sourceTableName === st);
+    const names = new Set(items.map(i => i.orderedBy).filter(Boolean) as string[]);
+    return Array.from(names);
+  });
+
+  hasMultipleOrderers = computed(() => this.orderedByNames().length > 1);
+
+  filteredItems = computed(() => {
+    let items = this.items();
+    const st = this.sourceTableFilter();
+    if (st) items = items.filter(i => i.sourceTableName === st);
+    const ob = this.orderedByFilter();
+    if (ob) items = items.filter(i => i.orderedBy === ob);
+    return items;
+  });
 
   constructor(
     private selfOrderService: SelfOrderService,
@@ -83,6 +76,11 @@ export class OrderTrackingComponent implements OnInit {
       });
   }
 
+  onSourceTableChange(value: string | null): void {
+    this.sourceTableFilter.set(value || null);
+    this.orderedByFilter.set(null);
+  }
+
   getStatusLabel(status: string): string {
     switch (status) {
       case 'Sent': return 'รอทำ';
@@ -96,12 +94,60 @@ export class OrderTrackingComponent implements OnInit {
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'Sent': return 'bg-surface text-surface-sub';
-      case 'Preparing': return 'bg-warning/10 text-warning';
-      case 'Ready': return 'bg-success/10 text-success';
+      case 'Sent': return 'bg-info-bg text-info';
+      case 'Preparing': return 'bg-warning-bg text-warning-dark';
+      case 'Ready': return 'bg-success-bg text-success';
       case 'Served': return 'bg-surface text-surface-muted';
-      case 'Cancelled': return 'bg-danger/10 text-danger line-through';
+      case 'Cancelled': return 'bg-danger-bg text-danger line-through';
       default: return 'bg-surface text-surface-sub';
+    }
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'Sent': return 'chef';
+      case 'Preparing': return 'kitchen-room';
+      case 'Ready': return 'check-in';
+      case 'Served': return 'order-dinner';
+      case 'Cancelled': return 'error';
+      default: return 'order-dinner';
+    }
+  }
+
+  getItemBorderClass(status: string): string {
+    switch (status) {
+      case 'Sent': return 'border-info bg-info-bg';
+      case 'Preparing': return 'border-warning bg-warning-bg';
+      case 'Ready': return 'border-success bg-success-bg';
+      case 'Served': return 'border-surface-border bg-surface';
+      case 'Cancelled': return 'border-danger bg-danger-bg';
+      default: return 'border-surface-border';
+    }
+  }
+
+  getItemIconBgClass(status: string): string {
+    switch (status) {
+      case 'Sent': return 'bg-info-bg';
+      case 'Preparing': return 'bg-warning-bg';
+      case 'Ready': return 'bg-success-bg';
+      case 'Served': return 'bg-surface-hover';
+      case 'Cancelled': return 'bg-danger-bg';
+      default: return 'bg-surface';
+    }
+  }
+
+  getImageUrl(fileId?: number | null): string | null {
+    return fileId ? `${environment.apiUrl}/api/admin/file/${fileId}` : null;
+  }
+
+  getItemIconTextClass(status: string): string {
+    switch (status) {
+      case 'Sent': return 'text-info';
+      case 'Preparing': return 'text-warning-dark';
+      case 'Ready': return 'text-success';
+      case 'Served': return 'text-surface-muted';
+      case 'Cancelled': return 'text-danger';
+      default: return 'text-surface-sub';
     }
   }
 }

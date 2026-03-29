@@ -2,7 +2,6 @@ import { Component, DestroyRef, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import {
   CreateServiceChargeRequestModel,
   ServiceChargeResponseModel,
@@ -24,6 +23,7 @@ export class ServiceChargeDialogComponent implements OnInit {
   isSubmitting = signal(false);
   minEndDate = signal<Date | null>(null);
 
+  private serviceChargeId: number | null = null;
   serviceCharge: ServiceChargeResponseModel | null = null;
   canUpdate: boolean;
 
@@ -40,10 +40,20 @@ export class ServiceChargeDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.serviceCharge = this.config.data?.serviceCharge ?? null;
-    this.isEditMode.set(!!this.serviceCharge);
+    this.serviceChargeId = this.config.data?.serviceChargeId ?? null;
+    this.isEditMode.set(!!this.serviceChargeId);
     this.initForm();
-    linkDateRange(this.form, 'startDate', 'endDate', this.minEndDate, this.destroyRef);
+    linkDateRange(
+      this.form,
+      'startDate',
+      'endDate',
+      this.minEndDate,
+      this.destroyRef,
+    );
+
+    if (this.serviceChargeId) {
+      this.loadDetail(this.serviceChargeId);
+    }
   }
 
   onSubmit(): void {
@@ -57,8 +67,12 @@ export class ServiceChargeDialogComponent implements OnInit {
     const formValue = this.form.value;
     const data = {
       ...formValue,
-      startDate: formValue.startDate ? new Date(formValue.startDate).toISOString() : null,
-      endDate: formValue.endDate ? new Date(formValue.endDate).toISOString() : null,
+      startDate: formValue.startDate
+        ? new Date(formValue.startDate).toISOString()
+        : null,
+      endDate: formValue.endDate
+        ? new Date(formValue.endDate).toISOString()
+        : null,
     };
 
     if (this.isEditMode()) {
@@ -73,19 +87,40 @@ export class ServiceChargeDialogComponent implements OnInit {
   }
 
   private initForm(): void {
-    const sc = this.serviceCharge;
     this.form = this.fb.group({
-      name: [sc?.name ?? '', [Validators.required, Validators.maxLength(100)]],
-      percentageRate: [sc?.percentageRate ?? null, [Validators.required]],
-      description: [sc?.description ?? ''],
-      isActive: [sc?.isActive ?? true],
-      startDate: [sc?.startDate ? new Date(sc.startDate) : null],
-      endDate: [sc?.endDate ? new Date(sc.endDate) : null],
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      percentageRate: [null, [Validators.required]],
+      description: [''],
+      isActive: [true],
+      startDate: [null as Date | null],
+      endDate: [null as Date | null],
     });
+  }
 
-    if (this.isEditMode() && !this.canUpdate) {
-      this.form.disable();
-    }
+  private loadDetail(serviceChargeId: number): void {
+    this.serviceChargesService
+      .serviceChargesGetByIdGet({ serviceChargeId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.serviceCharge = res.result ?? null;
+          if (this.serviceCharge) {
+            this.form.patchValue({
+              name: this.serviceCharge.name,
+              percentageRate: this.serviceCharge.percentageRate,
+              description: this.serviceCharge.description,
+              isActive: this.serviceCharge.isActive,
+              startDate: this.serviceCharge.startDate
+                ? new Date(this.serviceCharge.startDate)
+                : null,
+              endDate: this.serviceCharge.endDate
+                ? new Date(this.serviceCharge.endDate)
+                : null,
+            });
+            if (!this.canUpdate) this.form.disable();
+          }
+        },
+      });
   }
 
   private createServiceCharge(data: CreateServiceChargeRequestModel): void {
@@ -110,7 +145,7 @@ export class ServiceChargeDialogComponent implements OnInit {
   private updateServiceCharge(data: UpdateServiceChargeRequestModel): void {
     this.serviceChargesService
       .serviceChargesUpdatePut({
-        serviceChargeId: this.serviceCharge!.serviceChargeId!,
+        serviceChargeId: this.serviceChargeId!,
         body: data,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))

@@ -1,15 +1,12 @@
 import { Component, DestroyRef, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { DialogService } from 'primeng/dynamicdialog';
-
 import { AuthService as AuthApiService } from '@app/core/api/services/auth.service';
 import { AuthService } from '@app/core/services/auth.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { PinKeypadComponent } from '@app/shared/components/pin-keypad/pin-keypad.component';
 import { VerifyPasswordDialogComponent } from '@app/shared/dialogs/verify-password/verify-password.component';
-
 const MAX_ATTEMPTS = 3;
 
 @Component({
@@ -60,7 +57,7 @@ export class VerifyPinDialogComponent {
           if (newAttempts >= MAX_ATTEMPTS) {
             this.modalService.cancel({
               title: 'ยืนยันตัวตนล้มเหลว',
-              message: 'กรอกรหัส PIN ผิดเกินจำนวนครั้งที่กำหนด',
+              message: 'กรอกรหัส PIN ผิด\nเกินจำนวนครั้งที่กำหนด',
               onConfirm: () => this.ref.close('max-attempts'),
             });
             return;

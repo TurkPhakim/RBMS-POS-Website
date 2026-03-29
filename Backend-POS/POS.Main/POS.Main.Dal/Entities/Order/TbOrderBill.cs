@@ -40,5 +40,11 @@ public class TbOrderBill : BaseEntity
 
     public DateTime? PaidAt { get; set; }
 
+    // Customer-uploaded slip (from Mobile Web)
+    public int? CustomerSlipFileId { get; set; }
+    public virtual TbFile? CustomerSlipFile { get; set; }
+    public decimal? CustomerSlipOcrAmount { get; set; }
+    public string? CustomerSlipVerificationStatus { get; set; }
+
     public virtual ICollection<TbOrderItem> OrderItems { get; set; } = new List<TbOrderItem>();
 }

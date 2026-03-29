@@ -82,6 +82,18 @@ public class TbOrderBillConfiguration : IEntityTypeConfiguration<TbOrderBill>
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
+        builder.HasOne(ob => ob.CustomerSlipFile)
+            .WithMany()
+            .HasForeignKey(ob => ob.CustomerSlipFileId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        builder.Property(ob => ob.CustomerSlipOcrAmount)
+            .HasColumnType("decimal(12,2)");
+
+        builder.Property(ob => ob.CustomerSlipVerificationStatus)
+            .HasMaxLength(20);
+
         // Indexes
         builder.HasIndex(ob => ob.BillNumber)
             .IsUnique()

@@ -72,7 +72,7 @@ public class TbPaymentConfiguration : IEntityTypeConfiguration<TbPayment>
         builder.HasOne(p => p.SlipImageFile)
             .WithMany()
             .HasForeignKey(p => p.SlipImageFileId)
-            .OnDelete(DeleteBehavior.Restrict)
+            .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
         // Indexes

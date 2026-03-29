@@ -16,16 +16,13 @@ const routes: Routes = [
   },
   {
     path: 'categories',
-    data: { breadcrumb: 'หมวดหมู่เมนู', permissions: ['menu-category.read'] },
+    data: {
+      breadcrumb: 'จัดการหมวดหมู่เมนู',
+      permissions: ['menu-category.read'],
+    },
     canActivate: [PermissionGuard],
     children: [
       { path: '', component: SubCategoryListComponent },
-      {
-        path: 'create',
-        component: SubCategoryManageComponent,
-        data: { breadcrumb: 'เพิ่ม', permissions: ['menu-category.create'] },
-        canActivate: [PermissionGuard],
-      },
       {
         path: 'update/:subCategoryId',
         component: SubCategoryManageComponent,
@@ -36,7 +33,7 @@ const routes: Routes = [
   {
     path: 'food',
     data: {
-      breadcrumb: 'เมนูอาหาร',
+      breadcrumb: 'จัดการเมนูอาหาร',
       permissions: ['menu-food.read'],
       categoryType: 1,
     },
@@ -59,7 +56,7 @@ const routes: Routes = [
   {
     path: 'beverage',
     data: {
-      breadcrumb: 'เมนูเครื่องดื่ม',
+      breadcrumb: 'จัดการเมนูเครื่องดื่ม',
       permissions: ['menu-beverage.read'],
       categoryType: 2,
     },
@@ -82,7 +79,7 @@ const routes: Routes = [
   {
     path: 'dessert',
     data: {
-      breadcrumb: 'เมนูของหวาน',
+      breadcrumb: 'จัดการเมนูของหวาน',
       permissions: ['menu-dessert.read'],
       categoryType: 3,
     },
@@ -104,7 +101,10 @@ const routes: Routes = [
   },
   {
     path: 'options',
-    data: { breadcrumb: 'ตัวเลือกเสริม', permissions: ['menu-option.read'] },
+    data: {
+      breadcrumb: 'จัดการตัวเลือกเสริม',
+      permissions: ['menu-option.read'],
+    },
     canActivate: [PermissionGuard],
     children: [
       { path: '', component: OptionGroupListComponent },

@@ -1,41 +1,91 @@
 <app-card-template [headerLabel]="config.header!">
   <div class="space-y-4">
-    <!-- Session Summary -->
-    <div class="bg-surface rounded-lg p-4 space-y-2">
-      <div class="flex justify-between">
-        <span class="text-surface-sub">เงินเปิดรอบ</span>
-        <span class="font-semibold">{{ session.openingCash | number: '1.2-2' }} บาท</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-surface-sub">ยอดขายเงินสด</span>
-        <span class="font-semibold text-success">{{ session.totalCashSales | number: '1.2-2' }} บาท</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-surface-sub">ยอดขาย QR</span>
-        <span class="font-semibold text-info">{{ session.totalQrSales | number: '1.2-2' }} บาท</span>
-      </div>
-      <div class="flex justify-between">
-        <span class="text-surface-sub">จำนวนบิล</span>
-        <span class="font-semibold">{{ session.billCount }} รายการ</span>
+    <!-- Section 1: สรุปยอดขาย -->
+    <div>
+      <h3 class="text-xl font-bold mb-2">สรุปยอดขาย</h3>
+      <div class="bg-surface rounded-lg p-5 space-y-3">
+        <div class="flex justify-between items-center">
+          <span class="text-surface-sub text-lg">เงินเปิดรอบ</span>
+          <span class="text-lg font-semibold"
+            >{{ session.openingCash | number: "1.2-2" }} บาท</span
+          >
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-surface-sub text-lg">ยอดขายเงินสด</span>
+          <span class="text-lg font-semibold text-success"
+            >{{ session.totalCashSales | number: "1.2-2" }} บาท</span
+          >
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-surface-sub text-lg">ยอดขาย QR</span>
+          <span class="text-lg font-semibold text-info"
+            >{{ session.totalQrSales | number: "1.2-2" }} บาท</span
+          >
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-surface-sub text-lg">จำนวนบิล</span>
+          <span class="text-lg font-semibold"
+            >{{ session.billCount }} รายการ</span
+          >
+        </div>
       </div>
     </div>
 
-    <form [formGroup]="form">
-      <!-- Actual Cash -->
-      <div>
-        <label class="block font-semibold mb-2">จำนวนเงินจริงในลิ้นชัก (บาท)</label>
-        <p-inputNumber
-          formControlName="actualCash"
-          [minFractionDigits]="2"
-          [maxFractionDigits]="2"
-          [min]="0"
-          mode="decimal"
-          styleClass="w-full"
-          placeholder="0.00"
-        ></p-inputNumber>
-        <app-field-error [control]="form.controls['actualCash']" label="จำนวนเงินจริง"></app-field-error>
+    <!-- Section 2: เงินเข้า-ออกลิ้นชัก -->
+    <div>
+      <h3 class="text-xl font-bold mb-2">เงินเข้า - ออกลิ้นชัก</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-success-bg rounded-lg p-2 text-center">
+          <div class="text-success-text font-semibold mb-1">
+            เงินเข้าลิ้นชัก
+          </div>
+          <div class="text-xl font-bold text-success">
+            + {{ totalCashIn | number: "1.2-2" }}
+          </div>
+        </div>
+        <div class="bg-danger-bg rounded-lg p-2 text-center">
+          <div class="text-danger-dark font-semibold mb-1">เงินออกลิ้นชัก</div>
+          <div class="text-xl font-bold text-danger">
+            - {{ totalCashOut | number: "1.2-2" }}
+          </div>
+        </div>
       </div>
+    </div>
 
+    <!-- Section 3: เงินสดที่ควรมี (Expected) -->
+    <div
+      class="bg-primary-subtle border border-primary-light rounded-lg p-4 text-center"
+    >
+      <div class="text-primary text-xl font-semibold mb-1">
+        เงินสดที่ควรมีในลิ้นชัก
+      </div>
+      <div class="text-4xl font-bold text-primary">
+        {{ expectedCash | number: "1.2-2" }} บาท
+      </div>
+    </div>
+
+    <!-- Section 4: Input จำนวนเงินจริง -->
+    <form [formGroup]="form">
+      <div>
+        <label class="block font-semibold mb-2 text-lg"
+          >จำนวนเงินจริงในลิ้นชัก <span class="text-danger">*</span></label
+        >
+        <p-inputgroup>
+          <p-inputNumber
+            formControlName="actualCash"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            [min]="0"
+            mode="decimal"
+            styleClass="w-full"
+            placeholder="จำนวนเงินจริงในลิ้นชัก"
+          ></p-inputNumber>
+          <p-inputgroup-addon>บาท</p-inputgroup-addon>
+        </p-inputgroup>
+        <app-field-error
+          [control]="form.controls['actualCash']"
+        ></app-field-error>
+      </div>
     </form>
   </div>
 

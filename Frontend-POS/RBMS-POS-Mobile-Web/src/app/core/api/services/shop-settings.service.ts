@@ -9,9 +9,12 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
+import { CurrentPeriodResultModelBaseResponseModel } from '../models/current-period-result-model-base-response-model';
 import { ShopBrandingResponseModelBaseResponseModel } from '../models/shop-branding-response-model-base-response-model';
 import { shopSettingsGetBrandingGet } from '../fn/shop-settings/shop-settings-get-branding-get';
 import { ShopSettingsGetBrandingGet$Params } from '../fn/shop-settings/shop-settings-get-branding-get';
+import { shopSettingsGetCurrentPeriodGet } from '../fn/shop-settings/shop-settings-get-current-period-get';
+import { ShopSettingsGetCurrentPeriodGet$Params } from '../fn/shop-settings/shop-settings-get-current-period-get';
 import { shopSettingsGetGet } from '../fn/shop-settings/shop-settings-get-get';
 import { ShopSettingsGetGet$Params } from '../fn/shop-settings/shop-settings-get-get';
 import { shopSettingsGetWelcomeShopInfoGet } from '../fn/shop-settings/shop-settings-get-welcome-shop-info-get';
@@ -74,6 +77,31 @@ export class ShopSettingsService extends BaseService {
   shopSettingsGetWelcomeShopInfoGet(params?: ShopSettingsGetWelcomeShopInfoGet$Params, context?: HttpContext): Observable<WelcomeShopInfoResponseModelBaseResponseModel> {
     return this.shopSettingsGetWelcomeShopInfoGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<WelcomeShopInfoResponseModelBaseResponseModel>): WelcomeShopInfoResponseModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `shopSettingsGetCurrentPeriodGet()` */
+  static readonly ShopSettingsGetCurrentPeriodGetPath = '/api/admin/shop-settings/current-period';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `shopSettingsGetCurrentPeriodGet()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  shopSettingsGetCurrentPeriodGet$Response(params?: ShopSettingsGetCurrentPeriodGet$Params, context?: HttpContext): Observable<StrictHttpResponse<CurrentPeriodResultModelBaseResponseModel>> {
+    return shopSettingsGetCurrentPeriodGet(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `shopSettingsGetCurrentPeriodGet$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  shopSettingsGetCurrentPeriodGet(params?: ShopSettingsGetCurrentPeriodGet$Params, context?: HttpContext): Observable<CurrentPeriodResultModelBaseResponseModel> {
+    return this.shopSettingsGetCurrentPeriodGet$Response(params, context).pipe(
+      map((r: StrictHttpResponse<CurrentPeriodResultModelBaseResponseModel>): CurrentPeriodResultModelBaseResponseModel => r.body)
     );
   }
 

@@ -7,13 +7,11 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-
 import { PositionResponseModel } from '@app/core/api/models';
 import { PositionsService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { Icon, ModalService } from '@app/core/services/modal.service';
-
 const KEY_BTN_ADD = 'add-position';
 
 @Component({
@@ -76,15 +74,19 @@ export class PositionListComponent implements OnInit, OnDestroy {
   }
 
   onDelete(id: number, name: string): void {
-    this.modalService.info({
-      icon: Icon.Question,
-      title: 'ยืนยันการลบ',
-      message: `คุณต้องการลบตำแหน่ง "${name}"?`,
-      confirmButtonLabel: 'ลบ',
-      cancelButtonLabel: 'ยกเลิก',
-      onConfirm: () => this.positionsService.positionsDeletePositionDelete({ positionId: id }),
-    }).onClose
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.modalService
+      .info({
+        icon: Icon.Question,
+        title: 'ยืนยันการลบ',
+        message: `คุณต้องการลบตำแหน่ง "${name}"?`,
+        confirmButtonLabel: 'ลบ',
+        cancelButtonLabel: 'ยกเลิก',
+        onConfirm: () =>
+          this.positionsService.positionsDeletePositionDelete({
+            positionId: id,
+          }),
+      })
+      .onClose.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result) => {
         if (result) {
           this.modalService.commonSuccess();
@@ -95,8 +97,11 @@ export class PositionListComponent implements OnInit, OnDestroy {
 
   private loadPositions(): void {
     const isActive =
-      this.statusFilter === 'active' ? true :
-      this.statusFilter === 'inactive' ? false : undefined;
+      this.statusFilter === 'active'
+        ? true
+        : this.statusFilter === 'inactive'
+          ? false
+          : undefined;
 
     this.positionsService
       .positionsGetPositionsGet({

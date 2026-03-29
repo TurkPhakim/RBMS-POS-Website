@@ -18,9 +18,9 @@
     <!-- Card 1: โลโก้ร้านค้า -->
     <app-image-upload-card
       label="โลโก้ร้านค้า"
-      placeholderIcon="image-preview"
+      placeholderIcon="restaurant"
       [imageUrl]="serverLogoUrl()"
-      [allowedTypes]="['image/png']"
+      [allowedTypes]="['image/png', 'image/jpeg']"
       [readOnly]="!canUpdate"
       (fileSelected)="selectedLogoFile.set($event)"
       (imageRemoved)="onLogoRemoved()"
@@ -153,7 +153,7 @@
       <!-- Toggle ใน Header ทางขวา -->
       <div
         sectionActions
-        class="flex items-center gap-4 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full px-6 py-3"
+        class="flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/30 rounded-full px-6 py-3"
       >
         <p-inputSwitch formControlName="hasTwoPeriods"></p-inputSwitch>
         <span class="font-bold text-white text-lg tracking-wide mb-1">
@@ -293,7 +293,7 @@
     <!-- Card 4: ที่อยู่และช่องทางติดต่อ -->
     <app-section-card
       headerLabel="ที่อยู่และช่องทางติดต่อ"
-      headerIcon="restaurant-address"
+      headerIcon="address-location"
       contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
     >
       <!-- ที่อยู่ (full width) -->
@@ -415,7 +415,7 @@
         variant="square"
         label="คลิกเพื่ออัปโหลด QR Code ชำระเงิน"
         uploadedLabel="QR Code ชำระเงิน"
-        placeholderIcon="image-preview"
+        placeholderIcon="scan-barcode"
         [imageUrl]="qrCodePreview()"
         [allowedTypes]="['image/png', 'image/jpeg']"
         [readOnly]="!canUpdate"
@@ -427,20 +427,21 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div>
           <label for="bankName" class="block font-semibold mb-2">
-            ธนาคาร
+            ธนาคาร <span class="text-danger">*</span>
           </label>
           <input
             id="bankName"
             type="text"
             pInputText
             formControlName="bankName"
-            placeholder="ชื่อธนาคาร"
+            placeholder="ธนาคาร"
             class="w-full"
           />
+          <app-field-error [control]="form.get('bankName')" type="text" />
         </div>
         <div>
           <label for="accountNumber" class="block font-semibold mb-2">
-            เลขที่บัญชี
+            เลขที่บัญชี <span class="text-danger">*</span>
           </label>
           <input
             id="accountNumber"
@@ -450,10 +451,11 @@
             placeholder="เลขที่บัญชี"
             class="w-full"
           />
+          <app-field-error [control]="form.get('accountNumber')" type="text" />
         </div>
         <div>
           <label for="accountName" class="block font-semibold mb-2">
-            ชื่อบัญชี
+            ชื่อบัญชี <span class="text-danger">*</span>
           </label>
           <input
             id="accountName"
@@ -463,80 +465,85 @@
             placeholder="ชื่อบัญชี"
             class="w-full"
           />
+          <app-field-error [control]="form.get('accountName')" type="text" />
         </div>
       </div>
     </app-section-card>
 
-    <!-- Card 6: WiFi -->
+    <!-- Card 6: บริการลูกค้าเพิ่มเติม (WiFi + ใบเสร็จ) -->
     <app-section-card
-      headerLabel="WiFi สำหรับลูกค้า"
+      headerLabel="บริการลูกค้าเพิ่มเติม"
       headerIcon="information"
-      contentClass="p-6 grid grid-cols-1 md:grid-cols-2 gap-5"
+      contentClass="p-6 space-y-6"
     >
+      <!-- WiFi สำหรับลูกค้า -->
       <div>
-        <label for="wifiSsid" class="block font-semibold mb-2">
-          ชื่อ WiFi (SSID)
-        </label>
-        <input
-          id="wifiSsid"
-          type="text"
-          pInputText
-          formControlName="wifiSsid"
-          placeholder="ชื่อ WiFi"
-          class="w-full"
-        />
-      </div>
-      <div>
-        <label for="wifiPassword" class="block font-semibold mb-2">
-          รหัสผ่าน WiFi
-        </label>
-        <input
-          id="wifiPassword"
-          type="text"
-          pInputText
-          formControlName="wifiPassword"
-          placeholder="รหัสผ่าน WiFi"
-          class="w-full"
-        />
-      </div>
-    </app-section-card>
-
-    <!-- Card 7: ตั้งค่าใบเสร็จ -->
-    <app-section-card
-      headerLabel="ตั้งค่าใบเสร็จ"
-      headerIcon="receipt"
-      contentClass="p-6 grid grid-cols-1 gap-5"
-    >
-      <!-- ข้อความหัวใบเสร็จ -->
-      <div>
-        <label for="receiptHeaderText" class="block font-semibold mb-2">
-          ข้อความหัวใบเสร็จ
-        </label>
-        <textarea
-          id="receiptHeaderText"
-          pTextarea
-          formControlName="receiptHeaderText"
-          rows="3"
-          placeholder="ข้อความหัวใบเสร็จ"
-          class="w-full"
-          [autoResize]="true"
-        ></textarea>
+        <h3 class="text-section-title mb-3">WiFi สำหรับลูกค้า</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label for="wifiSsid" class="block font-semibold mb-2">
+              Wi-Fi Name
+            </label>
+            <input
+              id="wifiSsid"
+              type="text"
+              pInputText
+              formControlName="wifiSsid"
+              placeholder="Wi-Fi Name"
+              class="w-full"
+            />
+          </div>
+          <div>
+            <label for="wifiPassword" class="block font-semibold mb-2">
+              Wi-Fi Password
+            </label>
+            <input
+              id="wifiPassword"
+              type="text"
+              pInputText
+              formControlName="wifiPassword"
+              placeholder="Wi-Fi Password"
+              class="w-full"
+            />
+          </div>
+        </div>
       </div>
 
-      <!-- ข้อความท้ายใบเสร็จ -->
+      <hr class="border-surface-border border-2" />
+
+      <!-- ตั้งค่าใบเสร็จ -->
       <div>
-        <label for="receiptFooterText" class="block font-semibold mb-2">
-          ข้อความท้ายใบเสร็จ
-        </label>
-        <textarea
-          id="receiptFooterText"
-          pTextarea
-          formControlName="receiptFooterText"
-          rows="3"
-          placeholder="ข้อความท้ายใบเสร็จ"
-          class="w-full"
-          [autoResize]="true"
-        ></textarea>
+        <h3 class="text-section-title mb-3">ตั้งค่าใบเสร็จ</h3>
+        <div class="grid grid-cols-1 gap-5">
+          <div>
+            <label for="receiptHeaderText" class="block font-semibold mb-2">
+              ข้อความหัวใบเสร็จ
+            </label>
+            <textarea
+              id="receiptHeaderText"
+              pTextarea
+              formControlName="receiptHeaderText"
+              rows="3"
+              placeholder="ข้อความหัวใบเสร็จ"
+              class="w-full"
+              [autoResize]="true"
+            ></textarea>
+          </div>
+          <div>
+            <label for="receiptFooterText" class="block font-semibold mb-2">
+              ข้อความท้ายใบเสร็จ
+            </label>
+            <textarea
+              id="receiptFooterText"
+              pTextarea
+              formControlName="receiptFooterText"
+              rows="3"
+              placeholder="ข้อความท้ายใบเสร็จ"
+              class="w-full"
+              [autoResize]="true"
+            ></textarea>
+          </div>
+        </div>
       </div>
     </app-section-card>
 

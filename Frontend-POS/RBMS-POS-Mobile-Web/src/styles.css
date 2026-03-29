@@ -11,6 +11,7 @@
 @layer base {
   html {
     @apply h-full;
+    color-scheme: light only;
   }
   body {
     @apply h-full m-0 font-sans text-surface-dark bg-surface antialiased;
@@ -38,11 +39,42 @@
 /* ═══════════════════════════════════════════════════════════════
    Form — Validation states
    ═══════════════════════════════════════════════════════════════ */
+/* Reset: ลบกรอบแดงสำหรับ input ที่ยังไม่ dirty */
+input.ng-invalid:not(.ng-dirty),
+textarea.ng-invalid:not(.ng-dirty),
+p-select.ng-invalid:not(.ng-dirty) {
+  border-color: var(--p-inputtext-border-color) !important;
+}
+
+/* Apply: กรอบแดงเฉพาะเมื่อ dirty + invalid */
 input.ng-invalid.ng-dirty,
 textarea.ng-invalid.ng-dirty,
 p-select.ng-invalid.ng-dirty .p-select,
 p-datepicker.ng-invalid.ng-dirty .p-datepicker-input {
   border-color: #f43f5e !important;
+}
+
+/* Focus Ring — primary color */
+.p-inputtext:enabled:focus,
+.p-select:not(.p-disabled).p-focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 0.2rem var(--color-primary-light) !important;
+  outline: none !important;
+}
+
+/* Dropdown / Select — Selected item highlight */
+.p-select-option.p-select-option-selected {
+  background: var(--color-primary-subtle) !important;
+  color: var(--color-primary-text) !important;
+}
+
+.p-select-option:not(.p-select-option-selected):hover {
+  background: var(--color-surface) !important;
+}
+
+/* Dropdown — host element block */
+p-select {
+  display: block;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -62,13 +94,8 @@ p-datepicker.ng-invalid.ng-dirty .p-datepicker-input {
 
 /* Dialog — alert dialog */
 .alert-dialog .p-dialog-content {
-  padding: 0 !important;
+  padding: 1.5rem !important;
   border-radius: 0.75rem !important;
-}
-
-/* Toast */
-.p-toast {
-  max-width: calc(100vw - 2rem) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════

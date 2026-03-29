@@ -6,7 +6,7 @@ namespace POS.Main.Business.Table.Models.Table;
 
 public static class TableMapper
 {
-    public static TableResponseModel ToResponse(TbTable entity, string? linkedGroupCode = null, List<string>? linkedTableNames = null)
+    public static TableResponseModel ToResponse(TbTable entity, string? linkedGroupCode = null, List<string>? linkedTableNames = null, bool isLinkedPrimary = false)
     {
         return new TableResponseModel
         {
@@ -26,7 +26,9 @@ public static class TableMapper
             Note = entity.Note,
             LinkedGroupCode = linkedGroupCode,
             LinkedTableNames = linkedTableNames,
+            IsLinkedPrimary = isLinkedPrimary,
             HasQrToken = !string.IsNullOrEmpty(entity.QrToken),
+            QrShortCode = entity.QrShortCode,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             CreatedBy = entity.CreatedByEmployee?.Nickname ?? entity.CreatedBy?.ToString(),

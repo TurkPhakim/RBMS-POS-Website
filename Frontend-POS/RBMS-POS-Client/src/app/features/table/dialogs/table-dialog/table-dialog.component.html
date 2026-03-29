@@ -1,0 +1,88 @@
+<app-card-template [headerLabel]="config.header!">
+  <form [formGroup]="form" class="space-y-4">
+    <!-- Row 1: ชื่อโต๊ะที่นั่ง + โซน -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="tableName" class="block font-semibold mb-2">
+          ชื่อโต๊ะที่นั่ง <span class="text-danger">*</span>
+        </label>
+        <input
+          pInputText
+          id="tableName"
+          formControlName="tableName"
+          placeholder="ชื่อโต๊ะที่นั่ง"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('tableName')" type="text" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-2">
+          โซนร้าน <span class="text-danger">*</span>
+        </label>
+        <app-zone-dropdown formControlName="zoneId"></app-zone-dropdown>
+        <app-field-error [control]="form.get('zoneId')" type="select" />
+      </div>
+    </div>
+
+    <!-- Row 2: ความจุ + ขนาด -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="capacity" class="block font-semibold mb-2">
+          ความจุ (ที่นั่ง) <span class="text-danger">*</span>
+        </label>
+        <p-inputNumber
+          id="capacity"
+          formControlName="capacity"
+          [min]="1"
+          [max]="50"
+          [showButtons]="true"
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          inputStyleClass="w-full"
+          styleClass="w-full"
+        ></p-inputNumber>
+        <app-field-error [control]="form.get('capacity')" type="text" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-2">
+          ขนาดโต๊ะ <span class="text-danger">*</span>
+        </label>
+        <app-table-size-dropdown
+          formControlName="size"
+          [showClear]="false"
+        ></app-table-size-dropdown>
+      </div>
+    </div>
+
+    <!-- Audit Footer (edit mode only) -->
+    @if (isEditMode() && table) {
+      <div class="pt-2"></div>
+      <app-audit-footer
+        [compact]="true"
+        [createdAt]="table.createdAt"
+        [createdByName]="table.createdBy"
+        [updatedAt]="table.updatedAt"
+        [updatedByName]="table.updatedBy"
+      />
+    }
+  </form>
+
+  <p-footer>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      variant="outlined"
+      (onClick)="onCancel()"
+      [disabled]="isSubmitting()"
+    />
+    @if (!isEditMode() || canUpdate) {
+      <p-button
+        label="บันทึก"
+        severity="primary"
+        (onClick)="onSubmit()"
+        [loading]="isSubmitting()"
+      />
+    }
+  </p-footer>
+</app-card-template>

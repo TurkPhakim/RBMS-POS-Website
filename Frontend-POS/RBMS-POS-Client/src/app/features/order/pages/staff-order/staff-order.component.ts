@@ -1,9 +1,14 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from 'primeng/dynamicdialog';
 import { AnimationOptions } from 'ngx-lottie';
-
 import {
   AddOrderItemModel,
   MenuResponseModel,
@@ -13,12 +18,12 @@ import {
   MenuCategoriesService,
   MenuItemsService,
   OrdersService,
+  ShopSettingsService,
 } from '@app/core/api/services';
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { MenuItemDialogComponent } from '../../dialogs/menu-item-dialog/menu-item-dialog.component';
-
 const KEY_BTN_BACK = 'back-staff-order';
 
 @Component({
@@ -39,19 +44,61 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
   guestCount = 0;
 
   categories: CategoryTab[] = [
-    { label: 'อาหาร', type: 1, icon: 'chicken-drumstick', placeholderIcon: 'chicken-drumstick' },
-    { label: 'เครื่องดื่ม', type: 2, icon: 'drinks-glass', placeholderIcon: 'drinks-glass' },
-    { label: 'ของหวาน', type: 3, icon: 'dessert', placeholderIcon: 'dessert' },
+    {
+      label: 'อาหาร',
+      type: 1,
+      icon: 'chicken-drumstick',
+      svgClass: 'w-12 h-12',
+      placeholderIcon: 'chicken-drumstick',
+      activeClass: 'bg-surface-card text-cat-food',
+      inactiveClass: 'text-surface-sub hover:text-cat-food',
+      chipActiveClass: 'bg-cat-food text-white border-cat-food',
+      chipInactiveClass:
+        'bg-surface-card text-surface-sub border-surface-border hover:border-cat-food hover:text-cat-food',
+      cardRingClass: 'hover:ring-2 hover:ring-cat-food',
+    },
+    {
+      label: 'เครื่องดื่ม',
+      type: 2,
+      icon: 'drinks-glass',
+      svgClass: 'w-8 h-8',
+      placeholderIcon: 'drinks-glass',
+      activeClass: 'bg-surface-card text-cat-drink',
+      inactiveClass: 'text-surface-sub hover:text-cat-drink',
+      chipActiveClass: 'bg-cat-drink text-white border-cat-drink',
+      chipInactiveClass:
+        'bg-surface-card text-surface-sub border-surface-border hover:border-cat-drink hover:text-cat-drink',
+      cardRingClass: 'hover:ring-2 hover:ring-cat-drink',
+    },
+    {
+      label: 'ของหวาน',
+      type: 3,
+      icon: 'dessert',
+      svgClass: 'w-12 h-12',
+      placeholderIcon: 'dessert',
+      activeClass: 'bg-surface-card text-cat-dessert',
+      inactiveClass: 'text-surface-sub hover:text-cat-dessert',
+      chipActiveClass: 'bg-cat-dessert text-white border-cat-dessert',
+      chipInactiveClass:
+        'bg-surface-card text-surface-sub border-surface-border hover:border-cat-dessert hover:text-cat-dessert',
+      cardRingClass: 'hover:ring-2 hover:ring-cat-dessert',
+    },
   ];
 
   selectedCategory = signal(1);
+  activeCategory = () =>
+    this.categories.find((c) => c.type === this.selectedCategory())!;
   subCategories = signal<MenuSubCategoryResponseModel[]>([]);
   selectedSubCategoryId = signal<number | null>(null);
   menus = signal<MenuResponseModel[]>([]);
   filteredMenus = signal<MenuResponseModel[]>([]);
   cartItems = signal<CartItem[]>([]);
   isSending = signal(false);
+  noteEditIndex = signal<number | null>(null);
   searchTerm = '';
+  showPeriodFilter = signal(false);
+  selectedPeriodFilter: string | null = null;
+  private currentPeriod: string | null = null;
 
   constructor(
     private readonly apiConfig: ApiConfiguration,
@@ -64,16 +111,44 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
     private readonly ordersService: OrdersService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
+    private readonly shopSettingsService: ShopSettingsService,
   ) {}
 
   ngOnInit(): void {
     this.orderId = Number(this.route.snapshot.paramMap.get('orderId'));
-    this.orderNumber = this.route.snapshot.queryParamMap.get('orderNumber') ?? '';
+    this.orderNumber =
+      this.route.snapshot.queryParamMap.get('orderNumber') ?? '';
     this.zoneName = this.route.snapshot.queryParamMap.get('zoneName') ?? '';
     this.tableName = this.route.snapshot.queryParamMap.get('tableName') ?? '';
-    this.guestCount = Number(this.route.snapshot.queryParamMap.get('guestCount')) || 0;
+    this.guestCount =
+      Number(this.route.snapshot.queryParamMap.get('guestCount')) || 0;
     this.setupBreadcrumbButtons();
-    this.loadCategoryData(1);
+    this.loadCurrentPeriod();
+  }
+
+  private loadCurrentPeriod(): void {
+    this.shopSettingsService
+      .shopSettingsGetCurrentPeriodGet()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const period = res.result;
+          if (period?.hasTwoPeriods) {
+            if (period.isOpen && period.currentPeriod) {
+              this.currentPeriod = period.currentPeriod;
+            } else {
+              this.showPeriodFilter.set(true);
+              this.currentPeriod = null;
+            }
+          }
+          this.loadCategoryData(1);
+        },
+      });
+  }
+
+  onPeriodFilterChange(): void {
+    this.currentPeriod = this.selectedPeriodFilter;
+    this.loadCategoryData(this.selectedCategory());
   }
 
   ngOnDestroy(): void {
@@ -89,7 +164,7 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
         label: 'ย้อนกลับ',
         severity: 'secondary',
         variant: 'outlined',
-        callback: () => this.router.navigate(['/order', this.orderId]),
+        callback: () => this.router.navigate(['/order', 'list', this.orderId]),
       },
     });
   }
@@ -111,7 +186,12 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
       });
 
     this.menuItemsService
-      .menuItemsGetMenusGet({ categoryType, isAvailable: true, ItemPerPage: 200 })
+      .menuItemsGetMenusGet({
+        categoryType,
+        isAvailable: true,
+        ItemPerPage: 200,
+        ...(this.currentPeriod ? { period: this.currentPeriod } : {}),
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -157,12 +237,17 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
       );
     }
 
-    result = [...result].sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+    result = [...result].sort(
+      (a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0),
+    );
     this.filteredMenus.set(result);
   }
 
   get placeholderIcon(): string {
-    return this.categories.find((c) => c.type === this.selectedCategory())?.placeholderIcon ?? 'food';
+    return (
+      this.categories.find((c) => c.type === this.selectedCategory())
+        ?.placeholderIcon ?? 'food'
+    );
   }
 
   getImageUrl(fileId: number): string {
@@ -175,7 +260,7 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
         header: 'ตัวเลือกเมนู',
         showHeader: false,
         styleClass: 'card-dialog',
-        width: '40vw',
+        width: '50vw',
         data: { menu },
       });
       ref.onClose
@@ -213,7 +298,8 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
         ...updated[existingIdx],
         quantity: updated[existingIdx].quantity + item.quantity,
         totalPrice:
-          (updated[existingIdx].unitPrice + updated[existingIdx].optionsTotalPrice) *
+          (updated[existingIdx].unitPrice +
+            updated[existingIdx].optionsTotalPrice) *
           (updated[existingIdx].quantity + item.quantity),
       };
       this.cartItems.set(updated);
@@ -254,6 +340,17 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
     const updated = [...this.cartItems()];
     updated.splice(index, 1);
     this.cartItems.set(updated);
+    if (this.noteEditIndex() === index) this.noteEditIndex.set(null);
+  }
+
+  toggleNoteEdit(index: number): void {
+    this.noteEditIndex.set(this.noteEditIndex() === index ? null : index);
+  }
+
+  onNoteChange(index: number, value: string): void {
+    const updated = [...this.cartItems()];
+    updated[index] = { ...updated[index], note: value };
+    this.cartItems.set(updated);
   }
 
   getCartTotal(): number {
@@ -277,21 +374,16 @@ export class StaffOrderComponent implements OnInit, OnDestroy {
     }));
 
     this.ordersService
-      .ordersAddItemsPost({ orderId: this.orderId, body: { items } })
+      .ordersAddItemsPost({
+        orderId: this.orderId,
+        body: { items, sendToKitchen: true },
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.ordersService
-            .ordersSendToKitchenPost({ orderId: this.orderId })
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: () => {
-                this.isSending.set(false);
-                this.modalService.commonSuccess();
-                this.router.navigate(['/order', this.orderId]);
-              },
-              error: () => this.isSending.set(false),
-            });
+          this.isSending.set(false);
+          this.modalService.commonSuccess();
+          this.router.navigate(['/order', 'list', this.orderId]);
         },
         error: () => this.isSending.set(false),
       });
@@ -333,7 +425,12 @@ interface CartItem {
   unitPrice: number;
   quantity: number;
   note: string;
-  options: { optionGroupId: number; optionItemId: number; optionItemName: string; additionalPrice: number }[];
+  options: {
+    optionGroupId: number;
+    optionItemId: number;
+    optionItemName: string;
+    additionalPrice: number;
+  }[];
   optionsTotalPrice: number;
   totalPrice: number;
 }
@@ -342,5 +439,11 @@ interface CategoryTab {
   label: string;
   type: number;
   icon: string;
+  svgClass: string;
   placeholderIcon: string;
+  activeClass: string;
+  inactiveClass: string;
+  chipActiveClass: string;
+  chipInactiveClass: string;
+  cardRingClass: string;
 }

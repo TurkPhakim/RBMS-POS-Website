@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using POS.Main.Business.Admin.Interfaces;
+using POS.Main.Business.Admin.Models.ShopSettings;
 using POS.Main.Business.Payment.Interfaces;
 using POS.Main.Business.Payment.Models.Payment;
 using POS.Main.Business.Payment.Models.SelfOrder;
@@ -13,11 +15,19 @@ namespace RBMS.POS.WebAPI.Controllers;
 public class SelfOrderController : BaseController
 {
     private readonly ISelfOrderService _selfOrderService;
+    private readonly IShopSettingsService _shopSettingsService;
 
-    public SelfOrderController(ISelfOrderService selfOrderService)
+    public SelfOrderController(ISelfOrderService selfOrderService, IShopSettingsService shopSettingsService)
     {
         _selfOrderService = selfOrderService;
+        _shopSettingsService = shopSettingsService;
     }
+
+    [HttpGet("shop-status")]
+    [CustomerAuthorize]
+    [ProducesResponseType(typeof(BaseResponseModel<CurrentPeriodResultModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetShopStatus(CancellationToken ct = default)
+        => Success(await _shopSettingsService.GetCurrentPeriodAsync(ct));
 
     [HttpPost("auth")]
     [ProducesResponseType(typeof(BaseResponseModel<CustomerAuthResponseModel>), StatusCodes.Status200OK)]

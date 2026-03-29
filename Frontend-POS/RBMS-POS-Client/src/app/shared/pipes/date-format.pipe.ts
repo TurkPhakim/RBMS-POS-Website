@@ -29,6 +29,8 @@ export class DateFormatPipe implements PipeTransform {
         return `${HH}:${mm}`;
       case 'DATE_TIME':
         return `${dd}/${MM}/${yyyy} ${HH}:${mm}`;
+      case 'TIME_DATE':
+        return `${HH}:${mm} - ${dd}/${MM}/${yyyy}`;
       case 'MONTH':
         return `${TH_MONTHS[date.getMonth()]} ${yyyy}`;
       case 'DAY':

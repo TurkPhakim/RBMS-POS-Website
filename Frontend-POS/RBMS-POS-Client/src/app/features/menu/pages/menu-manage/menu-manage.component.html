@@ -1,11 +1,9 @@
 <!-- Page Header -->
 <div class="flex items-center gap-3 mb-6">
-  <div
-    class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
-  >
+  <div class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center">
     <app-generic-icon
       [name]="config.icon"
-      svgClass="w-10 h-10"
+      [svgClass]="config.iconClass"
       class="text-white"
     ></app-generic-icon>
   </div>
@@ -30,18 +28,19 @@
   <app-section-card
     headerLabel="ข้อมูลเมนู"
     [headerIcon]="config.icon"
+    [headerIconClass]="config.iconClassSm"
     contentClass="p-6 grid grid-cols-1 md:grid-cols-3 gap-5"
   >
     <!-- Row 1: ชื่อไทย, ชื่ออังกฤษ, หมวดหมู่ย่อย -->
     <div>
       <label for="nameThai" class="block font-semibold mb-2">
-        ชื่อเมนู (ไทย) <span class="text-danger">*</span>
+        ชื่อเมนู (ภาษาไทย) <span class="text-danger">*</span>
       </label>
       <input
         pInputText
         id="nameThai"
         formControlName="nameThai"
-        placeholder="กรอกชื่อเมนูภาษาไทย"
+        placeholder="ชื่อเมนู (ภาษาไทย)"
         class="w-full"
       />
       <app-field-error [control]="form.get('nameThai')" type="text" />
@@ -49,13 +48,13 @@
 
     <div>
       <label for="nameEnglish" class="block font-semibold mb-2">
-        ชื่อเมนู (อังกฤษ) <span class="text-danger">*</span>
+        ชื่อเมนู (ภาษาอังกฤษ) <span class="text-danger">*</span>
       </label>
       <input
         pInputText
         id="nameEnglish"
         formControlName="nameEnglish"
-        placeholder="Enter menu name in English"
+        placeholder="ชื่อเมนู (ภาษาอังกฤษ)"
         class="w-full"
       />
       <app-field-error [control]="form.get('nameEnglish')" type="text" />
@@ -68,15 +67,16 @@
       <app-sub-category-dropdown
         [categoryType]="categoryType"
         formControlName="subCategoryId"
-        placeholder="เลือกหมวดหมู่ย่อย"
+        placeholder="หมวดหมู่ย่อย"
+        [showClear]="false"
       ></app-sub-category-dropdown>
       <app-field-error [control]="form.get('subCategoryId')" type="select" />
     </div>
 
-    <!-- Row 2: ราคาขาย, ต้นทุน, สถานะการขาย -->
+    <!-- Row 2: ราคาขาย, ต้นทุน, แคลอรี่ -->
     <div>
       <label for="price" class="block font-semibold mb-2">
-        ราคา <span class="text-danger">*</span>
+        ราคาขาย <span class="text-danger">*</span>
       </label>
       <p-inputgroup>
         <p-inputNumber
@@ -84,7 +84,7 @@
           inputId="price"
           [min]="0"
           mode="decimal"
-          placeholder="ราคา"
+          placeholder="ราคาขาย"
           [minFractionDigits]="2"
           [maxFractionDigits]="2"
           styleClass="w-full"
@@ -114,34 +114,33 @@
     </div>
 
     <div>
-      <label class="block font-semibold mb-2">สถานะการขาย</label>
-      <div class="flex items-center gap-3 pt-2">
-        <p-inputSwitch
-          formControlName="isAvailable"
-          inputId="isAvailable"
-        ></p-inputSwitch>
-        <span
-          [class]="
-            form.get('isAvailable')?.value ? 'text-success' : 'text-danger'
-          "
-        >
-          {{ form.get("isAvailable")?.value ? "เปิดขาย" : "ปิดขาย" }}
-        </span>
-      </div>
+      <label for="caloriesPerServing" class="block font-semibold mb-2">
+        แคลอรี่ต่อจาน
+      </label>
+      <p-inputgroup>
+        <p-inputNumber
+          formControlName="caloriesPerServing"
+          inputId="caloriesPerServing"
+          [min]="0"
+          placeholder="แคลอรี่ต่อจาน"
+          styleClass="w-full"
+        ></p-inputNumber>
+        <p-inputgroup-addon>กิโลแคลอรี่</p-inputgroup-addon>
+      </p-inputgroup>
     </div>
 
-    <!-- Row 3: คำอธิบาย, สารก่อภูมิแพ้, แคลอรี่ -->
-    <div>
+    <!-- Row 3: คำอธิบาย (2 col), สารก่อภูมิแพ้ (1 col) -->
+    <div class="md:col-span-2">
       <label for="description" class="block font-semibold mb-2">
-        คำอธิบาย
+        คำอธิบายเมนู
       </label>
       <textarea
         pTextarea
         id="description"
         formControlName="description"
-        placeholder="คำอธิบายเมนู (ถ้ามี)"
+        placeholder="คำอธิบายเมนู"
         class="w-full"
-        rows="3"
+        rows="2"
       ></textarea>
     </div>
 
@@ -153,161 +152,171 @@
         pTextarea
         id="allergens"
         formControlName="allergens"
-        placeholder="ระบุสารก่อภูมิแพ้ (ถ้ามี)"
+        placeholder="สารก่อภูมิแพ้"
         class="w-full"
-        rows="3"
+        rows="2"
       ></textarea>
-    </div>
-
-    <div>
-      <label for="caloriesPerServing" class="block font-semibold mb-2">
-        แคลอรี่ต่อจาน
-      </label>
-      <p-inputgroup>
-        <p-inputNumber
-          formControlName="caloriesPerServing"
-          inputId="caloriesPerServing"
-          [min]="0"
-          styleClass="w-full"
-        ></p-inputNumber>
-        <p-inputgroup-addon>กิโลแคลอรี่</p-inputgroup-addon>
-      </p-inputgroup>
     </div>
   </app-section-card>
 
-  <!-- Card 2: ช่วงเวลาขาย -->
+  <!-- Card 2: ตั้งค่าเมนู (Tags ซ้าย + ช่วงเวลาขาย ขวา) -->
   <app-section-card
-    headerLabel="ช่วงเวลาขาย"
-    headerIcon="calendar-clock"
+    headerLabel="ตั้งค่าเมนู"
+    headerIcon="tag"
     contentClass="p-6"
   >
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <!-- Tags -->
+      <div class="md:col-span-2 flex items-center justify-around">
+        <div
+          class="flex flex-col items-center gap-2.5 cursor-pointer select-none"
+          (click)="onTagToggle('recommended')"
+        >
+          <div
+            class="w-[72px] h-[72px] rounded-full flex items-center justify-center transition-colors text-white"
+            [ngClass]="tagRecommended() ? 'bg-tag-recommend' : 'bg-gray-300'"
+          >
+            <app-generic-icon
+              name="thumb-tag"
+              svgClass="w-8 h-8"
+            ></app-generic-icon>
+          </div>
+          <span
+            class="font-semibold transition-colors"
+            [ngClass]="
+              tagRecommended() ? 'text-tag-recommend' : 'text-gray-400'
+            "
+            >แนะนำ</span
+          >
+        </div>
+        <div
+          class="flex flex-col items-center gap-2.5 cursor-pointer select-none"
+          (click)="onTagToggle('seasonal')"
+        >
+          <div
+            class="w-[72px] h-[72px] rounded-full flex items-center justify-center transition-colors text-white"
+            [ngClass]="tagSeasonal() ? 'bg-tag-seasonal' : 'bg-gray-300'"
+          >
+            <app-generic-icon
+              name="clover-tag"
+              svgClass="w-8 h-8"
+            ></app-generic-icon>
+          </div>
+          <span
+            class="font-semibold transition-colors"
+            [ngClass]="tagSeasonal() ? 'text-tag-seasonal' : 'text-gray-400'"
+            >ตามฤดูกาล</span
+          >
+        </div>
+        <div
+          class="flex flex-col items-center gap-2.5 cursor-pointer select-none"
+          (click)="onTagToggle('slow')"
+        >
+          <div
+            class="w-[72px] h-[72px] rounded-full flex items-center justify-center transition-colors text-white"
+            [ngClass]="tagSlow() ? 'bg-tag-slow' : 'bg-gray-300'"
+          >
+            <app-generic-icon
+              name="time-tag"
+              svgClass="w-8 h-8"
+            ></app-generic-icon>
+          </div>
+          <span
+            class="font-semibold transition-colors"
+            [ngClass]="tagSlow() ? 'text-tag-slow' : 'text-gray-400'"
+            >ใช้เวลานาน</span
+          >
+        </div>
+        <div
+          class="flex flex-col items-center gap-2.5 cursor-pointer select-none"
+          (click)="onTagToggle('pinned')"
+        >
+          <div
+            class="w-[72px] h-[72px] rounded-full flex items-center justify-center transition-colors text-white"
+            [ngClass]="
+              form.get('isPinned')?.value ? 'bg-tag-pin' : 'bg-gray-300'
+            "
+          >
+            <app-generic-icon
+              name="pin-tag"
+              svgClass="w-8 h-8"
+            ></app-generic-icon>
+          </div>
+          <span
+            class="font-semibold transition-colors"
+            [ngClass]="
+              form.get('isPinned')?.value ? 'text-tag-pin' : 'text-gray-400'
+            "
+            >ปักหมุด</span
+          >
+        </div>
+      </div>
+
+      <!-- ช่วงเวลาขาย (แสดงเฉพาะเมื่อร้านเปิด 2 ช่วง) -->
       @if (hasTwoPeriods()) {
-        <div>
-          <label class="block font-semibold mb-2">ช่วงที่ 1</label>
-          <div class="flex items-center gap-3 pt-2">
-            <p-inputSwitch
-              formControlName="isAvailablePeriod1"
-              inputId="isAvailablePeriod1"
-            ></p-inputSwitch>
-            <span
-              [class]="
-                form.get('isAvailablePeriod1')?.value
-                  ? 'text-success'
-                  : 'text-danger'
-              "
-            >
-              {{
-                form.get("isAvailablePeriod1")?.value ? "เปิดขาย" : "ปิดขาย"
-              }}
-            </span>
-          </div>
-        </div>
-        <div>
-          <label class="block font-semibold mb-2">ช่วงที่ 2</label>
-          <div class="flex items-center gap-3 pt-2">
-            <p-inputSwitch
-              formControlName="isAvailablePeriod2"
-              inputId="isAvailablePeriod2"
-            ></p-inputSwitch>
-            <span
-              [class]="
-                form.get('isAvailablePeriod2')?.value
-                  ? 'text-success'
-                  : 'text-danger'
-              "
-            >
-              {{
-                form.get("isAvailablePeriod2")?.value ? "เปิดขาย" : "ปิดขาย"
-              }}
-            </span>
-          </div>
-        </div>
-      } @else {
-        <div>
-          <label class="block font-semibold mb-2">สถานะช่วงเวลาขาย</label>
-          <div class="flex items-center gap-3 pt-2">
-            <p-inputSwitch
-              formControlName="isAvailablePeriod1"
-              inputId="isAvailablePeriod1"
-            ></p-inputSwitch>
-            <span
-              [class]="
-                form.get('isAvailablePeriod1')?.value
-                  ? 'text-success'
-                  : 'text-danger'
-              "
-            >
-              {{
-                form.get("isAvailablePeriod1")?.value ? "เปิดขาย" : "ปิดขาย"
-              }}
-            </span>
+        <div class="md:border-l-2 md:border-surface-border md:pl-6">
+          <label class="block font-semibold mb-4">ช่วงเวลาขาย</label>
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center gap-2 pt-2 whitespace-nowrap">
+              <span class="text-sm text-surface-sub">ช่วงที่ 1</span>
+              <p-inputSwitch
+                formControlName="isAvailablePeriod1"
+                inputId="isAvailablePeriod1"
+              ></p-inputSwitch>
+              <span
+                class="font-semibold mb-2"
+                [ngClass]="
+                  form.get('isAvailablePeriod1')?.value
+                    ? 'text-success'
+                    : 'text-danger'
+                "
+              >
+                {{
+                  form.get("isAvailablePeriod1")?.value ? "เปิดขาย" : "ปิดขาย"
+                }}
+              </span>
+            </div>
+            <div class="flex items-center gap-2 pt-2 whitespace-nowrap">
+              <span class="text-sm text-surface-sub">ช่วงที่ 2</span>
+              <p-inputSwitch
+                formControlName="isAvailablePeriod2"
+                inputId="isAvailablePeriod2"
+              ></p-inputSwitch>
+              <span
+                class="font-semibold mb-2"
+                [ngClass]="
+                  form.get('isAvailablePeriod2')?.value
+                    ? 'text-success'
+                    : 'text-danger'
+                "
+              >
+                {{
+                  form.get("isAvailablePeriod2")?.value ? "เปิดขาย" : "ปิดขาย"
+                }}
+              </span>
+            </div>
           </div>
         </div>
       }
 
-      <!-- ปักหมุด -->
-      <div>
-        <label class="block font-semibold mb-2">ปักหมุด</label>
-        <div class="flex items-center gap-3 pt-2">
+      <!-- สถานะการขาย -->
+      <div class="md:border-l-2 md:border-surface-border md:pl-6">
+        <label class="block font-semibold mb-4">สถานะการขาย</label>
+        <div class="flex items-center gap-2 pt-2">
           <p-inputSwitch
-            formControlName="isPinned"
-            inputId="isPinned"
+            formControlName="isAvailable"
+            inputId="isAvailable"
           ></p-inputSwitch>
-          <span>
-            {{ form.get("isPinned")?.value ? "ปักหมุดแล้ว" : "ไม่ได้ปักหมุด" }}
+          <span
+            class="font-semibold mb-2"
+            [ngClass]="
+              form.get('isAvailable')?.value ? 'text-success' : 'text-danger'
+            "
+          >
+            {{ form.get("isAvailable")?.value ? "เปิดขาย" : "ปิดขาย" }}
           </span>
         </div>
       </div>
-    </div>
-  </app-section-card>
-
-  <!-- Card 4: Tags -->
-  <app-section-card
-    headerLabel="Tags"
-    headerIcon="tag"
-    contentClass="p-6"
-  >
-    <div class="flex flex-wrap gap-3">
-      <button
-        pButton
-        type="button"
-        [severity]="tagRecommended() ? 'info' : 'secondary'"
-        [outlined]="!tagRecommended()"
-        (click)="onTagToggle('recommended')"
-        class="gap-2"
-      >
-        <app-generic-icon name="star" svgClass="w-4 h-4"></app-generic-icon>
-        แนะนำ
-      </button>
-      <button
-        pButton
-        type="button"
-        [severity]="tagSeasonal() ? 'warn' : 'secondary'"
-        [outlined]="!tagSeasonal()"
-        (click)="onTagToggle('seasonal')"
-        class="gap-2"
-      >
-        <app-generic-icon
-          name="calendar-clock"
-          svgClass="w-4 h-4"
-        ></app-generic-icon>
-        ตามเทศกาล
-      </button>
-      <button
-        pButton
-        type="button"
-        [severity]="tagSlow() ? 'danger' : 'secondary'"
-        [outlined]="!tagSlow()"
-        (click)="onTagToggle('slow')"
-        class="gap-2"
-      >
-        <app-generic-icon
-          name="clock-activity"
-          svgClass="w-4 h-4"
-        ></app-generic-icon>
-        ช้า
-      </button>
     </div>
   </app-section-card>
 
@@ -334,7 +343,11 @@
         cdkDropList
         (cdkDropListDropped)="onOptionGroupDrop($event)"
       >
-        @for (group of linkedOptionGroups(); track group.optionGroupId; let i = $index) {
+        @for (
+          group of linkedOptionGroups();
+          track group.optionGroupId;
+          let i = $index
+        ) {
           <div
             cdkDrag
             [cdkDragData]="group"
@@ -351,24 +364,40 @@
               </div>
 
               <div class="flex-1 min-w-0">
-                <!-- Name -->
-                <h3 class="text-xl font-bold truncate mb-4">{{ group.name }}</h3>
+                <!-- Name + Info -->
+                <div class="flex items-center gap-4 mb-4">
+                  <h3 class="text-xl font-bold truncate">{{ group.name }}</h3>
+                  <div
+                    class="flex items-center gap-3 text-sm text-surface-sub shrink-0"
+                  >
+                    @if (group.isRequired) {
+                      <span class="text-primary font-semibold">บังคับ</span>
+                    } @else {
+                      <span>ไม่บังคับ</span>
+                    }
+                    <span class="text-surface-border">|</span>
+                    <span>ขั้นต่ำ {{ group.minSelect ?? 0 }}</span>
+                    <span class="text-surface-border">|</span>
+                    <span>สูงสุด {{ group.maxSelect ?? "-" }}</span>
+                  </div>
+                </div>
 
-                <!-- Option Items + Tag -->
+                <!-- Option Items -->
                 <div class="flex flex-wrap items-center gap-2.5">
                   @for (oi of group.optionItems ?? []; track oi.name) {
-                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-subtle">
-                      <span class="text-base font-semibold text-primary-text">{{ oi.name }}</span>
+                    <div
+                      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-subtle"
+                    >
+                      <span class="text-base font-semibold text-primary-text">{{
+                        oi.name
+                      }}</span>
                       @if (oi.additionalPrice) {
-                        <span class="text-primary font-bold text-base">+{{ oi.additionalPrice | number:'1.0-0' }}</span>
+                        <span class="text-primary font-bold text-base"
+                          >+{{ oi.additionalPrice | number: "1.0-0" }}</span
+                        >
                       }
                     </div>
                   }
-                  <p-tag
-                    class="ml-auto"
-                    [value]="group.isRequired ? 'บังคับเลือก' : 'ไม่บังคับ'"
-                    [severity]="group.isRequired ? 'warn' : 'secondary'"
-                  ></p-tag>
                 </div>
               </div>
 

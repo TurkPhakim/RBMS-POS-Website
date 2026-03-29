@@ -2,7 +2,6 @@ import { Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { CashierSessionsService } from '@app/core/api/services/cashier-sessions.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { markFormDirty } from '@app/shared/utils';
@@ -24,13 +23,13 @@ export class CashDrawerDialogComponent {
     public config: DynamicDialogConfig,
     private cashierSessionsService: CashierSessionsService,
     private modalService: ModalService,
-    private destroyRef: DestroyRef
+    private destroyRef: DestroyRef,
   ) {
     this.type = this.config.data.type;
     this.sessionId = this.config.data.sessionId;
     this.form = this.fb.group({
-      amount: [null, [Validators.required, Validators.min(0.01)]],
-      reason: [null, [Validators.required, Validators.maxLength(500)]],
+      amount: [null, [Validators.required]],
+      reason: [null, [Validators.required]],
     });
   }
 
@@ -55,15 +54,13 @@ export class CashDrawerDialogComponent {
           body,
         });
 
-    request$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.modalService.commonSuccess();
-          this.ref.close(true);
-        },
-        error: () => this.isSaving.set(false),
-      });
+    request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.modalService.commonSuccess();
+        this.ref.close(true);
+      },
+      error: () => this.isSaving.set(false),
+    });
   }
 
   onCancel(): void {

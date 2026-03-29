@@ -35,6 +35,8 @@ public class TbTable : BaseEntity
 
     public string? QrTokenNonce { get; set; }
 
+    public string? QrShortCode { get; set; }
+
     public int? ActiveOrderId { get; set; }
     public virtual TbOrder? ActiveOrder { get; set; }
 

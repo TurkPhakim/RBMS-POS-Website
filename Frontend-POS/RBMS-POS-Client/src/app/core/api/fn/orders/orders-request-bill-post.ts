@@ -10,12 +10,14 @@ import { OrderDetailResponseModelBaseResponseModel } from '../../models/order-de
 
 export interface OrdersRequestBillPost$Params {
   orderId: number;
+  force?: boolean;
 }
 
 export function ordersRequestBillPost(http: HttpClient, rootUrl: string, params: OrdersRequestBillPost$Params, context?: HttpContext): Observable<StrictHttpResponse<OrderDetailResponseModelBaseResponseModel>> {
   const rb = new RequestBuilder(rootUrl, ordersRequestBillPost.PATH, 'post');
   if (params) {
     rb.path('orderId', params.orderId, {});
+    rb.query('force', params.force, {});
   }
 
   return http.request(

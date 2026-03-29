@@ -10,6 +10,7 @@ public class CustomerMenuDetailResponseModel
     public int? ImageFileId { get; set; }
     public bool IsRecommended { get; set; }
     public bool IsNew { get; set; }
+    public string? Allergens { get; set; }
     public List<CustomerOptionGroupModel> OptionGroups { get; set; } = new();
 }
 

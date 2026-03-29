@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-
 import { AuthGuard } from '../core/guards/auth.guard';
 import { GuestGuard } from '../core/guards/guest.guard';
 import { PermissionGuard } from '../core/guards/permission.guard';
@@ -35,7 +34,7 @@ const routes: Routes = [
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/dashboard/dashboard.module').then(
-            (m) => m.DashboardModule
+            (m) => m.DashboardModule,
           ),
       },
       {
@@ -50,7 +49,7 @@ const routes: Routes = [
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/human-resource/human-resource.module').then(
-            (m) => m.HumanResourceModule
+            (m) => m.HumanResourceModule,
           ),
       },
       {
@@ -92,7 +91,7 @@ const routes: Routes = [
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/payment/payment.module').then(
-            (m) => m.PaymentModule
+            (m) => m.PaymentModule,
           ),
       },
       {
@@ -108,7 +107,7 @@ const routes: Routes = [
         canActivate: [PermissionGuard],
         loadChildren: () =>
           import('../features/kitchen-display/kitchen-display.module').then(
-            (m) => m.KitchenDisplayModule
+            (m) => m.KitchenDisplayModule,
           ),
       },
       {
@@ -116,19 +115,10 @@ const routes: Routes = [
         data: { breadcrumb: 'โปรไฟล์' },
         loadChildren: () =>
           import('../features/profile/profile.module').then(
-            (m) => m.ProfileModule
+            (m) => m.ProfileModule,
           ),
       },
     ],
-  },
-
-  // Customer QR panel — no layout, public
-  {
-    path: 'customer',
-    loadChildren: () =>
-      import('../features/customer/customer.module').then(
-        (m) => m.CustomerModule
-      ),
   },
 
   // Access denied — no layout

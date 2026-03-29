@@ -19,6 +19,7 @@ export interface OrderItemResponseModel {
   readyAt?: string | null;
   sentToKitchenAt?: string | null;
   servedAt?: string | null;
+  sourceTableName?: string | null;
   status?: string | null;
   subCategoryName?: string | null;
   totalPrice?: number;

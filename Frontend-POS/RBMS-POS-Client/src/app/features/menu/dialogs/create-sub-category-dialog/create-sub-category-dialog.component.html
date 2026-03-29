@@ -1,0 +1,53 @@
+<app-card-template [headerLabel]="config.header!">
+  <form [formGroup]="form" class="grid grid-cols-3 gap-6">
+    <!-- ชื่อหมวดหมู่เมนู -->
+    <div class="col-span-2">
+      <label for="name" class="block font-semibold mb-2">
+        ชื่อหมวดหมู่เมนู <span class="text-danger">*</span>
+      </label>
+      <input
+        pInputText
+        id="name"
+        formControlName="name"
+        placeholder=" ชื่อหมวดหมู่เม"
+        class="w-full"
+      />
+      <app-field-error [control]="form.get('name')" type="text" />
+    </div>
+
+    <!-- สถานะการขาย -->
+    <div>
+      <label class="block font-semibold mb-2">สถานะการขาย</label>
+      <div class="flex items-center gap-2 pt-2">
+        <p-inputSwitch
+          formControlName="isActive"
+          inputId="isActive"
+        ></p-inputSwitch>
+        <span
+          class="font-semibold mb-2"
+          [ngClass]="
+            form.get('isActive')?.value ? 'text-success' : 'text-danger'
+          "
+        >
+          {{ form.get("isActive")?.value ? "เปิดขาย" : "ปิดขาย" }}
+        </span>
+      </div>
+    </div>
+  </form>
+
+  <p-footer>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      [style]="{ 'min-width': '100px' }"
+      (onClick)="onCancel()"
+    ></p-button>
+    <p-button
+      label="บันทึก"
+      [style]="{ 'min-width': '100px' }"
+      [loading]="isSubmitting()"
+      (onClick)="onSubmit()"
+    ></p-button>
+  </p-footer>
+</app-card-template>

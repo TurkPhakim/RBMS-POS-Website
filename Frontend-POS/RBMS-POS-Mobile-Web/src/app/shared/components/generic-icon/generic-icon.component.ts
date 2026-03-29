@@ -39,9 +39,12 @@ export class GenericIconComponent {
   }
 
   private processSvg(svg: string): string {
-    return svg
-      .replace(/width="[^"]*"/, '')
-      .replace(/height="[^"]*"/, '')
-      .replace('<svg', `<svg class="${this.svgClass}" style="color: inherit; fill: currentColor;"`);
+    const cleaned = svg.replace(/<svg([^>]*)>/, (_, attrs) => {
+      const stripped = attrs
+        .replace(/\s*width="[^"]*"/, '')
+        .replace(/\s*height="[^"]*"/, '');
+      return `<svg class="${this.svgClass}"${stripped}>`;
+    });
+    return cleaned;
   }
 }

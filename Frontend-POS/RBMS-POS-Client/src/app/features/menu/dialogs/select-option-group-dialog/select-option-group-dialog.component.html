@@ -8,42 +8,49 @@
     [rowsPerPageOptions]="[10, 25, 50]"
     [showCurrentPageReport]="true"
     currentPageReportTemplate="{first} - {last} of {totalRecords}"
-
     styleClass="p-datatable-clean"
+    [paginatorDropdownAppendTo]="'body'"
   >
     <ng-template pTemplate="header">
       <tr>
-        <th class="w-[50px]">
+        <th class="w-[50px] !text-center">
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
         </th>
-        <th class="w-[80px] text-center">รหัส</th>
+        <th class="w-[80px]">รหัส</th>
         <th class="w-[200px]">ชื่อกลุ่ม</th>
-        <th class="w-[120px] text-center">จำนวนตัวเลือก</th>
-        <th class="w-[100px] text-center">บังคับ</th>
+        <th class="w-[120px]">ตัวเลือก</th>
+        <th class="w-[100px]">บังคับ</th>
+        <th class="w-[100px]">ขั้นต่ำ</th>
+        <th class="w-[100px]">สูงสุด</th>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="body" let-group>
       <tr>
-        <td>
+        <td class="!text-center">
           <p-tableCheckbox [value]="group"></p-tableCheckbox>
         </td>
         <td class="text-center">{{ group.optionGroupId }}</td>
         <td>{{ group.name }}</td>
         <td class="text-center">{{ group.optionItems?.length ?? 0 }}</td>
         <td class="text-center">
-          <p-tag
-            [value]="group.isRequired ? 'บังคับ' : 'ไม่บังคับ'"
-            [severity]="group.isRequired ? 'warn' : 'secondary'"
-          ></p-tag>
+          @if (group.isRequired) {
+            <span class="text-primary font-semibold">บังคับ</span>
+          } @else {
+            <span class="text-surface-sub">ไม่บังคับ</span>
+          }
         </td>
+        <td class="text-center">{{ group.minSelect ?? "-" }}</td>
+        <td class="text-center">{{ group.maxSelect ?? "-" }}</td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td [attr.colspan]="5">
-          <div class="flex justify-center items-center w-full py-8 text-surface-placeholder">
+        <td [attr.colspan]="7">
+          <div
+            class="flex justify-center items-center w-full py-8 text-surface-placeholder"
+          >
             ไม่มีกลุ่มตัวเลือกที่สามารถเพิ่มได้
           </div>
         </td>

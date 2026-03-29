@@ -1,13 +1,10 @@
 import { Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { AuthService as AuthApiService } from '@app/core/api/services/auth.service';
 import { AuthService } from '@app/core/services/auth.service';
 import { ModalService } from '@app/core/services/modal.service';
-
 const MAX_ATTEMPTS = 3;
 
 @Component({
@@ -51,7 +48,10 @@ export class VerifyPasswordDialogComponent {
         next: () => {
           this.isLoading.set(false);
           if (this.config.data?.returnPassword) {
-            this.ref.close({ verified: true, password: this.passwordForm.value.password });
+            this.ref.close({
+              verified: true,
+              password: this.passwordForm.value.password,
+            });
           } else {
             this.ref.close(true);
           }
@@ -64,7 +64,7 @@ export class VerifyPasswordDialogComponent {
           if (newAttempts >= MAX_ATTEMPTS) {
             this.modalService.cancel({
               title: 'ยืนยันตัวตนล้มเหลว',
-              message: 'กรอกรหัสผ่านผิดเกินจำนวนครั้งที่กำหนด',
+              message: 'กรอกรหัสผ่านผิด\nเกินจำนวนครั้งที่กำหนด',
               onConfirm: () => this.ref.close('max-attempts'),
             });
             return;

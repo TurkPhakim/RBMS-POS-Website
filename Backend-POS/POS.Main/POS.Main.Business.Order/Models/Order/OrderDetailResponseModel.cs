@@ -14,5 +14,10 @@ public class OrderDetailResponseModel
     public decimal SubTotal { get; set; }
     public string? Note { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool IsLinked { get; set; }
+    public string? PrimaryTableName { get; set; }
+    public List<string>? SecondaryTableNames { get; set; }
+    public int TotalGuestCount { get; set; }
+    public List<OrderLinkedTableModel>? LinkedTables { get; set; }
     public List<OrderItemResponseModel> Items { get; set; } = new();
 }

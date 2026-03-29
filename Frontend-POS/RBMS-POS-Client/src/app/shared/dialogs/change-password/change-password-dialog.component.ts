@@ -1,9 +1,7 @@
 import { Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { AuthService as AuthApiService } from '@app/core/api/services/auth.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { PasswordStrength } from '@app/shared/component-interfaces';
@@ -61,7 +59,7 @@ export class ChangePasswordDialogComponent {
     if (newPassword !== confirmPassword) {
       this.modalService.cancel({
         title: 'ผิดพลาด !',
-        message: 'รหัสผ่านใหม่ไม่ตรงกัน กรุณากรอกใหม่อีกครั้ง',
+        message: 'รหัสผ่านใหม่ไม่ตรงกัน\nกรุณากรอกใหม่อีกครั้ง',
       });
       return;
     }
@@ -87,7 +85,7 @@ export class ChangePasswordDialogComponent {
           if (newAttempts >= MAX_ATTEMPTS) {
             this.modalService.cancel({
               title: 'ผิดพลาด !',
-              message: 'กรอกรหัสผ่านเก่าผิด กรุณาลองใหม่ภายหลัง',
+              message: 'กรอกรหัสผ่านเก่าผิด\nกรุณาลองใหม่ภายหลัง',
             });
             this.ref.close(false);
             return;
@@ -97,7 +95,7 @@ export class ChangePasswordDialogComponent {
             title: 'ผิดพลาด !',
             message:
               err.error?.message ||
-              'ไม่สามารถเปลี่ยนรหัสผ่านได้ กรุณาลองใหม่อีกครั้ง',
+              'ไม่สามารถเปลี่ยนรหัสผ่านได้\nกรุณาลองใหม่อีกครั้ง',
           });
         },
       });

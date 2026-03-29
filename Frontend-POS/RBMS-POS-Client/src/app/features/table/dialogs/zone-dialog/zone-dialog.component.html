@@ -1,75 +1,150 @@
 <app-card-template [headerLabel]="config.header!">
-  <form [formGroup]="form" class="space-y-5">
-    <!-- ชื่อโซน -->
-    <div>
-      <label for="zoneName" class="block font-semibold mb-2">
-        ชื่อโซน <span class="text-danger">*</span>
-      </label>
-      <input
-        pInputText
-        id="zoneName"
-        formControlName="zoneName"
-        placeholder="เช่น ชั้น 1, ระเบียง, VIP"
-        class="w-full"
-      />
-      <app-field-error [control]="form.get('zoneName')" type="text" />
+  <form [formGroup]="form" class="space-y-4">
+    <!-- แถว 1: ชื่อโซนร้าน (3 col) + สถานะ (1 col) -->
+    <div class="grid grid-cols-4 gap-6">
+      <div class="col-span-3">
+        <label for="zoneName" class="block font-semibold mb-2">
+          ชื่อโซนร้าน <span class="text-danger">*</span>
+        </label>
+        <input
+          pInputText
+          id="zoneName"
+          formControlName="zoneName"
+          placeholder="ชื่อโซนร้าน"
+          class="w-full"
+        />
+        <app-field-error [control]="form.get('zoneName')" type="text" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
+        <div class="flex items-center gap-2 pt-2">
+          <p-inputSwitch
+            formControlName="isActive"
+            inputId="isActive"
+          ></p-inputSwitch>
+          <span
+            class="font-semibold mb-2"
+            [ngClass]="
+              form.get('isActive')?.value ? 'text-success' : 'text-danger'
+            "
+          >
+            {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
+          </span>
+        </div>
+      </div>
     </div>
 
-    <!-- สีโซน -->
-    <div>
-      <label class="block font-semibold mb-2">สีโซน</label>
-      <!-- Preset Colors -->
-      <div class="flex flex-wrap gap-3 mb-4">
-        @for (color of presetColors; track color) {
-          <button
-            type="button"
-            class="w-10 h-10 rounded-full border-2 transition-all"
-            [style.background-color]="color"
-            [class]="selectedColor === color ? 'border-primary scale-110' : 'border-surface-border'"
-            (click)="selectColor(color)"
-          ></button>
-        }
-      </div>
+    <!-- แถว 2: สีโซน + สีที่กำหนดเอง + ตัวอย่าง -->
+    <div class="grid grid-cols-2 gap-6">
+      <!-- ซ้าย: สีโซน + สีที่กำหนดเอง -->
+      <div>
+        <label class="block font-semibold mb-2">สีโซน</label>
+        <!-- สี 2 แถว -->
+        <div class="flex flex-wrap gap-2">
+          @for (color of presetColors; track color) {
+            <button
+              type="button"
+              class="w-10 h-10 rounded-full border-2 transition-all"
+              [style.background-color]="color"
+              [class]="
+                selectedColor === color
+                  ? 'border-primary scale-110'
+                  : 'border-surface-border'
+              "
+              (click)="selectColor(color)"
+            ></button>
+          }
+          <!-- Custom color picker + Hex -->
+          <div class="relative flex items-center gap-2">
+            <button
+              type="button"
+              class="w-10 h-10 rounded-full border-2 transition-all flex-shrink-0"
+              [class]="
+                isCustomColor()
+                  ? 'border-primary scale-110'
+                  : 'border-surface-border'
+              "
+              [style.background]="
+                'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)'
+              "
+              pTooltip="เลือกสีเอง"
+              tooltipPosition="top"
+              (click)="showPicker = !showPicker"
+            ></button>
+            <span class="mr-1 text-surface-sub font-semibold">{{
+              selectedColor
+            }}</span>
 
-      <!-- Custom Color Picker -->
-      <div class="flex items-center gap-4">
-        <label class="font-semibold">สีที่กำหนดเอง:</label>
-        <div class="flex items-center gap-3">
-          <input
-            type="color"
-            [value]="selectedColor"
-            (input)="onColorInput($event)"
-            class="w-10 h-10 rounded cursor-pointer border border-surface-border"
-          />
-          <span class="font-mono text-sm">{{ selectedColor }}</span>
+            @if (showPicker) {
+              <!-- Backdrop -->
+              <div
+                class="fixed inset-0 z-[1100]"
+                (click)="showPicker = false"
+              ></div>
+              <!-- Picker panel (fixed centered — ไม่ถูก clip โดย dialog overflow) -->
+              <div
+                class="fixed z-[1101] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl border border-surface-border p-4 shadow-lg custom-color-panel"
+              >
+                <!-- HSB Picker (inline) -->
+                <p-colorPicker
+                  [inline]="true"
+                  [ngModel]="selectedColor"
+                  (ngModelChange)="selectColor($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                />
+                <!-- Preview + Hex input + ปุ่มยืนยัน -->
+                <div class="flex items-center gap-2 mt-6">
+                  <span
+                    class="w-8 h-8 rounded-lg border border-surface-border flex-shrink-0"
+                    [style.background-color]="selectedColor"
+                  ></span>
+                  <span class="text-surface-sub">HEX</span>
+                  <input
+                    pInputText
+                    class="flex-1 !text-sm"
+                    [ngModel]="selectedColor"
+                    (ngModelChange)="onHexInput($event)"
+                    [ngModelOptions]="{ standalone: true }"
+                    maxlength="7"
+                  />
+                  <button
+                    type="button"
+                    class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0"
+                    pTooltip="ตกลง"
+                    tooltipPosition="top"
+                    (click)="showPicker = false"
+                  >
+                    <i class="pi pi-check text-sm"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
         </div>
       </div>
 
-      <!-- Preview -->
-      <div class="mt-4 flex items-center gap-3">
-        <span class="font-semibold">ตัวอย่าง:</span>
-        <span
-          class="inline-block w-10 h-10 rounded-full"
-          [style.background-color]="selectedColor"
-        ></span>
-        <span class="font-semibold">{{ form.get("zoneName")?.value || "ชื่อโซน" }}</span>
-      </div>
-    </div>
-
-    <!-- สถานะ -->
-    <div>
-      <label class="block font-semibold mb-2">สถานะ</label>
-      <div class="flex items-center gap-3">
-        <p-inputSwitch formControlName="isActive" inputId="isActive"></p-inputSwitch>
-        <span [class]="form.get('isActive')?.value ? 'text-success' : 'text-danger'">
-          {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
-        </span>
+      <!-- ขวา: ตัวอย่าง -->
+      <div>
+        <label class="block font-semibold mb-2">ตัวอย่างการแสดงผล</label>
+        <div
+          class="flex items-center gap-4 p-4 bg-surface rounded-xl border border-surface-border"
+        >
+          <span
+            class="inline-block w-12 h-12 rounded-full flex-shrink-0"
+            [style.background-color]="selectedColor"
+          ></span>
+          <span class="text-xl font-bold">{{
+            form.get("zoneName")?.value || "ชื่อโซนร้าน"
+          }}</span>
+        </div>
       </div>
     </div>
 
     <!-- Audit Footer (edit mode only) -->
     @if (isEditMode() && zone) {
+      <div class="pt-2"></div>
       <app-audit-footer
+        [compact]="true"
         [createdAt]="zone.createdAt"
         [createdByName]="zone.createdBy"
         [updatedAt]="zone.updatedAt"

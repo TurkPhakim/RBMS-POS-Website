@@ -1,0 +1,202 @@
+<div class="space-y-4">
+  <!-- Page Header -->
+  <div class="flex items-center gap-3">
+    <div
+      class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
+    >
+      <app-generic-icon
+        name="restaurant"
+        svgClass="w-10 h-10"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <h1 class="text-page-title">ภาพรวมร้าน</h1>
+  </div>
+
+  <!-- Zone Tabs (Segmented Control) -->
+  <div class="flex bg-surface-border rounded-xl gap-4">
+    @for (zone of activeZones(); track zone.zoneId) {
+      <button
+        class="flex-1 flex items-center justify-center gap-4 py-3 rounded-lg font-semibold transition-all"
+        [class]="
+          selectedZoneId() === zone.zoneId
+            ? 'bg-surface-card text-primary'
+            : 'text-surface-sub hover:text-primary'
+        "
+        (click)="onSelectZone(zone.zoneId!)"
+      >
+        <app-generic-icon name="floors" svgClass="w-8 h-8"></app-generic-icon>
+        {{ zone.zoneName }}
+      </button>
+    }
+  </div>
+
+  <!-- Canvas -->
+  <div
+    #canvasEl
+    class="relative bg-surface-card rounded-lg border-4 overflow-hidden"
+    [style.border-color]="selectedZoneColor() ?? ''"
+    [class.border-surface-border]="!selectedZoneColor()"
+    [style.min-height.px]="700 * canvasScale()"
+  >
+    <!-- Canvas Header -->
+    <div
+      class="flex items-center justify-between px-5 py-4 border-b border-surface-border"
+    >
+      <div
+        class="flex items-center gap-2.5 text-surface-sub font-semibold text-lg"
+      >
+        <app-generic-icon
+          name="information"
+          svgClass="w-5 h-5"
+        ></app-generic-icon>
+        <span>กดที่โต๊ะ เพื่อดำเนินการ</span>
+      </div>
+
+      <!-- Status Legend (clickable chips) -->
+      <div class="flex flex-wrap gap-2">
+        @for (item of statusLegend; track item.key) {
+          <button
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-all cursor-pointer"
+            [ngClass]="
+              selectedStatusFilter() === item.key
+                ? item.activeClass
+                : item.borderClass
+            "
+            (click)="toggleStatusFilter(item.key)"
+          >
+            <span
+              class="w-2.5 h-2.5 rounded-full"
+              [ngClass]="
+                selectedStatusFilter() === item.key ? 'bg-white' : item.color
+              "
+            ></span>
+            {{ item.label }}
+            <span class="font-bold">({{ statusCounts()[item.key] }})</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Table Cards -->
+    @for (table of filteredTables(); track table.tableId) {
+      <div
+        class="absolute select-none"
+        [style.transform]="
+          'translate(' +
+          (table.positionX ?? 0) * canvasScale() +
+          'px, ' +
+          (table.positionY ?? 0) * canvasScale() +
+          'px)'
+        "
+        (click)="onTableClick(table)"
+      >
+        <!-- Call waiter (raise-hand) -->
+        @if (callingTableIds().has(table.tableId!)) {
+          <div
+            class="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-billing flex items-center justify-center z-10 animate-bounce cursor-pointer"
+            (click)="onDismissCallWaiter($event, table)"
+          >
+            <app-generic-icon
+              name="raise-hand"
+              svgClass="w-7 h-7"
+              class="text-white"
+            ></app-generic-icon>
+          </div>
+        }
+
+        <!-- Request bill (payment-bath) -->
+        @if (
+          table.status === "Billing" && !callingTableIds().has(table.tableId!)
+        ) {
+          <div
+            class="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-success-bg flex items-center justify-center z-10 animate-bounce"
+          >
+            <app-generic-icon
+              name="payment-bath"
+              svgClass="w-7 h-7"
+              class="text-success"
+            ></app-generic-icon>
+          </div>
+        }
+
+        <!-- Cleaning -->
+        @if (
+          table.status === "Cleaning" && !callingTableIds().has(table.tableId!)
+        ) {
+          <div
+            class="absolute -top-4 -right-4 w-12 h-12 rounded-full bg-cleaning flex items-center justify-center z-10 animate-bounce cursor-pointer"
+            (click)="onQuickClean($event, table)"
+          >
+            <app-generic-icon
+              name="cleaning"
+              svgClass="w-7 h-7"
+              class="text-white"
+            ></app-generic-icon>
+          </div>
+        }
+
+        <div [ngClass]="getTableClasses(table)">
+          <!-- Table Name -->
+          <span class="flex items-center gap-1 font-bold text-xl leading-none">
+            @if (table.linkedGroupCode) {
+              <app-generic-icon name="link" svgClass="w-5 h-5"
+                [class]="table.isLinkedPrimary ? 'text-primary' : 'text-surface-sub'"></app-generic-icon>
+            }
+            {{ table.tableName }}
+          </span>
+
+          <!-- Capacity -->
+          <span class="flex items-center gap-1.5 text-lg leading-none mt-2">
+            <app-generic-icon
+              name="human"
+              svgClass="w-5 h-5"
+            ></app-generic-icon>
+            {{ getCapacityLabel(table) }}
+          </span>
+
+          <!-- Status -->
+          <span class="leading-none mt-2 opacity-60">
+            {{ getStatusLabel(table) }}
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- Floor Object Cards (read-only) -->
+    @for (obj of filteredFloorObjects(); track obj.floorObjectId) {
+      <div
+        class="absolute select-none"
+        [style.transform]="
+          'translate(' +
+          (obj.positionX ?? 0) * canvasScale() +
+          'px, ' +
+          (obj.positionY ?? 0) * canvasScale() +
+          'px)'
+        "
+      >
+        <div
+          class="flex flex-col items-center justify-center w-24 h-24 rounded-lg border-2 border-dashed bg-surface-card"
+          [ngClass]="getObjectTypeClasses(obj.objectType)"
+        >
+          <app-generic-icon
+            [name]="getObjectIconName(obj.objectType)"
+            svgClass="w-12 h-12"
+          ></app-generic-icon>
+          <span
+            class="text-lg mt-2 font-medium text-center leading-tight truncate max-w-[80px]"
+          >
+            {{ obj.label }}
+          </span>
+        </div>
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (filteredTables().length === 0 && filteredFloorObjects().length === 0) {
+      <div class="flex justify-center items-center h-full min-h-[500px]">
+        <app-empty-view message="ไม่พบโต๊ะ" />
+      </div>
+    }
+  </div>
+</div>

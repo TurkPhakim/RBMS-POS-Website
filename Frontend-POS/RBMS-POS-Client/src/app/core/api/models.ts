@@ -34,6 +34,8 @@ export type { CreateTableRequestModel } from './models/create-table-request-mode
 export type { CreateUserAccountResponseModel } from './models/create-user-account-response-model';
 export type { CreateUserAccountResponseModelBaseResponseModel } from './models/create-user-account-response-model-base-response-model';
 export type { CreateZoneRequestModel } from './models/create-zone-request-model';
+export type { CurrentPeriodResultModel } from './models/current-period-result-model';
+export type { CurrentPeriodResultModelBaseResponseModel } from './models/current-period-result-model-base-response-model';
 export type { CustomerAuthRequestModel } from './models/customer-auth-request-model';
 export type { CustomerAuthResponseModel } from './models/customer-auth-response-model';
 export type { CustomerAuthResponseModelBaseResponseModel } from './models/customer-auth-response-model-base-response-model';
@@ -58,6 +60,7 @@ export type { CustomerOrderTrackingResponseModelBaseResponseModel } from './mode
 export type { CustomerSubCategoryModel } from './models/customer-sub-category-model';
 export type { CustomerSubmitOrderRequestModel } from './models/customer-submit-order-request-model';
 export type { CustomerTrackingItemModel } from './models/customer-tracking-item-model';
+export type { CustomerTrackingOptionModel } from './models/customer-tracking-option-model';
 export type { DailyBreakdownModel } from './models/daily-breakdown-model';
 export type { DashboardKpiModel } from './models/dashboard-kpi-model';
 export type { DashboardOverviewResponseModel } from './models/dashboard-overview-response-model';
@@ -92,6 +95,7 @@ export type { KitchenOrderItemModel } from './models/kitchen-order-item-model';
 export type { KitchenOrderModel } from './models/kitchen-order-model';
 export type { KitchenOrderModelListResponseModel } from './models/kitchen-order-model-list-response-model';
 export type { LinkedMenuModel } from './models/linked-menu-model';
+export type { LinkedTableServingModel } from './models/linked-table-serving-model';
 export type { LinkTablesRequestModel } from './models/link-tables-request-model';
 export type { LoginRequestModel } from './models/login-request-model';
 export type { LoginResponseModel } from './models/login-response-model';
@@ -128,6 +132,7 @@ export type { OrderDetailResponseModel } from './models/order-detail-response-mo
 export type { OrderDetailResponseModelBaseResponseModel } from './models/order-detail-response-model-base-response-model';
 export type { OrderItemOptionResponseModel } from './models/order-item-option-response-model';
 export type { OrderItemResponseModel } from './models/order-item-response-model';
+export type { OrderLinkedTableModel } from './models/order-linked-table-model';
 export type { OrderResponseModel } from './models/order-response-model';
 export type { OrderResponseModelPaginationResult } from './models/order-response-model-pagination-result';
 export type { PaymentResponseModel } from './models/payment-response-model';
@@ -194,6 +199,7 @@ export type { UpdateEmployeeEducationRequestModel } from './models/update-employ
 export type { UpdateEmployeeWorkHistoryRequestModel } from './models/update-employee-work-history-request-model';
 export type { UpdateFloorObjectPositionsRequestModel } from './models/update-floor-object-positions-request-model';
 export type { UpdateFloorObjectRequestModel } from './models/update-floor-object-request-model';
+export type { UpdateGuestCountRequestModel } from './models/update-guest-count-request-model';
 export type { UpdateMenuSubCategoryRequestModel } from './models/update-menu-sub-category-request-model';
 export type { UpdateOptionGroupRequestModel } from './models/update-option-group-request-model';
 export type { UpdatePermissionsRequestModel } from './models/update-permissions-request-model';

@@ -8,5 +8,6 @@ public enum EFloorObjectType
     Kitchen,
     Exit,
     Cashier,
+    Plant,
     Decoration
 }

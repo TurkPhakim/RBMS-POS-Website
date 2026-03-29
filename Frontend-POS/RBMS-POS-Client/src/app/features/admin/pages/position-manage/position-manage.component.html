@@ -57,16 +57,14 @@
         <label for="isActive" class="block font-semibold mb-2"
           >สถานะการใช้งาน</label
         >
-        <div class="flex items-center gap-3 pt-2">
+        <div class="flex items-center gap-2 pt-2">
           <p-inputSwitch
             formControlName="isActive"
             inputId="isActive"
           ></p-inputSwitch>
           <span
             class="font-semibold mb-2"
-            [class]="
-              form.get('isActive')?.value ? 'text-success' : 'text-danger'
-            "
+            [ngClass]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
             >{{
               form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน"
             }}</span
@@ -97,7 +95,7 @@
             <tr>
               <th class="w-[80px]">รหัส</th>
               <th class="w-[120px]">รูปภาพ</th>
-              <th class="w-[220px]">ชื่อ-นามสกุล</th>
+              <th class="w-[220px] whitespace-nowrap">ชื่อ-นามสกุล</th>
               <th class="w-[200px]">อีเมล</th>
               <th class="w-[120px] text-center">ประเภทการจ้าง</th>
               <th class="w-[120px] text-center">สถานะ</th>
@@ -126,7 +124,7 @@
                     >
                       <app-generic-icon
                         name="human"
-                        svgClass="w-9 h-9"
+                        svgClass="w-10 h-10"
                         class="text-surface-sub opacity-50"
                       ></app-generic-icon>
                     </div>
@@ -136,7 +134,7 @@
 
               <!-- ชื่อ-นามสกุล -->
               <td class="whitespace-nowrap">
-                <div class="font-semibold">
+                <div class="font-semibold whitespace-nowrap">
                   {{ item.fullNameThai }}
                 </div>
                 <div class="text-surface-sub mt-0.5">
@@ -197,15 +195,15 @@
               (click)="toggleParent(mod.moduleId!)"
             >
               <div class="flex items-center gap-3">
-                @if (moduleIconMap[mod.moduleCode!]) {
+                @if (moduleMetaMap[mod.moduleCode!]?.icon) {
                   <app-generic-icon
-                    [name]="moduleIconMap[mod.moduleCode!]"
-                    svgClass="w-6 h-6"
+                    [name]="moduleMetaMap[mod.moduleCode!].icon"
+                    svgClass="w-10 h-10"
                     class="text-white"
                   ></app-generic-icon>
                 }
                 <span class="text-white font-bold text-2xl">{{
-                  moduleLabelMap[mod.moduleCode!] || mod.moduleName
+                  moduleMetaMap[mod.moduleCode!]?.label || mod.moduleName
                 }}</span>
               </div>
               <div class="flex items-center gap-3">
@@ -243,15 +241,16 @@
                       (click)="toggleChild(child.moduleId!)"
                     >
                       <div class="flex items-center gap-3 pl-4">
-                        @if (moduleIconMap[child.moduleCode!]) {
+                        @if (moduleMetaMap[child.moduleCode!]?.icon) {
                           <app-generic-icon
-                            [name]="moduleIconMap[child.moduleCode!]"
-                            svgClass="w-6 h-6"
+                            [name]="moduleMetaMap[child.moduleCode!].icon"
+                            svgClass="w-8 h-8"
                             class="text-primary-text"
                           ></app-generic-icon>
                         }
                         <span class="text-primary-text font-semibold text-xl">{{
-                          moduleLabelMap[child.moduleCode!] || child.moduleName
+                          moduleMetaMap[child.moduleCode!]?.label ||
+                            child.moduleName
                         }}</span>
                       </div>
                       <div class="flex items-center gap-3">

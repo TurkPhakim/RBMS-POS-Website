@@ -1,0 +1,265 @@
+<div class="flex flex-col min-h-screen bg-surface">
+  <!-- Header -->
+  <header
+    class="bg-gradient-to-r from-primary to-primary-dark sticky top-0 z-10"
+  >
+    <div class="px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
+        <div
+          class="w-12 h-12 xs:w-14 xs:h-14 flex items-center justify-center overflow-hidden shrink-0"
+          [ngClass]="logoUrl ? 'rounded-xl' : 'bg-white rounded-full p-0.5'"
+        >
+          <img
+            [src]="logoUrl || 'images/RBMS_Logo.png'"
+            alt="Logo"
+            class="w-full h-full object-contain"
+            [class.rounded-xl]="!!logoUrl"
+            (error)="logoUrl = null"
+          />
+        </div>
+        <div class="flex-1 min-w-0">
+          <span class="font-bold text-lg xs:text-2xl text-white leading-tight block truncate">{{
+            session?.shopNameThai || "ร้านอาหาร"
+          }}</span>
+          @if (session?.shopNameEnglish) {
+            <span class="text-sm xs:text-xl text-white/70 leading-tight block truncate">{{
+              session?.shopNameEnglish
+            }}</span>
+          }
+          <span class="text-sm xs:text-lg text-white/70 leading-tight block mt-0.5 truncate"
+            >โซน{{ session?.zoneName }} - โต๊ะ{{ session?.tableName }}@if (nickname()) { <span class="text-white font-medium"> | สั่งโดยคุณ{{ nickname() }}</span>}</span
+          >
+        </div>
+      </div>
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-1.5 xs:gap-2 shrink-0">
+        @if (!isBillPage()) {
+          <button
+            class="w-12 h-12 xs:w-14 xs:h-14 rounded-full bg-billing flex items-center justify-center transition-colors"
+            [class.opacity-50]="billRequested()"
+            [disabled]="billRequested()"
+            (click)="requestBill()"
+          >
+            <app-generic-icon
+              name="receipt"
+              svgClass="w-6 h-6 xs:w-7 xs:h-7"
+              class="text-white"
+            ></app-generic-icon>
+          </button>
+        }
+        <button
+          class="w-12 h-12 xs:w-14 xs:h-14 rounded-full flex items-center justify-center transition-colors relative"
+          [class.bg-success-dark]="waiterCooldown() === 0"
+          [class.bg-surface-muted]="waiterCooldown() > 0"
+          [disabled]="waiterCooldown() > 0"
+          (click)="callWaiter()"
+        >
+          <app-generic-icon
+            name="raise-hand"
+            svgClass="w-6 h-6 xs:w-7 xs:h-7"
+            class="text-white"
+          ></app-generic-icon>
+          @if (waiterCooldown() > 0) {
+            <span
+              class="absolute -bottom-1.5 -right-1.5 bg-success-bg text-success text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center"
+            >
+              {{ waiterCooldown() }}
+            </span>
+          }
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="flex-1 overflow-y-auto flex flex-col">
+    <div class="flex-1">
+      <router-outlet></router-outlet>
+    </div>
+
+    <!-- Footer — ข้อมูลติดต่อร้าน -->
+    @if (hasContactInfo && !isCartPage()) {
+      <footer
+        class="bg-gradient-to-br from-primary to-primary-badge"
+        style="padding-bottom: 78px"
+      >
+        <div class="bg-black/15 px-3 xs:px-5 py-2 xs:py-3 mb-1 flex items-center gap-2 xs:gap-3">
+          <span
+            class="w-8 h-8 xs:w-10 xs:h-10 rounded-full bg-white/25 flex items-center justify-center"
+          >
+            <app-generic-icon
+              name="restaurant"
+              svgClass="w-4 h-4 xs:w-6 xs:h-6"
+              class="text-white"
+            ></app-generic-icon>
+          </span>
+          <span
+            class="font-extrabold text-base xs:text-xl text-white tracking-wider uppercase"
+            >ข้อมูลติดต่อร้าน</span
+          >
+        </div>
+        <div
+          class="px-3 xs:px-5 pb-4 xs:pb-5 pt-1.5 xs:pt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1 xs:gap-y-1.5"
+        >
+          @if (session?.address) {
+            <div class="flex items-start gap-2 xs:gap-2.5 sm:col-span-2">
+              <span
+                class="w-6 h-6 xs:w-7 xs:h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5"
+              >
+                <app-generic-icon
+                  name="address-location"
+                  svgClass="w-3.5 h-3.5 xs:w-4 xs:h-4"
+                  class="text-white"
+                ></app-generic-icon>
+              </span>
+              <span class="text-sm xs:text-base text-white leading-snug">{{
+                session!.address
+              }}</span>
+            </div>
+          }
+          @if (session?.website) {
+            <div class="flex items-center gap-2 xs:gap-2.5">
+              <span
+                class="w-6 h-6 xs:w-7 xs:h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"
+              >
+                <app-generic-icon
+                  name="web"
+                  svgClass="w-3.5 h-3.5 xs:w-5 xs:h-5"
+                  class="text-white"
+                ></app-generic-icon>
+              </span>
+              <span class="text-sm xs:text-base text-white">{{ session!.website }}</span>
+            </div>
+          }
+          @if (session?.phoneNumber) {
+            <div class="flex items-center gap-2 xs:gap-2.5">
+              <span
+                class="w-6 h-6 xs:w-7 xs:h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"
+              >
+                <app-generic-icon
+                  name="telephone"
+                  svgClass="w-3.5 h-3.5 xs:w-4 xs:h-4"
+                  class="text-white"
+                ></app-generic-icon>
+              </span>
+              <span class="text-sm xs:text-base text-white">{{ session!.phoneNumber }}</span>
+            </div>
+          }
+          @if (session?.facebook) {
+            <div class="flex items-center gap-2 xs:gap-2.5">
+              <span
+                class="w-6 h-6 xs:w-7 xs:h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"
+              >
+                <app-generic-icon
+                  name="facebook"
+                  svgClass="w-3.5 h-3.5 xs:w-4 xs:h-4"
+                  class="text-white"
+                ></app-generic-icon>
+              </span>
+              <span class="text-sm xs:text-base text-white">{{ session!.facebook }}</span>
+            </div>
+          }
+          @if (session?.shopEmail) {
+            <div class="flex items-center gap-2 xs:gap-2.5">
+              <span
+                class="w-6 h-6 xs:w-7 xs:h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"
+              >
+                <app-generic-icon
+                  name="email"
+                  svgClass="w-3.5 h-3.5 xs:w-4 xs:h-4"
+                  class="text-white"
+                ></app-generic-icon>
+              </span>
+              <span class="text-sm xs:text-base text-white">{{ session!.shopEmail }}</span>
+            </div>
+          }
+          @if (session?.instagram) {
+            <div class="flex items-center gap-2 xs:gap-2.5">
+              <span
+                class="w-6 h-6 xs:w-7 xs:h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"
+              >
+                <app-generic-icon
+                  name="instagram"
+                  svgClass="w-3.5 h-3.5 xs:w-4 xs:h-4"
+                  class="text-white"
+                ></app-generic-icon>
+              </span>
+              <span class="text-sm xs:text-base text-white">{{ session!.instagram }}</span>
+            </div>
+          }
+        </div>
+      </footer>
+    } @else {
+      <div style="padding-bottom: 78px"></div>
+    }
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav
+    class="fixed bottom-0 left-0 right-0 bg-white border-t border-surface-border z-20"
+  >
+    <div class="flex items-center justify-around h-[74px] max-w-lg mx-auto">
+      <a
+        routerLink="/menu"
+        routerLinkActive
+        #menuLink="routerLinkActive"
+        class="flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors"
+        [class]="
+          menuLink.isActive
+            ? 'text-primary bg-primary-subtle'
+            : 'text-surface-sub'
+        "
+      >
+        <app-generic-icon
+          name="menu-list"
+          svgClass="w-8 h-8"
+        ></app-generic-icon>
+        <span class="text-sm font-semibold">เมนู</span>
+      </a>
+      <a
+        routerLink="/cart"
+        routerLinkActive
+        #cartLink="routerLinkActive"
+        class="flex-1 flex flex-col items-center justify-center h-full transition-colors relative"
+        [class]="
+          cartLink.isActive
+            ? 'text-primary bg-primary-subtle'
+            : 'text-surface-sub'
+        "
+      >
+        <span class="relative">
+          <app-generic-icon
+            name="basket-shopping"
+            svgClass="w-8 h-8"
+          ></app-generic-icon>
+          @if (cartService.itemCount() > 0) {
+            <span
+              class="absolute -top-1.5 -right-2.5 bg-danger text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1"
+            >
+              {{ cartService.itemCount() }}
+            </span>
+          }
+        </span>
+        <span class="text-sm font-semibold">ตะกร้า</span>
+      </a>
+      <a
+        routerLink="/orders"
+        routerLinkActive
+        #ordersLink="routerLinkActive"
+        class="flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors"
+        [class]="
+          ordersLink.isActive
+            ? 'text-primary bg-primary-subtle'
+            : 'text-surface-sub'
+        "
+      >
+        <app-generic-icon
+          name="order-dinner"
+          svgClass="w-8 h-8"
+        ></app-generic-icon>
+        <span class="text-sm font-semibold">ออเดอร์</span>
+      </a>
+    </div>
+  </nav>
+
+</div>

@@ -1,0 +1,29 @@
+<div class="p-4 space-y-3">
+  <!-- Call Waiter -->
+  <button pButton class="w-full !justify-start gap-3 !p-4" severity="secondary" [outlined]="true"
+          [disabled]="waiterCooldown() > 0" (click)="callWaiter()">
+    <app-generic-icon name="raise-hand" svgClass="w-6 h-6"></app-generic-icon>
+    <div class="text-left">
+      <p class="font-medium text-sm">เรียกพนักงาน</p>
+      @if (waiterCooldown() > 0) {
+        <p class="text-xs text-surface-sub">กรุณารอ {{ waiterCooldown() }} วินาที</p>
+      } @else {
+        <p class="text-xs text-surface-sub">แจ้งพนักงานมาที่โต๊ะ</p>
+      }
+    </div>
+  </button>
+
+  <!-- Request Bill -->
+  <button pButton class="w-full !justify-start gap-3 !p-4" severity="secondary" [outlined]="true"
+          [disabled]="billRequested()" (click)="requestBill()">
+    <app-generic-icon name="bill" svgClass="w-6 h-6"></app-generic-icon>
+    <div class="text-left">
+      <p class="font-medium text-sm">ขอบิล</p>
+      @if (billRequested()) {
+        <p class="text-xs text-surface-sub">ขอบิลแล้ว — รอพนักงานจัดเตรียม</p>
+      } @else {
+        <p class="text-xs text-surface-sub">ขอเช็คบิลเพื่อชำระเงิน</p>
+      }
+    </div>
+  </button>
+</div>

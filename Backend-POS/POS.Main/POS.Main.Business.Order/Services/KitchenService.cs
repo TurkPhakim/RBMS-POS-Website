@@ -43,6 +43,8 @@ public class KitchenService : IKitchenService
             .Include(i => i.Order)
                 .ThenInclude(o => o.Table)
                     .ThenInclude(t => t.Zone)
+            .Include(i => i.CancelledByEmployee)
+            .Include(i => i.SourceTable)
             .Include(i => i.OrderItemOptions)
             .Where(i => statuses.Contains(i.Status)
                 && i.CategoryType == categoryType
@@ -61,6 +63,7 @@ public class KitchenService : IKitchenService
                     OrderNumber = first.Order.OrderNumber,
                     TableId = first.Order.TableId,
                     TableName = first.Order.Table.TableName,
+                    ZoneName = first.Order.Table.Zone?.ZoneName ?? "",
                     ZoneColor = first.Order.Table.Zone?.Color,
                     OpenedAt = first.Order.Table.OpenedAt,
                     Items = g.Select(i => new KitchenOrderItemModel
@@ -77,6 +80,10 @@ public class KitchenService : IKitchenService
                         CookingStartedAt = i.CookingStartedAt,
                         ReadyAt = i.ReadyAt,
                         CancelReason = i.CancelReason,
+                        CancelledByName = i.CancelledByEmployee != null
+                            ? $"{i.CancelledByEmployee.FirstNameThai} {i.CancelledByEmployee.LastNameThai}"
+                            : null,
+                        SourceTableName = i.SourceTable?.TableName,
                         Options = i.OrderItemOptions.Select(o => new KitchenOptionModel
                         {
                             OptionGroupName = o.OptionGroupName,
@@ -118,7 +125,7 @@ public class KitchenService : IKitchenService
         foreach (var item in items)
         {
             await _notificationService.NotifyItemStatusChangedAsync(
-                item.OrderId, item.OrderItemId, EOrderItemStatus.Preparing.ToString(), ct);
+                item.OrderId, item.OrderItemId, item.Order.TableId, EOrderItemStatus.Preparing.ToString(), ct);
         }
 
         // Notify customer devices on table
@@ -162,7 +169,7 @@ public class KitchenService : IKitchenService
         foreach (var item in items)
         {
             await _notificationService.NotifyItemStatusChangedAsync(
-                item.OrderId, item.OrderItemId, EOrderItemStatus.Ready.ToString(), ct);
+                item.OrderId, item.OrderItemId, item.Order.TableId, EOrderItemStatus.Ready.ToString(), ct);
         }
 
         // Notify customer devices on table

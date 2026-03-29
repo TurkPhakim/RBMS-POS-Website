@@ -1,51 +1,90 @@
-<app-card-template [headerLabel]="headerLabel">
-  <div class="space-y-4">
-    <!-- Reservation Info -->
-    <div class="grid grid-cols-2 gap-3 text-sm">
-      <div>
-        <span class="text-surface-sub">ลูกค้า:</span>
-        <span class="font-semibold ml-1">{{ reservation.customerName }}</span>
+<app-card-template [headerLabel]="headerLabel" contentClass="space-y-4">
+  <!-- Reservation Info -->
+  <div
+    class="border border-surface-border rounded-lg border-l-[6px] border-l-primary"
+  >
+    <div class="divide-y divide-surface-border">
+      <!-- Customer -->
+      <div class="px-5 py-3 flex items-center gap-3">
+        <div
+          class="w-12 h-12 rounded-full bg-primary-subtle flex items-center justify-center shrink-0"
+        >
+          <app-generic-icon
+            name="human"
+            svgClass="w-6 h-6"
+            class="text-primary"
+          ></app-generic-icon>
+        </div>
+        <div>
+          <div class="font-bold text-xl">{{ reservation.customerName }}</div>
+          <div class="text-surface-sub mt-1">
+            {{ reservation.customerPhone | formatPhone }}
+          </div>
+        </div>
       </div>
-      <div>
-        <span class="text-surface-sub">จำนวน:</span>
-        <span class="font-semibold ml-1">{{ reservation.guestCount }} คน</span>
-      </div>
-      <div>
-        <span class="text-surface-sub">วันที่:</span>
-        <span class="font-semibold ml-1">{{ reservation.reservationDate | dateFormat }}</span>
-      </div>
-      <div>
-        <span class="text-surface-sub">เวลา:</span>
-        <span class="font-semibold ml-1">{{ reservation.reservationTime }}</span>
-      </div>
-    </div>
 
-    <!-- Table Selection -->
-    <div>
-      <label class="block font-semibold mb-2">
-        เลือกโต๊ะ <span class="text-danger">*</span>
-      </label>
-      <app-available-table-dropdown
-        [ngModel]="selectedTableId()"
-        (ngModelChange)="selectedTableId.set($event)"
-      ></app-available-table-dropdown>
+      <!-- Details -->
+      <div class="grid grid-cols-3 divide-x divide-surface-border">
+        <div class="px-5 py-3">
+          <div class="text-surface-sub">จำนวนลูกค้า</div>
+          <div class="font-semibold text-lg mt-1">
+            {{ reservation.guestCount }} คน
+          </div>
+        </div>
+        <div class="px-5 py-3">
+          <div class="text-surface-sub">ในวันที่</div>
+          <div class="font-semibold text-lg mt-1">
+            {{ reservation.reservationDate | dateFormat }}
+          </div>
+        </div>
+        <div class="px-5 py-3">
+          <div class="text-surface-sub">เวลา</div>
+          <div class="font-semibold text-lg mt-1">
+            {{ reservation.reservationTime }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Note -->
+      @if (reservation.note) {
+        <div class="px-5 py-3 flex items-start gap-2">
+          <app-generic-icon
+            name="chat-message"
+            svgClass="w-6 h-6"
+            class="text-warning mt-0.5"
+          ></app-generic-icon>
+          <div>
+            <div class="text-surface-sub">หมายเหตุ</div>
+            <div class="font-semibold text-lg mt-1">{{ reservation.note }}</div>
+          </div>
+        </div>
+      }
     </div>
   </div>
 
+  <!-- Table Selection -->
+  <div>
+    <label class="block font-semibold mb-2">
+      เลือกโต๊ะที่นั่ง <span class="text-danger">*</span>
+    </label>
+    <app-available-table-dropdown
+      [ngModel]="selectedTableId()"
+      (ngModelChange)="selectedTableId.set($event)"
+    ></app-available-table-dropdown>
+  </div>
+
   <p-footer>
-    <div class="flex justify-center gap-3">
-      <p-button
-        label="ยกเลิก"
-        severity="secondary"
-        [outlined]="true"
-        (onClick)="onCancel()"
-      ></p-button>
-      <p-button
-        label="ยืนยัน"
-        severity="primary"
-        [disabled]="!selectedTableId()"
-        (onClick)="onConfirm()"
-      ></p-button>
-    </div>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      variant="outlined"
+      (onClick)="onCancel()"
+    ></p-button>
+    <p-button
+      label="ยืนยัน"
+      severity="primary"
+      [disabled]="!selectedTableId()"
+      (onClick)="onConfirm()"
+    ></p-button>
   </p-footer>
 </app-card-template>

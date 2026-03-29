@@ -1,0 +1,98 @@
+@if (isCompleted()) {
+  <div class="flex flex-col items-center px-4 text-center">
+    <div class="-mb-2 flex justify-center">
+      <ng-lottie
+        [options]="successLottie"
+        width="200px"
+        height="200px"
+      ></ng-lottie>
+    </div>
+    <p class="text-2xl font-bold text-success">ชำระเงินเรียบร้อย</p>
+    <p class="text-surface-sub mt-2 text-lg">
+      ขอบคุณที่ใช้บริการ {{ shopName }}
+    </p>
+
+    <!-- Receipt Summary -->
+    @if (receipt()) {
+      <div
+        class="mt-8 bg-white rounded-2xl text-left w-full border border-surface-border overflow-hidden"
+      >
+        <app-card-header
+          icon="checklist-cash"
+          title="ใบเสร็จชำระเงิน"
+          gradient="success"
+        ></app-card-header>
+        <div class="px-5 py-4 space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-surface-sub">หมายเลขออเดอร์</span>
+            <span class="font-medium">{{ receipt()!.orderNumber }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-surface-sub">โซน - โต๊ะ</span>
+            <span class="font-medium">{{ receipt()!.tableName }}</span>
+          </div>
+          @if (receipt()!.billType === 'ByAmount') {
+            <div class="flex justify-between text-sm">
+              <span class="text-surface-sub">ประเภท</span>
+              <span class="font-medium">หารเท่า {{ receipt()!.splitCount }} ส่วน</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-surface-sub">ส่วนที่</span>
+              <span class="font-medium">{{ receipt()!.splitIndex }} จาก {{ receipt()!.splitCount }}</span>
+            </div>
+          } @else {
+            <div class="flex justify-between text-sm">
+              <span class="text-surface-sub">จำนวนรายการ</span>
+              <span class="font-medium">{{ receipt()!.items?.length ?? 0 }} รายการ</span>
+            </div>
+          }
+          <div class="flex justify-between text-sm">
+            <span class="text-surface-sub">วิธีการชำระเงิน</span>
+            <span class="font-medium">{{ paymentMethodLabel() }}</span>
+          </div>
+          <div
+            class="border-t border-surface-border pt-2 mt-2 flex justify-between font-semibold"
+          >
+            <span>ยอดรวมสุทธิ</span>
+            <span class="text-primary text-lg"
+              >{{ formatCurrency(receipt()!.grandTotal) }} บาท</span
+            >
+          </div>
+        </div>
+        <!-- Download Receipt Button -->
+        <div class="px-5 pb-4">
+          <button
+            pButton
+            [label]="downloaded() ? 'ดาวน์โหลดแล้ว' : 'ดาวน์โหลดใบเสร็จ'"
+            severity="secondary"
+            [outlined]="!downloaded()"
+            class="w-full"
+            [class.!bg-primary]="downloaded()"
+            [class.!border-primary]="downloaded()"
+            [class.!text-white]="downloaded()"
+            (click)="onDownloadReceipt()"
+          >
+            <app-generic-icon
+              name="download"
+              svgClass="w-6 h-6"
+            ></app-generic-icon>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+} @else {
+  <div
+    class="flex-1 flex flex-col items-center justify-center text-center px-6"
+  >
+    <div class="-mb-24 flex justify-center">
+      <ng-lottie
+        [options]="waitingLottie"
+        width="400px"
+        height="400px"
+      ></ng-lottie>
+    </div>
+    <p class="text-2xl font-semibold">รอการยืนยันชำระเงิน</p>
+    <p class="text-surface-sub text-lg mt-1">พนักงานกำลังตรวจสอบสลิป</p>
+  </div>
+}

@@ -22,6 +22,7 @@ public class OrderItemResponseModel
     public DateTime? ServedAt { get; set; }
     public string? CancelledByName { get; set; }
     public string? CancelReason { get; set; }
+    public string? SourceTableName { get; set; }
     public List<OrderItemOptionResponseModel> Options { get; set; } = new();
 }
 

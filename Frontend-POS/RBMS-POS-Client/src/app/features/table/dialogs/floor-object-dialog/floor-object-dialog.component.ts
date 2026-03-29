@@ -17,6 +17,7 @@ export class FloorObjectDialogComponent implements OnInit {
   isEditMode = signal(false);
   isSubmitting = signal(false);
 
+  private floorObjectId: number | null = null;
   floorObject: FloorObjectResponseModel | null = null;
 
   constructor(
@@ -29,9 +30,30 @@ export class FloorObjectDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.floorObject = this.config.data?.floorObject ?? null;
-    this.isEditMode.set(!!this.floorObject);
+    this.floorObjectId = this.config.data?.floorObjectId ?? null;
+    this.isEditMode.set(!!this.floorObjectId);
     this.initForm();
+
+    if (this.floorObjectId) {
+      this.loadDetail(this.floorObjectId);
+    }
+  }
+
+  private loadDetail(floorObjectId: number): void {
+    this.floorObjectsService
+      .floorObjectsGetFloorObjectGet({ floorObjectId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.floorObject = res.result ?? null;
+          if (this.floorObject) {
+            this.form.patchValue({
+              objectType: this.floorObject.objectType,
+              label: this.floorObject.label,
+            });
+          }
+        },
+      });
   }
 
   onSubmit(): void {
@@ -57,7 +79,7 @@ export class FloorObjectDialogComponent implements OnInit {
       onConfirm: () => {
         this.floorObjectsService
           .floorObjectsDeleteFloorObjectDelete({
-            floorObjectId: this.floorObject!.floorObjectId!,
+            floorObjectId: this.floorObjectId!,
           })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
@@ -76,14 +98,8 @@ export class FloorObjectDialogComponent implements OnInit {
 
   private initForm(): void {
     this.form = this.fb.group({
-      objectType: [
-        this.floorObject?.objectType ?? '',
-        Validators.required,
-      ],
-      label: [
-        this.floorObject?.label ?? '',
-        [Validators.required, Validators.maxLength(100)],
-      ],
+      objectType: ['', Validators.required],
+      label: ['', [Validators.required]],
     });
   }
 
@@ -118,7 +134,7 @@ export class FloorObjectDialogComponent implements OnInit {
   private updateFloorObject(): void {
     this.floorObjectsService
       .floorObjectsUpdateFloorObjectPut({
-        floorObjectId: this.floorObject!.floorObjectId!,
+        floorObjectId: this.floorObjectId!,
         body: {
           objectType: this.form.value.objectType,
           label: this.form.value.label,

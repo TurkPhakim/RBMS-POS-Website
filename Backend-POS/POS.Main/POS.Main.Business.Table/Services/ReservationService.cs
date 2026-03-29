@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using POS.Main.Business.Order.Interfaces;
 using POS.Main.Business.Table.Interfaces;
 using POS.Main.Business.Table.Models.Reservation;
 using POS.Main.Core.Enums;
@@ -13,15 +14,24 @@ public class ReservationService : IReservationService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ITableService _tableService;
+    private readonly IOrderNotificationService _notificationService;
     private readonly ILogger<ReservationService> _logger;
+
+    private static readonly TimeZoneInfo ThaiTimeZone =
+        TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+
+    private static DateOnly ThaiToday =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ThaiTimeZone));
 
     public ReservationService(
         IUnitOfWork unitOfWork,
         ITableService tableService,
+        IOrderNotificationService notificationService,
         ILogger<ReservationService> logger)
     {
         _unitOfWork = unitOfWork;
         _tableService = tableService;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -85,7 +95,7 @@ public class ReservationService : IReservationService
 
     public async Task<List<ReservationResponseModel>> GetTodayReservationsAsync(CancellationToken ct = default)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = ThaiToday;
 
         return await _unitOfWork.Reservations.QueryNoTracking()
             .Include(r => r.Table)
@@ -125,7 +135,7 @@ public class ReservationService : IReservationService
     public async Task<ReservationResponseModel> CreateReservationAsync(
         CreateReservationRequestModel request, CancellationToken ct = default)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = ThaiToday;
         if (request.ReservationDate < today)
             throw new ValidationException("ไม่สามารถจองวันที่ผ่านไปแล้ว");
 
@@ -152,7 +162,7 @@ public class ReservationService : IReservationService
         if (entity.Status == EReservationStatus.CheckedIn || entity.Status == EReservationStatus.Cancelled || entity.Status == EReservationStatus.NoShow)
             throw new BusinessException("ไม่สามารถแก้ไขการจองที่ดำเนินการแล้ว");
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = ThaiToday;
         if (request.ReservationDate < today)
             throw new ValidationException("ไม่สามารถจองวันที่ผ่านไปแล้ว");
 
@@ -182,7 +192,18 @@ public class ReservationService : IReservationService
         entity.Status = EReservationStatus.Confirmed;
         entity.TableId = request.TableId;
         _unitOfWork.Reservations.Update(entity);
+
+        // เปลี่ยนสถานะโต๊ะเป็น Reserved
+        var table = await _unitOfWork.Tables.GetByIdAsync(request.TableId, ct)
+            ?? throw new EntityNotFoundException("Table", request.TableId);
+        table.Status = ETableStatus.Reserved;
+        _unitOfWork.Tables.Update(table);
+
         await _unitOfWork.CommitAsync(ct);
+
+        // SignalR notification
+        await _notificationService.NotifyTableStatusChangedAsync(
+            request.TableId, ETableStatus.Reserved.ToString(), ct);
 
         _logger.LogInformation("Confirmed Reservation {ReservationId} TableId={TableId}",
             reservationId, request.TableId);
@@ -231,6 +252,7 @@ public class ReservationService : IReservationService
             throw new BusinessException("ยกเลิกได้เฉพาะการจองที่ยังไม่ Check-in");
 
         // If table was RESERVED, set back to AVAILABLE
+        var tableIdToNotify = (int?)null;
         if (entity.TableId.HasValue && entity.Status == EReservationStatus.Confirmed)
         {
             var table = await _unitOfWork.Tables.GetByIdAsync(entity.TableId.Value, ct);
@@ -238,12 +260,17 @@ public class ReservationService : IReservationService
             {
                 table.Status = ETableStatus.Available;
                 _unitOfWork.Tables.Update(table);
+                tableIdToNotify = entity.TableId.Value;
             }
         }
 
         entity.Status = EReservationStatus.Cancelled;
         _unitOfWork.Reservations.Update(entity);
         await _unitOfWork.CommitAsync(ct);
+
+        if (tableIdToNotify.HasValue)
+            await _notificationService.NotifyTableStatusChangedAsync(
+                tableIdToNotify.Value, ETableStatus.Available.ToString(), ct);
 
         _logger.LogInformation("Cancelled Reservation {ReservationId}", reservationId);
 
@@ -260,6 +287,7 @@ public class ReservationService : IReservationService
             throw new BusinessException("Mark No-show ได้เฉพาะการจองที่ยืนยันแล้ว");
 
         // If table was RESERVED, set back to AVAILABLE
+        var tableIdToNotify = (int?)null;
         if (entity.TableId.HasValue)
         {
             var table = await _unitOfWork.Tables.GetByIdAsync(entity.TableId.Value, ct);
@@ -267,12 +295,17 @@ public class ReservationService : IReservationService
             {
                 table.Status = ETableStatus.Available;
                 _unitOfWork.Tables.Update(table);
+                tableIdToNotify = entity.TableId.Value;
             }
         }
 
         entity.Status = EReservationStatus.NoShow;
         _unitOfWork.Reservations.Update(entity);
         await _unitOfWork.CommitAsync(ct);
+
+        if (tableIdToNotify.HasValue)
+            await _notificationService.NotifyTableStatusChangedAsync(
+                tableIdToNotify.Value, ETableStatus.Available.ToString(), ct);
 
         _logger.LogInformation("NoShow Reservation {ReservationId}", reservationId);
 

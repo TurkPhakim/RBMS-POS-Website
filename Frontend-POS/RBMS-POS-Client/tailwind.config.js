@@ -33,10 +33,10 @@ module.exports = {
         // ─── Status Colors ──────────────────────────────────────────────
         // ใช้: bg-success, text-success, bg-success-bg ฯลฯ
         success: {
-          DEFAULT: "var(--color-success)", // #14b8a6 — teal active/available
-          dark: "var(--color-success-dark)", // #0d9488 — darker teal
-          bg: "var(--color-success-bg)", // #ccfbf1 — badge background
-          text: "var(--color-success-text)", // #0f766e — badge text
+          DEFAULT: "var(--color-success)", // #10b924 — green active/available
+          dark: "var(--color-success-dark)", // #0d9e1e — darker green
+          bg: "var(--color-success-bg)", // #DCFCE7 — badge background
+          text: "var(--color-success-text)", // #166534 — badge text
         },
         danger: {
           DEFAULT: "var(--color-danger)", // #f43f5e — delete / error / locked
@@ -57,6 +57,40 @@ module.exports = {
         billing: {
           DEFAULT: "var(--color-billing)", // #8B5CF6 — violet billing
           dark: "var(--color-billing-dark)", // #7C3AED — gradient end
+          bg: "var(--color-billing-bg)", // #F5F3FF — badge background
+        },
+        cleaning: {
+          DEFAULT: "var(--color-cleaning)", // #14b8a6 — teal cleaning
+        },
+        amber: {
+          DEFAULT: "var(--color-amber)", // #F59E0B — ยังไม่สั่ง (occupied, no order)
+          bg: "var(--color-amber-bg)", // #FFFBEB — badge background
+        },
+
+        // ─── Category Colors ───────────────────────────────────────────
+        // ใช้: bg-cat-food, bg-cat-drink, bg-cat-dessert (tab / badge / header)
+        cat: {
+          food: {
+            DEFAULT: "var(--color-cat-food)",        // #f97316 — ส้ม
+            dark: "var(--color-cat-food-dark)",       // #ea580c
+          },
+          drink: {
+            DEFAULT: "var(--color-cat-drink)",        // #0EA5E9 — ฟ้า
+            dark: "var(--color-cat-drink-dark)",       // #0284C7
+          },
+          dessert: {
+            DEFAULT: "var(--color-cat-dessert)",      // #EC4899 — ชมพู
+            dark: "var(--color-cat-dessert-dark)",     // #DB2777
+          },
+        },
+
+        // ─── Tag Colors ───────────────────────────────────────────────
+        // ใช้: bg-tag-recommend, text-tag-recommend ฯลฯ (menu tags)
+        tag: {
+          recommend: "var(--color-tag-recommend)", // #EF4444 — แดง (แนะนำ)
+          seasonal: "var(--color-tag-seasonal)", // #22C55E — เขียว (ตามฤดูกาล)
+          slow: "var(--color-tag-slow)", // #F59E0B — ส้มเหลือง (ใช้เวลานาน)
+          pin: "var(--color-tag-pin)", // #F97316 — ส้ม (ปักหมุด)
         },
 
         // ─── Gender Colors ──────────────────────────────────────────────
@@ -158,10 +192,10 @@ module.exports = {
           "--color-surface-sidebar": "#1e293b",
 
           // Status
-          "--color-success": "#14b8a6",
-          "--color-success-dark": "#0d9488",
-          "--color-success-bg": "#ccfbf1",
-          "--color-success-text": "#0f766e",
+          "--color-success": "#10b924",
+          "--color-success-dark": "#0d9e1e",
+          "--color-success-bg": "#DCFCE7",
+          "--color-success-text": "#166534",
 
           "--color-danger": "#f43f5e",
           "--color-danger-bg": "#fff1f2",
@@ -179,6 +213,28 @@ module.exports = {
           // Billing
           "--color-billing": "#8B5CF6",
           "--color-billing-dark": "#7C3AED",
+          "--color-billing-bg": "#F5F3FF",
+
+          // Cleaning
+          "--color-cleaning": "#14b8a6",
+
+          // Amber (ยังไม่สั่ง)
+          "--color-amber": "#F59E0B",
+          "--color-amber-bg": "#FFFBEB",
+
+          // Category
+          "--color-cat-food": "#f97316",
+          "--color-cat-food-dark": "#ea580c",
+          "--color-cat-drink": "#0EA5E9",
+          "--color-cat-drink-dark": "#0284C7",
+          "--color-cat-dessert": "#EC4899",
+          "--color-cat-dessert-dark": "#DB2777",
+
+          // Tag
+          "--color-tag-recommend": "#EF4444",
+          "--color-tag-seasonal": "#22C55E",
+          "--color-tag-slow": "#F59E0B",
+          "--color-tag-pin": "#F97316",
 
           // Gender
           "--color-gender-male": "#93C5FD",

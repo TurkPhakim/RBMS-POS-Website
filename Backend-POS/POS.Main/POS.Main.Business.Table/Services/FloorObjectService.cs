@@ -34,6 +34,17 @@ public class FloorObjectService : IFloorObjectService
         return items.Select(FloorObjectMapper.ToResponse).ToList();
     }
 
+    public async Task<FloorObjectResponseModel> GetFloorObjectByIdAsync(
+        int floorObjectId, CancellationToken ct = default)
+    {
+        var entity = await _unitOfWork.FloorObjects.QueryNoTracking()
+            .Include(f => f.Zone)
+            .FirstOrDefaultAsync(f => f.FloorObjectId == floorObjectId, ct)
+            ?? throw new EntityNotFoundException("FloorObject", floorObjectId);
+
+        return FloorObjectMapper.ToResponse(entity);
+    }
+
     public async Task<FloorObjectResponseModel> CreateFloorObjectAsync(
         CreateFloorObjectRequestModel request, CancellationToken ct = default)
     {

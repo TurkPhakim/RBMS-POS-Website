@@ -14,6 +14,9 @@ public class CustomerSessionRepository : ICustomerSessionRepository
         _context = context;
     }
 
+    public IQueryable<TbCustomerSession> QueryNoTracking()
+        => _context.CustomerSessions.AsNoTracking();
+
     public async Task<TbCustomerSession?> GetByIdAsync(int sessionId, CancellationToken ct = default)
         => await _context.CustomerSessions
             .FirstOrDefaultAsync(cs => cs.CustomerSessionId == sessionId && cs.IsActive && cs.ExpiresAt > DateTime.UtcNow, ct);
@@ -34,6 +37,15 @@ public class CustomerSessionRepository : ICustomerSessionRepository
         => await _context.CustomerSessions
             .Where(cs => cs.TableId == tableId && cs.IsActive && cs.ExpiresAt > DateTime.UtcNow)
             .ToListAsync(ct);
+
+    public async Task<string?> GetLastNicknameByTableAndDeviceAsync(int tableId, string deviceFingerprint, CancellationToken ct = default)
+        => await _context.CustomerSessions
+            .Where(cs => cs.TableId == tableId
+                && cs.DeviceFingerprint == deviceFingerprint
+                && cs.Nickname != null)
+            .OrderByDescending(cs => cs.CreatedAt)
+            .Select(cs => cs.Nickname)
+            .FirstOrDefaultAsync(ct);
 
     public async Task AddAsync(TbCustomerSession session, CancellationToken ct = default)
         => await _context.CustomerSessions.AddAsync(session, ct);

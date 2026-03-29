@@ -195,19 +195,18 @@ export class ReservationListComponent implements OnInit, OnDestroy {
 
   // ─── Action methods (เดิม) ───
 
-  onEdit(reservation: ReservationResponseModel): void {
-    this.openReservationDialog(reservation);
+  onEdit(reservationId: number): void {
+    this.openReservationDialog(reservationId);
   }
 
-  openReservationDialog(reservation: ReservationResponseModel | null): void {
-    const isEdit = !!reservation;
+  openReservationDialog(reservationId: number | null): void {
     const ref = this.dialogService.open(ReservationDialogComponent, {
-      header: isEdit ? 'แก้ไขการจอง' : 'เพิ่มการจอง',
+      header: reservationId ? 'แก้ไขการจอง' : 'เพิ่มการจอง',
       showHeader: false,
       modal: true,
       styleClass: 'card-dialog',
       width: '60vw',
-      data: { reservation },
+      data: { reservationId },
     });
     ref.onClose
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -221,7 +220,7 @@ export class ReservationListComponent implements OnInit, OnDestroy {
       header: 'ยืนยันการจอง',
       showHeader: false,
       modal: true,
-      styleClass: 'card-dialog',
+      styleClass: 'card-dialog card-dialog--visible',
       width: '35vw',
       data: { reservation },
     });
@@ -344,7 +343,7 @@ export class ReservationListComponent implements OnInit, OnDestroy {
       case 'Cancelled':
         return 'text-danger';
       case 'NoShow':
-        return 'text-surface-sub';
+        return 'text-white';
       default:
         return '';
     }
@@ -361,7 +360,7 @@ export class ReservationListComponent implements OnInit, OnDestroy {
       case 'Cancelled':
         return 'bg-danger-bg';
       case 'NoShow':
-        return 'bg-surface';
+        return 'bg-surface-sub';
       default:
         return '';
     }

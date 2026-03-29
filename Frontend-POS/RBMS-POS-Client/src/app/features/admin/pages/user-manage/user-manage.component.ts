@@ -1,15 +1,19 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { UserDetailResponseModel } from '@app/core/api/models';
 import { UsersService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
-
 const KEY_BTN_BACK = 'back';
 const KEY_BTN_SAVE = 'save-user';
 
@@ -126,13 +130,16 @@ export class UserManageComponent implements OnInit, OnDestroy {
             );
           }
 
-          this.form.patchValue({
-            isActive: user.isActive,
-            isLockedByAdmin: user.isLockedByAdmin,
-            autoUnlockDate: user.autoUnlockDate
-              ? new Date(user.autoUnlockDate)
-              : null,
-          }, { emitEvent: false });
+          this.form.patchValue(
+            {
+              isActive: user.isActive,
+              isLockedByAdmin: user.isLockedByAdmin,
+              autoUnlockDate: user.autoUnlockDate
+                ? new Date(user.autoUnlockDate)
+                : null,
+            },
+            { emitEvent: false },
+          );
         },
         error: () => {
           this.modalService.cancel({
@@ -152,9 +159,10 @@ export class UserManageComponent implements OnInit, OnDestroy {
     const body = {
       isActive: value.isActive,
       isLockedByAdmin: value.isLockedByAdmin,
-      autoUnlockDate: value.isLockedByAdmin && value.autoUnlockDate
-        ? value.autoUnlockDate.toISOString()
-        : null,
+      autoUnlockDate:
+        value.isLockedByAdmin && value.autoUnlockDate
+          ? value.autoUnlockDate.toISOString()
+          : null,
     };
 
     this.usersService

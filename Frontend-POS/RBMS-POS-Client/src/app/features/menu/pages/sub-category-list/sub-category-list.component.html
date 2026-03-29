@@ -5,7 +5,7 @@
       class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center"
     >
       <app-generic-icon
-        name="tag"
+        name="category"
         svgClass="w-10 h-10"
         class="text-white"
       ></app-generic-icon>
@@ -17,19 +17,15 @@
   <div class="flex bg-surface-border rounded-xl gap-4">
     @for (tab of tabs; track tab.categoryType; let i = $index) {
       <button
-        class="flex-1 flex items-center justify-center gap-4 py-3 rounded-lg font-semibold transition-all"
-        [class]="
-          activeTabIndex() === i
-            ? 'bg-surface-card text-primary'
-            : 'text-surface-sub hover:text-primary'
-        "
+        class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-semibold transition-all"
+        [class]="activeTabIndex() === i ? tab.activeClass : tab.inactiveClass"
         (click)="onTabChange(i)"
       >
         <app-generic-icon
           [name]="tab.icon"
-          svgClass="w-8 h-8"
+          [svgClass]="tab.svgClass"
         ></app-generic-icon>
-        {{ tab.label }}
+        <span class="text-lg">{{ tab.label }}</span>
       </button>
     }
   </div>
@@ -46,18 +42,29 @@
             <p-iconField>
               <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
               <input
-                #subCatSearchInput
                 pInputText
-                placeholder="ค้นหาชื่อหมวดหมู่..."
+                placeholder="ค้นหาด้วยชื่อหมวดหมู่ย่อย"
                 class="w-full pr-8"
-                (keyup.enter)="onSearch($event)"
+                [(ngModel)]="searchTerm"
+                (keyup.enter)="onSearch()"
               />
             </p-iconField>
-            @if (searchTerm()) {
-              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
-                 (click)="clearSearch(subCatSearchInput)"></i>
+            @if (searchTerm) {
+              <i
+                class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                (click)="clearSearch()"
+              ></i>
             }
           </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">สถานะการขาย</label>
+          <app-availability-status-dropdown
+            [(ngModel)]="statusFilter"
+            (ngModelChange)="onStatusChange()"
+          ></app-availability-status-dropdown>
         </div>
       </div>
     </div>
@@ -82,9 +89,9 @@
               <th class="w-[40px]">ลำดับ</th>
             }
             <th class="w-[80px]">รหัส</th>
-            <th class="w-[200px]">ชื่อหมวดหมู่</th>
-            <th class="w-[120px]">จำนวนเมนู</th>
-            <th class="w-[120px]">สถานะการขาย</th>
+            <th class="w-[200px] whitespace-nowrap">ชื่อหมวดหมู่เมนู</th>
+            <th class="w-[160px] whitespace-nowrap">จำนวนเมนูที่ใช้งาน</th>
+            <th class="w-[140px] whitespace-nowrap">สถานะการขาย</th>
             <th class="w-[100px]">ตัวเลือก</th>
           </tr>
         </ng-template>
@@ -99,15 +106,15 @@
                     <span pReorderableRowHandle class="cursor-move">
                       <app-generic-icon
                         name="menu-bar"
-                        svgClass="w-6 h-6"
+                        svgClass="w-8 h-8"
                         class="text-surface-placeholder"
                       ></app-generic-icon>
                     </span>
                   } @else {
                     <app-generic-icon
                       name="lock-correct"
-                      svgClass="w-6 h-6"
-                      class="text-surface-border"
+                      svgClass="w-8 h-8"
+                      class="text-danger"
                     ></app-generic-icon>
                   }
                 </div>
@@ -155,7 +162,7 @@
                     ></app-generic-icon>
                   </button>
                 }
-                @if (canDelete) {
+                @if (canDelete && (item.menuCount ?? 0) === 0) {
                   <button
                     class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
                     pTooltip="ลบ"
@@ -177,7 +184,7 @@
           <tr>
             <td [attr.colspan]="canUpdate ? 6 : 5">
               <div class="flex justify-center items-center w-full p-[100px]">
-                <app-empty-view message="ไม่พบข้อมูลหมวดหมู่" />
+                <app-empty-view message="ไม่พบข้อมูลหมวดหมู่เมนู" />
               </div>
             </td>
           </tr>

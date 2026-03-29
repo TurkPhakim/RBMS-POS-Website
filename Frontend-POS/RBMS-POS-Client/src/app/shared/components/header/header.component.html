@@ -33,6 +33,10 @@
             alt="Shop Logo"
             class="w-full h-full object-contain"
             [class.rounded-xl]="brandingService.hasCustomLogo()"
+            (error)="
+              brandingService.logoUrl.set('images/RBMS_Logo.png');
+              brandingService.hasCustomLogo.set(false)
+            "
           />
         </div>
         <h1 class="text-white font-bold text-3xl drop-shadow-md">
@@ -93,11 +97,12 @@
           {{ currentUser()?.nickname || currentUser()?.username || "User" }}
         </span>
         <!-- Avatar -->
-        @if (profileImageUrl()) {
+        @if (profileImageUrl() && !profileImageError()) {
           <img
             [src]="profileImageUrl()"
             alt="avatar"
             class="w-12 h-12 rounded-full object-cover border-2 border-white/30"
+            (error)="profileImageError.set(true)"
           />
         } @else {
           <div

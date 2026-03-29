@@ -42,16 +42,14 @@
       <!-- สถานะการใช้งาน -->
       <div>
         <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
-        <div class="flex items-center gap-2 h-[45px]">
+        <div class="flex items-center gap-2 pt-2">
           <p-inputSwitch
             formControlName="isActive"
             inputId="isActive"
           ></p-inputSwitch>
           <span
             class="font-semibold mb-2"
-            [class]="
-              form.get('isActive')?.value ? 'text-success' : 'text-danger'
-            "
+            [ngClass]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
           >
             {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
           </span>

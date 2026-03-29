@@ -12,4 +12,5 @@ public interface IShopSettingsService
         int? logoFileId,
         int? paymentQrCodeFileId,
         CancellationToken ct = default);
+    Task<CurrentPeriodResultModel> GetCurrentPeriodAsync(CancellationToken ct = default);
 }

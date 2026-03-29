@@ -1,0 +1,89 @@
+<app-card-template [headerLabel]="config.header!">
+  <div class="space-y-5" [formGroup]="form">
+    <!-- จำนวนลูกค้า + ประเภทลูกค้า -->
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block font-semibold mb-2">
+          จำนวนลูกค้า <span class="text-danger">*</span>
+        </label>
+        <p-inputgroup>
+          <p-inputNumber
+            formControlName="guestCount"
+            [min]="1"
+            [max]="table.capacity ?? 99"
+            [showButtons]="true"
+            buttonLayout="horizontal"
+            incrementButtonIcon="pi pi-plus"
+            decrementButtonIcon="pi pi-minus"
+            inputStyleClass="w-full text-center"
+            styleClass="w-full"
+          ></p-inputNumber>
+          <p-inputgroup-addon>คน</p-inputgroup-addon>
+        </p-inputgroup>
+        <app-field-error [control]="form.controls['guestCount']" type="text" />
+      </div>
+      <div>
+        <label class="block font-semibold mb-2">
+          ประเภทลูกค้า <span class="text-danger">*</span>
+        </label>
+        <div class="flex gap-6 h-[2.6rem] items-center">
+          @for (opt of guestTypeOptions; track opt.value) {
+            <div class="flex items-center gap-2">
+              <p-radioButton
+                name="guestType"
+                [value]="opt.value"
+                formControlName="guestType"
+                [inputId]="'guestType_' + opt.value"
+              ></p-radioButton>
+              <label [for]="'guestType_' + opt.value" class="cursor-pointer font-medium">{{ opt.label }}</label>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- การจอง + หมายเหตุ -->
+    <div class="grid gap-4" [ngClass]="form.controls['guestType'].value === 'Reserved' ? 'grid-cols-2' : 'grid-cols-1'">
+      @if (form.controls['guestType'].value === 'Reserved') {
+        <div>
+          <label class="block font-semibold mb-2">
+            การจอง <span class="text-danger">*</span>
+          </label>
+          <app-reservation-available-dropdown
+            formControlName="reservationId"
+            [invalid]="!!form.controls['reservationId']?.dirty && !!form.controls['reservationId']?.invalid"
+            (reservationSelected)="onReservationSelected($event)"
+          ></app-reservation-available-dropdown>
+          <app-field-error [control]="form.controls['reservationId']" label="การจอง"></app-field-error>
+        </div>
+      }
+      <div>
+        <label class="block font-semibold mb-2">หมายเหตุเพิ่มเติม</label>
+        <textarea
+          pInputTextarea
+          formControlName="note"
+          [rows]="2"
+          class="w-full"
+          placeholder="หมายเหตุเพิ่มเติม"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
+  <p-footer>
+    <div class="flex justify-center gap-3">
+      <p-button
+        label="ยกเลิก"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="onCancel()"
+      ></p-button>
+      <p-button
+        label="เปิดโต๊ะ"
+        severity="primary"
+        [loading]="isSubmitting()"
+        (onClick)="onSubmit()"
+      ></p-button>
+    </div>
+  </p-footer>
+</app-card-template>

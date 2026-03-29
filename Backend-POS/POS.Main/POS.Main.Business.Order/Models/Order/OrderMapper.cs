@@ -38,6 +38,7 @@ public static class OrderMapper
             OrderNumber = entity.OrderNumber,
             Status = entity.Status.ToString(),
             GuestCount = entity.GuestCount,
+            TotalGuestCount = entity.GuestCount,
             SubTotal = entity.SubTotal,
             Note = entity.Note,
             CreatedAt = entity.CreatedAt,

@@ -4,6 +4,9 @@ export interface OrderBillResponseModel {
   billNumber?: string | null;
   billType?: string | null;
   createdAt?: string;
+  customerSlipFileId?: number | null;
+  customerSlipOcrAmount?: number | null;
+  customerSlipVerificationStatus?: string | null;
   grandTotal?: number;
   netAmount?: number;
   orderBillId?: number;

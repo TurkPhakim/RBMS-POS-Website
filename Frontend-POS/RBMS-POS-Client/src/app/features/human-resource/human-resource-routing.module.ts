@@ -12,7 +12,7 @@ const routes: Routes = [
   },
   {
     path: 'employees',
-    data: { breadcrumb: 'รายการพนักงาน' },
+    data: { breadcrumb: 'จัดการพนักงาน' },
     children: [
       {
         path: '',

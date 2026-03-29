@@ -42,6 +42,14 @@ public class ShopSettingsController : BaseController
         => Success(await _shopSettingsService.GetWelcomeShopInfoAsync(ct));
 
     /// <summary>
+    /// ดึงสถานะช่วงเวลาเปิด-ปิดปัจจุบัน — ทุกคนที่ login ดูได้
+    /// </summary>
+    [HttpGet("current-period")]
+    [ProducesResponseType(typeof(BaseResponseModel<CurrentPeriodResultModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCurrentPeriod(CancellationToken ct = default)
+        => Success(await _shopSettingsService.GetCurrentPeriodAsync(ct));
+
+    /// <summary>
     /// ดึงข้อมูลตั้งค่าร้านค้า
     /// </summary>
     [HttpGet]
@@ -64,12 +72,13 @@ public class ShopSettingsController : BaseController
         IFormFile? paymentQrCodeFile,
         CancellationToken ct = default)
     {
-        // Validate .png only
-        if (logoFile != null && logoFile.ContentType != "image/png")
-            throw new ValidationException("โลโก้ร้านค้ารองรับเฉพาะไฟล์ .png เท่านั้น");
+        // Validate image types
+        string[] allowedImageTypes = ["image/png", "image/jpeg"];
+        if (logoFile != null && !allowedImageTypes.Contains(logoFile.ContentType))
+            throw new ValidationException("โลโก้ร้านค้ารองรับเฉพาะไฟล์ .png และ .jpg เท่านั้น");
 
-        if (paymentQrCodeFile != null && paymentQrCodeFile.ContentType != "image/png")
-            throw new ValidationException("QR Code รองรับเฉพาะไฟล์ .png เท่านั้น");
+        if (paymentQrCodeFile != null && !allowedImageTypes.Contains(paymentQrCodeFile.ContentType))
+            throw new ValidationException("QR Code รองรับเฉพาะไฟล์ .png และ .jpg เท่านั้น");
 
         int? logoFileId = null;
         if (logoFile != null)

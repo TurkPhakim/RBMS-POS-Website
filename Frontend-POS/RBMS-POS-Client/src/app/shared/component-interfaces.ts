@@ -123,6 +123,7 @@ export type DateFormatMode =
   | 'DATE'
   | 'TIME'
   | 'DATE_TIME'
+  | 'TIME_DATE'
   | 'MONTH'
   | 'DAY'
   | 'thLongDate';

@@ -25,13 +25,13 @@ export class SideBarComponent {
       children: [
         {
           label: 'ภาพรวม',
-          icon: 'dashboard',
+          icon: 'bar-chart',
           route: '/dashboard',
           permissions: ['dashboard.view.read'],
         },
         {
           label: 'รายงานยอดขาย',
-          icon: 'coin',
+          icon: 'bar-analytics',
           route: '/dashboard/sales',
           permissions: ['dashboard.view.read'],
         },
@@ -40,8 +40,21 @@ export class SideBarComponent {
     {
       label: 'ออเดอร์',
       icon: 'order-dinner',
-      route: '/order',
       permissions: ['order-manage.read'],
+      children: [
+        {
+          label: 'ภาพรวมร้าน',
+          icon: 'restaurant',
+          route: '/order/overview',
+          permissions: ['order-manage.read'],
+        },
+        {
+          label: 'รายการออเดอร์',
+          icon: 'menu-list',
+          route: '/order/list',
+          permissions: ['order-manage.read'],
+        },
+      ],
     },
     {
       label: 'เมนู',

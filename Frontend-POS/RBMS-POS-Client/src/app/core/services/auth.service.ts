@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-
-
 import {
   LoginResponseModel,
   RefreshTokenRequestModel,
@@ -37,7 +34,9 @@ export class AuthService {
   }
 
   public get permissions(): string[] {
-    return this.currentUserValue?.permissions ?? this.getPermissionsFromStorage();
+    return (
+      this.currentUserValue?.permissions ?? this.getPermissionsFromStorage()
+    );
   }
 
   public updateAuthState(): void {
@@ -61,12 +60,14 @@ export class AuthService {
 
   hasAnyPermission(permissions: string[]): boolean {
     const userPermissions = this.permissions;
-    return permissions.some(p => userPermissions.includes(p));
+    return permissions.some((p) => userPermissions.includes(p));
   }
 
   logout(): Observable<unknown> {
     const refreshToken = this.getRefreshToken();
-    const request: RefreshTokenRequestModel = { refreshToken: refreshToken || '' };
+    const request: RefreshTokenRequestModel = {
+      refreshToken: refreshToken || '',
+    };
 
     return this.authApi.authLogoutPost({ body: request }).pipe(
       tap(() => {
@@ -179,5 +180,4 @@ export class AuthService {
     localStorage.removeItem('session_last_activity');
     localStorage.removeItem('session_state');
   }
-
 }

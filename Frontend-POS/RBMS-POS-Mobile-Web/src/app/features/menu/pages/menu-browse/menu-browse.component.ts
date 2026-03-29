@@ -1,97 +1,58 @@
 import { Component, DestroyRef, signal } from '@angular/core';
+import { AnimationOptions } from 'ngx-lottie';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DialogService } from 'primeng/dynamicdialog';
+import { Router } from '@angular/router';
 import { SelfOrderService } from '@core/api/services/self-order.service';
 import { CustomerCategoryModel } from '@core/api/models/customer-category-model';
 import { CustomerSubCategoryModel } from '@core/api/models/customer-sub-category-model';
 import { CustomerMenuItemResponseModel } from '@core/api/models/customer-menu-item-response-model';
 import { CartService } from '@core/services/cart.service';
-import { MessageService } from 'primeng/api';
-import { MenuDetailSheetComponent } from '../../dialogs/menu-detail-sheet/menu-detail-sheet.component';
+import { ModalService } from '@core/services/modal.service';
 
-const CATEGORY_CONFIG: Record<number, { icon: string; label: string }> = {
-  1: { icon: 'chicken-drumstick', label: 'อาหาร' },
-  2: { icon: 'drinks-glass', label: 'เครื่องดื่ม' },
-  3: { icon: 'dessert', label: 'ของหวาน' },
+const CATEGORY_STYLES: Record<number, CategoryStyle> = {
+  1: {
+    icon: 'chicken-drumstick',
+    label: 'อาหาร',
+    activeClass: 'bg-surface-card text-cat-food',
+    inactiveClass: 'text-surface-sub',
+    chipActiveClass: 'bg-cat-food text-white border-cat-food',
+    chipInactiveClass: 'bg-white text-surface-sub border-surface-border',
+    cardRingClass: 'active:ring-2 active:ring-cat-food',
+  },
+  2: {
+    icon: 'drinks-glass',
+    label: 'เครื่องดื่ม',
+    activeClass: 'bg-surface-card text-cat-drink',
+    inactiveClass: 'text-surface-sub',
+    chipActiveClass: 'bg-cat-drink text-white border-cat-drink',
+    chipInactiveClass: 'bg-white text-surface-sub border-surface-border',
+    cardRingClass: 'active:ring-2 active:ring-cat-drink',
+  },
+  3: {
+    icon: 'dessert',
+    label: 'ของหวาน',
+    activeClass: 'bg-surface-card text-cat-dessert',
+    inactiveClass: 'text-surface-sub',
+    chipActiveClass: 'bg-cat-dessert text-white border-cat-dessert',
+    chipInactiveClass: 'bg-white text-surface-sub border-surface-border',
+    cardRingClass: 'active:ring-2 active:ring-cat-dessert',
+  },
+};
+
+const DEFAULT_STYLE: CategoryStyle = {
+  icon: 'food',
+  label: '',
+  activeClass: 'bg-surface-card text-primary',
+  inactiveClass: 'text-surface-sub',
+  chipActiveClass: 'bg-primary text-white border-primary',
+  chipInactiveClass: 'bg-white text-surface-sub border-surface-border',
+  cardRingClass: 'active:ring-2 active:ring-primary',
 };
 
 @Component({
   selector: 'app-menu-browse',
   standalone: false,
-  providers: [DialogService],
-  template: `
-    <!-- Category Tabs (Segmented Control) -->
-    <div class="flex bg-white rounded-xl gap-1 mx-4 mt-4 p-1">
-      @for (cat of categories(); track cat.categoryType) {
-        <button
-          class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold text-sm transition-all"
-          [class]="selectedCategoryType === cat.categoryType
-            ? 'bg-primary-subtle text-primary'
-            : 'text-surface-sub hover:text-primary'"
-          (click)="toggleCategory(cat.categoryType!)"
-        >
-          <app-generic-icon [name]="getCategoryIcon(cat.categoryType!)" svgClass="w-6 h-6"></app-generic-icon>
-          {{ getCategoryLabel(cat.categoryType!) || cat.name }}
-        </button>
-      }
-    </div>
-
-    <!-- Search -->
-    <div class="relative mx-4 mt-3">
-      <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-muted"></i>
-      <input
-        type="text"
-        placeholder="ค้นหาเมนู..."
-        class="w-full pl-10 pr-9 py-3 rounded-xl border border-surface-border bg-white text-sm"
-        [(ngModel)]="searchTerm"
-        (keyup.enter)="onSearch()"
-      />
-      @if (searchTerm) {
-        <i
-          class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-primary"
-          (click)="clearSearch()"
-        ></i>
-      }
-    </div>
-
-    <!-- Sub-Category Chips -->
-    @if (filteredSubCategories().length > 0) {
-      <div class="flex gap-2 px-4 mt-3 overflow-x-auto pb-1" style="scrollbar-width: none;">
-        <button
-          class="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all border-2"
-          [class]="selectedSubCategoryId === null
-            ? 'bg-primary text-white border-primary'
-            : 'bg-white text-surface-sub border-surface-border hover:border-primary hover:text-primary'"
-          (click)="selectSubCategory(null)"
-        >
-          ทั้งหมด
-        </button>
-        @for (sub of filteredSubCategories(); track sub.subCategoryId) {
-          <button
-            class="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all border-2"
-            [class]="selectedSubCategoryId === sub.subCategoryId
-              ? 'bg-primary text-white border-primary'
-              : 'bg-white text-surface-sub border-surface-border hover:border-primary hover:text-primary'"
-            (click)="selectSubCategory(sub.subCategoryId!)"
-          >
-            {{ sub.name }}
-          </button>
-        }
-      </div>
-    }
-
-    <!-- Menu Grid -->
-    <div class="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-3 gap-3 p-4">
-      @for (item of menuItems(); track item.menuId) {
-        <app-menu-card [item]="item" (cardClick)="onCardClick(item)"></app-menu-card>
-      } @empty {
-        <div class="col-span-full flex flex-col items-center py-16">
-          <app-generic-icon name="food" svgClass="w-16 h-16" class="text-surface-muted"></app-generic-icon>
-          <p class="text-surface-sub mt-3 font-medium">ไม่พบเมนู</p>
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './menu-browse.component.html',
 })
 export class MenuBrowseComponent {
   categories = signal<CustomerCategoryModel[]>([]);
@@ -99,37 +60,46 @@ export class MenuBrowseComponent {
   filteredSubCategories = signal<CustomerSubCategoryModel[]>([]);
   menuItems = signal<CustomerMenuItemResponseModel[]>([]);
 
+  lottieOptions: AnimationOptions = {
+    path: 'animations/order-sent.json',
+  };
+
   selectedCategoryType: number | null = null;
   selectedSubCategoryId: number | null = null;
   searchTerm = '';
 
   constructor(
     private selfOrderService: SelfOrderService,
-    private dialogService: DialogService,
     private cartService: CartService,
-    private messageService: MessageService,
+    private modalService: ModalService,
+    private router: Router,
     private destroyRef: DestroyRef,
   ) {
     this.loadCategories();
-    this.loadMenuItems();
   }
 
   getCategoryIcon(type: number): string {
-    return CATEGORY_CONFIG[type]?.icon ?? 'food';
+    return CATEGORY_STYLES[type]?.icon ?? 'food';
   }
 
   getCategoryLabel(type: number): string {
-    return CATEGORY_CONFIG[type]?.label ?? '';
+    return CATEGORY_STYLES[type]?.label ?? '';
   }
 
-  toggleCategory(categoryType: number): void {
-    const next = this.selectedCategoryType === categoryType ? null : categoryType;
-    this.selectedCategoryType = next;
+  getActiveStyle(): CategoryStyle {
+    return CATEGORY_STYLES[this.selectedCategoryType ?? 0] ?? DEFAULT_STYLE;
+  }
+
+  getCategoryStyle(type: number): CategoryStyle {
+    return CATEGORY_STYLES[type] ?? DEFAULT_STYLE;
+  }
+
+  selectCategory(categoryType: number): void {
+    if (this.selectedCategoryType === categoryType) return;
+    this.selectedCategoryType = categoryType;
     this.selectedSubCategoryId = null;
     this.filteredSubCategories.set(
-      next === null
-        ? this.allSubCategories
-        : this.allSubCategories.filter(s => s.categoryType === next)
+      this.allSubCategories.filter(s => s.categoryType === categoryType)
     );
     this.loadMenuItems();
   }
@@ -150,12 +120,7 @@ export class MenuBrowseComponent {
 
   onCardClick(item: CustomerMenuItemResponseModel): void {
     if (item.hasOptions) {
-      this.dialogService.open(MenuDetailSheetComponent, {
-        data: { menuId: item.menuId },
-        showHeader: false,
-        styleClass: 'bottom-sheet',
-        modal: true,
-      });
+      this.router.navigate(['/menu', item.menuId]);
     } else {
       this.cartService.addItem({
         menuId: item.menuId!,
@@ -166,12 +131,6 @@ export class MenuBrowseComponent {
         imageFileId: item.imageFileId,
         itemTotal: item.price ?? 0,
       });
-      this.messageService.add({
-        severity: 'success',
-        summary: 'เพิ่มลงตะกร้าแล้ว',
-        detail: item.name!,
-        life: 2000,
-      });
     }
   }
 
@@ -180,9 +139,12 @@ export class MenuBrowseComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.categories.set(res.result?.categories ?? []);
+          const cats = res.result?.categories ?? [];
+          this.categories.set(cats);
           this.allSubCategories = res.result?.subCategories ?? [];
-          this.filteredSubCategories.set(this.allSubCategories);
+          if (cats.length > 0) {
+            this.selectCategory(cats[0].categoryType!);
+          }
         },
       });
   }
@@ -199,4 +161,14 @@ export class MenuBrowseComponent {
         next: (res) => this.menuItems.set(res.result ?? []),
       });
   }
+}
+
+interface CategoryStyle {
+  icon: string;
+  label: string;
+  activeClass: string;
+  inactiveClass: string;
+  chipActiveClass: string;
+  chipInactiveClass: string;
+  cardRingClass: string;
 }

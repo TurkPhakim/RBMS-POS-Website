@@ -1,4 +1,10 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -19,11 +25,41 @@ import { SelectOptionGroupDialogComponent } from '../../dialogs/select-option-gr
 
 const KEY_BTN_BACK = 'back-menu';
 const KEY_BTN_SAVE = 'save-menu';
-
-const CATEGORY_CONFIG: Record<number, { title: string; icon: string; basePath: string; permissionPrefix: string }> = {
-  1: { title: 'เมนูอาหาร', icon: 'food', basePath: '/menu/food', permissionPrefix: 'menu-food' },
-  2: { title: 'เมนูเครื่องดื่ม', icon: 'drinks-glass', basePath: '/menu/beverage', permissionPrefix: 'menu-beverage' },
-  3: { title: 'เมนูของหวาน', icon: 'dessert', basePath: '/menu/dessert', permissionPrefix: 'menu-dessert' },
+const CATEGORY_CONFIG: Record<
+  number,
+  {
+    title: string;
+    icon: string;
+    iconClass: string;
+    iconClassSm: string;
+    basePath: string;
+    permissionPrefix: string;
+  }
+> = {
+  1: {
+    title: 'เมนูอาหาร',
+    icon: 'chicken-drumstick',
+    iconClass: 'w-16 h-16',
+    iconClassSm: 'w-10 h-10',
+    basePath: '/menu/food',
+    permissionPrefix: 'menu-food',
+  },
+  2: {
+    title: 'เมนูเครื่องดื่ม',
+    icon: 'drinks-glass',
+    iconClass: 'w-10 h-10',
+    iconClassSm: 'w-8 h-8',
+    basePath: '/menu/beverage',
+    permissionPrefix: 'menu-beverage',
+  },
+  3: {
+    title: 'เมนูของหวาน',
+    icon: 'dessert',
+    iconClass: 'w-14 h-14',
+    iconClassSm: 'w-10 h-10',
+    basePath: '/menu/dessert',
+    permissionPrefix: 'menu-dessert',
+  },
 };
 
 @Component({
@@ -73,7 +109,9 @@ export class MenuManageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.categoryType = this.route.parent?.snapshot.data['categoryType'] ?? 1;
     this.config = CATEGORY_CONFIG[this.categoryType] ?? CATEGORY_CONFIG[1];
-    this.canUpdate = this.authService.hasPermission(`${this.config.permissionPrefix}.update`);
+    this.canUpdate = this.authService.hasPermission(
+      `${this.config.permissionPrefix}.update`,
+    );
     this.initForm();
     this.setupPeriodAutoClose();
     this.loadShopSettings();
@@ -110,10 +148,14 @@ export class MenuManageComponent implements OnInit, OnDestroy {
     this.imageRemoved.set(true);
   }
 
-  onTagToggle(tag: 'recommended' | 'seasonal' | 'slow'): void {
+  onTagToggle(tag: 'recommended' | 'seasonal' | 'slow' | 'pinned'): void {
     if (tag === 'recommended') this.tagRecommended.update((v) => !v);
     if (tag === 'seasonal') this.tagSeasonal.update((v) => !v);
     if (tag === 'slow') this.tagSlow.update((v) => !v);
+    if (tag === 'pinned') {
+      const ctrl = this.form.get('isPinned');
+      ctrl?.setValue(!ctrl.value);
+    }
   }
 
   openSelectOptionGroupDialog(): void {
@@ -170,7 +212,7 @@ export class MenuManageComponent implements OnInit, OnDestroy {
       nameEnglish: ['', Validators.required],
       description: [''],
       subCategoryId: [null, Validators.required],
-      price: [0, [Validators.required, Validators.min(0)]],
+      price: [null, [Validators.required, Validators.min(0)]],
       costPrice: [null],
       isAvailablePeriod1: [true],
       isAvailablePeriod2: [true],
@@ -256,14 +298,21 @@ export class MenuManageComponent implements OnInit, OnDestroy {
           if (!this.canUpdate) this.form.disable();
         },
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถโหลดข้อมูลได้' });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถโหลดข้อมูลได้',
+          });
           this.router.navigate([this.config.basePath]);
         },
       });
   }
 
   private buildTags(): number {
-    return (this.tagRecommended() ? 1 : 0) | (this.tagSeasonal() ? 2 : 0) | (this.tagSlow() ? 4 : 0);
+    return (
+      (this.tagRecommended() ? 1 : 0) |
+      (this.tagSeasonal() ? 2 : 0) |
+      (this.tagSlow() ? 4 : 0)
+    );
   }
 
   private buildBody(): Record<string, unknown> {
@@ -299,7 +348,10 @@ export class MenuManageComponent implements OnInit, OnDestroy {
           this.router.navigate([this.config.basePath]);
         },
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถสร้างเมนูได้' });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถสร้างเมนูได้',
+          });
           this.resetSavingState();
         },
       });
@@ -321,7 +373,10 @@ export class MenuManageComponent implements OnInit, OnDestroy {
           this.router.navigate([this.config.basePath]);
         },
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถบันทึกข้อมูลได้' });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถบันทึกข้อมูลได้',
+          });
           this.resetSavingState();
         },
       });

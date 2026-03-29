@@ -1,48 +1,15 @@
 import { Component, DestroyRef, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DialogService } from 'primeng/dynamicdialog';
-import { MessageService } from 'primeng/api';
 import { SelfOrderService } from '@core/api/services/self-order.service';
-import { ConfirmDialogComponent } from '@shared/dialogs/confirm-dialog/confirm-dialog.component';
+import { ModalService, Icon } from '@core/services/modal.service';
 
 const COOLDOWN_SECONDS = 60;
 
 @Component({
   selector: 'app-actions',
   standalone: false,
-  providers: [DialogService],
-  template: `
-    <div class="p-4 space-y-3">
-      <!-- Call Waiter -->
-      <button pButton class="w-full !justify-start gap-3 !p-4" severity="secondary" [outlined]="true"
-              [disabled]="waiterCooldown() > 0" (click)="callWaiter()">
-        <app-generic-icon name="raise-hand" svgClass="w-6 h-6"></app-generic-icon>
-        <div class="text-left">
-          <p class="font-medium text-sm">เรียกพนักงาน</p>
-          @if (waiterCooldown() > 0) {
-            <p class="text-xs text-surface-sub">กรุณารอ {{ waiterCooldown() }} วินาที</p>
-          } @else {
-            <p class="text-xs text-surface-sub">แจ้งพนักงานมาที่โต๊ะ</p>
-          }
-        </div>
-      </button>
-
-      <!-- Request Bill -->
-      <button pButton class="w-full !justify-start gap-3 !p-4" severity="secondary" [outlined]="true"
-              [disabled]="billRequested()" (click)="requestBill()">
-        <app-generic-icon name="bill" svgClass="w-6 h-6"></app-generic-icon>
-        <div class="text-left">
-          <p class="font-medium text-sm">ขอบิล</p>
-          @if (billRequested()) {
-            <p class="text-xs text-surface-sub">ขอบิลแล้ว — รอพนักงานจัดเตรียม</p>
-          } @else {
-            <p class="text-xs text-surface-sub">ขอเช็คบิลเพื่อชำระเงิน</p>
-          }
-        </div>
-      </button>
-    </div>
-  `,
+  templateUrl: './actions.component.html',
 })
 export class ActionsComponent {
   waiterCooldown = signal(0);
@@ -52,46 +19,39 @@ export class ActionsComponent {
 
   constructor(
     private selfOrderService: SelfOrderService,
-    private dialogService: DialogService,
-    private messageService: MessageService,
+    private modalService: ModalService,
     private router: Router,
     private destroyRef: DestroyRef,
-  ) {}
+  ) {
+    this.restoreCooldown();
+  }
 
   callWaiter(): void {
     this.selfOrderService.selfOrderCallWaiterPost()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'เรียกพนักงานแล้ว',
-            detail: 'พนักงานกำลังมาที่โต๊ะ',
-            life: 3000,
+          this.modalService.success({
+            title: 'เรียกพนักงานแล้ว',
+            message: 'พนักงานกำลังมาที่โต๊ะ',
           });
           this.startCooldown();
         },
         error: (err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'เกิดข้อผิดพลาด',
-            detail: err?.error?.message || 'ไม่สามารถเรียกพนักงานได้',
-            life: 5000,
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: err?.error?.message || 'ไม่สามารถเรียกพนักงานได้',
           });
         },
       });
   }
 
   requestBill(): void {
-    this.dialogService.open(ConfirmDialogComponent, {
-      data: {
-        title: 'ยืนยันขอบิล',
-        message: 'ต้องการเช็คบิลเพื่อชำระเงินใช่ไหม?',
-        confirmLabel: 'ขอบิล',
-      },
-      showHeader: false,
-      styleClass: 'alert-dialog',
-      modal: true,
+    this.modalService.info({
+      title: 'ยืนยันขอบิล',
+      message: 'ต้องการเช็คบิลเพื่อชำระเงินใช่ไหม?',
+      icon: Icon.Question,
+      confirmButtonLabel: 'ขอบิล',
     }).onClose
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(confirmed => {
@@ -105,27 +65,40 @@ export class ActionsComponent {
       .subscribe({
         next: () => {
           this.billRequested.set(true);
-          this.messageService.add({
-            severity: 'success',
-            summary: 'ขอบิลสำเร็จ',
-            detail: 'กรุณารอพนักงานจัดเตรียมบิล',
-            life: 3000,
+          this.modalService.success({
+            title: 'ขอบิลสำเร็จ',
+            message: 'กรุณารอพนักงานจัดเตรียมบิล',
           });
           this.router.navigate(['/bill/waiting'], { replaceUrl: true });
         },
         error: (err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'เกิดข้อผิดพลาด',
-            detail: err?.error?.message || 'ไม่สามารถขอบิลได้',
-            life: 5000,
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: err?.error?.message || 'ไม่สามารถขอบิลได้',
           });
         },
       });
   }
 
   private startCooldown(): void {
-    this.waiterCooldown.set(COOLDOWN_SECONDS);
+    sessionStorage.setItem('call_waiter_at', Date.now().toString());
+    this.runCooldown(COOLDOWN_SECONDS);
+  }
+
+  private restoreCooldown(): void {
+    const savedAt = sessionStorage.getItem('call_waiter_at');
+    if (!savedAt) return;
+    const elapsed = Math.floor((Date.now() - parseInt(savedAt, 10)) / 1000);
+    const remaining = COOLDOWN_SECONDS - elapsed;
+    if (remaining > 0) {
+      this.runCooldown(remaining);
+    } else {
+      sessionStorage.removeItem('call_waiter_at');
+    }
+  }
+
+  private runCooldown(seconds: number): void {
+    this.waiterCooldown.set(seconds);
     if (this.cooldownTimer) clearInterval(this.cooldownTimer);
     this.cooldownTimer = setInterval(() => {
       const next = this.waiterCooldown() - 1;
@@ -133,6 +106,7 @@ export class ActionsComponent {
       if (next <= 0 && this.cooldownTimer) {
         clearInterval(this.cooldownTimer);
         this.cooldownTimer = null;
+        sessionStorage.removeItem('call_waiter_at');
       }
     }, 1000);
   }

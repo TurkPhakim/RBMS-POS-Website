@@ -1,6 +1,4 @@
-<app-card-template
-  [headerLabel]="config.header!"
->
+<app-card-template [headerLabel]="config.header!">
   <form [formGroup]="form" class="grid grid-cols-3 gap-x-4 gap-y-3">
     <!-- สถานที่ทำงาน -->
     <div>
@@ -32,9 +30,7 @@
 
     <!-- เบอร์โทรศัพท์ที่ทำงาน -->
     <div>
-      <label class="block font-semibold mb-1"
-        >เบอร์โทรศัพท์ที่ทำงาน</label
-      >
+      <label class="block font-semibold mb-1">เบอร์โทรศัพท์ที่ทำงาน</label>
       <input
         pInputText
         formControlName="workPhone"
@@ -67,9 +63,7 @@
 
     <!-- วันที่สิ้นสุดทำงาน -->
     <div>
-      <label class="block font-semibold mb-1"
-        >วันที่สิ้นสุดทำงาน</label
-      >
+      <label class="block font-semibold mb-1">วันที่สิ้นสุดทำงาน</label>
       <p-datepicker
         formControlName="endDate"
         dateFormat="dd/mm/yy"
@@ -90,6 +84,10 @@
       [style]="{ 'min-width': '100px' }"
       (onClick)="onCancel()"
     ></p-button>
-    <p-button label="ตกลง" [style]="{ 'min-width': '100px' }" (onClick)="onSave()"></p-button>
+    <p-button
+      label="ตกลง"
+      [style]="{ 'min-width': '100px' }"
+      (onClick)="onSave()"
+    ></p-button>
   </p-footer>
 </app-card-template>

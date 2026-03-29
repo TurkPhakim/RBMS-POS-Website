@@ -10,9 +10,7 @@
         class="text-white"
       ></app-generic-icon>
     </div>
-    <h1 class="text-page-title">
-      จัดการค่าบริการ
-    </h1>
+    <h1 class="text-page-title">จัดการค่าบริการ</h1>
   </div>
 
   <!-- Content (Filter + Table) -->
@@ -35,15 +33,17 @@
               />
             </p-iconField>
             @if (searchTerm) {
-              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
-                 (click)="searchTerm = ''; onFilterChange()"></i>
+              <i
+                class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                (click)="searchTerm = ''; onFilterChange()"
+              ></i>
             }
           </div>
         </div>
 
         <!-- Status Filter -->
         <div class="flex-1 min-w-[160px]">
-          <label class="block font-semibold mb-2">สถานะ</label>
+          <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
           <app-active-status-dropdown
             [(ngModel)]="statusFilter"
             (ngModelChange)="onFilterChange()"
@@ -66,18 +66,20 @@
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
         [totalRecords]="totalRecords()"
         [lazy]="true"
-        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        (onLazyLoad)="
+          onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })
+        "
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr class="whitespace-nowrap">
             <th class="w-[80px]">รหัส</th>
-            <th class="w-[150px]">ชื่อ</th>
-            <th class="w-[100px]">อัตรา (%)</th>
-            <th class="w-[200px]">รายละเอียด</th>
-            <th class="w-[160px]">วันที่เริ่มต้น</th>
-            <th class="w-[160px]">วันที่สิ้นสุด</th>
-            <th class="w-[100px]">สถานะ</th>
+            <th class="w-[150px] whitespace-nowrap">ชื่อค่าบริการ</th>
+            <th class="w-[100px] whitespace-nowrap">อัตรา (%)</th>
+            <th class="w-[200px] whitespace-nowrap">รายละเอียด</th>
+            <th class="w-[160px] whitespace-nowrap">วันที่เริ่มต้น</th>
+            <th class="w-[160px] whitespace-nowrap">วันที่สิ้นสุด</th>
+            <th class="w-[100px] whitespace-nowrap">สถานะการใช้งาน</th>
             <th class="w-[120px]">ตัวเลือก</th>
           </tr>
         </ng-template>
@@ -111,7 +113,7 @@
             <td class="text-center">
               <div class="flex justify-center gap-2">
                 <button
-                  (click)="onEdit(item)"
+                  (click)="onEdit(item.serviceChargeId)"
                   class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
                   pTooltip="ดู/แก้ไข"
                   tooltipPosition="top"

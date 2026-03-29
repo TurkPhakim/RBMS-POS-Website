@@ -1,15 +1,25 @@
-import { Component, computed, DestroyRef, OnDestroy, OnInit, signal, Signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+  Signal,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-
-import { KitchenOptionModel, KitchenOrderItemModel, KitchenOrderModel } from '@app/core/api/models';
+import {
+  KitchenOptionModel,
+  KitchenOrderItemModel,
+  KitchenOrderModel,
+} from '@app/core/api/models';
 import { AuthService } from '@app/core/services/auth.service';
 import { KitchenStateService } from '@app/core/services/kitchen-state.service';
 
 const LS_VIEW_MODE_KEY = 'kds-view-mode';
-
 const VIEW_TABS: ViewTab[] = [
-  { mode: 'order', label: 'ตามออเดอร์', icon: 'order-dinner' },
-  { mode: 'menu', label: 'ตามเมนู', icon: 'menu-bar' },
+  { mode: 'order', label: 'ตามออเดอร์', icon: 'food' },
+  { mode: 'menu', label: 'ตามเมนู', icon: 'menu-list' },
 ];
 
 @Component({
@@ -23,8 +33,8 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
   readonly readyOrders: Signal<KitchenOrderModel[]>;
   readonly pendingMenuGroups: Signal<MenuGroup[]>;
   readonly readyMenuGroups: Signal<MenuGroup[]>;
-  readonly viewTabs = VIEW_TABS;
 
+  readonly viewTabs = VIEW_TABS;
   readonly viewMode = signal<'order' | 'menu'>(
     (localStorage.getItem(LS_VIEW_MODE_KEY) as 'order' | 'menu') || 'order',
   );
@@ -50,7 +60,9 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
     this.categoryType = data['categoryType'] ?? 1;
     this.pageTitle = data['pageTitle'] ?? 'ครัวอาหาร';
     this.pageIcon = data['pageIcon'] ?? 'food';
-    this.canUpdate = this.authService.hasPermission(data['updatePermission'] ?? 'kitchen-food.update');
+    this.canUpdate = this.authService.hasPermission(
+      data['updatePermission'] ?? 'kitchen-food.update',
+    );
 
     this.orders = this.kitchenState.orders;
 
@@ -64,7 +76,9 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
       this.orders().filter(
         (o) =>
           o.items?.some((i) => i.status === 'Ready') &&
-          !o.items?.some((i) => i.status === 'Sent' || i.status === 'Preparing'),
+          !o.items?.some(
+            (i) => i.status === 'Sent' || i.status === 'Preparing',
+          ),
       ),
     );
 
@@ -73,28 +87,32 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
 
     this.totalSent = computed(() =>
       this.orders().reduce(
-        (sum, o) => sum + (o.items ?? []).filter((i) => i.status === 'Sent').length,
+        (sum, o) =>
+          sum + (o.items ?? []).filter((i) => i.status === 'Sent').length,
         0,
       ),
     );
 
     this.totalPreparing = computed(() =>
       this.orders().reduce(
-        (sum, o) => sum + (o.items ?? []).filter((i) => i.status === 'Preparing').length,
+        (sum, o) =>
+          sum + (o.items ?? []).filter((i) => i.status === 'Preparing').length,
         0,
       ),
     );
 
     this.totalReady = computed(() =>
       this.orders().reduce(
-        (sum, o) => sum + (o.items ?? []).filter((i) => i.status === 'Ready').length,
+        (sum, o) =>
+          sum + (o.items ?? []).filter((i) => i.status === 'Ready').length,
         0,
       ),
     );
 
     this.totalCancelled = computed(() =>
       this.orders().reduce(
-        (sum, o) => sum + (o.items ?? []).filter((i) => i.status === 'Cancelled').length,
+        (sum, o) =>
+          sum + (o.items ?? []).filter((i) => i.status === 'Cancelled').length,
         0,
       ),
     );
@@ -127,7 +145,9 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
   }
 
   getPendingItems(order: KitchenOrderModel): KitchenOrderItemModel[] {
-    return (order.items ?? []).filter((i) => i.status === 'Sent' || i.status === 'Preparing');
+    return (order.items ?? []).filter(
+      (i) => i.status === 'Sent' || i.status === 'Preparing',
+    );
   }
 
   getReadyItems(order: KitchenOrderModel): KitchenOrderItemModel[] {
@@ -181,25 +201,35 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
   }
 
   getSentCount(group: MenuGroup): number {
-    return group.items.filter((i) => i.status === 'Sent').reduce((sum, i) => sum + i.quantity, 0);
+    return group.items
+      .filter((i) => i.status === 'Sent')
+      .reduce((sum, i) => sum + i.quantity, 0);
   }
 
   getPreparingCount(group: MenuGroup): number {
-    return group.items.filter((i) => i.status === 'Preparing').reduce((sum, i) => sum + i.quantity, 0);
+    return group.items
+      .filter((i) => i.status === 'Preparing')
+      .reduce((sum, i) => sum + i.quantity, 0);
   }
 
   getReadyCount(group: MenuGroup): number {
-    return group.items.filter((i) => i.status === 'Ready').reduce((sum, i) => sum + i.quantity, 0);
+    return group.items
+      .filter((i) => i.status === 'Ready')
+      .reduce((sum, i) => sum + i.quantity, 0);
   }
 
   startPreparingGroup(group: MenuGroup): void {
-    const ids = group.items.filter((i) => i.status === 'Sent').map((i) => i.orderItemId);
+    const ids = group.items
+      .filter((i) => i.status === 'Sent')
+      .map((i) => i.orderItemId);
     if (ids.length === 0) return;
     this.kitchenState.startPreparing(ids, this.categoryType);
   }
 
   markReadyGroup(group: MenuGroup): void {
-    const ids = group.items.filter((i) => i.status === 'Preparing').map((i) => i.orderItemId);
+    const ids = group.items
+      .filter((i) => i.status === 'Preparing')
+      .map((i) => i.orderItemId);
     if (ids.length === 0) return;
     this.kitchenState.markReady(ids, this.categoryType);
   }
@@ -212,11 +242,35 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
     this.kitchenState.markReady([item.orderItemId], this.categoryType);
   }
 
+  // --- Source Table Grouping ---
+
+  hasMultipleSourceTables(order: KitchenOrderModel): boolean {
+    const items = order.items ?? [];
+    const names = new Set(items.map((i) => i.sourceTableName).filter(Boolean));
+    return names.size > 1;
+  }
+
+  getSourceTableGroups(
+    items: KitchenOrderItemModel[],
+  ): SourceTableGroup[] {
+    const groups = new Map<string, KitchenOrderItemModel[]>();
+    for (const item of items) {
+      const key = item.sourceTableName ?? '';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
+    }
+    return Array.from(groups.entries()).map(([tableName, groupItems]) => ({
+      tableName,
+      items: groupItems,
+    }));
+  }
+
   // --- Shared helpers ---
 
   getElapsedMinutes(dateStr: string | null | undefined): number {
     if (!dateStr) return 0;
-    return Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+    const utcStr = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
+    return Math.floor((Date.now() - new Date(utcStr).getTime()) / 60000);
   }
 
   getTimeBadgeClass(minutes: number): string {
@@ -251,7 +305,7 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
 
         groups.get(key)!.items.push({
           orderItemId: item.orderItemId!,
-          tableName: order.tableName ?? '',
+          tableName: item.sourceTableName ?? order.tableName ?? '',
           quantity: item.quantity ?? 0,
           note: item.note ?? null,
           status: item.status!,
@@ -263,15 +317,23 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
 
     for (const group of groups.values()) {
       group.items.sort((a, b) => {
-        const aTime = a.sentToKitchenAt ? new Date(a.sentToKitchenAt).getTime() : 0;
-        const bTime = b.sentToKitchenAt ? new Date(b.sentToKitchenAt).getTime() : 0;
+        const aTime = a.sentToKitchenAt
+          ? new Date(a.sentToKitchenAt).getTime()
+          : 0;
+        const bTime = b.sentToKitchenAt
+          ? new Date(b.sentToKitchenAt).getTime()
+          : 0;
         return aTime - bTime;
       });
     }
 
     return Array.from(groups.values()).sort((a, b) => {
-      const aOldest = a.items[0]?.sentToKitchenAt ? new Date(a.items[0].sentToKitchenAt).getTime() : 0;
-      const bOldest = b.items[0]?.sentToKitchenAt ? new Date(b.items[0].sentToKitchenAt).getTime() : 0;
+      const aOldest = a.items[0]?.sentToKitchenAt
+        ? new Date(a.items[0].sentToKitchenAt).getTime()
+        : 0;
+      const bOldest = b.items[0]?.sentToKitchenAt
+        ? new Date(b.items[0].sentToKitchenAt).getTime()
+        : 0;
       return aOldest - bOldest;
     });
   }
@@ -300,6 +362,11 @@ interface MenuGroup {
   menuNameThai: string;
   options: KitchenOptionModel[];
   items: MenuGroupItem[];
+}
+
+interface SourceTableGroup {
+  tableName: string;
+  items: KitchenOrderItemModel[];
 }
 
 interface ViewTab {

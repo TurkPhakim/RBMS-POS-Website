@@ -1,18 +1,22 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRoute, ActivationStart, NavigationEnd, NavigationStart, Router } from '@angular/router';
-
+import {
+  ActivatedRoute,
+  ActivationStart,
+  NavigationEnd,
+  NavigationStart,
+  Router,
+} from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
-import { filter } from 'rxjs/operators';
-
 import { Store } from '@ngrx/store';
-
 import * as LayoutActions from '@app/store/layout/layout.actions';
 import { selectBreadcrumbButtons } from '@app/store/layout/layout.selectors';
-
-import { BreadcrumbButton, BreadcrumbItem, Pbutton } from '@app/shared/component-interfaces';
+import {
+  BreadcrumbButton,
+  BreadcrumbItem,
+} from '@app/shared/component-interfaces';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class BreadcrumbService {
   breadcrumbButtons$;
@@ -42,11 +46,15 @@ export class BreadcrumbService {
   }
 
   setButtonLoading(key: string, loading: boolean): void {
-    this.store.dispatch(LayoutActions.setBreadcrumbButtonLoading({ key, loading }));
+    this.store.dispatch(
+      LayoutActions.setBreadcrumbButtonLoading({ key, loading }),
+    );
   }
 
   setButtonDisabled(key: string, disabled: boolean): void {
-    this.store.dispatch(LayoutActions.setBreadcrumbButtonDisabled({ key, disabled }));
+    this.store.dispatch(
+      LayoutActions.setBreadcrumbButtonDisabled({ key, disabled }),
+    );
   }
 
   clearButtons(): void {
@@ -55,16 +63,18 @@ export class BreadcrumbService {
 
   getButton(key: string): BreadcrumbButton | undefined {
     let found: BreadcrumbButton | undefined;
-    this.breadcrumbButtons$.subscribe(buttons => {
-      found = buttons.find(b => b.key === key);
-    }).unsubscribe();
+    this.breadcrumbButtons$
+      .subscribe((buttons) => {
+        found = buttons.find((b) => b.key === key);
+      })
+      .unsubscribe();
     return found;
   }
 
   // --- Auto-clear on navigation ---
 
   private listenToRouterEvents(): void {
-    this.router.events.subscribe(event => {
+    this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
         this.pendingUrl = event.url;
       }
@@ -90,7 +100,7 @@ export class BreadcrumbService {
         const label = route.snapshot.data['breadcrumb'];
         const url = this.getRouteUrl(route);
 
-        if (!items.find(item => item.label === label)) {
+        if (!items.find((item) => item.label === label)) {
           items.push({ label, route: url });
         }
       }
@@ -105,7 +115,7 @@ export class BreadcrumbService {
     let current: ActivatedRoute | null = route;
 
     while (current) {
-      const seg = current.snapshot.url.map(s => s.path);
+      const seg = current.snapshot.url.map((s) => s.path);
       if (seg.length > 0) {
         segments.push(...seg);
       }

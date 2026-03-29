@@ -11,10 +11,32 @@ export class OrderHubService implements OnDestroy {
   private started = false;
   private joinedGroups = new Set<string>();
 
-  readonly tableStatusChanged$ = new Subject<{ tableId: number; status: string }>();
+  readonly tableStatusChanged$ = new Subject<{
+    tableId: number;
+    status: string;
+  }>();
   readonly newOrderItems$ = new Subject<{ orderId: number; tableId: number }>();
-  readonly itemStatusChanged$ = new Subject<{ orderId: number; orderItemId: number; status: string }>();
-  readonly itemCancelled$ = new Subject<{ orderId: number; orderItemId: number }>();
+  readonly itemStatusChanged$ = new Subject<{
+    orderId: number;
+    orderItemId: number;
+    status: string;
+  }>();
+  readonly itemCancelled$ = new Subject<{
+    orderId: number;
+    orderItemId: number;
+  }>();
+  readonly orderUpdated$ = new Subject<{
+    orderId: number;
+    status: string;
+  }>();
+  readonly paymentCompleted$ = new Subject<{
+    tableId: number;
+    orderBillId: number;
+  }>();
+  readonly slipUploaded$ = new Subject<{
+    tableId: number;
+    orderBillId: number;
+  }>();
 
   async start(group: 'floor' | 'kitchen'): Promise<void> {
     if (!this.hubConnection) {
@@ -45,7 +67,8 @@ export class OrderHubService implements OnDestroy {
   }
 
   async leaveGroup(group: string): Promise<void> {
-    if (!this.hubConnection || !this.started || !this.joinedGroups.has(group)) return;
+    if (!this.hubConnection || !this.started || !this.joinedGroups.has(group))
+      return;
 
     try {
       await this.hubConnection.invoke('LeaveGroup', group);
@@ -62,21 +85,54 @@ export class OrderHubService implements OnDestroy {
   private registerListeners(): void {
     if (!this.hubConnection) return;
 
-    this.hubConnection.on('TableStatusChanged', (data: { tableId: number; status: string }) => {
-      this.tableStatusChanged$.next(data);
-    });
+    this.hubConnection.on(
+      'TableStatusChanged',
+      (data: { tableId: number; status: string }) => {
+        this.tableStatusChanged$.next(data);
+      },
+    );
 
-    this.hubConnection.on('NewOrderItems', (data: { orderId: number; tableId: number }) => {
-      this.newOrderItems$.next(data);
-    });
+    this.hubConnection.on(
+      'NewOrderItems',
+      (data: { orderId: number; tableId: number }) => {
+        this.newOrderItems$.next(data);
+      },
+    );
 
-    this.hubConnection.on('ItemStatusChanged', (data: { orderId: number; orderItemId: number; status: string }) => {
-      this.itemStatusChanged$.next(data);
-    });
+    this.hubConnection.on(
+      'ItemStatusChanged',
+      (data: { orderId: number; orderItemId: number; status: string }) => {
+        this.itemStatusChanged$.next(data);
+      },
+    );
 
-    this.hubConnection.on('ItemCancelled', (data: { orderId: number; orderItemId: number }) => {
-      this.itemCancelled$.next(data);
-    });
+    this.hubConnection.on(
+      'ItemCancelled',
+      (data: { orderId: number; orderItemId: number }) => {
+        this.itemCancelled$.next(data);
+      },
+    );
+
+    this.hubConnection.on(
+      'OrderUpdated',
+      (data: { orderId: number; status: string }) => {
+        this.orderUpdated$.next(data);
+      },
+    );
+
+    this.hubConnection.on(
+      'PaymentCompleted',
+      (data: { tableId: number; orderBillId: number }) => {
+        this.paymentCompleted$.next(data);
+      },
+    );
+
+    this.hubConnection.on(
+      'SlipUploaded',
+      (data: { tableId: number; orderBillId: number }) => {
+        this.slipUploaded$.next(data);
+      },
+    );
   }
 
   async stop(): Promise<void> {
@@ -109,5 +165,8 @@ export class OrderHubService implements OnDestroy {
     this.newOrderItems$.complete();
     this.itemStatusChanged$.complete();
     this.itemCancelled$.complete();
+    this.orderUpdated$.complete();
+    this.paymentCompleted$.complete();
+    this.slipUploaded$.complete();
   }
 }

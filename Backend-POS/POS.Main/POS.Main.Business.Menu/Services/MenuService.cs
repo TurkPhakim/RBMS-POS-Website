@@ -64,8 +64,7 @@ public class MenuService : IMenuService
         var total = await query.CountAsync(ct);
 
         var items = await query
-            .OrderBy(m => m.SubCategory.SortOrder)
-            .ThenBy(m => m.NameThai)
+            .OrderBy(m => m.MenuId)
             .Skip(param.Skip)
             .Take(param.Take)
             .ToListAsync(ct);

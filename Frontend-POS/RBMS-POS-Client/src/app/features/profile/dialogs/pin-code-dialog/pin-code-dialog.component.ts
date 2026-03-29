@@ -1,15 +1,16 @@
 import { Component, DestroyRef, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
-import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
+import {
+  DialogService,
+  DynamicDialogConfig,
+  DynamicDialogRef,
+} from 'primeng/dynamicdialog';
 import { AuthService as AuthApiService } from '@app/core/api/services/auth.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { PinKeypadComponent } from '@app/shared/components/pin-keypad/pin-keypad.component';
 import { VerifyPasswordDialogComponent } from '@app/shared/dialogs/verify-password/verify-password.component';
 
 type PinStep = 'enter-current' | 'enter-new' | 'confirm-new';
-
 const MAX_ATTEMPTS = 3;
 
 @Component({
@@ -49,7 +50,9 @@ export class PinCodeDialogComponent {
       case 'enter-current':
         return 'กรุณาใส่รหัส PIN ปัจจุบัน';
       case 'enter-new':
-        return this.hasPinCode ? 'กรุณาตั้งรหัส PIN ใหม่ 6 หลัก' : 'กรุณาตั้งรหัส PIN 6 หลัก';
+        return this.hasPinCode
+          ? 'กรุณาตั้งรหัส PIN ใหม่ 6 หลัก'
+          : 'กรุณาตั้งรหัส PIN 6 หลัก';
       case 'confirm-new':
         return 'ยืนยันรหัส PIN อีกครั้ง';
     }

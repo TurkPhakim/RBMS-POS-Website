@@ -26,6 +26,7 @@ public static class PositionMapper
             PositionName = entity.PositionName,
             Description = entity.Description,
             IsActive = entity.IsActive,
+            EmployeeCount = entity.Employees?.Count(e => !e.DeleteFlag) ?? 0,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             CreatedBy = entity.CreatedByEmployee?.Nickname ?? entity.CreatedBy?.ToString(),

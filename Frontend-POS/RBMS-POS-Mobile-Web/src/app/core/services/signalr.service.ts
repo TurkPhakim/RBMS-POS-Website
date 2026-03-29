@@ -49,14 +49,17 @@ export class SignalRService {
 
     try {
       await this.connection.start();
+      console.log('[SignalR] Connected to hub');
 
       // Join table group
       const session = this.customerAuth.getSession();
       if (session) {
         this.currentGroup = `table_${session.tableId}`;
         await this.connection.invoke('JoinGroup', this.currentGroup);
+        console.log('[SignalR] Joined group:', this.currentGroup);
       }
-    } catch {
+    } catch (err) {
+      console.error('[SignalR] Connection failed:', err);
       this.connection = null;
     }
   }

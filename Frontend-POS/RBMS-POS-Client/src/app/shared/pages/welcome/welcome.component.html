@@ -44,11 +44,12 @@
 
         <div class="relative z-10 flex items-center gap-6">
           <!-- Avatar -->
-          @if (profileImageUrl()) {
+          @if (profileImageUrl() && !profileImageError()) {
             <img
               [src]="profileImageUrl()"
               alt="Profile"
               class="w-32 h-32 rounded-full object-cover border-4 border-white/30 flex-shrink-0"
+              (error)="profileImageError.set(true)"
             />
           } @else {
             <div
@@ -197,6 +198,7 @@
                           [src]="brandingService.logoUrl()"
                           alt="Shop Logo"
                           class="relative z-10 w-24 h-24 rounded-2xl object-contain flex-shrink-0 bg-white/90 p-1"
+                          (error)="brandingService.logoUrl.set('images/RBMS_Logo.png'); brandingService.hasCustomLogo.set(false)"
                         />
                       } @else {
                         <div
@@ -276,7 +278,9 @@
                             ></app-generic-icon>
                           </div>
                           <div class="min-w-0">
-                            <div class="text-surface-sub">รายละเอียด</div>
+                            <div class="text-surface-sub">
+                              รายละเอียดร้านค้า
+                            </div>
                             <p
                               class="text-lg mt-0.5 line-clamp-2 whitespace-pre-line"
                             >

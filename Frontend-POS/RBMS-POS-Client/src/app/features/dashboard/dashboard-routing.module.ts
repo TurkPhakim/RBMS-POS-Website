@@ -8,7 +8,7 @@ const routes: Routes = [
   {
     path: '',
     component: DashboardOverviewComponent,
-    data: { breadcrumb: 'ภาพรวม' },
+    data: { breadcrumb: 'ภาพรวมแดชบอร์ด' },
   },
   {
     path: 'sales',

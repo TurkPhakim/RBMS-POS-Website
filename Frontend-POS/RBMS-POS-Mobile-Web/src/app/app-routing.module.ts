@@ -7,6 +7,7 @@ import { CustomerLayoutComponent } from './layouts/customer-layout/customer-layo
 const routes: Routes = [
   { path: 'auth', component: AuthComponent },
   { path: 'expired', component: ExpiredComponent },
+  { path: 'shop-closed', component: ExpiredComponent, data: { mode: 'closed' } },
   {
     path: '',
     component: CustomerLayoutComponent,

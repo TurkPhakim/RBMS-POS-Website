@@ -56,6 +56,7 @@
               [(ngModel)]="tableFilter"
               (ngModelChange)="onFilterChange()"
               [zoneId]="zoneFilter"
+              [disabled]="!zoneFilter"
             ></app-table-dropdown>
           </div>
         </div>
@@ -134,7 +135,15 @@
         <ng-template pTemplate="body" let-item>
           <tr>
             <td class="font-semibold whitespace-nowrap">
-              {{ item.orderNumber }}
+              <div class="flex items-center gap-1.5">
+                @if (item.isLinked) {
+                  <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary shrink-0"
+                        pTooltip="โต๊ะเชื่อมต่อ" tooltipPosition="top">
+                    <app-generic-icon name="link" svgClass="w-5 h-5" class="text-white"></app-generic-icon>
+                  </span>
+                }
+                {{ item.orderNumber }}
+              </div>
             </td>
             <td class="!text-center whitespace-nowrap">
               โซน{{ item.zoneName }} - โต๊ะ{{ item.tableName }}
@@ -144,8 +153,8 @@
             </td>
             <td class="!text-center">{{ item.itemCount }}</td>
             <td class="!text-center">{{ item.guestCount }}</td>
-            <td class="!text-right font-semibold">
-              {{ item.subTotal | number: "1.2-2" }}
+            <td class="!text-right font-semibold whitespace-nowrap">
+              {{ item.subTotal | number: "1.2-2" }} บาท
             </td>
             <td class="!text-center whitespace-nowrap">
               <span [class]="getStatusClass(item.status)">

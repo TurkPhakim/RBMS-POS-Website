@@ -1,6 +1,6 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, QueryList, signal, ViewChildren } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, NgModel, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MenuOptionsService } from '@app/core/api/services/menu-options.service';
@@ -11,6 +11,7 @@ import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
+import { ShopBrandingService } from '@app/core/services/shop-branding.service';
 import { markFormDirty } from '@app/shared/utils';
 
 const KEY_BTN_BACK = 'back-option-group';
@@ -32,7 +33,10 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
   hasMaxLimit = signal(false);
   hasItemError = signal(false);
 
+  @ViewChildren(NgModel) ngModels!: QueryList<NgModel>;
+
   canUpdate: boolean;
+  hasTwoPeriods = () => this.shopBrandingService.hasTwoPeriods();
 
   constructor(
     private readonly fb: FormBuilder,
@@ -43,6 +47,7 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
     private readonly authService: AuthService,
     private readonly breadcrumbService: BreadcrumbService,
     private readonly modalService: ModalService,
+    private readonly shopBrandingService: ShopBrandingService,
     private readonly destroyRef: DestroyRef,
   ) {
     this.canUpdate = this.authService.hasPermission('menu-option.update');
@@ -59,22 +64,28 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    let hasError = false;
+
     if (this.form.invalid) {
       markFormDirty(this.form);
-      return;
+      hasError = true;
     }
 
     const items = this.optionItems();
     if (items.length === 0) {
       this.hasItemError.set(true);
-      return;
+      hasError = true;
+    } else {
+      const hasEmptyName = items.some((i) => !i.name.trim());
+      const hasNullPrice = items.some((i) => i.additionalPrice == null || i.costPrice == null);
+      if (hasEmptyName || hasNullPrice) {
+        this.hasItemError.set(true);
+        this.ngModels?.forEach((m) => m.control.markAsDirty());
+        hasError = true;
+      }
     }
 
-    const hasEmptyName = items.some((i) => !i.name.trim());
-    if (hasEmptyName) {
-      this.hasItemError.set(true);
-      return;
-    }
+    if (hasError) return;
 
     this.hasItemError.set(false);
     this.setSavingState(true);
@@ -116,15 +127,37 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
     return fileId ? `${this.apiConfig.rootUrl}/api/admin/file/${fileId}` : null;
   }
 
+  getCategoryColorClass(name: string | null | undefined): string {
+    switch (name) {
+      case 'อาหาร': return 'text-cat-food';
+      case 'เครื่องดื่ม': return 'text-cat-drink';
+      case 'ของหวาน': return 'text-cat-dessert';
+      default: return '';
+    }
+  }
+
+  getPeriodLabel(item: LinkedMenuModel): { text: string; colorClass: string } {
+    const p1 = item.isAvailablePeriod1 ?? false;
+    const p2 = item.isAvailablePeriod2 ?? false;
+    if (p1 && p2) return { text: 'ทั้งวัน', colorClass: 'text-success' };
+    if (p1) return { text: 'ช่วงที่ 1', colorClass: 'text-primary' };
+    if (p2) return { text: 'ช่วงที่ 2', colorClass: 'text-billing' };
+    return { text: 'ปิด', colorClass: 'text-danger' };
+  }
+
   onHasMaxLimitChange(checked: boolean): void {
     this.hasMaxLimit.set(checked);
+    const maxCtrl = this.form.get('maxSelect');
     if (checked) {
-      this.form.get('maxSelect')?.enable();
-      this.form.get('maxSelect')?.setValue(1);
+      maxCtrl?.enable();
+      maxCtrl?.setValidators(Validators.required);
+      maxCtrl?.setValue(null);
     } else {
-      this.form.get('maxSelect')?.setValue(null);
-      this.form.get('maxSelect')?.disable();
+      maxCtrl?.setValue(null);
+      maxCtrl?.clearValidators();
+      maxCtrl?.disable();
     }
+    maxCtrl?.updateValueAndValidity();
   }
 
   private initForm(): void {
@@ -132,10 +165,26 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
       name: ['', Validators.required],
       categoryType: [null, Validators.required],
       isRequired: [false],
-      minSelect: [0],
+      minSelect: [{ value: null, disabled: true }],
       maxSelect: [{ value: null, disabled: true }],
       isActive: [true],
     });
+
+    this.form.get('isRequired')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((isRequired: boolean) => {
+        const minCtrl = this.form.get('minSelect');
+        if (isRequired) {
+          minCtrl?.enable();
+          minCtrl?.setValidators(Validators.required);
+          minCtrl?.setValue(null);
+        } else {
+          minCtrl?.setValue(null);
+          minCtrl?.clearValidators();
+          minCtrl?.disable();
+        }
+        minCtrl?.updateValueAndValidity();
+      });
   }
 
   private checkEditMode(): void {
@@ -173,9 +222,19 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
             isActive: data.isActive,
           });
 
+          if (data.isRequired) {
+            const minCtrl = this.form.get('minSelect');
+            minCtrl?.enable();
+            minCtrl?.setValidators(Validators.required);
+            minCtrl?.updateValueAndValidity();
+          }
+
           if (data.maxSelect != null) {
             this.hasMaxLimit.set(true);
-            this.form.get('maxSelect')?.enable();
+            const maxCtrl = this.form.get('maxSelect');
+            maxCtrl?.enable();
+            maxCtrl?.setValidators(Validators.required);
+            maxCtrl?.updateValueAndValidity();
           } else {
             this.hasMaxLimit.set(false);
             this.form.get('maxSelect')?.disable();

@@ -9,12 +9,15 @@ import {
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { take, takeUntil } from 'rxjs';
 import { TablesService } from '@app/core/api/services/tables.service';
-import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component';
+import {
+  DropdownBaseComponent,
+  DROPDOWN_BASE_TEMPLATE,
+} from '../dropdown-base/dropdown-base.component';
 
 @Component({
   selector: 'app-available-table-dropdown',
   standalone: false,
-  templateUrl: '../dropdown-base/dropdown-base.component.html',
+  template: DROPDOWN_BASE_TEMPLATE,
   host: { class: 'block' },
   providers: [
     {
@@ -32,7 +35,7 @@ export class AvailableTableDropdownComponent
 
   constructor(private readonly tablesService: TablesService) {
     super();
-    this.placeholder = 'เลือกโต๊ะที่ว่าง';
+    this.placeholder = 'โต๊ะที่นั่ง';
     this.showClear = true;
     this.filter = false;
   }
@@ -58,7 +61,7 @@ export class AvailableTableDropdownComponent
             .filter((t) => t.tableId !== this.excludeTableId)
             .map((t) => ({
               value: t.tableId,
-              label: `${t.tableName} (${t.zoneName}, ${t.capacity} ที่นั่ง)`,
+              label: `โซน${t.zoneName} - โต๊ะ${t.tableName} (${t.capacity} ที่นั่ง)`,
             }));
         },
       });

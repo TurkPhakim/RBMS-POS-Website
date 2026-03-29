@@ -8,7 +8,8 @@ import { Component, Input } from '@angular/core';
     <div class="bg-surface-card rounded-xl border border-surface-border">
       <!-- Gradient Header -->
       <div
-        class="bg-gradient-to-r from-primary to-primary-dark px-6 py-5 rounded-t-xl relative overflow-hidden"
+        class="bg-gradient-to-r px-6 py-5 rounded-t-xl relative overflow-hidden"
+        [ngClass]="headerGradient || 'from-primary to-primary-dark'"
       >
         <!-- Decorative Circles-->
         <div
@@ -57,7 +58,7 @@ import { Component, Input } from '@angular/core';
               >
                 <app-generic-icon
                   [name]="headerIcon"
-                  svgClass="w-7 h-7"
+                  [svgClass]="headerIconClass || 'w-7 h-7'"
                   class="text-white"
                 ></app-generic-icon>
               </div>
@@ -84,5 +85,7 @@ export class SectionCardComponent {
   @Input() headerLabel = '';
   @Input() headerSubtitle = '';
   @Input() headerIcon = '';
+  @Input() headerIconClass = '';
+  @Input() headerGradient = '';
   @Input() contentClass = '';
 }

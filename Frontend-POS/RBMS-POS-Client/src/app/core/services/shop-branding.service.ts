@@ -1,6 +1,5 @@
 import { DestroyRef, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { ShopSettingsService } from '@app/core/api/services';
 
@@ -39,7 +38,9 @@ export class ShopBrandingService {
             this.shopNameThai.set(data.shopNameThai);
           }
           if (data?.logoFileId) {
-            this.logoUrl.set(`${this.apiConfig.rootUrl}/api/admin/file/${data.logoFileId}`);
+            this.logoUrl.set(
+              `${this.apiConfig.rootUrl}/api/admin/file/${data.logoFileId}`,
+            );
             this.hasCustomLogo.set(true);
           } else {
             this.hasCustomLogo.set(false);

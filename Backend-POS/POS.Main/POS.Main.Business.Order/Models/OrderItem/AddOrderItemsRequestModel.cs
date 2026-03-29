@@ -6,6 +6,8 @@ public class AddOrderItemsRequestModel
 {
     [Required]
     public List<AddOrderItemModel> Items { get; set; } = new();
+
+    public bool SendToKitchen { get; set; }
 }
 
 public class AddOrderItemModel

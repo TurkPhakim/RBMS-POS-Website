@@ -1,14 +1,37 @@
 import { Component, forwardRef, Input, OnDestroy, OnInit } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-
 import { finalize, Observable, Subject, take, takeUntil } from 'rxjs';
-
 import { ScrollerOptions } from 'primeng/api';
+
+export const DROPDOWN_BASE_TEMPLATE = `
+  <p-dropdown
+    #dropdownRef
+    [(ngModel)]="selectedValue"
+    [options]="effectiveOptions"
+    [optionLabel]="optionLabel"
+    [optionValue]="optionValue"
+    [placeholder]="placeholder"
+    [showClear]="showClear"
+    [filter]="filter"
+    [filterBy]="filterBy"
+    [disabled]="isDisabled || disabled"
+    [loading]="isLoading"
+    [virtualScroll]="virtualScroll"
+    [virtualScrollItemSize]="virtualScrollItemSize"
+    [virtualScrollOptions]="virtualScrollOptions"
+    [styleClass]="styleClass"
+    [panelStyleClass]="panelStyleClass"
+    [appendTo]="appendTo || null"
+    [class]="invalid ? 'ng-invalid ng-dirty' : ''"
+    (ngModelChange)="onValueChange($event)"
+    (onFilter)="onFilterChange($event)"
+  ></p-dropdown>
+`;
 
 @Component({
   selector: 'app-dropdown-base',
   standalone: false,
-  templateUrl: './dropdown-base.component.html',
+  template: DROPDOWN_BASE_TEMPLATE,
   host: { class: 'block' },
   providers: [
     {
@@ -31,7 +54,7 @@ export class DropdownBaseComponent
   @Input() disabled = false;
   @Input() invalid = false;
   @Input() styleClass = 'w-full';
-  @Input() appendTo = 'body';
+  @Input() appendTo: string | null = null;
   @Input() panelStyleClass = '';
 
   // === Lazy Load Inputs ===
@@ -179,7 +202,10 @@ export class DropdownBaseComponent
           );
           this.total = response.total;
 
-          if (this.lazyOptions.length >= this.total && this.virtualScrollOptions) {
+          if (
+            this.lazyOptions.length >= this.total &&
+            this.virtualScrollOptions
+          ) {
             this.virtualScrollOptions = {
               ...this.virtualScrollOptions,
               lazy: false,

@@ -56,6 +56,9 @@ public class TbTableConfiguration : IEntityTypeConfiguration<TbTable>
         builder.Property(t => t.QrTokenNonce)
             .HasMaxLength(50);
 
+        builder.Property(t => t.QrShortCode)
+            .HasMaxLength(10);
+
         builder.Property(t => t.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");
@@ -68,9 +71,10 @@ public class TbTableConfiguration : IEntityTypeConfiguration<TbTable>
             .IsRequired();
 
         // ActiveOrder (nullable — only set when table has an open order)
+        // WithMany: linked tables share the same ActiveOrderId
         builder.HasOne(t => t.ActiveOrder)
-            .WithOne()
-            .HasForeignKey<TbTable>(t => t.ActiveOrderId)
+            .WithMany()
+            .HasForeignKey(t => t.ActiveOrderId)
             .OnDelete(DeleteBehavior.Restrict)
             .IsRequired(false);
 
@@ -87,5 +91,10 @@ public class TbTableConfiguration : IEntityTypeConfiguration<TbTable>
 
         builder.HasIndex(t => t.DeleteFlag)
             .HasDatabaseName("IX_Tables_DeleteFlag");
+
+        builder.HasIndex(t => t.QrShortCode)
+            .IsUnique()
+            .HasFilter("[QrShortCode] IS NOT NULL")
+            .HasDatabaseName("IX_Tables_QrShortCode");
     }
 }

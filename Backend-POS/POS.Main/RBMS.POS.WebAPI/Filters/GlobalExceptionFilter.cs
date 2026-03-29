@@ -38,11 +38,23 @@ public class GlobalExceptionFilter : IExceptionFilter
         else
             _logger.LogWarning(context.Exception, "Handled exception: {Code}", code);
 
+        // Include inner exception chain for 500 errors (debug)
+        var message = context.Exception.Message;
+        if (statusCode == 500 && context.Exception.InnerException != null)
+        {
+            var inner = context.Exception.InnerException;
+            while (inner != null)
+            {
+                message += " → " + inner.Message;
+                inner = inner.InnerException;
+            }
+        }
+
         var response = new BaseResponseModel<object>
         {
             Status = constResultType.Fail,
             Code = code,
-            Message = context.Exception.Message
+            Message = message
         };
 
         if (context.Exception is ValidationException validationEx && validationEx.Errors != null)

@@ -3,6 +3,7 @@
 import { KitchenOptionModel } from '../models/kitchen-option-model';
 export interface KitchenOrderItemModel {
   cancelReason?: string | null;
+  cancelledByName?: string | null;
   categoryType?: number;
   cookingStartedAt?: string | null;
   menuId?: number;
@@ -14,5 +15,6 @@ export interface KitchenOrderItemModel {
   quantity?: number;
   readyAt?: string | null;
   sentToKitchenAt?: string | null;
+  sourceTableName?: string | null;
   status?: string | null;
 }

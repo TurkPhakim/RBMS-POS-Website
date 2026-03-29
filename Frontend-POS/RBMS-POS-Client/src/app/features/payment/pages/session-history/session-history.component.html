@@ -71,69 +71,65 @@
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
         (onLazyLoad)="loadHistory($event)"
         [stripedRows]="true"
+        [scrollable]="true"
+        [tableStyle]="{ 'min-width': '90rem' }"
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr class="whitespace-nowrap">
             <th class="w-[80px]">รหัส</th>
             <th class="w-[140px]">ผู้เปิดรอบ</th>
-            <th class="w-[100px]">ช่วงเวลา</th>
+            @if (hasTwoPeriods()) {
+              <th class="w-[100px]">ช่วงเวลา</th>
+            }
             <th class="w-[160px]">เวลาเปิดรอบ</th>
             <th class="w-[160px]">เวลาปิดรอบ</th>
             <th class="w-[100px]">สถานะ</th>
-            <th class="w-[120px]">เงินเปิดรอบ</th>
-            <th class="w-[120px]">ยอดเงินสด</th>
+            <th class="w-[140px]">เงินเปิดรอบ</th>
+            <th class="w-[140px]">ยอดเงินสด</th>
             <th class="w-[120px]">ยอด QR</th>
-            <th class="w-[100px]">จำนวนบิล</th>
-            <th class="w-[120px]">ผลต่าง</th>
-            <th class="w-[80px]">ตัวเลือก</th>
+            <th class="w-[120px]">จำนวนบิล</th>
+            <th class="w-[140px]">ผลต่าง</th>
+            <th class="w-[100px]">ตัวเลือก</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-session>
           <tr>
-            <td>{{ session.cashierSessionId }}</td>
-            <td>{{ session.userName }}</td>
+            <td class="!text-center font-semibold">{{ session.cashierSessionId }}</td>
+            <td class="whitespace-nowrap">{{ session.userName }}</td>
+            @if (hasTwoPeriods()) {
+              <td class="!text-center">
+                @if (session.shiftPeriod) {
+                  <span class="font-semibold">ช่วงที่ {{ session.shiftPeriod }}</span>
+                } @else {
+                  <span class="text-surface-sub">-</span>
+                }
+              </td>
+            }
+            <td>{{ session.openedAt | dateFormat: "DATE_TIME" }}</td>
             <td>
-              @if (session.shiftPeriod) {
-                <span class="font-semibold"
-                  >ช่วงที่ {{ session.shiftPeriod }}</span
-                >
+              @if (session.closedAt) {
+                {{ session.closedAt | dateFormat: "DATE_TIME" }}
               } @else {
                 <span class="text-surface-sub">-</span>
               }
             </td>
-            <td>{{ session.openedAt | dateFormat: "DATE_TIME" }}</td>
-            <td>
-              {{
-                session.closedAt
-                  ? (session.closedAt | dateFormat: "DATE_TIME")
-                  : "-"
-              }}
-            </td>
-            <td>
+            <td class="!text-center">
               @if (session.status === "Open") {
-                <span
-                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-success/10 text-success"
-                >
-                  เปิดอยู่
-                </span>
+                <span class="font-bold text-success">เปิดอยู่</span>
               } @else {
-                <span
-                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-surface text-surface-sub"
-                >
-                  ปิดแล้ว
-                </span>
+                <span class="font-bold text-surface-sub">ปิดแล้ว</span>
               }
             </td>
-            <td>{{ session.openingCash | number: "1.2-2" }}</td>
-            <td class="text-success font-semibold">
+            <td class="!text-right font-semibold">{{ session.openingCash | number: "1.2-2" }}</td>
+            <td class="!text-right text-success font-semibold">
               {{ session.totalCashSales | number: "1.2-2" }}
             </td>
-            <td class="text-info font-semibold">
+            <td class="!text-right text-info font-semibold">
               {{ session.totalQrSales | number: "1.2-2" }}
             </td>
-            <td>{{ session.billCount }} รายการ</td>
-            <td>
+            <td class="!text-center">{{ session.billCount }} รายการ</td>
+            <td class="!text-right">
               @if (session.variance != null) {
                 <span
                   class="font-semibold"
@@ -143,29 +139,29 @@
                   {{ session.variance | number: "1.2-2" }}
                 </span>
               } @else {
-                <span>-</span>
+                <span class="text-surface-sub">-</span>
               }
             </td>
-            <td>
-              <div class="flex items-center justify-center">
+            <td class="text-center">
+              <div class="flex justify-center">
                 <button
-                  pButton
-                  icon="pi pi-eye"
-                  severity="info"
-                  [rounded]="true"
-                  [text]="true"
-                  (click)="onViewDetail(session)"
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
                   pTooltip="ดูรายละเอียด"
-                  tooltipPosition="left"
-                ></button>
+                  tooltipPosition="top"
+                  (click)="onViewDetail(session)"
+                >
+                  <app-generic-icon name="eye" svgClass="w-6 h-6"></app-generic-icon>
+                </button>
               </div>
             </td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="12" class="text-center py-8 text-surface-sub">
-              ไม่มีประวัติรอบขาย
+            <td [attr.colspan]="hasTwoPeriods() ? 12 : 11">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่มีประวัติรอบขาย" />
+              </div>
             </td>
           </tr>
         </ng-template>

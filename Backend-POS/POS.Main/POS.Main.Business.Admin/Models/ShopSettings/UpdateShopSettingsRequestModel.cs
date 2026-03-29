@@ -62,14 +62,17 @@ public class UpdateShopSettingsRequestModel
     [StringLength(1000)]
     public string? ReceiptFooterText { get; set; }
 
+    [Required]
     [StringLength(200)]
-    public string? BankName { get; set; }
+    public string BankName { get; set; } = string.Empty;
 
+    [Required]
     [StringLength(50)]
-    public string? AccountNumber { get; set; }
+    public string AccountNumber { get; set; } = string.Empty;
 
+    [Required]
     [StringLength(200)]
-    public string? AccountName { get; set; }
+    public string AccountName { get; set; } = string.Empty;
 
     [StringLength(100)]
     public string? WifiSsid { get; set; }

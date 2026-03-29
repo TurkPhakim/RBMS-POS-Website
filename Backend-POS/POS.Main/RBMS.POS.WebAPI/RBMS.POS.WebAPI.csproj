@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="tessdata\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\POS.Main.Core\POS.Main.Core.csproj" />
     <ProjectReference Include="..\POS.Main.Business.Admin\POS.Main.Business.Admin.csproj" />
     <ProjectReference Include="..\POS.Main.Business.Menu\POS.Main.Business.Menu.csproj" />

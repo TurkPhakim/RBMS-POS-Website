@@ -8,7 +8,7 @@
     ></app-generic-icon>
   </div>
   <h1 class="text-page-title">
-    {{ isEditMode() ? "แก้ไขตัวเลือกเสริม" : "เพิ่มตัวเลือกเสริม" }}
+    {{ isEditMode() ? "แก้ไขกลุ่มตัวเลือกเสริม" : "เพิ่มกลุ่มตัวเลือกเสริม" }}
   </h1>
 </div>
 
@@ -17,18 +17,18 @@
   <app-section-card
     headerLabel="ข้อมูลกลุ่มตัวเลือก"
     headerIcon="option-extra"
-    contentClass="p-6 space-y-4"
+    contentClass="space-y-4 p-6"
   >
-    <!-- แถวที่ 1: ประเภทเมนู / ชื่อกลุ่ม / สถานะ -->
+    <!-- แถวที่ 1: หมวดหมู่เมนู / ชื่อกลุ่ม / สถานะ -->
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
       <div class="md:col-span-2">
         <label class="block font-semibold mb-2">
-          ประเภทเมนู <span class="text-danger">*</span>
+          หมวดหมู่เมนู <span class="text-danger">*</span>
         </label>
         <app-menu-category-dropdown
           formControlName="categoryType"
-          placeholder="เลือกประเภทเมนู"
           [disabled]="isEditMode()"
+          [showClear]="false"
         ></app-menu-category-dropdown>
         @if (!isEditMode()) {
           <app-field-error [control]="form.get('categoryType')" type="select" />
@@ -37,26 +37,31 @@
 
       <div class="md:col-span-2">
         <label for="name" class="block font-semibold mb-2">
-          ชื่อกลุ่ม <span class="text-danger">*</span>
+          ชื่อกลุ่มตัวเลือก <span class="text-danger">*</span>
         </label>
         <input
           pInputText
           id="name"
           formControlName="name"
-          placeholder="กรอกชื่อกลุ่มตัวเลือก"
+          placeholder="ชื่อกลุ่มตัวเลือก"
           class="w-full"
         />
         <app-field-error [control]="form.get('name')" type="text" />
       </div>
 
       <div>
-        <label class="block font-semibold mb-3">สถานะการใช้งาน</label>
-        <div class="flex items-center gap-3 pt-2">
+        <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
+        <div class="flex items-center gap-2 pt-2">
           <p-inputSwitch
             formControlName="isActive"
             inputId="isActive"
           ></p-inputSwitch>
-          <span [class]="form.get('isActive')?.value ? 'text-success' : 'text-danger'">
+          <span
+            class="font-semibold mb-2"
+            [ngClass]="
+              form.get('isActive')?.value ? 'text-success' : 'text-danger'
+            "
+          >
             {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
           </span>
         </div>
@@ -67,12 +72,17 @@
     <div class="grid grid-cols-6 gap-4">
       <div>
         <label class="block font-semibold mb-2">บังคับเลือก</label>
-        <div class="flex items-center gap-3 pt-2">
+        <div class="flex items-center gap-2 pt-2">
           <p-inputSwitch
             formControlName="isRequired"
             inputId="isRequired"
           ></p-inputSwitch>
-          <span>
+          <span
+            class="font-semibold mb-2"
+            [ngClass]="
+              form.get('isRequired')?.value ? 'text-success' : 'text-danger'
+            "
+          >
             {{ form.get("isRequired")?.value ? "บังคับ" : "ไม่บังคับ" }}
           </span>
         </div>
@@ -80,40 +90,54 @@
 
       <div>
         <label class="block font-semibold mb-2">จำนวนสูงสุด</label>
-        <div class="flex items-center gap-3 pt-2">
+        <div class="flex items-center gap-2 pt-2">
           <p-inputSwitch
             [ngModel]="hasMaxLimit()"
             [ngModelOptions]="{ standalone: true }"
             (onChange)="onHasMaxLimitChange($event.checked)"
             inputId="hasMaxLimit"
           ></p-inputSwitch>
-          <span>{{ hasMaxLimit() ? "จำกัด" : "ไม่จำกัด" }}</span>
+          <span
+            class="font-semibold mb-2"
+            [ngClass]="hasMaxLimit() ? 'text-success' : 'text-danger'"
+            >{{ hasMaxLimit() ? "จำกัด" : "ไม่จำกัด" }}</span
+          >
         </div>
       </div>
 
       @if (form.get("isRequired")?.value) {
         <div [class]="hasMaxLimit() ? 'col-span-2' : 'col-span-4'">
-          <label for="minSelect" class="block font-semibold mb-2">จำนวนขั้นต่ำ</label>
+          <label for="minSelect" class="block font-semibold mb-2"
+            >จำนวนขั้นต่ำ <span class="text-danger">*</span></label
+          >
           <p-inputNumber
             formControlName="minSelect"
             inputId="minSelect"
             [min]="1"
             [showButtons]="true"
+            placeholder="กรอกจำนวนขั้นต่ำ"
             styleClass="w-full"
           ></p-inputNumber>
+          <app-field-error [control]="form.get('minSelect')" type="text" />
         </div>
       }
 
       @if (hasMaxLimit()) {
-        <div [class]="form.get('isRequired')?.value ? 'col-span-2' : 'col-span-4'">
-          <label for="maxSelect" class="block font-semibold mb-2">จำนวนสูงสุด</label>
+        <div
+          [class]="form.get('isRequired')?.value ? 'col-span-2' : 'col-span-4'"
+        >
+          <label for="maxSelect" class="block font-semibold mb-2"
+            >จำนวนสูงสุด <span class="text-danger">*</span></label
+          >
           <p-inputNumber
             formControlName="maxSelect"
             inputId="maxSelect"
             [min]="1"
             [showButtons]="true"
+            placeholder="กรอกจำนวนสูงสุด"
             styleClass="w-full"
           ></p-inputNumber>
+          <app-field-error [control]="form.get('maxSelect')" type="text" />
         </div>
       }
     </div>
@@ -122,8 +146,8 @@
   <!-- Card 2: รายการตัวเลือก -->
   <app-section-card
     headerLabel="รายการตัวเลือก"
-    headerIcon="option-extra"
-    contentClass="p-6"
+    headerIcon="ege-fried"
+    headerIconClass="w-10 h-10"
   >
     <button
       sectionActions
@@ -134,9 +158,10 @@
       เพิ่มตัวเลือก
     </button>
 
-    @if (hasItemError()) {
-      <div class="text-danger text-sm mb-3">
-        กรุณาเพิ่มตัวเลือกอย่างน้อย 1 รายการ และกรอกชื่อให้ครบ
+    @if (hasItemError() && optionItems().length === 0) {
+      <div class="text-danger mb-3 flex items-center gap-1 font-semibold">
+        <app-generic-icon name="error" svgClass="w-4 h-4"></app-generic-icon>
+        กรุณาเพิ่มตัวเลือกอย่างน้อย 1 รายการ
       </div>
     }
 
@@ -144,7 +169,7 @@
       <app-empty-view></app-empty-view>
     } @else {
       <div
-        class="space-y-3"
+        class="space-y-4"
         cdkDropList
         (cdkDropListDropped)="onItemDrop($event)"
       >
@@ -152,7 +177,7 @@
           <div
             cdkDrag
             [cdkDragData]="item"
-            class="py-4 px-4 border border-surface-border rounded-lg border-l-[6px] border-l-primary flex items-center gap-4"
+            class="p-4 pr-6 border border-surface-border rounded-lg border-l-4 border-l-primary flex items-center gap-4"
           >
             <!-- Drag Handle -->
             <div
@@ -169,25 +194,30 @@
             <!-- Fields -->
             <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label class="block text-sm font-semibold mb-1">
-                  ชื่อตัวเลือก
+                <label class="block font-semibold mb-2">
+                  ชื่อตัวเลือก <span class="text-danger">*</span>
                 </label>
                 <input
                   pInputText
                   [(ngModel)]="item.name"
                   [ngModelOptions]="{ standalone: true }"
-                  placeholder="กรอกชื่อ"
+                  #nameRef="ngModel"
+                  required
+                  placeholder="ชื่อตัวเลือก"
                   class="w-full"
                 />
+                <app-field-error [control]="nameRef.control" />
               </div>
               <div>
-                <label class="block text-sm font-semibold mb-1">
-                  ราคาเพิ่ม
+                <label class="block font-semibold mb-2">
+                  ราคาเพิ่ม <span class="text-danger">*</span>
                 </label>
                 <p-inputgroup>
                   <p-inputNumber
                     [(ngModel)]="item.additionalPrice"
                     [ngModelOptions]="{ standalone: true }"
+                    #additionalPriceRef="ngModel"
+                    required
                     [min]="0"
                     mode="decimal"
                     placeholder="ราคาเพิ่ม"
@@ -197,15 +227,18 @@
                   ></p-inputNumber>
                   <p-inputgroup-addon>บาท</p-inputgroup-addon>
                 </p-inputgroup>
+                <app-field-error [control]="additionalPriceRef.control" />
               </div>
               <div>
-                <label class="block text-sm font-semibold mb-1">
-                  ราคาต้นทุน
+                <label class="block font-semibold mb-2">
+                  ราคาต้นทุน <span class="text-danger">*</span>
                 </label>
                 <p-inputgroup>
                   <p-inputNumber
                     [(ngModel)]="item.costPrice"
                     [ngModelOptions]="{ standalone: true }"
+                    #costPriceRef="ngModel"
+                    required
                     [min]="0"
                     mode="decimal"
                     placeholder="ราคาต้นทุน"
@@ -215,19 +248,18 @@
                   ></p-inputNumber>
                   <p-inputgroup-addon>บาท</p-inputgroup-addon>
                 </p-inputgroup>
+                <app-field-error [control]="costPriceRef.control" />
               </div>
               <div class="flex flex-col justify-center">
-                <label class="block text-sm font-semibold mb-3"
-                  >สถานะการขาย</label
-                >
-                <div class="flex items-center gap-2">
+                <label class="block font-semibold mb-2">สถานะการขาย</label>
+                <div class="flex items-center gap-2 pt-2">
                   <p-inputSwitch
                     [(ngModel)]="item.isActive"
                     [ngModelOptions]="{ standalone: true }"
                   ></p-inputSwitch>
                   <span
-                    class="mb-2"
-                    [class]="item.isActive ? 'text-success' : 'text-danger'"
+                    class="font-semibold mb-2"
+                    [ngClass]="item.isActive ? 'text-success' : 'text-danger'"
                   >
                     {{ item.isActive ? "เปิดขาย" : "ปิดขาย" }}
                   </span>
@@ -245,7 +277,7 @@
             >
               <app-generic-icon
                 name="trash"
-                svgClass="w-5 h-5"
+                svgClass="w-6 h-6"
               ></app-generic-icon>
             </button>
           </div>
@@ -256,7 +288,7 @@
 
   <!-- Card 3: เมนูที่ใช้กลุ่มนี้ (edit mode only) -->
   @if (isEditMode() && linkedMenus().length > 0) {
-    <app-section-card headerLabel="เมนูที่ใช้กลุ่มนี้" headerIcon="piggy-bank">
+    <app-section-card headerLabel="เมนูที่ใช้กลุ่มนี้" headerIcon="menu-list">
       <p-table
         [value]="linkedMenus()"
         [paginator]="true"
@@ -264,17 +296,19 @@
         [rowsPerPageOptions]="[5, 10]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr>
-            <th class="w-[80px] text-center">รหัส</th>
-            <th class="w-[80px] text-center">รูปเมนู</th>
-            <th class="w-[200px]">ชื่อเมนู (ไทย)</th>
-            <th class="w-[200px]">ชื่อเมนู (อังกฤษ)</th>
-            <th class="w-[120px] text-center">ประเภท</th>
-            <th class="w-[120px] text-center">สถานะการขาย</th>
+            <th class="w-[80px]">รหัส</th>
+            <th class="w-[160px]">รูปเมนู</th>
+            <th class="w-[200px] whitespace-nowrap">ชื่อเมนู (ภาษาไทย)</th>
+            <th class="w-[200px] whitespace-nowrap">ชื่อเมนู (ภาษาอังกฤษ)</th>
+            <th class="w-[140px]">ประเภท</th>
+            @if (hasTwoPeriods()) {
+              <th class="w-[120px] whitespace-nowrap">ช่วงเวลาขาย</th>
+            }
+            <th class="w-[140px]">สถานะการขาย</th>
           </tr>
         </ng-template>
 
@@ -286,30 +320,46 @@
                 <img
                   [src]="getImageUrl(menu.imageFileId)"
                   alt=""
-                  class="w-12 h-12 rounded-lg object-cover mx-auto"
+                  class="w-20 h-20 rounded-lg object-cover mx-auto"
                 />
               } @else {
                 <div
-                  class="w-12 h-12 rounded-lg bg-surface-hover flex items-center justify-center mx-auto"
+                  class="w-20 h-20 rounded-lg bg-surface-hover flex items-center justify-center mx-auto"
                 >
                   <app-generic-icon
-                    name="piggy-bank"
-                    svgClass="w-6 h-6"
+                    name="menu-list"
+                    svgClass="w-10 h-10"
                     class="text-surface-placeholder"
                   ></app-generic-icon>
                 </div>
               }
             </td>
-            <td>{{ menu.nameThai }}</td>
-            <td>{{ menu.nameEnglish }}</td>
+            <td class="whitespace-nowrap">{{ menu.nameThai }}</td>
+            <td class="whitespace-nowrap">{{ menu.nameEnglish }}</td>
             <td class="text-center">
-              <p-tag [value]="menu.categoryTypeName" severity="info"></p-tag>
+              <span
+                class="font-bold"
+                [ngClass]="getCategoryColorClass(menu.categoryTypeName)"
+              >
+                {{ menu.categoryTypeName }}
+              </span>
             </td>
+            @if (hasTwoPeriods()) {
+              <td class="text-center">
+                <span
+                  class="font-bold"
+                  [ngClass]="getPeriodLabel(menu).colorClass"
+                >
+                  {{ getPeriodLabel(menu).text }}
+                </span>
+              </td>
+            }
             <td class="text-center">
-              <p-tag
-                [value]="menu.isAvailable ? 'เปิดขาย' : 'ปิดขาย'"
-                [severity]="menu.isAvailable ? 'success' : 'danger'"
-              ></p-tag>
+              @if (menu.isAvailable) {
+                <span class="font-bold text-primary">เปิดขาย</span>
+              } @else {
+                <span class="font-bold text-danger">ปิดขาย</span>
+              }
             </td>
           </tr>
         </ng-template>

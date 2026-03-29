@@ -1,5 +1,5 @@
 <app-card-template [headerLabel]="headerLabel">
-  <div class="space-y-5">
+  <div class="space-y-4">
     <!-- Header Banner -->
     <div
       class="relative bg-gradient-to-r from-primary-dark to-primary rounded-xl p-4 overflow-hidden"
@@ -16,7 +16,7 @@
             class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0"
           >
             <app-generic-icon
-              name="bill-rastaurant"
+              name="bill-splitting"
               svgClass="w-10 h-10"
               class="text-white"
             ></app-generic-icon>
@@ -224,8 +224,10 @@
                 <app-dropdown-base
                   [options]="groupOptions"
                   [(ngModel)]="ig.groupIndex"
+                  (ngModelChange)="onItemGroupChange()"
                   [showClear]="false"
                   [filter]="false"
+                  placeholder="บิลที่"
                   styleClass="compact-dropdown w-[100px]"
                   panelStyleClass="compact-dropdown-panel"
                   appendTo="body"

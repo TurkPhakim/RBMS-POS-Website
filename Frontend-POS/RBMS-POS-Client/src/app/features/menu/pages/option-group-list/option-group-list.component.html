@@ -26,15 +26,17 @@
               <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
               <input
                 pInputText
-                placeholder="ค้นหาชื่อกลุ่มตัวเลือก..."
+                placeholder="ค้นหาด้วยชื่อกลุ่มตัวเลือกเสริม"
                 class="w-full pr-8"
                 [(ngModel)]="searchTerm"
                 (keyup.enter)="onFilterChange()"
               />
             </p-iconField>
             @if (searchTerm) {
-              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
-                 (click)="searchTerm = ''; onFilterChange()"></i>
+              <i
+                class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                (click)="searchTerm = ''; onFilterChange()"
+              ></i>
             }
           </div>
         </div>
@@ -51,7 +53,7 @@
 
         <!-- Status Filter -->
         <div class="flex-1 min-w-[160px]">
-          <label class="block font-semibold mb-2">สถานะ</label>
+          <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
           <app-active-status-dropdown
             [(ngModel)]="selectedStatus"
             (ngModelChange)="onFilterChange()"
@@ -71,20 +73,21 @@
         [rowsPerPageOptions]="[10, 25, 50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-
         [totalRecords]="totalRecords()"
         [lazy]="true"
-        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        (onLazyLoad)="
+          onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })
+        "
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr>
             <th class="w-[80px]">รหัส</th>
-            <th class="w-[200px]">ชื่อกลุ่ม</th>
-            <th class="w-[120px]">ประเภท</th>
-            <th class="w-[120px]">จำนวนตัวเลือก</th>
-            <th class="w-[120px]">เมนูที่ใช้</th>
-            <th class="w-[120px]">สถานะ</th>
+            <th class="w-[200px] whitespace-nowrap">ชื่อกลุ่มตัวเลือกเสริม</th>
+            <th class="w-[120px] whitespace-nowrap">ประเภทหมวดหมู่เมนู</th>
+            <th class="w-[120px] whitespace-nowrap">จำนวนตัวเลือก</th>
+            <th class="w-[120px] whitespace-nowrap">จำนวนเมนูที่ใช้งาน</th>
+            <th class="w-[120px] whitespace-nowrap">สถานะการใช้งาน</th>
             <th class="w-[100px]">ตัวเลือก</th>
           </tr>
         </ng-template>
@@ -103,10 +106,12 @@
 
             <!-- Category Type -->
             <td class="!text-center whitespace-nowrap">
-              <p-tag
-                [value]="item.categoryTypeName"
-                severity="info"
-              ></p-tag>
+              <span
+                class="font-bold"
+                [ngClass]="getCategoryColorClass(item.categoryTypeName)"
+              >
+                {{ item.categoryTypeName }}
+              </span>
             </td>
 
             <!-- Option Items Count -->

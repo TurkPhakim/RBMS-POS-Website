@@ -18,6 +18,9 @@ export class ConfirmReservationDialogComponent {
   ) {
     this.reservation = this.config.data.reservation;
     this.headerLabel = this.config.header!;
+    if (this.reservation.tableId) {
+      this.selectedTableId.set(this.reservation.tableId);
+    }
   }
 
   onConfirm(): void {

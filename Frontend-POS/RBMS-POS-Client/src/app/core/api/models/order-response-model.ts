@@ -4,6 +4,7 @@ export interface OrderResponseModel {
   createdAt?: string;
   guestCount?: number;
   guestType?: string | null;
+  isLinked?: boolean;
   itemCount?: number;
   note?: string | null;
   orderId?: number;

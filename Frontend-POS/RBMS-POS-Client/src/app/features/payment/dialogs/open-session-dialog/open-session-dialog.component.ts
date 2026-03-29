@@ -2,7 +2,6 @@ import { Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { CashierSessionsService } from '@app/core/api/services/cashier-sessions.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { ShopBrandingService } from '@app/core/services/shop-branding.service';
@@ -25,11 +24,11 @@ export class OpenSessionDialogComponent {
     private cashierSessionsService: CashierSessionsService,
     private modalService: ModalService,
     private shopBrandingService: ShopBrandingService,
-    private destroyRef: DestroyRef
+    private destroyRef: DestroyRef,
   ) {
     this.hasTwoPeriods = this.shopBrandingService.hasTwoPeriods();
     this.form = this.fb.group({
-      openingCash: [0, [Validators.required, Validators.min(0)]],
+      openingCash: [null, [Validators.required, Validators.min(0)]],
       shiftPeriod: [null, this.hasTwoPeriods ? [Validators.required] : []],
     });
   }
@@ -39,9 +38,10 @@ export class OpenSessionDialogComponent {
     if (this.form.invalid) return;
 
     this.isSaving.set(true);
-    this.cashierSessionsService.cashierSessionsOpenSessionPost({
-      body: this.form.value,
-    })
+    this.cashierSessionsService
+      .cashierSessionsOpenSessionPost({
+        body: this.form.value,
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

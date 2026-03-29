@@ -94,6 +94,16 @@ export class SplitBillDialogComponent implements OnInit {
     });
   }
 
+  onItemGroupChange(): void {
+    const usedGroups = new Set(this.itemGroups.map((ig) => ig.groupIndex));
+    const maxUsed = Math.max(...usedGroups);
+    const newCount = Math.max(maxUsed + 1, 2);
+    if (newCount < this.numberOfGroups) {
+      this.numberOfGroups = newCount;
+      this.updateGroupOptions();
+    }
+  }
+
   private updateGroupOptions(): void {
     this.groupOptions = Array.from({ length: this.numberOfGroups }, (_, i) => ({
       label: `บิล ${i + 1}`,

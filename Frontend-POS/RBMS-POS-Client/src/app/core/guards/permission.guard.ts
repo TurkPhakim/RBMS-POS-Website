@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
-
+import {
+  ActivatedRouteSnapshot,
+  CanActivate,
+  Router,
+  RouterStateSnapshot,
+  UrlTree,
+} from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Injectable({
@@ -22,7 +27,9 @@ export class PermissionGuard implements CanActivate {
       });
     }
 
-    const requiredPermissions = route.data['permissions'] as string[] | undefined;
+    const requiredPermissions = route.data['permissions'] as
+      | string[]
+      | undefined;
 
     if (!requiredPermissions || requiredPermissions.length === 0) {
       return true;

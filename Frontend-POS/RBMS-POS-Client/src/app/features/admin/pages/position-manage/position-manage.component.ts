@@ -37,42 +37,44 @@ export class PositionManageComponent implements OnDestroy {
   positionData = signal<PositionResponseModel | null>(null);
   canUpdate: boolean;
 
-  readonly moduleLabelMap: Record<string, string> = {
-    'payment-manage': 'รอบการขาย',
-    'cashier-session': 'ประวัติรอบขาย',
-    'service-charge': 'จัดการค่าบริการ',
-  };
-
-  readonly moduleIconMap: Record<string, string> = {
-    dashboard: 'dashboard',
-    'admin-settings': 'admin-setting',
-    'human-resource': 'human-resource',
-    menu: 'menu-restaurant',
-    order: 'order-dinner',
-    table: 'table-set',
-    payment: 'cashier',
-    'kitchen-display': 'chef-human',
-    'dashboard.view': 'dashboard',
-    'service-charge': 'coin',
-    position: 'lock-protect',
-    'shop-settings': 'restaurant',
-    'user-management': 'user-octagon',
-    employee: 'human',
-    'menu-category': 'category',
-    'menu-food': 'chicken-drumstick',
-    'menu-beverage': 'drinks-glass',
-    'menu-dessert': 'dessert',
-    'menu-option': 'option-extra',
-    'order-manage': 'order-dinner',
-    'table-manage': 'table-restaurant',
-    'floor-plan': 'table-dinner',
-    reservation: 'reservation',
-    'payment-manage': 'bill-rastaurant',
-    'cashier-session': 'bill-invoice',
-    'kitchen-order': 'chef-human',
-    'kitchen-food': 'cook-chef',
-    'kitchen-beverage': 'bartender',
-    'kitchen-dessert': 'pastry-chef',
+  readonly moduleMetaMap: Record<string, ModuleMeta> = {
+    // --- แดชบอร์ด ---
+    dashboard: { icon: 'dashboard' },
+    'dashboard.view': { icon: 'bar-chart' },
+    // --- ออเดอร์ ---
+    order: { icon: 'order-dinner' },
+    'order-manage': { icon: 'menu-list' },
+    // --- เมนู ---
+    menu: { icon: 'menu-restaurant' },
+    'menu-category': { icon: 'category' },
+    'menu-food': { icon: 'chicken-drumstick' },
+    'menu-beverage': { icon: 'drinks-glass' },
+    'menu-dessert': { icon: 'dessert' },
+    'menu-option': { icon: 'option-extra' },
+    // --- โต๊ะ ---
+    table: { icon: 'table-set' },
+    'table-manage': { icon: 'table-restaurant' },
+    'floor-plan': { icon: 'table-dinner' },
+    reservation: { icon: 'reservation' },
+    // --- ชำระเงิน ---
+    payment: { icon: 'cashier' },
+    'payment-manage': { icon: 'bill-rastaurant', label: 'รอบการขาย' },
+    'cashier-session': { icon: 'bill-invoice', label: 'ประวัติรอบขาย' },
+    'service-charge': { icon: 'coin', label: 'จัดการค่าบริการ' },
+    // --- ครัว ---
+    'kitchen-display': { icon: 'chef-human' },
+    'kitchen-order': { icon: 'chef-human' },
+    'kitchen-food': { icon: 'cook-chef' },
+    'kitchen-beverage': { icon: 'bartender' },
+    'kitchen-dessert': { icon: 'pastry-chef' },
+    // --- ทรัพยากรบุคคล ---
+    'human-resource': { icon: 'human-resource' },
+    employee: { icon: 'human' },
+    'user-management': { icon: 'user-octagon' },
+    // --- ตั้งค่าระบบ ---
+    'admin-settings': { icon: 'admin-setting' },
+    position: { icon: 'lock-protect' },
+    'shop-settings': { icon: 'restaurant' },
   };
 
   constructor(
@@ -454,4 +456,9 @@ export class PositionManageComponent implements OnDestroy {
 
 interface ExpandState {
   [key: number]: boolean;
+}
+
+interface ModuleMeta {
+  icon: string;
+  label?: string;
 }

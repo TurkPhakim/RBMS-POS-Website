@@ -9,12 +9,15 @@ import {
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { take, takeUntil } from 'rxjs';
 import { TablesService } from '@app/core/api/services/tables.service';
-import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component';
+import {
+  DropdownBaseComponent,
+  DROPDOWN_BASE_TEMPLATE,
+} from '../dropdown-base/dropdown-base.component';
 
 @Component({
   selector: 'app-table-dropdown',
   standalone: false,
-  templateUrl: '../dropdown-base/dropdown-base.component.html',
+  template: DROPDOWN_BASE_TEMPLATE,
   host: { class: 'block' },
   providers: [
     {

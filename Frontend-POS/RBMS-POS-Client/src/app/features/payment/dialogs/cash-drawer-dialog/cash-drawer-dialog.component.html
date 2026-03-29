@@ -3,22 +3,29 @@
     <form [formGroup]="form">
       <!-- Amount -->
       <div>
-        <label class="block font-semibold mb-2">จำนวนเงิน (บาท)</label>
-        <p-inputNumber
-          formControlName="amount"
-          [minFractionDigits]="2"
-          [maxFractionDigits]="2"
-          [min]="0"
-          mode="decimal"
-          styleClass="w-full"
-          placeholder="0.00"
-        ></p-inputNumber>
-        <app-field-error [control]="form.controls['amount']" label="จำนวนเงิน"></app-field-error>
+        <label class="block font-semibold mb-2"
+          >จำนวนเงิน <span class="text-danger">*</span></label
+        >
+        <p-inputgroup>
+          <p-inputNumber
+            formControlName="amount"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            [min]="0"
+            mode="decimal"
+            styleClass="w-full"
+            placeholder="จำนวนเงิน"
+          ></p-inputNumber>
+          <p-inputgroup-addon>บาท</p-inputgroup-addon>
+        </p-inputgroup>
+        <app-field-error [control]="form.controls['amount']"></app-field-error>
       </div>
 
       <!-- Reason -->
       <div class="mt-4">
-        <label class="block font-semibold mb-2">เหตุผล</label>
+        <label class="block font-semibold mb-2"
+          >ระบุเหตุผล <span class="text-danger">*</span></label
+        >
         <textarea
           pInputTextarea
           formControlName="reason"
@@ -26,7 +33,7 @@
           class="w-full"
           placeholder="ระบุเหตุผล"
         ></textarea>
-        <app-field-error [control]="form.controls['reason']" label="เหตุผล"></app-field-error>
+        <app-field-error [control]="form.controls['reason']"></app-field-error>
       </div>
     </form>
   </div>
@@ -42,7 +49,7 @@
     <button
       pButton
       [label]="isCashIn ? 'เงินเข้า' : 'เงินออก'"
-      [severity]="isCashIn ? 'success' : 'warn'"
+      severity="warn"
       [loading]="isSaving()"
       (click)="onSave()"
     ></button>

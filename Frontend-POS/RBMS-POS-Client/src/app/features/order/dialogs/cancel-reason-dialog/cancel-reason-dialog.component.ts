@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { DialogService } from 'primeng/dynamicdialog';
-
 import { OrderItemResponseModel } from '@app/core/api/models';
 import { VerifyPinDialogComponent } from '@app/shared/dialogs/verify-pin/verify-pin-dialog.component';
 
@@ -15,7 +14,7 @@ import { VerifyPinDialogComponent } from '@app/shared/dialogs/verify-pin/verify-
 export class CancelReasonDialogComponent implements OnInit {
   headerLabel = '';
   item!: OrderItemResponseModel;
-  categoryLabel = 'อาหาร';
+  categoryLabel = '';
   cancelReasonControl = new FormControl('', Validators.required);
 
   constructor(
@@ -32,9 +31,12 @@ export class CancelReasonDialogComponent implements OnInit {
 
   private getCategoryLabel(categoryType?: number): string {
     switch (categoryType) {
-      case 2: return 'เครื่องดื่ม';
-      case 3: return 'ของหวาน';
-      default: return 'อาหาร';
+      case 2:
+        return 'เครื่องดื่ม';
+      case 3:
+        return 'ของหวาน';
+      default:
+        return 'อาหาร';
     }
   }
 
@@ -51,7 +53,9 @@ export class CancelReasonDialogComponent implements OnInit {
 
     pinRef.onClose.subscribe((result: boolean | string | undefined) => {
       if (result === true) {
-        this.ref.close({ cancelReason: this.cancelReasonControl.value!.trim() });
+        this.ref.close({
+          cancelReason: this.cancelReasonControl.value!.trim(),
+        });
       } else if (result === 'max-attempts') {
         this.ref.close();
       }

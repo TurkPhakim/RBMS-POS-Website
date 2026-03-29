@@ -1,8 +1,12 @@
 import {
+  AfterViewInit,
   Component,
   DestroyRef,
+  ElementRef,
+  NgZone,
   OnDestroy,
   OnInit,
+  ViewChild,
   signal,
   computed,
 } from '@angular/core';
@@ -18,8 +22,6 @@ import { FloorObjectResponseModel } from '@app/core/api/models/floor-object-resp
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
-import { OrderHubService } from '@app/core/services/order-hub.service';
-import { TableActionDialogComponent } from '../../dialogs/table-action-dialog/table-action-dialog.component';
 import { FloorObjectDialogComponent } from '../../dialogs/floor-object-dialog/floor-object-dialog.component';
 
 const AUTO_GRID_GAP = 20;
@@ -27,6 +29,7 @@ const AUTO_GRID_START_X = 30;
 const AUTO_GRID_START_Y = 30;
 const KEY_BTN_EDIT = 'edit-floor-plan';
 const KEY_BTN_ADD_OBJECT = 'add-floor-object';
+const CANVAS_REF_WIDTH = 1400;
 
 @Component({
   selector: 'app-floor-plan',
@@ -34,23 +37,80 @@ const KEY_BTN_ADD_OBJECT = 'add-floor-object';
   templateUrl: './floor-plan.component.html',
   providers: [DialogService],
 })
-export class FloorPlanComponent implements OnInit, OnDestroy {
+export class FloorPlanComponent implements OnInit, AfterViewInit, OnDestroy {
   tables = signal<TableResponseModel[]>([]);
   zones = signal<ZoneResponseModel[]>([]);
   floorObjects = signal<FloorObjectResponseModel[]>([]);
   selectedZoneId = signal<number | null>(null);
   isEditMode = signal(false);
+  canvasScale = signal(1);
+
+  @ViewChild('canvasEl') canvasEl!: ElementRef<HTMLDivElement>;
+
+  selectedStatusFilter = signal<string | null>(null);
 
   canUpdate: boolean;
   canCreateFloorObject: boolean;
   canUpdateFloorObject: boolean;
 
   private _wasDragged = false;
+  private resizeObserver?: ResizeObserver;
+
+  readonly statusLegend: StatusLegendItem[] = [
+    {
+      key: 'Available',
+      label: 'ว่าง',
+      color: 'bg-surface-sub',
+      activeClass: 'bg-surface-sub text-white',
+      borderClass: 'border-surface-sub text-surface-sub',
+    },
+    {
+      key: 'Occupied',
+      label: 'มีลูกค้า',
+      color: 'bg-primary-badge',
+      activeClass: 'bg-primary-badge text-white',
+      borderClass: 'border-primary-badge text-primary',
+    },
+    {
+      key: 'Reserved',
+      label: 'ติดจอง',
+      color: 'bg-info',
+      activeClass: 'bg-info text-white',
+      borderClass: 'border-info text-info',
+    },
+    {
+      key: 'Unavailable',
+      label: 'ปิดใช้งาน',
+      color: 'bg-danger',
+      activeClass: 'bg-danger text-white',
+      borderClass: 'border-danger text-danger',
+    },
+  ];
 
   filteredTables = computed(() => {
     const zoneId = this.selectedZoneId();
     const all = this.tables();
     return zoneId ? all.filter((t) => t.zoneId === zoneId) : all;
+  });
+
+  statusCounts = computed(() => {
+    const tables = this.filteredTables();
+    const counts: Record<string, number> = {
+      Available: 0,
+      Occupied: 0,
+      Reserved: 0,
+      Unavailable: 0,
+    };
+    for (const t of tables) {
+      const group = this.getStatusGroup(t.status);
+      counts[group] = (counts[group] ?? 0) + 1;
+    }
+    return counts;
+  });
+
+  activeZones = computed(() => {
+    const zoneIdsWithTables = new Set(this.tables().map((t) => t.zoneId));
+    return this.zones().filter((z) => zoneIdsWithTables.has(z.zoneId));
   });
 
   filteredFloorObjects = computed(() => {
@@ -74,11 +134,13 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
     private readonly modalService: ModalService,
     private readonly dialogService: DialogService,
     private readonly destroyRef: DestroyRef,
-    private readonly orderHubService: OrderHubService,
+    private readonly ngZone: NgZone,
   ) {
     this.canUpdate = this.authService.hasPermission('floor-plan.update');
-    this.canCreateFloorObject = this.authService.hasPermission('floor-plan.create');
-    this.canUpdateFloorObject = this.authService.hasPermission('floor-plan.update');
+    this.canCreateFloorObject =
+      this.authService.hasPermission('floor-plan.create');
+    this.canUpdateFloorObject =
+      this.authService.hasPermission('floor-plan.update');
   }
 
   ngOnInit(): void {
@@ -86,16 +148,30 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
     this.loadTables();
     this.loadFloorObjects();
     this.setupBreadcrumbButtons();
-    this.connectSignalR();
+  }
+
+  ngAfterViewInit(): void {
+    this.observeCanvasResize();
   }
 
   ngOnDestroy(): void {
     this.breadcrumbService.clearButtons();
-    this.orderHubService.leaveGroup('floor');
+    this.resizeObserver?.disconnect();
   }
 
   onSelectZone(zoneId: number | null): void {
     this.selectedZoneId.set(zoneId);
+    this.selectedStatusFilter.set(null);
+  }
+
+  toggleStatusFilter(key: string): void {
+    this.selectedStatusFilter.update((v) => (v === key ? null : key));
+  }
+
+  isTableDimmed(table: TableResponseModel): boolean {
+    const filter = this.selectedStatusFilter();
+    if (!filter) return false;
+    return this.getStatusGroup(table.status) !== filter;
   }
 
   toggleEditMode(): void {
@@ -108,45 +184,33 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
 
   onDragEnded(event: CdkDragEnd, table: TableResponseModel): void {
     const pos = event.source.getFreeDragPosition();
-    table.positionX = Math.max(0, Math.round(pos.x));
-    table.positionY = Math.max(0, Math.round(pos.y));
-  }
-
-  onTableClick(table: TableResponseModel): void {
-    if (this.isEditMode()) return;
-
-    const ref = this.dialogService.open(TableActionDialogComponent, {
-      header: `โซน${table.zoneName} - โต๊ะ${table.tableName}`,
-      showHeader: false,
-      modal: true,
-      styleClass: 'card-dialog',
-      width: '40vw',
-      data: { table },
-    });
-
-    ref.onClose
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((reload: boolean | undefined) => {
-        if (reload) this.loadTables();
-      });
+    const s = this.canvasScale();
+    table.positionX = Math.max(0, Math.round(pos.x / s));
+    table.positionY = Math.max(0, Math.round(pos.y / s));
   }
 
   getTableClasses(table: TableResponseModel): string {
     const sizeShape = this.getSizeClass(table.size);
     const status = this.getStatusClasses(table.status);
-    const cursor = this.isEditMode() ? 'cursor-move' : 'cursor-pointer';
-    return `${sizeShape} ${status} ${cursor} border-2 flex flex-col items-center justify-center transition-all`;
+    const cursor = this.isEditMode() ? 'cursor-move' : 'cursor-default';
+    const dimmed = this.isTableDimmed(table) ? 'opacity-40' : '';
+    return `${sizeShape} ${status} ${cursor} ${dimmed} border-4 bg-surface-card flex flex-col items-center justify-center transition-all`;
   }
 
   getStatusLabel(status: string | null | undefined): string {
     switch (status) {
-      case 'Available': return 'ว่าง';
-      case 'Occupied': return 'มีลูกค้า';
-      case 'Billing': return 'เช็คบิล';
-      case 'Reserved': return 'จองแล้ว';
-      case 'Cleaning': return 'ทำความสะอาด';
-      case 'Unavailable': return 'ปิดใช้งาน';
-      default: return '-';
+      case 'Available':
+        return 'ว่าง';
+      case 'Occupied':
+      case 'Billing':
+      case 'Cleaning':
+        return 'มีลูกค้า';
+      case 'Reserved':
+        return 'ติดจอง';
+      case 'Unavailable':
+        return 'ปิดใช้งาน';
+      default:
+        return '-';
     }
   }
 
@@ -158,7 +222,8 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
   }
 
   getFreeDragPosition(table: TableResponseModel): { x: number; y: number } {
-    return { x: table.positionX ?? 0, y: table.positionY ?? 0 };
+    const s = this.canvasScale();
+    return { x: (table.positionX ?? 0) * s, y: (table.positionY ?? 0) * s };
   }
 
   onObjDragStarted(): void {
@@ -167,12 +232,17 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
 
   onObjDragEnded(event: CdkDragEnd, obj: FloorObjectResponseModel): void {
     const pos = event.source.getFreeDragPosition();
-    obj.positionX = Math.max(0, Math.round(pos.x));
-    obj.positionY = Math.max(0, Math.round(pos.y));
+    const s = this.canvasScale();
+    obj.positionX = Math.max(0, Math.round(pos.x / s));
+    obj.positionY = Math.max(0, Math.round(pos.y / s));
   }
 
-  getObjFreeDragPosition(obj: FloorObjectResponseModel): { x: number; y: number } {
-    return { x: obj.positionX ?? 0, y: obj.positionY ?? 0 };
+  getObjFreeDragPosition(obj: FloorObjectResponseModel): {
+    x: number;
+    y: number;
+  } {
+    const s = this.canvasScale();
+    return { x: (obj.positionX ?? 0) * s, y: (obj.positionY ?? 0) * s };
   }
 
   onFloorObjectClick(obj: FloorObjectResponseModel): void {
@@ -186,9 +256,9 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
       header: 'แก้ไขวัตถุ',
       showHeader: false,
       modal: true,
-      styleClass: 'card-dialog',
-      width: '35vw',
-      data: { floorObject: obj },
+      styleClass: 'card-dialog card-dialog--visible',
+      width: '45vw',
+      data: { floorObjectId: obj.floorObjectId },
     });
 
     ref.onClose
@@ -203,8 +273,8 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
       header: 'เพิ่มวัตถุ',
       showHeader: false,
       modal: true,
-      styleClass: 'card-dialog',
-      width: '35vw',
+      styleClass: 'card-dialog card-dialog--visible',
+      width: '45vw',
       data: { zoneId: this.selectedZoneId() },
     });
 
@@ -215,29 +285,61 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
       });
   }
 
+  onDeleteFloorObject(event: Event, obj: FloorObjectResponseModel): void {
+    event.stopPropagation();
+    this.floorObjectsService
+      .floorObjectsDeleteFloorObjectDelete({
+        floorObjectId: obj.floorObjectId!,
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.loadFloorObjects(),
+      });
+  }
+
   getObjectIconName(objectType: string | null | undefined): string {
     switch (objectType) {
-      case 'Restroom': return 'floor-restroom';
-      case 'Stairs': return 'floor-stairs';
-      case 'Counter': return 'floor-counter';
-      case 'Kitchen': return 'chef';
-      case 'Exit': return 'floor-exit';
-      case 'Cashier': return 'floor-cashier';
-      case 'Decoration': return 'floor-decoration';
-      default: return 'floor-decoration';
+      case 'Restroom':
+        return 'toilet';
+      case 'Stairs':
+        return 'stairs-handrail';
+      case 'Counter':
+        return 'counter-bar';
+      case 'Kitchen':
+        return 'kitchen-room';
+      case 'Exit':
+        return 'exit';
+      case 'Cashier':
+        return 'cashier-machine';
+      case 'Plant':
+        return 'tree';
+      case 'Decoration':
+        return 'furniture';
+      default:
+        return 'furniture';
     }
   }
 
   getObjectTypeClasses(objectType: string | null | undefined): string {
     switch (objectType) {
-      case 'Restroom': return 'border-info text-info';
-      case 'Stairs': return 'border-warning text-warning';
-      case 'Counter': return 'border-primary text-primary';
-      case 'Kitchen': return 'border-danger text-danger';
-      case 'Exit': return 'border-success text-success';
-      case 'Cashier': return 'border-info text-info';
-      case 'Decoration': return 'border-surface-sub text-surface-sub';
-      default: return 'border-surface-sub text-surface-sub';
+      case 'Restroom':
+        return 'border-info text-info';
+      case 'Stairs':
+        return 'border-warning text-warning';
+      case 'Counter':
+        return 'border-primary text-primary';
+      case 'Kitchen':
+        return 'border-danger text-danger';
+      case 'Exit':
+        return 'border-success text-success';
+      case 'Cashier':
+        return 'border-info text-info';
+      case 'Plant':
+        return 'border-success text-success';
+      case 'Decoration':
+        return 'border-surface-sub text-surface-sub';
+      default:
+        return 'border-surface-sub text-surface-sub';
     }
   }
 
@@ -247,6 +349,8 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
   }
 
   private updateEditButton(): void {
+    this.breadcrumbService.clearButtons();
+
     if (this.isEditMode() && this.canCreateFloorObject) {
       this.breadcrumbService.addOrUpdateButton({
         key: KEY_BTN_ADD_OBJECT,
@@ -259,8 +363,6 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
           callback: () => this.openAddFloorObjectDialog(),
         },
       });
-    } else {
-      this.breadcrumbService.removeButton(KEY_BTN_ADD_OBJECT);
     }
 
     this.breadcrumbService.addOrUpdateButton({
@@ -268,19 +370,22 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
       type: 'button',
       item: {
         key: KEY_BTN_EDIT,
-        label: this.isEditMode() ? 'บันทึกตำแหน่ง' : 'จัดผังโต๊ะ',
-        severity: this.isEditMode() ? 'primary' : 'secondary',
-        variant: this.isEditMode() ? undefined : 'outlined',
+        label: this.isEditMode() ? 'บันทึกตำแหน่ง' : 'จัดผังร้าน',
+        severity: 'primary',
+        variant: undefined,
         callback: () => this.toggleEditMode(),
       },
     });
   }
 
-  private connectSignalR(): void {
-    this.orderHubService.start('floor');
-    this.orderHubService.tableStatusChanged$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadTables());
+  private observeCanvasResize(): void {
+    this.resizeObserver = new ResizeObserver((entries) => {
+      this.ngZone.run(() => {
+        const width = entries[0].contentRect.width;
+        this.canvasScale.set(width / CANVAS_REF_WIDTH);
+      });
+    });
+    this.resizeObserver.observe(this.canvasEl.nativeElement);
   }
 
   private loadTables(): void {
@@ -292,6 +397,7 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
           const items = res.results ?? [];
           this.assignAutoPositions(items);
           this.tables.set(items);
+          this.autoSelectFirstActiveZone();
         },
       });
   }
@@ -302,13 +408,20 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          const items = res.results ?? [];
-          this.zones.set(items);
-          if (items.length > 0 && this.selectedZoneId() === null) {
-            this.selectedZoneId.set(items[0].zoneId!);
-          }
+          this.zones.set(res.results ?? []);
+          this.autoSelectFirstActiveZone();
         },
       });
+  }
+
+  private autoSelectFirstActiveZone(): void {
+    const active = this.activeZones();
+    const current = this.selectedZoneId();
+    if (!current || !active.some((z) => z.zoneId === current)) {
+      if (active.length > 0) {
+        this.selectedZoneId.set(active[0].zoneId!);
+      }
+    }
   }
 
   private loadFloorObjects(): void {
@@ -347,7 +460,11 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
   }
 
   private assignAutoPositions(tables: TableResponseModel[]): void {
-    const sizeMap: Record<string, number> = { Small: 128, Medium: 176, Large: 288 };
+    const sizeMap: Record<string, number> = {
+      Small: 112,
+      Medium: 144,
+      Large: 224,
+    };
     let x = AUTO_GRID_START_X;
     let y = AUTO_GRID_START_Y;
     let rowMaxH = 0;
@@ -371,21 +488,54 @@ export class FloorPlanComponent implements OnInit, OnDestroy {
 
   private getSizeClass(size: string | null | undefined): string {
     switch (size) {
-      case 'Small': return 'w-32 h-32 rounded-full';
-      case 'Large': return 'w-72 h-36 rounded-lg';
-      default: return 'w-44 h-44 rounded-lg';
+      case 'Small':
+        return 'w-32 h-32 rounded-full';
+      case 'Large':
+        return 'w-64 h-32 rounded-lg';
+      default:
+        return 'w-40 h-40 rounded-lg';
     }
   }
 
   private getStatusClasses(status: string | null | undefined): string {
     switch (status) {
-      case 'Available': return 'border-success bg-success/10';
-      case 'Occupied': return 'border-primary bg-primary/10';
-      case 'Billing': return 'border-warning bg-warning/10';
-      case 'Reserved': return 'border-info bg-info/10';
-      case 'Cleaning': return 'border-surface-sub bg-surface';
-      case 'Unavailable': return 'border-danger bg-danger/10';
-      default: return 'border-surface-border bg-surface';
+      case 'Available':
+        return 'border-surface-sub';
+      case 'Occupied':
+      case 'Billing':
+      case 'Cleaning':
+        return 'border-primary-badge';
+      case 'Reserved':
+        return 'border-info';
+      case 'Unavailable':
+        return 'border-danger';
+      default:
+        return 'border-surface-border';
     }
   }
+
+  private getStatusGroup(status: string | null | undefined): string {
+    switch (status) {
+      case 'Available':
+        return 'Available';
+      case 'Occupied':
+      case 'Billing':
+      case 'Cleaning':
+        return 'Occupied';
+      case 'Reserved':
+        return 'Reserved';
+      case 'Unavailable':
+        return 'Unavailable';
+      default:
+        return 'Available';
+    }
+  }
+}
+
+interface StatusLegendItem {
+  key: string;
+  label: string;
+  color: string;
+  activeClass: string;
+  borderClass: string;
 }

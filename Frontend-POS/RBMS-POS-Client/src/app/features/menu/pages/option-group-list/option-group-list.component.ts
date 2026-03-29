@@ -12,7 +12,6 @@ import { OptionGroupResponseModel } from '@app/core/api/models/option-group-resp
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { Icon, ModalService } from '@app/core/services/modal.service';
-
 const KEY_BTN_ADD = 'add-option-group';
 
 @Component({
@@ -65,6 +64,19 @@ export class OptionGroupListComponent implements OnInit, OnDestroy {
     this.page = Math.floor(event.first / event.rows) + 1;
     this.rows = event.rows;
     this.loadOptionGroups();
+  }
+
+  getCategoryColorClass(name: string | null | undefined): string {
+    switch (name) {
+      case 'อาหาร':
+        return 'text-cat-food';
+      case 'เครื่องดื่ม':
+        return 'text-cat-drink';
+      case 'ของหวาน':
+        return 'text-cat-dessert';
+      default:
+        return '';
+    }
   }
 
   onEdit(optionGroupId: number): void {

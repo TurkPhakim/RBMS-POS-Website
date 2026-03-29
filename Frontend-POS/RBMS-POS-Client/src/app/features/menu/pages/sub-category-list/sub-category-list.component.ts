@@ -1,29 +1,62 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DialogService } from 'primeng/dynamicdialog';
 import { MenuCategoriesService } from '@app/core/api/services/menu-categories.service';
 import { MenuSubCategoryResponseModel } from '@app/core/api/models/menu-sub-category-response-model';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { Icon, ModalService } from '@app/core/services/modal.service';
+import { CreateSubCategoryDialogComponent } from '../../dialogs/create-sub-category-dialog/create-sub-category-dialog.component';
 
 const KEY_BTN_ADD = 'add-sub-category';
-
 const TAB_CONFIG = [
-  { label: 'อาหาร', icon: 'food', categoryType: 1, addLabel: 'เพิ่มหมวดหมู่อาหาร' },
-  { label: 'เครื่องดื่ม', icon: 'drinks-glass', categoryType: 2, addLabel: 'เพิ่มหมวดหมู่เครื่องดื่ม' },
-  { label: 'ของหวาน', icon: 'dessert', categoryType: 3, addLabel: 'เพิ่มหมวดหมู่ของหวาน' },
+  {
+    label: 'อาหาร',
+    icon: 'chicken-drumstick',
+    svgClass: 'w-12 h-12',
+    categoryType: 1,
+    addLabel: 'เพิ่มหมวดหมู่อาหาร',
+    activeClass: 'bg-surface-card text-cat-food',
+    inactiveClass: 'text-surface-sub hover:text-cat-food',
+  },
+  {
+    label: 'เครื่องดื่ม',
+    icon: 'drinks-glass',
+    svgClass: 'w-8 h-8',
+    categoryType: 2,
+    addLabel: 'เพิ่มหมวดหมู่เครื่องดื่ม',
+    activeClass: 'bg-surface-card text-cat-drink',
+    inactiveClass: 'text-surface-sub hover:text-cat-drink',
+  },
+  {
+    label: 'ของหวาน',
+    icon: 'dessert',
+    svgClass: 'w-12 h-12',
+    categoryType: 3,
+    addLabel: 'เพิ่มหมวดหมู่ของหวาน',
+    activeClass: 'bg-surface-card text-cat-dessert',
+    inactiveClass: 'text-surface-sub hover:text-cat-dessert',
+  },
 ];
 
 @Component({
   selector: 'app-sub-category-list',
   standalone: false,
   templateUrl: './sub-category-list.component.html',
+  providers: [DialogService],
 })
 export class SubCategoryListComponent implements OnInit, OnDestroy {
   subCategories = signal<MenuSubCategoryResponseModel[]>([]);
   activeTabIndex = signal(0);
-  searchTerm = signal('');
+  searchTerm = '';
+  statusFilter: boolean | null = null;
 
   canCreate: boolean;
   canUpdate: boolean;
@@ -37,6 +70,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
     private readonly authService: AuthService,
     private readonly breadcrumbService: BreadcrumbService,
     private readonly modalService: ModalService,
+    private readonly dialogService: DialogService,
     private readonly router: Router,
     private readonly destroyRef: DestroyRef,
   ) {
@@ -61,20 +95,22 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
 
   onTabChange(index: number): void {
     this.activeTabIndex.set(index);
-    this.searchTerm.set('');
+    this.searchTerm = '';
+    this.statusFilter = null;
     this.loadSubCategories();
     this.updateAddButtonLabel();
   }
 
-  onSearch(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.searchTerm.set(value);
+  onSearch(): void {
     this.loadSubCategories();
   }
 
-  clearSearch(input: HTMLInputElement): void {
-    input.value = '';
-    this.searchTerm.set('');
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.loadSubCategories();
+  }
+
+  onStatusChange(): void {
     this.loadSubCategories();
   }
 
@@ -96,7 +132,11 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
               this.modalService.commonSuccess();
               this.loadSubCategories();
             },
-            error: () => this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถลบหมวดหมู่ได้' }),
+            error: () =>
+              this.modalService.cancel({
+                title: 'เกิดข้อผิดพลาด',
+                message: 'ไม่สามารถลบหมวดหมู่ได้',
+              }),
           });
       },
     });
@@ -123,7 +163,10 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถบันทึกลำดับได้' });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถบันทึกลำดับได้',
+          });
           this.loadSubCategories();
         },
       });
@@ -138,13 +181,42 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
       .menuCategoriesGetSubCategoriesGet({
         categoryType: this.activeCategoryType,
         ItemPerPage: 100,
-        Search: this.searchTerm() || undefined,
+        Search: this.searchTerm || undefined,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => this.subCategories.set(res.results ?? []),
-        error: () => this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถโหลดข้อมูลได้' }),
+        next: (res) => {
+          let items = res.results ?? [];
+          if (this.statusFilter === true)
+            items = items.filter((i) => i.isActive);
+          else if (this.statusFilter === false)
+            items = items.filter((i) => !i.isActive);
+          this.subCategories.set(items);
+        },
+        error: () =>
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถโหลดข้อมูลได้',
+          }),
       });
+  }
+
+  private openCreateDialog(): void {
+    const tab = this.tabs[this.activeTabIndex()];
+    const ref = this.dialogService.open(CreateSubCategoryDialogComponent, {
+      header: tab.addLabel,
+      width: '40vw',
+      styleClass: 'card-dialog',
+      showHeader: false,
+      modal: true,
+      data: { categoryType: tab.categoryType },
+    });
+
+    ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (created) => {
+        if (created) this.loadSubCategories();
+      },
+    });
   }
 
   private setupBreadcrumbButtons(): void {
@@ -156,10 +228,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
         key: KEY_BTN_ADD,
         label: this.tabs[0].addLabel,
         severity: 'primary',
-        callback: () =>
-          this.router.navigate(['/menu/categories/create'], {
-            queryParams: { categoryType: this.activeCategoryType },
-          }),
+        callback: () => this.openCreateDialog(),
       },
     });
   }
@@ -174,10 +243,7 @@ export class SubCategoryListComponent implements OnInit, OnDestroy {
         key: KEY_BTN_ADD,
         label: tab.addLabel,
         severity: 'primary',
-        callback: () =>
-          this.router.navigate(['/menu/categories/create'], {
-            queryParams: { categoryType: tab.categoryType },
-          }),
+        callback: () => this.openCreateDialog(),
       },
     });
   }

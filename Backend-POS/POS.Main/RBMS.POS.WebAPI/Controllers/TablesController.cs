@@ -107,6 +107,14 @@ public class TablesController : BaseController
         return Success("ยกเลิกเชื่อมโต๊ะสำเร็จ");
     }
 
+    [HttpDelete("link/single/{tableId}")]
+    [PermissionAuthorize(Permissions.Table.Update)]
+    public async Task<IActionResult> UnlinkSingleTable(int tableId, CancellationToken ct = default)
+    {
+        await _tableService.UnlinkSingleTableAsync(tableId, ct);
+        return Success("แยกโต๊ะสำเร็จ");
+    }
+
     [HttpPost("{tableId}/set-unavailable")]
     [PermissionAuthorize(Permissions.Table.Update)]
     [ProducesResponseType(typeof(BaseResponseModel<TableResponseModel>), StatusCodes.Status200OK)]

@@ -16,7 +16,6 @@ import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { Icon, ModalService } from '@app/core/services/modal.service';
 import { CreateUserDialogComponent } from '../../dialogs/create-user-dialog/create-user-dialog.component';
 import { CredentialsDialogComponent } from '../../dialogs/credentials-dialog/credentials-dialog.component';
-
 const KEY_BTN_ADD = 'add-employee';
 
 @Component({
@@ -132,8 +131,11 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
   private loadEmployees(): void {
     const isActive =
-      this.statusFilter === 'active' ? true :
-      this.statusFilter === 'inactive' ? false : undefined;
+      this.statusFilter === 'active'
+        ? true
+        : this.statusFilter === 'inactive'
+          ? false
+          : undefined;
 
     this.humanResourceService
       .humanResourceGetEmployeesGet({

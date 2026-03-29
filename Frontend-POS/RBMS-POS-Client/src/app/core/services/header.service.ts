@@ -1,14 +1,11 @@
 import { Injectable } from '@angular/core';
-
 import { Store } from '@ngrx/store';
-
 import * as LayoutActions from '@app/store/layout/layout.actions';
 import { selectHeaderButtons } from '@app/store/layout/layout.selectors';
-
 import { Pbutton } from '@app/shared/component-interfaces';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class HeaderService {
   headerButtons$;
@@ -30,7 +27,9 @@ export class HeaderService {
   }
 
   setButtonDisabled(key: string, disabled: boolean): void {
-    this.store.dispatch(LayoutActions.setHeaderButtonDisabled({ key, disabled }));
+    this.store.dispatch(
+      LayoutActions.setHeaderButtonDisabled({ key, disabled }),
+    );
   }
 
   clearButtons(): void {

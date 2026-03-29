@@ -109,9 +109,9 @@ public class CustomerService : ICustomerService
 
         var fileResult = await _fileService.UploadAsync(slipFile, ct);
 
-        decimal? ocrAmount = null;
         using var stream = slipFile.OpenReadStream();
-        ocrAmount = await _slipOcrService.ExtractAmountAsync(stream, ct);
+        var ocrResult = await _slipOcrService.ExtractSlipDataAsync(stream, ct);
+        var ocrAmount = ocrResult.Amount;
 
         var verificationStatus = ocrAmount.HasValue && ocrAmount.Value == bill.GrandTotal
             ? ESlipVerificationStatus.Matched
@@ -119,9 +119,16 @@ public class CustomerService : ICustomerService
                 ? ESlipVerificationStatus.Mismatched
                 : ESlipVerificationStatus.None;
 
+        // Store slip info on bill so staff can see it
+        bill.CustomerSlipFileId = fileResult.FileId;
+        bill.CustomerSlipOcrAmount = ocrAmount;
+        bill.CustomerSlipVerificationStatus = verificationStatus.ToString();
+        _unitOfWork.OrderBills.Update(bill);
+        await _unitOfWork.CommitAsync(ct);
+
         _logger.LogInformation(
-            "Customer uploaded slip for Bill {BillId}: OCR={OcrAmount}, Expected={GrandTotal}, Status={Status}",
-            request.OrderBillId, ocrAmount, bill.GrandTotal, verificationStatus);
+            "Customer uploaded slip for Bill {BillId}: FileId={FileId}, OCR={OcrAmount}, Expected={GrandTotal}, Status={Status}",
+            request.OrderBillId, fileResult.FileId, ocrAmount, bill.GrandTotal, verificationStatus);
 
         await _notificationService.NotifySlipUploadedAsync(table.TableId, request.OrderBillId, ct);
 

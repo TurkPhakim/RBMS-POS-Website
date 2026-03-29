@@ -1,0 +1,14 @@
+<p-select
+  [(ngModel)]="selectedValue"
+  [options]="options"
+  [optionLabel]="optionLabel"
+  [optionValue]="optionValue"
+  [placeholder]="placeholder"
+  [showClear]="showClear"
+  [filter]="filter"
+  [filterBy]="filterBy"
+  [disabled]="isDisabled || disabled"
+  [styleClass]="styleClass"
+  [class]="invalid ? 'ng-invalid ng-dirty' : ''"
+  (ngModelChange)="onValueChange($event)">
+</p-select>

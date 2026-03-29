@@ -13,4 +13,6 @@ public class OpenTableRequestModel
 
     [StringLength(500)]
     public string? Note { get; set; }
+
+    public int? ReservationId { get; set; }
 }

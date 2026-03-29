@@ -21,13 +21,19 @@ public interface IOrderService
 
     Task<OrderDetailResponseModel> SendToKitchenAsync(int orderId, CancellationToken ct = default);
 
+    Task SendItemToKitchenAsync(int orderItemId, CancellationToken ct = default);
+
     Task VoidOrderItemAsync(int orderItemId, CancellationToken ct = default);
 
     Task CancelOrderItemAsync(int orderItemId, CancelOrderItemRequestModel request, CancellationToken ct = default);
 
     Task ServeOrderItemAsync(int orderItemId, CancellationToken ct = default);
 
-    Task<OrderDetailResponseModel> RequestBillAsync(int orderId, CancellationToken ct = default);
+    Task ServeAllReadyItemsAsync(int orderId, CancellationToken ct = default);
+
+    Task<OrderDetailResponseModel> RequestBillAsync(int orderId, bool force = false, CancellationToken ct = default);
+
+    Task SendBillToCustomerAsync(int orderId, CancellationToken ct = default);
 
     Task<OrderDetailResponseModel> VoidBillAsync(int orderId, CancellationToken ct = default);
 
@@ -35,7 +41,11 @@ public interface IOrderService
 
     Task<List<OrderBillResponseModel>> SplitBillByAmountAsync(int orderId, SplitByAmountRequestModel request, CancellationToken ct = default);
 
+    Task<List<OrderBillResponseModel>> UnsplitBillAsync(int orderId, CancellationToken ct = default);
+
     Task<List<OrderBillResponseModel>> GetOrderBillsAsync(int orderId, CancellationToken ct = default);
 
     Task<OrderBillResponseModel> UpdateBillChargesAsync(int orderBillId, UpdateBillChargesRequestModel request, CancellationToken ct = default);
+
+    Task UpdateGuestCountAsync(int orderId, UpdateGuestCountRequestModel request, CancellationToken ct = default);
 }

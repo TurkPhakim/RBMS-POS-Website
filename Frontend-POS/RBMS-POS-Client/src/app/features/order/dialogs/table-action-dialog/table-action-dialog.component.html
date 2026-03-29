@@ -1,0 +1,149 @@
+<app-card-template [headerLabel]="config.header!">
+  <!-- Body -->
+  <div class="space-y-4">
+    <div class="flex items-start gap-4">
+      <!-- Table Visual -->
+      <div class="w-24 h-24 rounded-2xl flex items-center justify-center shrink-0"
+           [ngClass]="getTableBgClasses()">
+        <app-generic-icon name="table-dinner" svgClass="w-16 h-16" class="text-white"></app-generic-icon>
+      </div>
+
+      <!-- Info -->
+      <div class="flex-1 min-w-0 space-y-1">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1.5 text-lg font-medium">
+            <app-generic-icon name="human" svgClass="w-6 h-6" class="text-primary"></app-generic-icon>
+            {{ table.currentGuests ?? 0 }}/{{ table.capacity }} คน
+          </span>
+          @if (table.guestType) {
+            <span class="px-2.5 py-0.5 rounded-full font-semibold"
+                  [ngClass]="table.guestType === 'WalkIn' ? 'bg-primary-subtle text-primary' : 'bg-info-bg text-info'">
+              {{ table.guestType === "WalkIn" ? "Walk-in" : "จองมา" }}
+            </span>
+          }
+        </div>
+        @if (table.openedAt || table.linkedTableNames?.length) {
+          <div class="flex items-center gap-4 text-lg text-surface-sub">
+            @if (table.openedAt) {
+              <span class="flex items-center gap-1.5">
+                <app-generic-icon name="work-time" svgClass="w-5 h-5"></app-generic-icon>
+                {{ table.openedAt | dateFormat: "TIME_DATE" }}
+              </span>
+            }
+            @if (table.linkedTableNames?.length) {
+              <span class="flex items-center gap-1.5">
+                <app-generic-icon name="link" svgClass="w-6 h-6"></app-generic-icon>
+                เชื่อมกับ {{ table.linkedTableNames!.join(", ") }}
+              </span>
+            }
+          </div>
+        }
+        @if (table.note) {
+          <div class="flex items-start gap-1.5 text-lg text-surface-sub">
+            <app-generic-icon name="chat-message" svgClass="w-6 h-6 shrink-0 mt-0.5"></app-generic-icon>
+            <span class="whitespace-pre-line break-words">{{ table.note }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Quick Actions (right) -->
+      @if (table.status === "Occupied" || table.status === "Billing") {
+        <div class="flex gap-1 shrink-0">
+          <button class="w-16 h-16 rounded-xl bg-warning-bg flex items-center justify-center text-warning hover:bg-warning hover:text-white transition-colors"
+                  title="แก้ไขจำนวนลูกค้า"
+                  (click)="onEditGuestCount()">
+            <app-generic-icon name="human" svgClass="w-10 h-10"></app-generic-icon>
+          </button>
+          <button class="w-16 h-16 rounded-xl bg-surface-border flex items-center justify-center text-surface-sidebar hover:bg-surface-sidebar hover:text-white transition-colors"
+                  title="QR Code"
+                  (click)="onShowQrCode()">
+            <app-generic-icon name="scan-barcode" svgClass="w-10 h-10"></app-generic-icon>
+          </button>
+          @if (table.status === "Billing") {
+            <button class="w-16 h-16 rounded-xl bg-billing-bg flex items-center justify-center text-billing hover:bg-billing hover:text-white transition-colors"
+                    title="ชำระเงิน"
+                    (click)="onGoToCheckout()">
+              <app-generic-icon name="bill-rastaurant" svgClass="w-10 h-10"></app-generic-icon>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Serving Progress -->
+    @if (table.status === "Occupied" && (table.totalActiveItemCount ?? 0) > 0) {
+      <div class="rounded-xl px-4 py-3"
+           [ngClass]="(table.unservedItemCount ?? 0) > 0 ? 'bg-primary-subtle' : 'bg-success-bg'">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-lg flex items-center justify-center shrink-0"
+               [ngClass]="(table.unservedItemCount ?? 0) > 0 ? 'bg-primary' : 'bg-success'">
+            <app-generic-icon name="order-dinner" svgClass="w-8 h-8" class="text-white"></app-generic-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-lg font-semibold"
+                    [ngClass]="(table.unservedItemCount ?? 0) > 0 ? 'text-primary' : 'text-success-text'">
+                {{ (table.unservedItemCount ?? 0) > 0 ? 'กำลังเสิร์ฟ' : 'เสิร์ฟครบแล้ว' }}
+              </span>
+              <span class="text-lg font-bold"
+                    [ngClass]="(table.unservedItemCount ?? 0) > 0 ? 'text-primary' : 'text-success'">
+                {{ table.totalActiveItemCount! - (table.unservedItemCount ?? 0) }}/{{ table.totalActiveItemCount }}
+                <span class="font-normal text-surface-sub">รายการ</span>
+              </span>
+            </div>
+            <div class="w-full h-2 bg-white rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all"
+                   [ngClass]="(table.unservedItemCount ?? 0) > 0 ? 'bg-primary' : 'bg-success'"
+                   [style.width.%]="((table.totalActiveItemCount! - (table.unservedItemCount ?? 0)) / table.totalActiveItemCount!) * 100">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Footer: Action Buttons -->
+  <p-footer>
+    <p-button label="ปิด" severity="secondary" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onClose()"></p-button>
+    @if (canUpdate) {
+      @switch (table.status) {
+        @case ("Available") {
+          <p-button label="ปิดใช้งาน" severity="danger" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onSetUnavailable()"></p-button>
+          <p-button label="เปิดโต๊ะ" severity="primary" [style]="{ 'min-width': '120px' }" (onClick)="onOpenTable()"></p-button>
+        }
+        @case ("Occupied") {
+          @if (canCloseTable() && !table.linkedGroupCode) {
+            <p-button label="ปิดโต๊ะ" severity="danger" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onCloseTable()"></p-button>
+          }
+          @if (!table.linkedGroupCode) {
+            <p-button label="ย้ายโต๊ะ" severity="help" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onMoveTable()"></p-button>
+            <p-button label="เชื่อมโต๊ะ" severity="warn" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onLinkTables()"></p-button>
+          } @else if (table.isLinkedPrimary) {
+            <p-button label="ยกเลิกเชื่อม" severity="danger" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onUnlinkTables()"></p-button>
+          } @else {
+            <p-button label="แยกโต๊ะ" severity="warn" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onUnlinkSingleTable()"></p-button>
+          }
+          <p-button label="ดูออเดอร์" severity="primary" [style]="{ 'min-width': '120px' }" (onClick)="onViewOrder()"></p-button>
+        }
+        @case ("Billing") {
+          @if (table.linkedGroupCode && table.isLinkedPrimary) {
+            <p-button label="ยกเลิกเชื่อม" severity="danger" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onUnlinkTables()"></p-button>
+          } @else if (table.linkedGroupCode) {
+            <p-button label="แยกโต๊ะ" severity="warn" [outlined]="true" [style]="{ 'min-width': '120px' }" (onClick)="onUnlinkSingleTable()"></p-button>
+          }
+          <p-button label="ดูออเดอร์" severity="primary" [style]="{ 'min-width': '120px' }" (onClick)="onViewOrder()"></p-button>
+        }
+        @case ("Reserved") {
+          <p-button label="เปิดโต๊ะ (เช็คอิน)" severity="primary" [style]="{ 'min-width': '120px' }" (onClick)="onCheckInReservation()"></p-button>
+        }
+        @case ("Cleaning") {
+          <p-button label="ทำความสะอาดเสร็จ" severity="success" [style]="{ 'min-width': '120px' }" (onClick)="onCleanTable()"></p-button>
+        }
+        @case ("Unavailable") {
+          <p-button label="เปิดใช้งาน" severity="success" [style]="{ 'min-width': '120px' }" (onClick)="onSetAvailable()"></p-button>
+        }
+      }
+    }
+  </p-footer>
+</app-card-template>

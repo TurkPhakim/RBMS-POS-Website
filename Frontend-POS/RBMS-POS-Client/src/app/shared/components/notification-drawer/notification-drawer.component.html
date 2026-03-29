@@ -75,7 +75,7 @@
         } @else {
           <app-generic-icon
             [name]="chip.icon"
-            svgClass="w-5 h-5"
+            svgClass="w-6 h-6"
           ></app-generic-icon>
         }
         {{ chip.label }}
@@ -173,9 +173,23 @@
                   {{ relativeTime(noti.createdAt) }}
                 </span>
               </div>
-              <p class="text-surface-sub line-clamp-2">
-                {{ noti.message }}
-              </p>
+              @if (getMessageLines(noti.message).length > 1) {
+                <p class="text-surface-sub">
+                  {{ getMessageLines(noti.message)[0] }}
+                </p>
+                <p class="text-surface-sub flex items-center gap-1 mt-0.5">
+                  <app-generic-icon
+                    name="payment-bath"
+                    svgClass="w-6 h-6"
+                    class="text-success shrink-0"
+                  ></app-generic-icon>
+                  {{ getMessageLines(noti.message)[1] }}
+                </p>
+              } @else {
+                <p class="text-surface-sub line-clamp-2">
+                  {{ noti.message }}
+                </p>
+              }
               @if (noti.tableName) {
                 <p class="text-primary font-medium mt-0.5">
                   โซน{{ noti.zoneName }} - โต๊ะ{{ noti.tableName }}

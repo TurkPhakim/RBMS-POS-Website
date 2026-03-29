@@ -134,31 +134,59 @@ public class PaymentService : IPaymentService
         // 2. Upload slip image
         var fileResult = await _fileService.UploadAsync(slipFile, ct);
 
-        // 3. OCR extract amount
+        // 3. OCR extract data (amount, date, account)
         using var stream = slipFile.OpenReadStream();
-        var ocrAmount = await _slipOcrService.ExtractAmountAsync(stream, ct);
+        var ocrResult = await _slipOcrService.ExtractSlipDataAsync(stream, ct);
 
-        // 4. Determine verification status
+        // 4. Determine amount verification status
         var verificationStatus = ESlipVerificationStatus.None;
-        if (ocrAmount.HasValue)
+        if (ocrResult.Amount.HasValue)
         {
-            verificationStatus = ocrAmount.Value == bill.GrandTotal
+            verificationStatus = ocrResult.Amount.Value == bill.GrandTotal
                 ? ESlipVerificationStatus.Matched
                 : ESlipVerificationStatus.Mismatched;
         }
 
-        // 5. Store slip info on bill (temporary — will be moved to TbPayment on confirm)
-        // For now, track in a separate way: store fileId + ocrAmount for the confirm step
-        _logger.LogInformation("Slip uploaded for Bill {OrderBillId}, FileId: {FileId}, OCR Amount: {OcrAmount}, Status: {Status}",
-            request.OrderBillId, fileResult.FileId, ocrAmount, verificationStatus);
+        // 5. Determine date verification
+        bool? isDateToday = ocrResult.TransferDate.HasValue
+            ? ocrResult.TransferDate.Value.Date == DateTime.Today
+            : null;
+
+        // 6. Determine account verification
+        bool? isAccountMatched = null;
+        string? shopAccountNumber = null;
+        if (!string.IsNullOrEmpty(ocrResult.AccountNumber))
+        {
+            var shopSettings = await _unitOfWork.ShopSettings.GetAll()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ct);
+
+            shopAccountNumber = shopSettings?.AccountNumber;
+
+            if (!string.IsNullOrEmpty(shopAccountNumber))
+            {
+                // normalize: ลบ - และช่องว่าง แล้วเทียบ
+                var ocrDigits = System.Text.RegularExpressions.Regex.Replace(ocrResult.AccountNumber, @"[^0-9]", "");
+                var shopDigits = System.Text.RegularExpressions.Regex.Replace(shopAccountNumber, @"[^0-9]", "");
+                isAccountMatched = shopDigits.Contains(ocrDigits) || ocrDigits.Contains(shopDigits);
+            }
+        }
+
+        _logger.LogInformation("Slip uploaded for Bill {OrderBillId}, FileId: {FileId}, OCR Amount: {OcrAmount}, Date: {Date}, Account: {Account}, Status: {Status}",
+            request.OrderBillId, fileResult.FileId, ocrResult.Amount, ocrResult.TransferDate, ocrResult.AccountNumber, verificationStatus);
 
         return new SlipUploadResultModel
         {
             OrderBillId = bill.OrderBillId,
             SlipImageFileId = fileResult.FileId,
-            OcrAmount = ocrAmount,
+            OcrAmount = ocrResult.Amount,
             VerificationStatus = verificationStatus.ToString(),
             BillGrandTotal = bill.GrandTotal,
+            OcrTransferDate = ocrResult.TransferDate,
+            IsDateToday = isDateToday,
+            OcrAccountNumber = ocrResult.AccountNumber,
+            ShopAccountNumber = shopAccountNumber,
+            IsAccountMatched = isAccountMatched,
         };
     }
 
@@ -180,14 +208,27 @@ public class PaymentService : IPaymentService
         if (bill.Status != EBillStatus.Pending)
             throw new BusinessException("บิลนี้ชำระเงินไปแล้ว");
 
-        // 3. Create payment
+        // 3. Validate manual amount
+        if (request.ManualAmount.HasValue && request.ManualAmount.Value < bill.GrandTotal)
+            throw new ValidationException("จำนวนเงินที่รับน้อยกว่ายอดบิล");
+
+        // 4. Create payment
         await using var transaction = await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
+            // Use customer-uploaded slip from bill if staff didn't upload
+            var slipFileId = request.SlipImageFileId ?? bill.CustomerSlipFileId;
+            var ocrAmount = request.OcrAmount ?? bill.CustomerSlipOcrAmount;
+
             var amountReceived = request.ManualAmount ?? bill.GrandTotal;
-            var verificationStatus = request.ManualAmount.HasValue
-                ? ESlipVerificationStatus.Manual
-                : ESlipVerificationStatus.Matched;
+
+            ESlipVerificationStatus verificationStatus;
+            if (request.ManualAmount.HasValue)
+                verificationStatus = ESlipVerificationStatus.Manual;
+            else if (slipFileId.HasValue)
+                verificationStatus = ESlipVerificationStatus.Matched;
+            else
+                verificationStatus = ESlipVerificationStatus.None;
 
             var payment = new TbPayment
             {
@@ -197,8 +238,8 @@ public class PaymentService : IPaymentService
                 AmountDue = bill.GrandTotal,
                 AmountReceived = amountReceived,
                 ChangeAmount = 0,
-                SlipImageFileId = request.SlipImageFileId,
-                SlipOcrAmount = request.OcrAmount,
+                SlipImageFileId = slipFileId,
+                SlipOcrAmount = ocrAmount,
                 SlipVerificationStatus = verificationStatus,
                 PaymentReference = request.PaymentReference,
                 PaidAt = DateTime.UtcNow,
@@ -310,6 +351,7 @@ public class PaymentService : IPaymentService
             .Include(p => p.OrderBill)
                 .ThenInclude(b => b.Order)
                     .ThenInclude(o => o.Table)
+                        .ThenInclude(t => t.Zone)
             .Include(p => p.OrderBill)
                 .ThenInclude(b => b.Order)
                     .ThenInclude(o => o.OrderItems)
@@ -337,8 +379,11 @@ public class PaymentService : IPaymentService
         }
         else if (bill.BillType == EBillType.ByAmount)
         {
-            // ByAmount: no items — show split info instead
-            receiptItems = new List<ReceiptItemModel>();
+            // ByAmount: show all items (split info displayed separately on receipt)
+            receiptItems = order.OrderItems
+                .Where(oi => oi.Status != EOrderItemStatus.Cancelled)
+                .Select(oi => MapToReceiptItem(oi))
+                .ToList();
         }
         else
         {
@@ -358,6 +403,11 @@ public class PaymentService : IPaymentService
             TaxId = shop.TaxId,
             ReceiptHeaderText = shop.ReceiptHeaderText,
             ReceiptFooterText = shop.ReceiptFooterText,
+            ShopEmail = shop.ShopEmail,
+            Facebook = shop.Facebook,
+            Instagram = shop.Instagram,
+            Website = shop.Website,
+            LineId = shop.LineId,
             PaymentId = payment.PaymentId,
             PaymentMethod = payment.PaymentMethod.ToString(),
             PaidAt = payment.PaidAt,
@@ -367,7 +417,16 @@ public class PaymentService : IPaymentService
             SplitIndex = bill.SplitIndex,
             OrderNumber = order.OrderNumber,
             TableName = order.Table?.TableName,
+            ZoneName = order.Table?.Zone?.ZoneName,
+            GuestCount = order.GuestCount,
+            CompanyNameThai = shop.CompanyNameThai,
+            CompanyNameEnglish = shop.CompanyNameEnglish,
             SubTotal = bill.SubTotal,
+            OriginalSubTotal = bill.BillType == EBillType.ByAmount
+                ? order.OrderItems
+                    .Where(i => i.Status != EOrderItemStatus.Cancelled)
+                    .Sum(i => i.TotalPrice)
+                : bill.SubTotal,
             ServiceChargeRate = bill.ServiceChargeRate,
             ServiceChargeAmount = bill.ServiceChargeAmount,
             VatRate = bill.VatRate,
@@ -387,6 +446,7 @@ public class PaymentService : IPaymentService
     {
         var order = await _unitOfWork.Orders.QueryNoTracking()
             .Include(o => o.Table)
+                .ThenInclude(t => t.Zone)
             .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.OrderItemOptions)
             .FirstOrDefaultAsync(o => o.OrderId == orderId, ct)
@@ -401,6 +461,9 @@ public class PaymentService : IPaymentService
 
         var billIds = bills.Select(b => b.OrderBillId).ToList();
         var payments = await _unitOfWork.Payments.QueryNoTracking()
+            .Include(p => p.CashierSession)
+                .ThenInclude(cs => cs.User)
+                    .ThenInclude(u => u.Employee)
             .Where(p => billIds.Contains(p.OrderBillId))
             .ToListAsync(ct);
 
@@ -417,10 +480,24 @@ public class PaymentService : IPaymentService
             TaxId = shop.TaxId,
             ReceiptHeaderText = shop.ReceiptHeaderText,
             ReceiptFooterText = shop.ReceiptFooterText,
+            ShopEmail = shop.ShopEmail,
+            Facebook = shop.Facebook,
+            Instagram = shop.Instagram,
+            Website = shop.Website,
+            LineId = shop.LineId,
             BillNumber = $"รวม-{order.OrderNumber}",
             BillType = "Consolidated",
             OrderNumber = order.OrderNumber,
             TableName = order.Table?.TableName,
+            ZoneName = order.Table?.Zone?.ZoneName,
+            GuestCount = order.GuestCount,
+            PaidAt = payments.Max(p => p.PaidAt),
+            CashierName = payments.OrderByDescending(p => p.PaidAt).First().CashierSession?.User?.Employee is { } emp
+                ? $"{emp.FirstNameThai} {emp.LastNameThai}"
+                : null,
+            CompanyNameThai = shop.CompanyNameThai,
+            CompanyNameEnglish = shop.CompanyNameEnglish,
+            SplitCount = bills.Count,
             SubTotal = bills.Sum(b => b.SubTotal),
             ServiceChargeRate = bills.FirstOrDefault()?.ServiceChargeRate ?? 0,
             ServiceChargeAmount = bills.Sum(b => b.ServiceChargeAmount),
@@ -457,7 +534,9 @@ public class PaymentService : IPaymentService
             TotalPrice = oi.TotalPrice,
             Note = oi.Note,
             Options = oi.OrderItemOptions
-                .Select(o => $"{o.OptionGroupName}: {o.OptionItemName}")
+                .Select(o => o.AdditionalPrice != 0
+                    ? $"{o.OptionGroupName}: {o.OptionItemName} ({o.AdditionalPrice:F2})"
+                    : $"{o.OptionGroupName}: {o.OptionItemName}")
                 .ToList(),
         };
     }
@@ -531,7 +610,7 @@ public class PaymentService : IPaymentService
         {
             EventType = "PAYMENT_COMPLETED",
             Title = "ชำระเงินสำเร็จ",
-            Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} ชำระเงินเรียบร้อย (ยอด {bill.GrandTotal:N2} บาท)",
+            Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} ชำระเงินเรียบร้อย\nจำนวนเงิน {bill.GrandTotal:N2} บาท",
             TableId = order.TableId,
             OrderId = order.OrderId,
             TargetGroup = "Floor"

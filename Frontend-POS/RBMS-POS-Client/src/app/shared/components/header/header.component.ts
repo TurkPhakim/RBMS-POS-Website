@@ -33,6 +33,7 @@ export class HeaderComponent {
     const fileId = this.currentUser()?.profileImageFileId;
     return fileId ? `${this.apiConfig.rootUrl}/api/admin/file/${fileId}` : null;
   });
+  profileImageError = signal(false);
 
   constructor(
     private readonly apiConfig: ApiConfiguration,

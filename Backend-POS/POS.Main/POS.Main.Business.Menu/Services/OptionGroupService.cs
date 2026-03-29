@@ -137,7 +137,9 @@ public class OptionGroupService : IOptionGroupService
                         : mog.Menu.SubCategory.CategoryType == (int)EMenuCategory.Beverage ? "เครื่องดื่ม"
                         : mog.Menu.SubCategory.CategoryType == (int)EMenuCategory.Dessert ? "ของหวาน"
                         : "ไม่ระบุ",
-                    IsAvailable = mog.Menu.IsAvailable
+                    IsAvailable = mog.Menu.IsAvailable,
+                    IsAvailablePeriod1 = mog.Menu.IsAvailablePeriod1,
+                    IsAvailablePeriod2 = mog.Menu.IsAvailablePeriod2
                 })
                 .ToListAsync(ct);
         }

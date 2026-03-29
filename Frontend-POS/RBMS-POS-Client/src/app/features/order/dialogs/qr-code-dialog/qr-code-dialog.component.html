@@ -1,0 +1,94 @@
+<app-card-template [headerLabel]="config.header!" contentClass="!p-4">
+  @if (isDev && qrUrl) {
+    <a [href]="qrUrl" target="_blank" card-header-right>
+      <p-tag severity="warn" [rounded]="true">
+        <app-generic-icon
+          name="link"
+          svgClass="w-5 h-5"
+          class="text-white"
+        ></app-generic-icon>
+        Mobile Website
+      </p-tag>
+    </a>
+  }
+
+  <div class="flex items-center gap-4">
+    <!-- QR Code (ซ้าย) -->
+    <div class="shrink-0 flex flex-col items-center">
+      <div
+        class="p-2 rounded-2xl bg-primary-subtle border-2 border-primary-light"
+      >
+        <!-- canvas ซ่อนไว้สำหรับ download -->
+        <div #qrCanvas class="hidden"></div>
+        @if (qrDataUrl) {
+          <p-image
+            [src]="qrDataUrl"
+            alt="QR Code"
+            width="240"
+            [preview]="true"
+            [appendTo]="'body'"
+          ></p-image>
+        }
+      </div>
+
+      <span
+        class="mt-3 inline-flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full font-semibold"
+      >
+        <app-generic-icon
+          name="cash-qrcode"
+          svgClass="w-6 h-6"
+          class="text-white"
+        ></app-generic-icon>
+        สแกนเพื่อสั่งอาหาร
+      </span>
+      <p class="mt-2 text-surface-sub">{{ openedDate }}</p>
+    </div>
+
+    <!-- ข้อมูลร้าน + โต๊ะ (ขวา) -->
+    <div class="flex-1 min-w-0 flex flex-col justify-center">
+      <!-- Shop branding -->
+      <div class="flex flex-col items-center text-center gap-2">
+        <div
+          class="w-28 h-28 bg-white rounded-full flex items-center justify-center p-1.5 border-2 border-primary-light"
+        >
+          <img
+            [src]="logoUrl"
+            alt="Shop Logo"
+            class="w-full h-full object-contain rounded-full"
+            (error)="logoUrl = 'images/RBMS_Logo.png'"
+          />
+        </div>
+        <p class="text-2xl font-bold text-primary">{{ shopNameThai }}</p>
+        <p class="text-xl font-semibold text-primary-text">{{ shopName }}</p>
+      </div>
+
+      <div class="h-px bg-surface-border n my-4"></div>
+
+      <!-- Table + Zone -->
+      <div class="flex items-center gap-2">
+        <div
+          class="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0"
+        >
+          <app-generic-icon
+            name="table-restaurant"
+            svgClass="w-8 h-8"
+            class="text-white"
+          ></app-generic-icon>
+        </div>
+        <span class="font-semibold text-xl whitespace-nowrap"
+          >โซน {{ table.zoneName }} - โต๊ะ {{ table.tableName }}</span
+        >
+      </div>
+    </div>
+  </div>
+
+  <p-footer>
+    <p-button
+      label="ปิด"
+      severity="secondary"
+      styleClass="!px-8"
+      (onClick)="onClose()"
+    />
+    <p-button label="ดาวน์โหลด QR" (onClick)="onDownload()" />
+  </p-footer>
+</app-card-template>

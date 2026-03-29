@@ -1,10 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
-
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { SessionTimeoutComponent } from '@app/shared/dialogs/session-timeout/session-timeout.component';
 import { VerifyPasswordDialogComponent } from '@app/shared/dialogs/verify-password/verify-password.component';
-
 import { AuthService } from './auth.service';
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 นาที

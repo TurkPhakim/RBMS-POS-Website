@@ -1,8 +1,8 @@
 <app-card-template [headerLabel]="config.header!">
-  <form [formGroup]="form" class="space-y-5">
+  <form [formGroup]="form" class="space-y-4">
     <!-- ข้อมูลลูกค้า -->
     <div>
-      <h3 class="text-card-title text-primary-dark mb-3">ข้อมูลลูกค้า</h3>
+      <h3 class="text-lg font-semibold text-primary mb-3">ข้อมูลลูกค้า</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label for="customerName" class="block font-semibold mb-2">
@@ -12,7 +12,7 @@
             pInputText
             id="customerName"
             formControlName="customerName"
-            placeholder="ชื่อ-สกุล"
+            placeholder="ชื่อลูกค้า"
             class="w-full"
           />
           <app-field-error [control]="form.get('customerName')" type="text" />
@@ -20,14 +20,17 @@
 
         <div>
           <label for="customerPhone" class="block font-semibold mb-2">
-            เบอร์โทร <span class="text-danger">*</span>
+            เบอร์โทรติดต่อลูกค้า <span class="text-danger">*</span>
           </label>
           <input
             pInputText
             id="customerPhone"
             formControlName="customerPhone"
-            placeholder="0xx-xxx-xxxx"
+            placeholder="เบอร์โทรติดต่อลูกค้า"
             class="w-full"
+            maxlength="10"
+            (keypress)="'0123456789'.includes($event.key)"
+            (paste)="$event.preventDefault()"
           />
           <app-field-error [control]="form.get('customerPhone')" type="text" />
         </div>
@@ -53,42 +56,50 @@
       </div>
     </div>
 
+    <hr class="border-surface-border border-2" />
+
     <!-- ข้อมูลการจอง -->
     <div>
-      <h3 class="text-card-title text-primary-dark mb-3">ข้อมูลการจอง</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+      <h3 class="text-lg font-semibold text-primary text-primary-dark mb-3">
+        ข้อมูลการจอง
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div class="md:col-span-3">
           <label class="block font-semibold mb-2">
             วันที่และเวลาจอง <span class="text-danger">*</span>
           </label>
           <p-datepicker
             formControlName="reservationDateTime"
             dateFormat="dd/mm/yy"
-            placeholder="เลือกวันที่และเวลา"
+            placeholder="วันที่และเวลาจอง"
             [showTime]="true"
             [hourFormat]="'24'"
             [showClear]="true"
             [minDate]="minDate"
             styleClass="w-full"
           />
-          <app-field-error [control]="form.get('reservationDateTime')" type="select" />
-        </div>
-
-        <div>
-          <label class="block font-semibold mb-2">โต๊ะ (ไม่บังคับ)</label>
-          <app-available-table-dropdown
-            formControlName="tableId"
-            placeholder="เลือกโต๊ะ"
-          ></app-available-table-dropdown>
+          <app-field-error
+            [control]="form.get('reservationDateTime')"
+            type="select"
+          />
         </div>
 
         <div class="md:col-span-2">
-          <label for="note" class="block font-semibold mb-2">หมายเหตุ</label>
+          <label class="block font-semibold mb-2">โต๊ะที่นั่ง</label>
+          <app-available-table-dropdown
+            formControlName="tableId"
+          ></app-available-table-dropdown>
+        </div>
+
+        <div class="md:col-span-5">
+          <label for="note" class="block font-semibold mb-2"
+            >หมายเหตุลูกค้า</label
+          >
           <textarea
             pInputTextarea
             id="note"
             formControlName="note"
-            placeholder="เช่น แพ้อาหาร, ต้องการเก้าอี้เด็ก..."
+            placeholder="หมายเหตุลูกค้า"
             [rows]="3"
             class="w-full"
           ></textarea>
@@ -103,6 +114,7 @@
         [createdByName]="reservation.createdBy"
         [updatedAt]="reservation.updatedAt"
         [updatedByName]="reservation.updatedBy"
+        [compact]="true"
       />
     }
   </form>

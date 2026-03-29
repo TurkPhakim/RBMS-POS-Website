@@ -68,6 +68,7 @@ export interface CartItem {
   note?: string;
   selectedOptions: SelectedOption[];
   imageFileId?: number | null;
+  allergens?: string | null;
   itemTotal: number;
 }
 

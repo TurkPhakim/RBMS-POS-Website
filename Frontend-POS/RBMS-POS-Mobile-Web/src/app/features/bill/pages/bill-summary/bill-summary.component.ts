@@ -10,178 +10,7 @@ import { CustomerOrderItemModel } from '@core/api/models/customer-order-item-mod
 @Component({
   selector: 'app-bill-summary',
   standalone: false,
-  template: `
-    @if (bill()) {
-      <div class="px-4 pt-4">
-        <!-- Bill Card -->
-        <div class="bg-white rounded-2xl border border-surface-border">
-          <!-- Card Header -->
-          <app-card-header icon="checklist-cash" title="สรุปออเดอร์" [subtitle]="bill()!.orderNumber!" gradient="primary">
-            <span cardHeaderRight class="relative z-10 bg-white/20 text-white text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap">
-              {{ totalItemCount() }} รายการ
-            </span>
-          </app-card-header>
-
-          <!-- Grouped Items -->
-          <div class="px-5 py-4 space-y-5">
-            @for (group of groupedItems(); track group.categoryType; let isLast = $last) {
-              <div>
-                <div class="flex items-center mb-2">
-                  <span class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                    [class]="getCategoryBgClass(group.categoryType)">
-                    <app-generic-icon
-                      [name]="getCategoryIcon(group.categoryType)"
-                      [svgClass]="getCategoryIconSize(group.categoryType)"
-                      [class]="getCategoryTextClass(group.categoryType)"
-                    ></app-generic-icon>
-                  </span>
-                  <span class="text-lg font-extrabold tracking-wide"
-                    [class]="getCategoryTextClass(group.categoryType)">
-                    {{ getCategoryLabel(group.categoryType) }}
-                  </span>
-                </div>
-                <div class="space-y-3 pl-2">
-                  @for (item of group.items; track $index) {
-                    <div>
-                      <div class="flex justify-between">
-                        <span>{{ item.menuName }} x{{ item.quantity }}</span>
-                        <span class="font-semibold shrink-0 ml-3">{{ item.totalPrice }} บาท</span>
-                      </div>
-                      @if (item.options && item.options.length > 0) {
-                        <p class="text-sm text-surface-sub mt-0.5">{{ item.options!.join(', ') }}</p>
-                      }
-                      @if (item.note) {
-                        <p class="text-sm text-surface-sub mt-0.5">{{ item.note }}</p>
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
-
-              @if (!isLast) {
-                <div class="border-t-2 border-dashed border-surface-border"></div>
-              }
-            }
-          </div>
-
-          <!-- Bill Charges -->
-          @if (currentBill(); as b) {
-            <div class="border-t-2 border-surface-border px-5 py-4 space-y-2">
-              <div class="flex justify-between text-sm">
-                <span>ยอดอาหาร</span>
-                <span>{{ b.subTotal }} บาท</span>
-              </div>
-              @if (b.serviceChargeAmount) {
-                <div class="flex justify-between text-sm text-surface-sub">
-                  <span>ค่าบริการ</span>
-                  <span>{{ b.serviceChargeAmount }} บาท</span>
-                </div>
-              }
-              @if (b.vatAmount) {
-                <div class="flex justify-between text-sm text-surface-sub">
-                  <span>ภาษีมูลค่าเพิ่ม</span>
-                  <span>{{ b.vatAmount }} บาท</span>
-                </div>
-              }
-              @if (b.totalDiscountAmount) {
-                <div class="flex justify-between text-sm text-success">
-                  <span>ส่วนลด</span>
-                  <span>-{{ b.totalDiscountAmount }} บาท</span>
-                </div>
-              }
-            </div>
-
-            <!-- Grand Total -->
-            <div class="bg-primary/5 border-t-2 border-primary/30 px-5 py-4 flex justify-between items-center">
-              <span class="font-bold text-base sm:text-lg shrink-0">ยอดรวมสุทธิ</span>
-              <span class="text-xl sm:text-2xl font-extrabold text-primary text-right">{{ b.grandTotal | number:'1.2-2' }} บาท</span>
-            </div>
-
-            <!-- Payment Buttons -->
-            <div class="px-4 pb-4">
-              @if (!cashRequested() && !splitRequested()) {
-                <div class="relative flex gap-1.5">
-                  <button pButton label="เงินสด" severity="success" class="flex-1 !text-sm !px-1 !py-1.5 sm:!py-2.5"
-                          (click)="requestCashPayment()"></button>
-                  <button pButton label="โอนเงิน" class="flex-1 !text-sm !px-1 !py-1.5 sm:!py-2.5"
-                          (click)="goToSlipUpload(b.orderBillId!)"></button>
-                  <div class="flex-1">
-                    <button pButton severity="info" class="w-full !p-0 !overflow-hidden h-full"
-                            (click)="showSplitPanel.set(!showSplitPanel())">
-                      <span class="flex items-center w-full h-full">
-                        <span class="flex-1 px-1 text-center text-sm leading-tight whitespace-nowrap">แยกบิล</span>
-                        <span class="border-l border-white/30 px-2 flex items-center justify-center self-stretch">
-                          <i class="pi pi-chevron-down text-xs transition-transform duration-200"
-                             [class.rotate-180]="showSplitPanel()"></i>
-                        </span>
-                      </span>
-                    </button>
-                  </div>
-
-                  @if (showSplitPanel()) {
-                    <div class="absolute left-0 right-0 top-full mt-1 z-30 bg-white rounded-lg border border-surface-border overflow-hidden">
-                        @if (splitType() !== 'Equal') {
-                          <button class="w-full text-left px-4 py-3 hover:bg-info/5 transition-colors border-b border-surface-border font-medium"
-                                  (click)="splitType.set('Equal')">
-                            หารเท่า
-                          </button>
-                          <button class="w-full text-left px-4 py-3 hover:bg-info/5 transition-colors font-medium"
-                                  (click)="submitSplitBill('ByItem')">
-                            แยกตามรายการ
-                          </button>
-                        } @else {
-                          <div class="p-3 space-y-2">
-                            <p class="text-base font-semibold text-info">หารเท่า</p>
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                              <div class="flex items-center justify-center gap-2">
-                                <button pButton icon="pi pi-minus" [rounded]="true" severity="info" [outlined]="true" size="small"
-                                        [disabled]="numberOfPeople() <= 2"
-                                        (click)="numberOfPeople.set(numberOfPeople() - 1)"></button>
-                                <span class="text-2xl font-bold w-8 text-center">{{ numberOfPeople() }}</span>
-                                <button pButton icon="pi pi-plus" [rounded]="true" severity="info" [outlined]="true" size="small"
-                                        (click)="numberOfPeople.set(numberOfPeople() + 1)"></button>
-                              </div>
-                              <p class="text-sm text-surface-sub text-center sm:text-right">คนละ <span class="font-semibold text-info">~{{ (b.grandTotal! / numberOfPeople()) | number:'1.2-2' }}</span> บาท</p>
-                            </div>
-                            <div class="flex gap-2">
-                              <button pButton label="กลับ" severity="secondary" [outlined]="true" size="small" class="flex-1"
-                                      (click)="splitType.set(null)"></button>
-                              <button pButton label="ยืนยัน" severity="info" size="small" class="flex-[2]"
-                                      [loading]="isSubmitting()"
-                                      (click)="submitSplitBill('Equal')"></button>
-                            </div>
-                          </div>
-                        }
-                    </div>
-                  }
-                </div>
-              } @else if (cashRequested()) {
-                <div class="bg-success/5 border border-success/30 rounded-xl p-3 flex items-center gap-2">
-                  <span class="w-18 h-18 rounded-full bg-success/10 flex items-center justify-center shrink-0">
-                    <app-generic-icon name="bill-invoice" svgClass="w-12 h-12" class="text-success"></app-generic-icon>
-                  </span>
-                  <div>
-                    <p class="text-xl font-bold text-success">แจ้งพนักงานแล้ว</p>
-                    <p class="text-surface-sub mt-1">กรุณาชำระเงินที่เคาน์เตอร์ หรือรอพนักงานมารับเงินที่โต๊ะ</p>
-                  </div>
-                </div>
-              } @else if (splitRequested()) {
-                <div class="bg-info/5 border border-info/30 rounded-xl p-3 flex items-center gap-2">
-                  <span class="w-18 h-18 rounded-full bg-info/10 flex items-center justify-center shrink-0">
-                    <app-generic-icon name="bill-invoice" svgClass="w-12 h-12" class="text-info"></app-generic-icon>
-                  </span>
-                  <div>
-                    <p class="text-xl font-bold text-info">แจ้งพนักงานแล้ว</p>
-                    <p class="text-surface-sub mt-1">กรุณารอพนักงานมาแยกบิลชำระเงินให้ที่โต๊ะ</p>
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './bill-summary.component.html',
 })
 export class BillSummaryComponent implements OnInit {
   bill = signal<CustomerBillResponseModel | null>(null);
@@ -208,6 +37,23 @@ export class BillSummaryComponent implements OnInit {
 
   totalItemCount = computed(() => (this.bill()?.items ?? []).length);
 
+  categoryBreakdown = computed(() => {
+    const items = this.bill()?.items ?? [];
+    const categories = [
+      { type: 1, label: 'ค่าอาหาร' },
+      { type: 2, label: 'ค่าเครื่องดื่ม' },
+      { type: 3, label: 'ค่าของหวาน' },
+    ];
+    return categories
+      .map(cat => ({
+        label: cat.label,
+        total: items
+          .filter(i => i.categoryType === cat.type)
+          .reduce((sum, i) => sum + (i.totalPrice ?? 0), 0),
+      }))
+      .filter(cat => cat.total > 0);
+  });
+
   currentBill = computed(() => {
     const bills = this.bill()?.bills ?? [];
     return bills.length > 0 ? bills[0] : null;
@@ -224,6 +70,11 @@ export class BillSummaryComponent implements OnInit {
   ngOnInit(): void {
     const qrToken = this.customerAuth.getQrToken();
     if (!qrToken) return;
+
+    // Restore payment request state from sessionStorage
+    const savedState = sessionStorage.getItem(`bill_state_${qrToken}`);
+    if (savedState === 'cash') this.cashRequested.set(true);
+    if (savedState === 'split') this.splitRequested.set(true);
 
     this.customerService.customerGetBillGet({ qrToken })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -244,6 +95,8 @@ export class BillSummaryComponent implements OnInit {
       .subscribe({
         next: () => {
           this.cashRequested.set(true);
+          const qrToken = this.customerAuth.getQrToken();
+          if (qrToken) sessionStorage.setItem(`bill_state_${qrToken}`, 'cash');
         },
       });
   }
@@ -263,6 +116,8 @@ export class BillSummaryComponent implements OnInit {
           this.splitRequested.set(true);
           this.showSplitPanel.set(false);
           this.splitType.set(null);
+          const qrToken = this.customerAuth.getQrToken();
+          if (qrToken) sessionStorage.setItem(`bill_state_${qrToken}`, 'split');
         },
         error: () => {
           this.isSubmitting.set(false);

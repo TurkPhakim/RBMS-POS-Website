@@ -30,6 +30,7 @@ public static class OrderItemMapper
                 ? $"{entity.CancelledByEmployee.FirstNameThai} {entity.CancelledByEmployee.LastNameThai}"
                 : null,
             CancelReason = entity.CancelReason,
+            SourceTableName = entity.SourceTable?.TableName,
             Options = entity.OrderItemOptions?
                 .Select(o => new OrderItemOptionResponseModel
                 {

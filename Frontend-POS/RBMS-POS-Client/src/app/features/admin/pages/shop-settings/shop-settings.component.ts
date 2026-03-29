@@ -1,7 +1,6 @@
 import { Component, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { ShopSettingsResponseModel } from '@app/core/api/models';
 import { ShopSettingsService } from '@app/core/api/services';
@@ -79,9 +78,9 @@ export class ShopSettingsComponent implements OnDestroy {
       instagram: ['', [Validators.maxLength(200)]],
       website: ['', [Validators.maxLength(500)]],
       lineId: ['', [Validators.maxLength(100)]],
-      bankName: ['', [Validators.maxLength(200)]],
-      accountNumber: ['', [Validators.maxLength(50)]],
-      accountName: ['', [Validators.maxLength(200)]],
+      bankName: ['', [Validators.required, Validators.maxLength(200)]],
+      accountNumber: ['', [Validators.required, Validators.maxLength(50)]],
+      accountName: ['', [Validators.required, Validators.maxLength(200)]],
       wifiSsid: ['', [Validators.maxLength(100)]],
       wifiPassword: ['', [Validators.maxLength(200)]],
       operatingHours: this.fb.array(

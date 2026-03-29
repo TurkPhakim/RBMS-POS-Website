@@ -30,6 +30,8 @@ public interface ITableService
 
     Task UnlinkTablesAsync(string groupCode, CancellationToken ct = default);
 
+    Task UnlinkSingleTableAsync(int tableId, CancellationToken ct = default);
+
     Task<TableResponseModel> SetUnavailableAsync(int tableId, CancellationToken ct = default);
 
     Task<TableResponseModel> SetAvailableAsync(int tableId, CancellationToken ct = default);

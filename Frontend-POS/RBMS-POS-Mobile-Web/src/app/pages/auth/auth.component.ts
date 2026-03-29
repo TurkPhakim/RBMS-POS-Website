@@ -8,41 +8,7 @@ import { CustomerAuthService } from '@core/services/customer-auth.service';
 @Component({
   selector: 'app-auth',
   standalone: false,
-  template: `
-    <div class="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-badge via-primary-light/60 to-warning-bg">
-      <div class="w-full text-center px-8 -mt-28">
-        @if (isLoading()) {
-          <div class="mb-2 flex justify-center">
-            <img src="images/RBMS_Logo.png" alt="Logo" class="w-28 h-28 object-contain">
-          </div>
-          <h1 class="text-4xl font-bold text-primary-dark">
-            กำลังเข้าสู่ระบบ...
-          </h1>
-          <p class="text-lg text-surface-dark/80 mt-4">
-            กรุณารอสักครู่
-          </p>
-        }
-        @if (errorMessage()) {
-          <div class="-mb-6 flex justify-center">
-            <ng-lottie
-              [options]="errorLottieOptions"
-              width="360px"
-              height="360px"
-            ></ng-lottie>
-          </div>
-          <h1 class="text-4xl font-bold text-primary-dark">
-            เข้าสู่ระบบไม่สำเร็จ
-          </h1>
-          <p class="text-lg text-surface-dark/80 mt-4">
-            กรุณาแจ้งพนักงาน
-          </p>
-          <p class="text-lg text-surface-dark/80">
-            หรือสแกน QR Code ใหม่อีกครั้ง
-          </p>
-        }
-      </div>
-    </div>
-  `,
+  templateUrl: './auth.component.html',
 })
 export class AuthComponent implements OnInit {
   isLoading = signal(true);

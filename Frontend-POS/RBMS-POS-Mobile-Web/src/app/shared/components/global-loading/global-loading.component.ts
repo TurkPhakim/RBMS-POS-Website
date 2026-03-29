@@ -8,11 +8,7 @@ import { LoadingService } from '@core/services/loading.service';
   template: `
     @if (loadingService.loading$ | async) {
       <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30">
-        <ng-lottie
-          [options]="lottieOptions"
-          width="200px"
-          height="200px"
-        ></ng-lottie>
+        <ng-lottie [options]="lottieOptions" width="140px" height="140px"></ng-lottie>
       </div>
     }
   `,

@@ -28,9 +28,9 @@ export interface ShopSettingsUpdatePut$Params {
 'LineId'?: string;
 'ReceiptHeaderText'?: string;
 'ReceiptFooterText'?: string;
-'BankName'?: string;
-'AccountNumber'?: string;
-'AccountName'?: string;
+'BankName': string;
+'AccountNumber': string;
+'AccountName': string;
 'WifiSsid'?: string;
 'WifiPassword'?: string;
 'OperatingHours'?: Array<OperatingHourModel>;

@@ -28,6 +28,7 @@ public class PositionService : IPositionService
     public async Task<PaginationResult<PositionResponseModel>> GetPositionsAsync(PaginationModel param, bool? isActive = null, CancellationToken ct = default)
     {
         var query = _unitOfWork.Positions.QueryNoTracking()
+            .Include(p => p.Employees)
             .Include(p => p.CreatedByEmployee)
             .Include(p => p.UpdatedByEmployee)
             .AsQueryable();

@@ -3,15 +3,21 @@
  * - require('./get-api-url') → return URL string
  * - node get-api-url.js → print URL
  */
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const envPath = path.join(__dirname, '..', 'src', 'environments', 'environment.ts');
-const content = fs.readFileSync(envPath, 'utf8');
+const envPath = path.join(
+  __dirname,
+  "..",
+  "src",
+  "environments",
+  "environment.ts",
+);
+const content = fs.readFileSync(envPath, "utf8");
 const match = content.match(/apiUrl:\s*['"]([^'"]+)['"]/);
 
 if (!match) {
-  console.error('ERROR: apiUrl not found in environment.ts');
+  console.error("ERROR: apiUrl not found in environment.ts");
   process.exit(1);
 }
 

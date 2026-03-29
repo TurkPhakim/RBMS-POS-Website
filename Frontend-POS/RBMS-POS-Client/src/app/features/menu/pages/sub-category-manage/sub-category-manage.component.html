@@ -8,7 +8,7 @@
     ></app-generic-icon>
   </div>
   <h1 class="text-page-title">
-    {{ isEditMode() ? "แก้ไขหมวดหมู่" : "เพิ่มหมวดหมู่" }}
+    แก้ไขหมวดหมู่เมนู
   </h1>
 </div>
 
@@ -16,7 +16,8 @@
   <!-- Card 1: ข้อมูลหมวดหมู่ -->
   <app-section-card
     headerLabel="ข้อมูลหมวดหมู่"
-    headerIcon="category"
+    [headerIcon]="categoryIcon()"
+    [headerIconClass]="categoryIconClass()"
     contentClass="p-6 grid grid-cols-1 md:grid-cols-3 gap-4"
   >
     <!-- ประเภทหลัก (readonly) -->
@@ -48,13 +49,14 @@
     <!-- สถานะการขาย -->
     <div>
       <label class="block font-semibold mb-2">สถานะการขาย</label>
-      <div class="flex items-center gap-3 pt-2">
+      <div class="flex items-center gap-2 pt-2">
         <p-inputSwitch
           formControlName="isActive"
           inputId="isActive"
         ></p-inputSwitch>
         <span
-          [class]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
+          class="font-semibold mb-2"
+          [ngClass]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
         >
           {{ form.get("isActive")?.value ? "เปิดขาย" : "ปิดขาย" }}
         </span>
@@ -63,8 +65,8 @@
   </app-section-card>
 
   <!-- Card 2: เมนูในหมวดหมู่นี้ (edit mode only) -->
-  @if (isEditMode() && menus().length > 0) {
-    <app-section-card headerLabel="เมนูในหมวดหมู่นี้" headerIcon="piggy-bank">
+  @if (menus().length > 0) {
+    <app-section-card headerLabel="เมนูในหมวดหมู่นี้" headerIcon="menu-list">
       <p-table
         [value]="menus()"
         [paginator]="true"
@@ -72,18 +74,19 @@
         [rowsPerPageOptions]="[5, 10, 25]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr>
-            <th class="w-[80px] text-center">รหัส</th>
-            <th class="w-[140px] text-center">รูปเมนู</th>
-            <th class="w-[200px]">ชื่อเมนู (ภาษาไทย)</th>
-            <th class="w-[200px]">ชื่อเมนู (ภาษาอังกฤษ)</th>
-            <th class="w-[100px] text-center">ราคาขาย</th>
-            <th class="w-[120px] text-center">ช่วงเวลาขาย</th>
-            <th class="w-[120px] text-center">สถานะการขาย</th>
+            <th class="w-[80px]">รหัส</th>
+            <th class="w-[160px]">รูปเมนู</th>
+            <th class="w-[200px] whitespace-nowrap">ชื่อเมนู (ภาษาไทย)</th>
+            <th class="w-[200px] whitespace-nowrap">ชื่อเมนู (ภาษาอังกฤษ)</th>
+            <th class="w-[140px] whitespace-nowrap">ราคาขาย</th>
+            @if (hasTwoPeriods()) {
+              <th class="w-[120px] whitespace-nowrap">ช่วงเวลาขาย</th>
+            }
+            <th class="w-[120px] whitespace-nowrap">สถานะการขาย</th>
           </tr>
         </ng-template>
 
@@ -96,38 +99,36 @@
                   <img
                     [src]="getImageUrl(item.imageFileId)"
                     alt=""
-                    class="w-20 h-20 rounded-lg object-cover"
+                    class="w-20 h-20 rounded-lg object-cover mx-auto"
                   />
                 } @else {
                   <div
-                    class="w-20 h-20 rounded-lg bg-surface-border flex items-center justify-center"
+                    class="w-20 h-20 rounded-lg bg-surface-border flex items-center justify-center mx-auto"
                   >
                     <app-generic-icon
-                      name="piggy-bank"
-                      svgClass="w-9 h-9"
-                      class="text-surface-sub opacity-50"
+                      name="menu-list"
+                      svgClass="w-10 h-10"
+                      class="text-surface-placeholder"
                     ></app-generic-icon>
                   </div>
                 }
               </div>
             </td>
-            <td>{{ item.nameThai }}</td>
-            <td>{{ item.nameEnglish }}</td>
-            <td class="text-center font-semibold">
-              {{ item.price | number: "1.2-2" }}
+            <td class="whitespace-nowrap">{{ item.nameThai }}</td>
+            <td class="whitespace-nowrap">{{ item.nameEnglish }}</td>
+            <td class="!text-right font-semibold">
+              {{ item.price | number: "1.2-2" }} บาท
             </td>
-            <td class="text-center">
-              <span
-                class="font-bold"
-                [class]="
-                  getPeriodLabel(item).severity === 'success'
-                    ? 'text-success'
-                    : 'text-primary'
-                "
-              >
-                {{ getPeriodLabel(item).text }}
-              </span>
-            </td>
+            @if (hasTwoPeriods()) {
+              <td class="text-center">
+                <span
+                  class="font-bold"
+                  [ngClass]="getPeriodLabel(item).colorClass"
+                >
+                  {{ getPeriodLabel(item).text }}
+                </span>
+              </td>
+            }
             <td class="text-center">
               @if (item.isAvailable) {
                 <span class="font-bold text-success">เปิดขาย</span>
@@ -142,7 +143,7 @@
   }
 
   <!-- Audit Footer (edit mode only) -->
-  @if (isEditMode() && subCategoryData()) {
+  @if (subCategoryData()) {
     <app-audit-footer
       [createdAt]="subCategoryData()!.createdAt"
       [createdByName]="subCategoryData()!.createdBy"

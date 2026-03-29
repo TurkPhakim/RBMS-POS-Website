@@ -25,7 +25,10 @@ public static class OrderBillMapper
             GrandTotal = entity.GrandTotal,
             Status = entity.Status.ToString(),
             PaidAt = entity.PaidAt,
-            CreatedAt = entity.CreatedAt
+            CreatedAt = entity.CreatedAt,
+            CustomerSlipFileId = entity.CustomerSlipFileId,
+            CustomerSlipOcrAmount = entity.CustomerSlipOcrAmount,
+            CustomerSlipVerificationStatus = entity.CustomerSlipVerificationStatus
         };
     }
 }

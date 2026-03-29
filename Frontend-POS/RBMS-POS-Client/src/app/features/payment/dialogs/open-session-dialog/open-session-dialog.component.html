@@ -4,31 +4,41 @@
       <!-- Shift Period (only for shops with 2 periods) -->
       @if (hasTwoPeriods) {
         <div class="mb-4">
-          <label class="block font-semibold mb-2">ช่วงเวลา</label>
+          <label class="block font-semibold mb-2">
+            ช่วงเวลา <span class="text-danger">*</span>
+          </label>
           <app-shift-period-dropdown
             formControlName="shiftPeriod"
             [showClear]="false"
-            placeholder="เลือกช่วงเวลา"
+            placeholder="ช่วงเวลา"
           ></app-shift-period-dropdown>
-          <app-field-error [control]="form.controls['shiftPeriod']" label="ช่วงเวลา"></app-field-error>
+          <app-field-error
+            [control]="form.controls['shiftPeriod']"
+          ></app-field-error>
         </div>
       }
 
       <!-- Opening Cash -->
       <div>
-        <label class="block font-semibold mb-2">จำนวนเงินเปิดรอบ (บาท)</label>
-        <p-inputNumber
-          formControlName="openingCash"
-          [minFractionDigits]="2"
-          [maxFractionDigits]="2"
-          [min]="0"
-          mode="decimal"
-          styleClass="w-full"
-          placeholder="0.00"
-        ></p-inputNumber>
-        <app-field-error [control]="form.controls['openingCash']" label="จำนวนเงินเปิดรอบ"></app-field-error>
+        <label class="block font-semibold mb-2">
+          จำนวนเงินเปิดรอบ <span class="text-danger">*</span>
+        </label>
+        <p-inputgroup>
+          <p-inputNumber
+            formControlName="openingCash"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="2"
+            [min]="0"
+            mode="decimal"
+            styleClass="w-full"
+            placeholder="จำนวนเงินเปิดรอบ"
+          ></p-inputNumber>
+          <p-inputgroup-addon>บาท</p-inputgroup-addon>
+        </p-inputgroup>
+        <app-field-error
+          [control]="form.controls['openingCash']"
+        ></app-field-error>
       </div>
-
     </form>
   </div>
 

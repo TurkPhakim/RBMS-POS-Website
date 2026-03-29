@@ -8,37 +8,46 @@
           class="flex-1 flex items-center justify-center gap-3 py-3 rounded-lg font-semibold transition-all"
           [class]="
             selectedCategory() === cat.type
-              ? 'bg-surface-card text-primary'
-              : 'text-surface-sub hover:text-primary'
+              ? cat.activeClass
+              : cat.inactiveClass
           "
           (click)="onSelectCategory(cat.type)"
         >
           <app-generic-icon
             [name]="cat.icon"
-            svgClass="w-10 h-10"
+            [svgClass]="cat.svgClass"
           ></app-generic-icon>
           {{ cat.label }}
         </button>
       }
     </div>
 
-    <!-- Search -->
-    <div class="relative mb-4">
-      <p-iconField>
-        <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
-        <input
-          pInputText
-          placeholder="ค้นหาเมนู..."
-          class="w-full pr-8 text-lg py-3"
-          [(ngModel)]="searchTerm"
-          (input)="onSearchInput()"
-        />
-      </p-iconField>
-      @if (searchTerm) {
-        <i
-          class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
-          (click)="clearSearch()"
-        ></i>
+    <!-- Search + Period Filter -->
+    <div class="flex gap-3 mb-4">
+      <div class="relative flex-1">
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+          <input
+            pInputText
+            placeholder="ค้นหาเมนู..."
+            class="w-full pr-8 text-lg py-3"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchInput()"
+          />
+        </p-iconField>
+        @if (searchTerm) {
+          <i
+            class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+            (click)="clearSearch()"
+          ></i>
+        }
+      </div>
+      @if (showPeriodFilter()) {
+        <app-period-dropdown
+          class="w-[200px]"
+          [(ngModel)]="selectedPeriodFilter"
+          (ngModelChange)="onPeriodFilterChange()"
+        ></app-period-dropdown>
       }
     </div>
 
@@ -48,8 +57,8 @@
         class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all border-2"
         [class]="
           selectedSubCategoryId() === null
-            ? 'bg-primary text-white border-primary'
-            : 'bg-surface-card text-surface-sub border-surface-border hover:border-primary hover:text-primary'
+            ? activeCategory().chipActiveClass
+            : activeCategory().chipInactiveClass
         "
         (click)="onSelectSubCategory(null)"
       >
@@ -60,8 +69,8 @@
           class="px-5 py-2.5 rounded-full text-sm font-semibold transition-all border-2"
           [class]="
             selectedSubCategoryId() === sub.subCategoryId
-              ? 'bg-primary text-white border-primary'
-              : 'bg-surface-card text-surface-sub border-surface-border hover:border-primary hover:text-primary'
+              ? activeCategory().chipActiveClass
+              : activeCategory().chipInactiveClass
           "
           (click)="onSelectSubCategory(sub.subCategoryId!)"
         >
@@ -80,7 +89,8 @@
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           @for (menu of filteredMenus(); track menu.menuId) {
             <button
-              class="bg-surface-card rounded-xl text-left hover:ring-2 hover:ring-primary transition-all group"
+              class="bg-surface-card rounded-xl text-left transition-all group"
+              [ngClass]="activeCategory().cardRingClass"
               (click)="onMenuClick(menu)"
             >
               <!-- Image -->
@@ -103,7 +113,7 @@
                 <!-- Pinned Badge (มุมซ้ายบน) -->
                 @if (menu.isPinned) {
                   <span
-                    class="absolute top-2 left-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center"
+                    class="absolute top-2 left-2 w-8 h-8 rounded-full bg-tag-pin flex items-center justify-center"
                     pTooltip="เมนูปักหมุด"
                     tooltipPosition="right"
                   >
@@ -119,7 +129,7 @@
                   <div class="absolute top-2 right-2 flex flex-col gap-1.5">
                     @if (hasTag(menu, 1)) {
                       <span
-                        class="w-10 h-10 rounded-full bg-danger flex items-center justify-center"
+                        class="w-10 h-10 rounded-full bg-tag-recommend flex items-center justify-center"
                         pTooltip="แนะนำ"
                         tooltipPosition="left"
                       >
@@ -132,7 +142,7 @@
                     }
                     @if (hasTag(menu, 2)) {
                       <span
-                        class="w-10 h-10 rounded-full bg-success flex items-center justify-center"
+                        class="w-10 h-10 rounded-full bg-tag-seasonal flex items-center justify-center"
                         pTooltip="ตามฤดูกาล"
                         tooltipPosition="left"
                       >
@@ -145,7 +155,7 @@
                     }
                     @if (hasTag(menu, 4)) {
                       <span
-                        class="w-10 h-10 rounded-full bg-warning flex items-center justify-center"
+                        class="w-10 h-10 rounded-full bg-tag-slow flex items-center justify-center"
                         pTooltip="ใช้เวลา"
                         tooltipPosition="left"
                       >
@@ -169,7 +179,7 @@
                     <app-generic-icon
                       name="shield-warning"
                       svgClass="w-8 h-8"
-                      class="text-warning flex-shrink-0 cursor-help"
+                      class="text-danger-soft flex-shrink-0 cursor-help"
                       [pTooltip]="'สารก่อภูมิแพ้: ' + menu.allergens"
                       tooltipPosition="top"
                       appendTo="body"
@@ -194,15 +204,13 @@
                 <div class="flex items-end justify-between mt-2">
                   <div>
                     @if (menu.optionGroups?.length) {
-                      <div
-                        class="text-sm text-surface-sub flex items-center gap-1"
-                      >
-                        <app-generic-icon
-                          name="option-extra"
-                          svgClass="w-5 h-5"
-                        ></app-generic-icon>
-                        มีตัวเลือก
-                      </div>
+                      <app-generic-icon
+                        name="option-extra"
+                        svgClass="w-7 h-7"
+                        class="text-surface-sub"
+                        pTooltip="มีตัวเลือกเพิ่มเติม"
+                        tooltipPosition="right"
+                      ></app-generic-icon>
                     }
                   </div>
                   <span class="text-2xl font-bold text-primary">
@@ -242,14 +250,16 @@
           <p class="text-base text-white/80 mt-0.5">
             {{ orderNumber }}
           </p>
-          <p class="text-lg font-semibold text-white mt-0.5">
+          <p
+            class="text-base font-semibold text-white mt-0.5 whitespace-nowrap"
+          >
             โซน{{ zoneName }} - โต๊ะ{{ tableName }}
             <span class="text-white/80 ml-2">ลูกค้า: {{ guestCount }} คน</span>
           </p>
         </div>
         @if (cartItems().length) {
           <span
-            class="bg-white/20 text-white text-sm font-bold px-3 py-0.5 rounded-full self-start"
+            class="bg-white/20 text-white text-sm font-bold px-3 py-0.5 rounded-full self-start whitespace-nowrap"
           >
             {{ cartItems().length }} รายการ
           </span>
@@ -297,15 +307,39 @@
                   </div>
                 }
                 @if (item.note) {
-                  <div class="text-sm text-warning">{{ item.note }}</div>
+                  <div class="text-sm text-warning-dark italic">
+                    {{ item.note }}
+                  </div>
                 }
               </div>
-              <button
-                class="w-8 h-8 rounded-lg text-danger hover:bg-danger/10 flex items-center justify-center transition-colors"
-                (click)="onRemoveItem($index)"
-              >
-                <i class="pi pi-trash text-sm"></i>
-              </button>
+              <div class="flex items-center gap-1 shrink-0">
+                @if (!item.options.length) {
+                  <button
+                    class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                    [ngClass]="
+                      item.note || noteEditIndex() === $index
+                        ? 'text-warning-dark bg-warning-bg'
+                        : 'text-surface-sub hover:bg-surface-hover'
+                    "
+                    (click)="toggleNoteEdit($index); $event.stopPropagation()"
+                    pTooltip="หมายเหตุ"
+                    tooltipPosition="top"
+                  >
+                    <app-generic-icon
+                      name="chat-message"
+                      svgClass="w-5 h-5"
+                    ></app-generic-icon>
+                  </button>
+                }
+                <button
+                  class="w-8 h-8 rounded-lg text-danger hover:bg-danger-bg flex items-center justify-center transition-colors"
+                  (click)="onRemoveItem($index)"
+                  pTooltip="ลบรายการ"
+                  tooltipPosition="top"
+                >
+                  <i class="pi pi-trash text-sm"></i>
+                </button>
+              </div>
             </div>
             <!-- จำนวน + ราคา -->
             <div class="px-4 pb-4 pt-1 flex items-center justify-between">
@@ -335,6 +369,19 @@
                 {{ item.totalPrice | number: "1.2-2" }} บาท
               </span>
             </div>
+            <!-- Inline Note Input -->
+            @if (!item.options.length && noteEditIndex() === $index) {
+              <div class="px-4 pb-4">
+                <input
+                  type="text"
+                  class="w-full text-sm border border-warning rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-warning"
+                  placeholder="ระบุหมายเหตุ เช่น ไม่ใส่ผัก, เผ็ดน้อย"
+                  [value]="item.note"
+                  (input)="onNoteChange($index, $any($event.target).value)"
+                  (keyup.enter)="noteEditIndex.set(null)"
+                />
+              </div>
+            }
           </div>
         }
       }

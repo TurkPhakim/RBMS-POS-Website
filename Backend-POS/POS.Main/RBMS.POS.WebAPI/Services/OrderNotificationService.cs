@@ -15,13 +15,13 @@ public class OrderNotificationService : IOrderNotificationService
 
     public async Task NotifyNewOrderItemsAsync(int orderId, int tableId, CancellationToken ct = default)
     {
-        await _hubContext.Clients.Groups("kitchen", $"table_{tableId}")
+        await _hubContext.Clients.Groups("kitchen", "floor", $"table_{tableId}")
             .SendAsync("NewOrderItems", new { orderId, tableId }, ct);
     }
 
-    public async Task NotifyItemStatusChangedAsync(int orderId, int orderItemId, string newStatus, CancellationToken ct = default)
+    public async Task NotifyItemStatusChangedAsync(int orderId, int orderItemId, int tableId, string newStatus, CancellationToken ct = default)
     {
-        await _hubContext.Clients.Groups("kitchen", "floor")
+        await _hubContext.Clients.Groups("kitchen", "floor", $"table_{tableId}")
             .SendAsync("ItemStatusChanged", new { orderId, orderItemId, status = newStatus }, ct);
     }
 

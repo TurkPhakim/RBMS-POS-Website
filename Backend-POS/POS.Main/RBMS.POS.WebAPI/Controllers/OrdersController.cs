@@ -62,11 +62,28 @@ public class OrdersController : BaseController
     public async Task<IActionResult> SendToKitchen(int orderId, CancellationToken ct = default)
         => Success(await _orderService.SendToKitchenAsync(orderId, ct));
 
+    [HttpPost("items/{orderItemId}/send-kitchen")]
+    [PermissionAuthorize(Permissions.Order.Update)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SendItemToKitchen(int orderItemId, CancellationToken ct = default)
+    {
+        await _orderService.SendItemToKitchenAsync(orderItemId, ct);
+        return Success();
+    }
+
     [HttpPost("{orderId}/request-bill")]
     [PermissionAuthorize(Permissions.Order.Update)]
     [ProducesResponseType(typeof(BaseResponseModel<OrderDetailResponseModel>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> RequestBill(int orderId, CancellationToken ct = default)
-        => Success(await _orderService.RequestBillAsync(orderId, ct));
+    public async Task<IActionResult> RequestBill(int orderId, [FromQuery] bool force = false, CancellationToken ct = default)
+        => Success(await _orderService.RequestBillAsync(orderId, force, ct));
+
+    [HttpPost("{orderId}/send-bill")]
+    [PermissionAuthorize(Permissions.Order.Update)]
+    public async Task<IActionResult> SendBillToCustomer(int orderId, CancellationToken ct = default)
+    {
+        await _orderService.SendBillToCustomerAsync(orderId, ct);
+        return Success("ส่งบิลให้ลูกค้าแล้ว");
+    }
 
     [HttpPost("{orderId}/void-bill")]
     [PermissionAuthorize(Permissions.Order.Update)]
@@ -99,6 +116,14 @@ public class OrdersController : BaseController
         return Success("เสิร์ฟรายการสำเร็จ");
     }
 
+    [HttpPut("{orderId}/serve-all-ready")]
+    [PermissionAuthorize(Permissions.Order.Update)]
+    public async Task<IActionResult> ServeAllReady(int orderId, CancellationToken ct = default)
+    {
+        await _orderService.ServeAllReadyItemsAsync(orderId, ct);
+        return Success("เสิร์ฟรายการทั้งหมดสำเร็จ");
+    }
+
     [HttpPost("{orderId}/split/by-item")]
     [PermissionAuthorize(Permissions.Order.Update)]
     [ProducesResponseType(typeof(BaseResponseModel<List<OrderBillResponseModel>>), StatusCodes.Status200OK)]
@@ -113,6 +138,12 @@ public class OrdersController : BaseController
         int orderId, [FromBody] SplitByAmountRequestModel request, CancellationToken ct = default)
         => Success(await _orderService.SplitBillByAmountAsync(orderId, request, ct));
 
+    [HttpPost("{orderId}/unsplit-bill")]
+    [PermissionAuthorize(Permissions.Order.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<List<OrderBillResponseModel>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UnsplitBill(int orderId, CancellationToken ct = default)
+        => Success(await _orderService.UnsplitBillAsync(orderId, ct));
+
     [HttpGet("{orderId}/bills")]
     [PermissionAuthorize(Permissions.Order.Read)]
     [ProducesResponseType(typeof(BaseResponseModel<List<OrderBillResponseModel>>), StatusCodes.Status200OK)]
@@ -125,5 +156,14 @@ public class OrdersController : BaseController
     public async Task<IActionResult> UpdateBillCharges(
         int orderBillId, [FromBody] UpdateBillChargesRequestModel request, CancellationToken ct = default)
         => Success(await _orderService.UpdateBillChargesAsync(orderBillId, request, ct));
+
+    [HttpPut("{orderId}/update-guest-count")]
+    [PermissionAuthorize(Permissions.Order.Update)]
+    public async Task<IActionResult> UpdateGuestCount(
+        int orderId, [FromBody] UpdateGuestCountRequestModel request, CancellationToken ct = default)
+    {
+        await _orderService.UpdateGuestCountAsync(orderId, request, ct);
+        return Success("แก้ไขจำนวนลูกค้าสำเร็จ");
+    }
 
 }

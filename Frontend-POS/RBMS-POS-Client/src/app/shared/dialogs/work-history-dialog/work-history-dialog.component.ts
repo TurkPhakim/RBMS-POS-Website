@@ -1,8 +1,6 @@
 import { Component, DestroyRef, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { linkDateRange, markFormDirty } from '@app/shared/utils';
 
 @Component({
@@ -31,7 +29,13 @@ export class WorkHistoryDialogComponent {
       endDate: [null as Date | null],
     });
 
-    linkDateRange(this.form, 'startDate', 'endDate', this.minEndDate, this.destroyRef);
+    linkDateRange(
+      this.form,
+      'startDate',
+      'endDate',
+      this.minEndDate,
+      this.destroyRef,
+    );
 
     if (this.isEditMode) {
       const wh = this.config.data.workHistory;
@@ -52,7 +56,9 @@ export class WorkHistoryDialogComponent {
     const value = this.form.value;
     this.ref.close({
       ...value,
-      startDate: value.startDate ? (value.startDate as Date).toISOString() : null,
+      startDate: value.startDate
+        ? (value.startDate as Date).toISOString()
+        : null,
       endDate: value.endDate ? (value.endDate as Date).toISOString() : null,
     });
   }

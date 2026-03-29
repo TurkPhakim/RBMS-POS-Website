@@ -1,4 +1,10 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MenuItemsService } from '@app/core/api/services/menu-items.service';
@@ -10,11 +16,37 @@ import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { Icon, ModalService } from '@app/core/services/modal.service';
 
 const KEY_BTN_ADD = 'add-menu';
-
-const CATEGORY_CONFIG: Record<number, { title: string; icon: string; basePath: string; permissionPrefix: string }> = {
-  1: { title: 'เมนูอาหาร', icon: 'food', basePath: '/menu/food', permissionPrefix: 'menu-food' },
-  2: { title: 'เมนูเครื่องดื่ม', icon: 'drinks-glass', basePath: '/menu/beverage', permissionPrefix: 'menu-beverage' },
-  3: { title: 'เมนูของหวาน', icon: 'dessert', basePath: '/menu/dessert', permissionPrefix: 'menu-dessert' },
+const CATEGORY_CONFIG: Record<
+  number,
+  {
+    title: string;
+    icon: string;
+    iconClass: string;
+    basePath: string;
+    permissionPrefix: string;
+  }
+> = {
+  1: {
+    title: 'เมนูอาหาร',
+    icon: 'chicken-drumstick',
+    iconClass: 'w-14 h-14',
+    basePath: '/menu/food',
+    permissionPrefix: 'menu-food',
+  },
+  2: {
+    title: 'เมนูเครื่องดื่ม',
+    icon: 'drinks-glass',
+    iconClass: 'w-10 h-10',
+    basePath: '/menu/beverage',
+    permissionPrefix: 'menu-beverage',
+  },
+  3: {
+    title: 'เมนูของหวาน',
+    icon: 'dessert',
+    iconClass: 'w-14 h-14',
+    basePath: '/menu/dessert',
+    permissionPrefix: 'menu-dessert',
+  },
 };
 
 @Component({
@@ -77,22 +109,20 @@ export class MenuListComponent implements OnInit, OnDestroy {
     return fileId ? `${this.apiConfig.rootUrl}/api/admin/file/${fileId}` : null;
   }
 
-  getPeriodLabel(item: MenuResponseModel): { text: string; severity: string } {
+  getPeriodLabel(item: MenuResponseModel): {
+    text: string;
+    colorClass: string;
+  } {
     const p1 = item.isAvailablePeriod1 ?? false;
     const p2 = item.isAvailablePeriod2 ?? false;
-    if (p1 && p2) return { text: 'ทั้งวัน', severity: 'success' };
-    if (p1) return { text: 'ช่วง 1', severity: 'info' };
-    if (p2) return { text: 'ช่วง 2', severity: 'info' };
-    return { text: 'ปิด', severity: 'danger' };
+    if (p1 && p2) return { text: 'ทั้งวัน', colorClass: 'text-success' };
+    if (p1) return { text: 'ช่วงที่ 1', colorClass: 'text-primary' };
+    if (p2) return { text: 'ช่วงที่ 2', colorClass: 'text-billing' };
+    return { text: 'ปิด', colorClass: 'text-danger' };
   }
 
-  getTagLabels(tags: number | undefined): { label: string; severity: string }[] {
-    if (!tags) return [];
-    const result: { label: string; severity: string }[] = [];
-    if (tags & 1) result.push({ label: 'แนะนำ', severity: 'info' });
-    if (tags & 2) result.push({ label: 'ตามเทศกาล', severity: 'warn' });
-    if (tags & 4) result.push({ label: 'ช้า', severity: 'danger' });
-    return result;
+  hasTag(tags: number | undefined, bit: number): boolean {
+    return !!((tags ?? 0) & bit);
   }
 
   onFilterChange(): void {
@@ -125,7 +155,10 @@ export class MenuListComponent implements OnInit, OnDestroy {
               this.loadMenus();
             },
             error: () =>
-              this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถลบเมนูได้' }),
+              this.modalService.cancel({
+                title: 'เกิดข้อผิดพลาด',
+                message: 'ไม่สามารถลบเมนูได้',
+              }),
           });
       },
     });
@@ -160,7 +193,10 @@ export class MenuListComponent implements OnInit, OnDestroy {
           this.totalRecords.set(res.total ?? 0);
         },
         error: () =>
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถโหลดข้อมูลได้' }),
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถโหลดข้อมูลได้',
+          }),
       });
   }
 
@@ -171,7 +207,7 @@ export class MenuListComponent implements OnInit, OnDestroy {
       type: 'button',
       item: {
         key: KEY_BTN_ADD,
-        label: 'เพิ่มเมนู',
+        label: `เพิ่ม${this.config.title}`,
         severity: 'primary',
         callback: () => this.router.navigate([this.config.basePath, 'create']),
       },

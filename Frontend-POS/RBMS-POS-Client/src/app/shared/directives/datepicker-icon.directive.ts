@@ -1,4 +1,11 @@
-import { AfterViewInit, Directive, ElementRef, Host, Input, Renderer2 } from '@angular/core';
+import {
+  AfterViewInit,
+  Directive,
+  ElementRef,
+  Host,
+  Input,
+  Renderer2,
+} from '@angular/core';
 import { DatePicker } from 'primeng-buddhist-year-datepicker';
 
 @Directive({
@@ -45,8 +52,16 @@ export class DatePickerIconDirective implements AfterViewInit {
     this.renderer.setStyle(icon, 'display', 'inline-block');
     this.renderer.setStyle(icon, 'width', '1.25rem');
     this.renderer.setStyle(icon, 'height', '1.25rem');
-    this.renderer.setStyle(icon, 'background-color', 'var(--p-text-muted-color)');
-    this.renderer.setStyle(icon, '-webkit-mask-image', `url('/icons/${iconName}.svg')`);
+    this.renderer.setStyle(
+      icon,
+      'background-color',
+      'var(--p-text-muted-color)',
+    );
+    this.renderer.setStyle(
+      icon,
+      '-webkit-mask-image',
+      `url('/icons/${iconName}.svg')`,
+    );
     this.renderer.setStyle(icon, '-webkit-mask-size', 'contain');
     this.renderer.setStyle(icon, '-webkit-mask-repeat', 'no-repeat');
     this.renderer.setStyle(icon, '-webkit-mask-position', 'center');

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using POS.Main.Business.Admin.Interfaces;
 using POS.Main.Business.Admin.Models.ShopSettings;
+using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
 using POS.Main.Repositories.UnitOfWork;
 
@@ -96,5 +97,69 @@ public class ShopSettingsService : IShopSettingsService
         // Re-query เพื่อ return response ที่สมบูรณ์ (รวม navigation properties)
         var updated = await _unitOfWork.ShopSettings.GetWithOperatingHoursAsync(ct);
         return ShopSettingsMapper.ToResponse(updated!);
+    }
+
+    public async Task<CurrentPeriodResultModel> GetCurrentPeriodAsync(CancellationToken ct = default)
+    {
+        var settings = await _unitOfWork.ShopSettings.GetWithOperatingHoursAsync(ct);
+
+        // ไม่มี settings → default เปิด ไม่ filter
+        if (settings == null)
+            return new CurrentPeriodResultModel { IsOpen = true, HasTwoPeriods = false };
+
+        // หา operating hours ของวันนี้
+        var todayDow = MapDayOfWeek(DateTime.Now.DayOfWeek);
+        var todayHours = settings.OperatingHours.FirstOrDefault(h => h.DayOfWeek == todayDow);
+
+        // ไม่มีข้อมูลวันนี้ → default เปิด
+        if (todayHours == null)
+            return new CurrentPeriodResultModel { IsOpen = true, HasTwoPeriods = settings.HasTwoPeriods };
+
+        // วันนี้ปิด
+        if (!todayHours.IsOpen)
+            return new CurrentPeriodResultModel { IsOpen = false, HasTwoPeriods = settings.HasTwoPeriods };
+
+        // 1 ช่วง → เปิดตลอดวัน ไม่ filter
+        if (!settings.HasTwoPeriods)
+            return new CurrentPeriodResultModel { IsOpen = true, CurrentPeriod = null, HasTwoPeriods = false };
+
+        // 2 ช่วง → เช็คเวลาปัจจุบัน
+        var now = DateTime.Now.TimeOfDay;
+
+        if (IsWithinTimeRange(now, todayHours.OpenTime1, todayHours.CloseTime1))
+            return new CurrentPeriodResultModel { IsOpen = true, CurrentPeriod = "period1", HasTwoPeriods = true };
+
+        if (IsWithinTimeRange(now, todayHours.OpenTime2, todayHours.CloseTime2))
+            return new CurrentPeriodResultModel { IsOpen = true, CurrentPeriod = "period2", HasTwoPeriods = true };
+
+        // อยู่ระหว่าง period → ร้านปิดชั่วคราว
+        return new CurrentPeriodResultModel { IsOpen = false, CurrentPeriod = null, HasTwoPeriods = true };
+    }
+
+    private static EDayOfWeek MapDayOfWeek(DayOfWeek systemDay)
+    {
+        return systemDay switch
+        {
+            DayOfWeek.Monday => EDayOfWeek.Monday,
+            DayOfWeek.Tuesday => EDayOfWeek.Tuesday,
+            DayOfWeek.Wednesday => EDayOfWeek.Wednesday,
+            DayOfWeek.Thursday => EDayOfWeek.Thursday,
+            DayOfWeek.Friday => EDayOfWeek.Friday,
+            DayOfWeek.Saturday => EDayOfWeek.Saturday,
+            DayOfWeek.Sunday => EDayOfWeek.Sunday,
+            _ => EDayOfWeek.Monday
+        };
+    }
+
+    private static bool IsWithinTimeRange(TimeSpan now, TimeSpan? open, TimeSpan? close)
+    {
+        if (open == null || close == null)
+            return false;
+
+        // รองรับข้ามวัน (เช่น 22:00-02:00)
+        if (close.Value < open.Value)
+            return now >= open.Value || now < close.Value;
+
+        return now >= open.Value && now < close.Value;
     }
 }

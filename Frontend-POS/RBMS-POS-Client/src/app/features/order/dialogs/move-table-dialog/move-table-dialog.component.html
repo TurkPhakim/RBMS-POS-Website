@@ -1,0 +1,73 @@
+<app-card-template headerLabel="ย้ายโต๊ะ">
+  <div class="flex items-center gap-4">
+    <!-- โต๊ะต้นทาง (ซ้าย) -->
+    <div
+      class="flex-1 p-4 rounded-xl bg-primary-subtle border border-primary-light"
+    >
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-lg font-semibold text-primary uppercase tracking-wide">
+          ต้นทาง
+        </p>
+        <span class="text-surface-sub"
+          >{{ table.currentGuests ?? 0 }}/{{ table.capacity }} คน</span
+        >
+      </div>
+      <div class="flex items-center gap-4">
+        <div
+          class="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0"
+        >
+          <app-generic-icon
+            name="table-restaurant"
+            svgClass="w-8 h-8"
+            class="text-white"
+          ></app-generic-icon>
+        </div>
+        <p class="font-bold text-xl text-primary whitespace-nowrap">
+          โซน {{ table.zoneName }} - โต๊ะ {{ table.tableName }}
+        </p>
+      </div>
+    </div>
+
+    <!-- ลูกศรย้าย -->
+    <div class="shrink-0">
+      <div
+        class="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
+      >
+        <i class="pi pi-arrow-right text-white text-lg"></i>
+      </div>
+    </div>
+
+    <!-- โต๊ะปลายทาง (ขวา) -->
+    <div
+      class="flex-1 p-4 rounded-xl border-2 border-dashed border-surface-border"
+    >
+      <p
+        class="text-lg font-semibold text-surface-sub mb-2 uppercase tracking-wide"
+      >
+        ปลายทาง
+      </p>
+      <app-available-table-dropdown
+        [ngModel]="selectedTableId()"
+        (ngModelChange)="selectedTableId.set($event)"
+        [excludeTableId]="table.tableId!"
+        [showClear]="false"
+      ></app-available-table-dropdown>
+    </div>
+  </div>
+
+  <p-footer>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="onCancel()"
+    ></p-button>
+    <p-button
+      label="ย้ายโต๊ะ"
+      severity="primary"
+      [disabled]="!selectedTableId()"
+      [loading]="isSubmitting()"
+      (onClick)="onSubmit()"
+    ></p-button>
+  </p-footer>
+</app-card-template>

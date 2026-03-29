@@ -9,4 +9,5 @@ export interface KitchenOrderModel {
   tableId?: number;
   tableName?: string | null;
   zoneColor?: string | null;
+  zoneName?: string | null;
 }

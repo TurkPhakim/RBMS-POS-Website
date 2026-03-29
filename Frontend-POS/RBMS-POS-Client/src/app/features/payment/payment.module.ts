@@ -8,10 +8,11 @@ import { SessionHistoryComponent } from './pages/session-history/session-history
 import { OpenSessionDialogComponent } from './dialogs/open-session-dialog/open-session-dialog.component';
 import { CloseSessionDialogComponent } from './dialogs/close-session-dialog/close-session-dialog.component';
 import { CashDrawerDialogComponent } from './dialogs/cash-drawer-dialog/cash-drawer-dialog.component';
-import { CashPaymentDialogComponent } from './dialogs/cash-payment-dialog/cash-payment-dialog.component';
 import { QrPaymentDialogComponent } from './dialogs/qr-payment-dialog/qr-payment-dialog.component';
+import { SlipPreviewDialogComponent } from './dialogs/slip-preview-dialog/slip-preview-dialog.component';
 import { PaymentHistoryComponent } from './pages/payment-history/payment-history.component';
 import { SessionDetailComponent } from './pages/session-detail/session-detail.component';
+import { SplitBillDialogComponent } from '@app/shared/dialogs/split-bill-dialog/split-bill-dialog.component';
 import { PaymentRoutingModule } from './payment-routing.module';
 
 @NgModule({
@@ -24,8 +25,9 @@ import { PaymentRoutingModule } from './payment-routing.module';
     OpenSessionDialogComponent,
     CloseSessionDialogComponent,
     CashDrawerDialogComponent,
-    CashPaymentDialogComponent,
     QrPaymentDialogComponent,
+    SlipPreviewDialogComponent,
+    SplitBillDialogComponent,
   ],
   imports: [PaymentRoutingModule, SharedModule],
 })

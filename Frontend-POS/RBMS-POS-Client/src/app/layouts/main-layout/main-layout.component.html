@@ -48,6 +48,24 @@
             {{ message.summary }}
           </p>
           <p class="text-sm text-surface-sub truncate">{{ message.detail }}</p>
+        } @else if (getMessageLines(message.detail).length > 1) {
+          <p
+            class="text-lg font-semibold truncate"
+            [ngClass]="getToastIcon(message).color"
+          >
+            {{ message.summary }}
+          </p>
+          <p class="text-sm text-surface-sub truncate">
+            {{ getMessageLines(message.detail)[0] }}
+          </p>
+          <p class="text-sm text-surface-sub flex items-center gap-1 mt-0.5">
+            <app-generic-icon
+              name="payment-bath"
+              svgClass="w-5 h-5"
+              class="text-success shrink-0"
+            ></app-generic-icon>
+            {{ getMessageLines(message.detail)[1] }}
+          </p>
         } @else {
           <div class="flex items-center gap-2">
             <span

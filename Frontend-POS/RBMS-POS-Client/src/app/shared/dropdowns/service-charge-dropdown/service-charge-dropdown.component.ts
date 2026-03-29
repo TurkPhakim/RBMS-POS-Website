@@ -2,12 +2,15 @@ import { Component, forwardRef, OnInit } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { takeUntil } from 'rxjs';
 import { ServiceChargesService } from '@app/core/api/services';
-import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component';
+import {
+  DropdownBaseComponent,
+  DROPDOWN_BASE_TEMPLATE,
+} from '../dropdown-base/dropdown-base.component';
 
 @Component({
   selector: 'app-service-charge-dropdown',
   standalone: false,
-  templateUrl: '../dropdown-base/dropdown-base.component.html',
+  template: DROPDOWN_BASE_TEMPLATE,
   host: { class: 'block' },
   providers: [
     {

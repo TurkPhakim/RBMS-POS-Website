@@ -9,10 +9,17 @@ export interface ReceiptDataModel {
   billType?: string | null;
   cashierName?: string | null;
   changeAmount?: number;
+  companyNameEnglish?: string | null;
+  companyNameThai?: string | null;
+  facebook?: string | null;
   grandTotal?: number;
+  guestCount?: number;
+  instagram?: string | null;
   isConsolidated?: boolean;
   items?: Array<ReceiptItemModel> | null;
+  lineId?: string | null;
   orderNumber?: string | null;
+  originalSubTotal?: number;
   paidAt?: string;
   paymentId?: number;
   paymentMethod?: string | null;
@@ -22,6 +29,7 @@ export interface ReceiptDataModel {
   receiptHeaderText?: string | null;
   serviceChargeAmount?: number;
   serviceChargeRate?: number;
+  shopEmail?: string | null;
   shopNameEnglish?: string | null;
   shopNameThai?: string | null;
   splitCount?: number;
@@ -32,4 +40,6 @@ export interface ReceiptDataModel {
   totalDiscountAmount?: number;
   vatAmount?: number;
   vatRate?: number;
+  website?: string | null;
+  zoneName?: string | null;
 }

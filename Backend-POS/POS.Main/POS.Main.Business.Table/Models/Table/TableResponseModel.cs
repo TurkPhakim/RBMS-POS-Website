@@ -18,9 +18,21 @@ public class TableResponseModel
     public string? Note { get; set; }
     public string? LinkedGroupCode { get; set; }
     public List<string>? LinkedTableNames { get; set; }
+    public bool IsLinkedPrimary { get; set; }
     public bool HasQrToken { get; set; }
+    public string? QrShortCode { get; set; }
+    public int UnservedItemCount { get; set; }
+    public int TotalActiveItemCount { get; set; }
+    public List<LinkedTableServingModel>? LinkedTableServingBreakdown { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
+}
+
+public class LinkedTableServingModel
+{
+    public string TableName { get; set; } = string.Empty;
+    public int TotalItemCount { get; set; }
+    public int ServedItemCount { get; set; }
 }

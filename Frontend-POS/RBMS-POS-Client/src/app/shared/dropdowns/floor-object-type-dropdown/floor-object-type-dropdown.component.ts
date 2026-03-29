@@ -1,12 +1,14 @@
 import { Component, forwardRef } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
-
-import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component';
+import {
+  DropdownBaseComponent,
+  DROPDOWN_BASE_TEMPLATE,
+} from '../dropdown-base/dropdown-base.component';
 
 @Component({
   selector: 'app-floor-object-type-dropdown',
   standalone: false,
-  templateUrl: '../dropdown-base/dropdown-base.component.html',
+  template: DROPDOWN_BASE_TEMPLATE,
   host: { class: 'block' },
   providers: [
     {
@@ -19,17 +21,18 @@ import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component'
 export class FloorObjectTypeDropdownComponent extends DropdownBaseComponent {
   constructor() {
     super();
-    this.placeholder = 'เลือกประเภท';
+    this.placeholder = 'ประเภทวัตถุ';
     this.showClear = false;
     this.filter = false;
     this.options = [
       { value: 'Restroom', label: 'ห้องน้ำ' },
       { value: 'Stairs', label: 'บันได' },
-      { value: 'Counter', label: 'เคาน์เตอร์/บาร์' },
+      { value: 'Counter', label: 'เคาน์เตอร์บาร์' },
       { value: 'Kitchen', label: 'ครัว' },
-      { value: 'Exit', label: 'ทางออก/ทางเข้า' },
+      { value: 'Exit', label: 'ทางเข้า/ทางออก' },
       { value: 'Cashier', label: 'แคชเชียร์' },
-      { value: 'Decoration', label: 'ตกแต่งอื่นๆ' },
+      { value: 'Plant', label: 'ต้นไม้/พุ่มไม้' },
+      { value: 'Decoration', label: 'ของตกแต่งอื่นๆ' },
     ];
   }
 }

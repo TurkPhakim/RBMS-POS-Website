@@ -4,7 +4,6 @@ import { RouterModule, Routes } from '@angular/router';
 import { TestDialogPageComponent } from './test-dialog-page/test-dialog-page.component';
 import { TestDashboardOverviewComponent } from './test-dashboard-overview/test-dashboard-overview.component';
 import { TestSalesReportComponent } from './test-sales-report/test-sales-report.component';
-
 const routes: Routes = [
   // Test pages — root-level, no guard
   { path: 'test-dialog-page', component: TestDialogPageComponent },

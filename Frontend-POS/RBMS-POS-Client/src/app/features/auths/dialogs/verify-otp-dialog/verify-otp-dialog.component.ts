@@ -95,6 +95,7 @@ export class VerifyOtpDialogComponent implements OnInit, OnDestroy {
     for (let i = 0; i < 6; i++) {
       inputs[i].nativeElement.value = pasted[i] || '';
     }
+
     this.syncOtpCode();
     const focusIndex = Math.min(pasted.length, 5);
     inputs[focusIndex].nativeElement.focus();

@@ -31,6 +31,7 @@ import { TieredMenuModule } from 'primeng/tieredmenu';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ColorPickerModule } from 'primeng/colorpicker';
 import { RadioButton } from 'primeng/radiobutton';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { DragDropModule } from '@angular/cdk/drag-drop';
@@ -75,6 +76,8 @@ import { ShiftPeriodDropdownComponent } from './dropdowns/shift-period-dropdown/
 import { TableSizeDropdownComponent } from './dropdowns/table-size-dropdown/table-size-dropdown.component';
 import { FloorObjectTypeDropdownComponent } from './dropdowns/floor-object-type-dropdown/floor-object-type-dropdown.component';
 import { AvailableTableDropdownComponent } from './dropdowns/available-table-dropdown/available-table-dropdown.component';
+import { ReservationAvailableDropdownComponent } from './dropdowns/reservation-available-dropdown/reservation-available-dropdown.component';
+import { SourceTableDropdownComponent } from './dropdowns/source-table-dropdown/source-table-dropdown.component';
 import { AddressDialogComponent } from './dialogs/address-dialog/address-dialog.component';
 import { EducationDialogComponent } from './dialogs/education-dialog/education-dialog.component';
 import { WorkHistoryDialogComponent } from './dialogs/work-history-dialog/work-history-dialog.component';
@@ -85,7 +88,6 @@ import { SuccessModalComponent } from './modals/success-modal/success-modal.comp
 import { VerifyPasswordDialogComponent } from './dialogs/verify-password/verify-password.component';
 import { VerifyPinDialogComponent } from './dialogs/verify-pin/verify-pin-dialog.component';
 import { ChangePasswordDialogComponent } from './dialogs/change-password/change-password-dialog.component';
-import { SplitBillDialogComponent } from './dialogs/split-bill-dialog/split-bill-dialog.component';
 import { KpiCardComponent } from '../features/dashboard/components/kpi-card/kpi-card.component';
 import { AccessDeniedComponent } from './pages/access-denied/access-denied.component';
 import { WelcomeComponent } from './pages/welcome/welcome.component';
@@ -129,6 +131,7 @@ const PRIMENG_MODULES = [
   TabPanel,
   RadioButton,
   CheckboxModule,
+  ColorPickerModule,
 ];
 
 @NgModule({
@@ -174,6 +177,8 @@ const PRIMENG_MODULES = [
     TableSizeDropdownComponent,
     FloorObjectTypeDropdownComponent,
     AvailableTableDropdownComponent,
+    ReservationAvailableDropdownComponent,
+    SourceTableDropdownComponent,
     DatePickerIconDirective,
     DateFormatPipe,
     FormatPhonePipe,
@@ -187,7 +192,6 @@ const PRIMENG_MODULES = [
     EmptyViewComponent,
     ImageUploadCardComponent,
     AuditFooterComponent,
-    SplitBillDialogComponent,
     KpiCardComponent,
     SectionMiniCardComponent,
   ],
@@ -241,6 +245,8 @@ const PRIMENG_MODULES = [
     TableSizeDropdownComponent,
     FloorObjectTypeDropdownComponent,
     AvailableTableDropdownComponent,
+    ReservationAvailableDropdownComponent,
+    SourceTableDropdownComponent,
     DatePickerIconDirective,
     DateFormatPipe,
     FormatPhonePipe,

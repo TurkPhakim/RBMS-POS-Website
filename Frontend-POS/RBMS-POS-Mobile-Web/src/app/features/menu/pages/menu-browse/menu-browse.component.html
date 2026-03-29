@@ -1,0 +1,93 @@
+<!-- Category Tabs (Segmented Control — 3 สีเหมือน Staff) -->
+<div class="flex bg-surface-border rounded-xl gap-1 mx-4 mt-4 p-1">
+  @for (cat of categories(); track cat.categoryType) {
+    <button
+      class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-semibold text-sm transition-all"
+      [class]="
+        selectedCategoryType === cat.categoryType
+          ? getCategoryStyle(cat.categoryType!).activeClass
+          : getCategoryStyle(cat.categoryType!).inactiveClass
+      "
+      (click)="selectCategory(cat.categoryType!)"
+    >
+      <app-generic-icon
+        [name]="getCategoryIcon(cat.categoryType!)"
+        svgClass="w-6 h-6"
+      ></app-generic-icon>
+      {{ getCategoryLabel(cat.categoryType!) || cat.name }}
+    </button>
+  }
+</div>
+
+<!-- Search -->
+<div class="relative mx-4 mt-3">
+  <i
+    class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-surface-muted"
+  ></i>
+  <input
+    type="text"
+    placeholder="ค้นหาเมนู..."
+    class="w-full pl-10 pr-9 py-3 rounded-xl border border-surface-border bg-white text-sm"
+    [(ngModel)]="searchTerm"
+    (keyup.enter)="onSearch()"
+  />
+  @if (searchTerm) {
+    <i
+      class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub"
+      (click)="clearSearch()"
+    ></i>
+  }
+</div>
+
+<!-- Sub-Category Chips (สีตาม active category) -->
+@if (filteredSubCategories().length > 0) {
+  <div
+    class="flex gap-2 px-4 mt-3 overflow-x-auto pb-1"
+    style="scrollbar-width: none"
+  >
+    <button
+      class="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all border-2"
+      [class]="
+        selectedSubCategoryId === null
+          ? getActiveStyle().chipActiveClass
+          : getActiveStyle().chipInactiveClass
+      "
+      (click)="selectSubCategory(null)"
+    >
+      ทั้งหมด
+    </button>
+    @for (sub of filteredSubCategories(); track sub.subCategoryId) {
+      <button
+        class="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all border-2"
+        [class]="
+          selectedSubCategoryId === sub.subCategoryId
+            ? getActiveStyle().chipActiveClass
+            : getActiveStyle().chipInactiveClass
+        "
+        (click)="selectSubCategory(sub.subCategoryId!)"
+      >
+        {{ sub.name }}
+      </button>
+    }
+  </div>
+}
+
+<!-- Menu Grid -->
+<div class="grid grid-cols-2 xs:grid-cols-2 md:grid-cols-3 gap-3 p-4">
+  @for (item of menuItems(); track item.menuId) {
+    <app-menu-card
+      [item]="item"
+      [cardRingClass]="getActiveStyle().cardRingClass"
+      (cardClick)="onCardClick(item)"
+    ></app-menu-card>
+  } @empty {
+    <div class="col-span-full flex flex-col items-center pb-8">
+      <ng-lottie
+        [options]="lottieOptions"
+        width="240px"
+        height="240px"
+      ></ng-lottie>
+      <p class="text-2xl font-bold text-center -mt-10">ไม่พบรายการเมนู</p>
+    </div>
+  }
+</div>

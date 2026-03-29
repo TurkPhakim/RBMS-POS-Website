@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using POS.Main.Business.Admin.Interfaces;
 using POS.Main.Business.Admin.Services;
 using POS.Main.Business.Notification.Interfaces;
 using POS.Main.Business.Notification.Models;
@@ -25,6 +26,7 @@ public class SelfOrderService : ISelfOrderService
     private readonly IOrderNotificationService _orderNotificationService;
     private readonly INotificationBroadcaster _notificationBroadcaster;
     private readonly IPaymentService _paymentService;
+    private readonly IShopSettingsService _shopSettingsService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<SelfOrderService> _logger;
 
@@ -41,6 +43,7 @@ public class SelfOrderService : ISelfOrderService
         IOrderNotificationService orderNotificationService,
         INotificationBroadcaster notificationBroadcaster,
         IPaymentService paymentService,
+        IShopSettingsService shopSettingsService,
         IConfiguration configuration,
         ILogger<SelfOrderService> logger)
     {
@@ -49,6 +52,7 @@ public class SelfOrderService : ISelfOrderService
         _orderNotificationService = orderNotificationService;
         _notificationBroadcaster = notificationBroadcaster;
         _paymentService = paymentService;
+        _shopSettingsService = shopSettingsService;
         _configuration = configuration;
         _logger = logger;
     }
@@ -81,12 +85,21 @@ public class SelfOrderService : ISelfOrderService
 
         if (session == null)
         {
+            // ดึง nickname จาก session เก่า (expired) ของ device + table เดียวกัน
+            string? previousNickname = null;
+            if (!string.IsNullOrEmpty(request.DeviceFingerprint))
+            {
+                previousNickname = await _unitOfWork.CustomerSessions
+                    .GetLastNicknameByTableAndDeviceAsync(tableId, request.DeviceFingerprint, ct);
+            }
+
             session = new TbCustomerSession
             {
                 TableId = tableId,
                 SessionToken = Guid.NewGuid().ToString("N"),
                 DeviceFingerprint = request.DeviceFingerprint,
                 QrTokenNonce = nonce,
+                Nickname = previousNickname,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 ExpiresAt = DateTime.UtcNow.AddHours(1)
@@ -183,6 +196,13 @@ public class SelfOrderService : ISelfOrderService
             .Include(m => m.MenuOptionGroups)
             .Where(m => m.IsAvailable);
 
+        // Auto-filter ตามช่วงเวลาเปิด-ปิดร้าน
+        var periodResult = await _shopSettingsService.GetCurrentPeriodAsync(ct);
+        if (periodResult.CurrentPeriod == "period1")
+            query = query.Where(m => m.IsAvailablePeriod1);
+        else if (periodResult.CurrentPeriod == "period2")
+            query = query.Where(m => m.IsAvailablePeriod2);
+
         if (categoryType.HasValue)
             query = query.Where(m => m.SubCategory.CategoryType == categoryType.Value);
 
@@ -239,6 +259,7 @@ public class SelfOrderService : ISelfOrderService
             ImageFileId = menu.ImageFileId,
             IsRecommended = (menu.Tags & (int)EMenuTag.Recommended) != 0,
             IsNew = (menu.Tags & (int)EMenuTag.Seasonal) != 0,
+            Allergens = menu.Allergens,
             OptionGroups = menu.MenuOptionGroups
                 .Where(mog => mog.OptionGroup.IsActive && !mog.OptionGroup.DeleteFlag)
                 .OrderBy(mog => mog.SortOrder)
@@ -266,6 +287,12 @@ public class SelfOrderService : ISelfOrderService
     {
         if (request.Items.Count == 0)
             throw new ValidationException("กรุณาเลือกเมนูอย่างน้อย 1 รายการ");
+
+        // Validate nickname before ordering
+        var session = await _unitOfWork.CustomerSessions.QueryNoTracking()
+            .FirstOrDefaultAsync(cs => cs.CustomerSessionId == sessionId, ct);
+        if (session == null || string.IsNullOrWhiteSpace(session.Nickname))
+            throw new BusinessException("กรุณาตั้งชื่อเล่นก่อนสั่งอาหาร");
 
         var table = await _unitOfWork.Tables.GetAll()
             .FirstOrDefaultAsync(t => t.TableId == tableId && !t.DeleteFlag, ct)
@@ -399,12 +426,31 @@ public class SelfOrderService : ISelfOrderService
 
         var order = await _unitOfWork.Orders.QueryNoTracking()
             .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided))
+                .ThenInclude(i => i.Menu)
+            .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided))
+                .ThenInclude(i => i.SourceTable)
+            .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided))
+                .ThenInclude(i => i.OrderItemOptions)
             .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value, ct);
 
         if (order == null)
         {
             return new CustomerOrderTrackingResponseModel();
         }
+
+        // Build nickname map for customer sessions
+        var customerIds = order.OrderItems
+            .Where(i => i.OrderedBy.StartsWith("customer:"))
+            .Select(i => int.TryParse(i.OrderedBy[9..], out var id) ? id : 0)
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        var nicknameMap = customerIds.Count > 0
+            ? await _unitOfWork.CustomerSessions.QueryNoTracking()
+                .Where(cs => customerIds.Contains(cs.CustomerSessionId))
+                .ToDictionaryAsync(cs => cs.CustomerSessionId, cs => cs.Nickname ?? "", ct)
+            : new Dictionary<int, string>();
 
         return new CustomerOrderTrackingResponseModel
         {
@@ -420,7 +466,15 @@ public class SelfOrderService : ISelfOrderService
                     Quantity = i.Quantity,
                     TotalPrice = i.TotalPrice,
                     Status = i.Status.ToString(),
-                    OrderedBy = FormatOrderedBy(i.OrderedBy)
+                    OrderedBy = FormatOrderedBy(i.OrderedBy, nicknameMap),
+                    MenuImageFileId = i.Menu?.ImageFileId,
+                    SourceTableName = i.SourceTable?.TableName,
+                    Note = i.Note,
+                    Options = i.OrderItemOptions.Select(o => new CustomerTrackingOptionModel
+                    {
+                        OptionItemName = o.OptionItemName,
+                        AdditionalPrice = o.AdditionalPrice
+                    }).ToList()
                 }).ToList()
         };
     }
@@ -431,6 +485,18 @@ public class SelfOrderService : ISelfOrderService
             .Include(t => t.Zone)
             .FirstOrDefaultAsync(t => t.TableId == tableId && !t.DeleteFlag, ct)
             ?? throw new EntityNotFoundException("Table", tableId);
+
+        // ป้องกันการเรียกซ้ำ — ถ้ามี CALL_WAITER ที่ยังไม่มีใครอ่าน ไม่สร้างซ้ำ
+        var hasActiveCall = await _unitOfWork.Notifications.QueryNoTracking()
+            .AnyAsync(n => n.EventType == "CALL_WAITER"
+                        && n.TableId == tableId
+                        && !n.NotificationReads.Any(nr => nr.ReadAt != null), ct);
+
+        if (hasActiveCall)
+        {
+            _logger.LogInformation("Skipping duplicate call waiter for Table {TableId} — active call exists", tableId);
+            return;
+        }
 
         _logger.LogInformation("Customer {SessionId} called waiter for Table {TableId}", sessionId, tableId);
 
@@ -644,10 +710,16 @@ public class SelfOrderService : ISelfOrderService
         }
     }
 
-    private static string FormatOrderedBy(string orderedBy)
+    private static string FormatOrderedBy(string orderedBy, Dictionary<int, string>? nicknameMap = null)
     {
-        if (orderedBy.StartsWith("customer:"))
-            return "ลูกค้า";
+        if (orderedBy.StartsWith("customer:") && int.TryParse(orderedBy[9..], out var cid))
+        {
+            var nick = nicknameMap?.GetValueOrDefault(cid, "");
+            return string.IsNullOrEmpty(nick) ? "คุณลูกค้า" : $"คุณ{nick}";
+        }
+
+        if (orderedBy.StartsWith("staff:"))
+            return orderedBy;
 
         return orderedBy;
     }

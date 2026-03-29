@@ -70,12 +70,12 @@ public class CustomerAuthorizeAttribute : Attribute, IAsyncAuthorizationFilter
                 return;
             }
 
-            // Validate table is still OCCUPIED
+            // Validate table is still active (Occupied or Billing)
             var table = await dbContext.Tables
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.TableId == tableId && !t.DeleteFlag);
 
-            if (table == null || table.Status != ETableStatus.Occupied)
+            if (table == null || (table.Status != ETableStatus.Occupied && table.Status != ETableStatus.Billing))
             {
                 context.Result = new UnauthorizedObjectResult(new { message = "โต๊ะถูกปิดแล้ว" });
                 return;

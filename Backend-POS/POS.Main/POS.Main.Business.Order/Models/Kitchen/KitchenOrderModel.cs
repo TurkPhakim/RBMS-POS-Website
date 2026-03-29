@@ -6,6 +6,7 @@ public class KitchenOrderModel
     public string OrderNumber { get; set; } = string.Empty;
     public int TableId { get; set; }
     public string TableName { get; set; } = string.Empty;
+    public string ZoneName { get; set; } = string.Empty;
     public string? ZoneColor { get; set; }
     public DateTime? OpenedAt { get; set; }
     public List<KitchenOrderItemModel> Items { get; set; } = new();
@@ -25,6 +26,8 @@ public class KitchenOrderItemModel
     public DateTime? CookingStartedAt { get; set; }
     public DateTime? ReadyAt { get; set; }
     public string? CancelReason { get; set; }
+    public string? CancelledByName { get; set; }
+    public string? SourceTableName { get; set; }
     public List<KitchenOptionModel> Options { get; set; } = new();
 }
 

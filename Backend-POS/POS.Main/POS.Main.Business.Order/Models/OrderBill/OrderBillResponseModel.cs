@@ -20,4 +20,9 @@ public class OrderBillResponseModel
     public string Status { get; set; } = string.Empty;
     public DateTime? PaidAt { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    // Customer-uploaded slip (from Mobile Web)
+    public int? CustomerSlipFileId { get; set; }
+    public decimal? CustomerSlipOcrAmount { get; set; }
+    public string? CustomerSlipVerificationStatus { get; set; }
 }

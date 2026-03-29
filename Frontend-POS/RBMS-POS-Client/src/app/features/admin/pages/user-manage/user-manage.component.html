@@ -125,13 +125,11 @@
           <!-- สถานะการใช้งาน -->
           <div>
             <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
-            <div class="flex items-center gap-3 pt-2">
+            <div class="flex items-center gap-2 pt-2">
               <p-inputSwitch formControlName="isActive"></p-inputSwitch>
               <span
                 class="font-semibold mb-2"
-                [class]="
-                  form.get('isActive')?.value ? 'text-success' : 'text-danger'
-                "
+                [ngClass]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
               >
                 {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
               </span>
@@ -141,15 +139,11 @@
           <!-- ล็อคบัญชีผู้ใช้งาน -->
           <div>
             <label class="block font-semibold mb-2">ล็อคบัญชีผู้ใช้งาน</label>
-            <div class="flex items-center gap-3 pt-2">
+            <div class="flex items-center gap-2 pt-2">
               <p-inputSwitch formControlName="isLockedByAdmin"></p-inputSwitch>
               <span
                 class="font-semibold mb-2"
-                [class]="
-                  form.get('isLockedByAdmin')?.value
-                    ? 'text-success'
-                    : 'text-danger'
-                "
+                [ngClass]="form.get('isLockedByAdmin')?.value ? 'text-success' : 'text-danger'"
               >
                 {{
                   form.get("isLockedByAdmin")?.value

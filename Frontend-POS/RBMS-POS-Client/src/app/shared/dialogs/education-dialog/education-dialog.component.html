@@ -1,6 +1,4 @@
-<app-card-template
-  [headerLabel]="config.header!"
->
+<app-card-template [headerLabel]="config.header!">
   <form [formGroup]="form" class="grid grid-cols-3 gap-x-4 gap-y-3">
     <!-- ระดับการศึกษา -->
     <div>
@@ -46,9 +44,7 @@
 
     <!-- เกรดเฉลี่ย -->
     <div>
-      <label class="block font-semibold mb-1"
-        >เกรดเฉลี่ย</label
-      >
+      <label class="block font-semibold mb-1">เกรดเฉลี่ย</label>
       <p-inputNumber
         formControlName="gpa"
         [minFractionDigits]="2"
@@ -63,9 +59,7 @@
 
     <!-- ปี พ.ศ. ที่จบการศึกษา -->
     <div>
-      <label class="block font-semibold mb-1"
-        >ปี พ.ศ. ที่จบการศึกษา</label
-      >
+      <label class="block font-semibold mb-1">ปี พ.ศ. ที่จบการศึกษา</label>
       <p-inputNumber
         formControlName="graduationYear"
         [useGrouping]="false"
@@ -84,6 +78,10 @@
       [style]="{ 'min-width': '100px' }"
       (onClick)="onCancel()"
     ></p-button>
-    <p-button label="ตกลง" [style]="{ 'min-width': '100px' }" (onClick)="onSave()"></p-button>
+    <p-button
+      label="ตกลง"
+      [style]="{ 'min-width': '100px' }"
+      (onClick)="onSave()"
+    ></p-button>
   </p-footer>
 </app-card-template>

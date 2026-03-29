@@ -10,9 +10,7 @@
         class="text-white"
       ></app-generic-icon>
     </div>
-    <h1 class="text-page-title">
-      รายชื่อพนักงาน
-    </h1>
+    <h1 class="text-page-title">รายชื่อพนักงาน</h1>
   </div>
 
   <!-- Content (Search + Table รวมกัน) -->
@@ -35,8 +33,10 @@
               />
             </p-iconField>
             @if (searchTerm) {
-              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
-                 (click)="searchTerm = ''; onFilterChange()"></i>
+              <i
+                class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                (click)="searchTerm = ''; onFilterChange()"
+              ></i>
             }
           </div>
         </div>
@@ -53,7 +53,7 @@
 
         <!-- Status Filter -->
         <div class="flex-1 min-w-[160px]">
-          <label class="block font-semibold mb-2">สถานะ</label>
+          <label class="block font-semibold mb-2">สถานะการใช้งาน</label>
           <app-active-status-dropdown
             [(ngModel)]="statusFilter"
             (ngModelChange)="onFilterChange()"
@@ -77,18 +77,20 @@
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
         [totalRecords]="totalRecords()"
         [lazy]="true"
-        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        (onLazyLoad)="
+          onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })
+        "
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr>
             <th class="w-[80px]">รหัส</th>
             <th class="w-[140px]">รูปภาพ</th>
-            <th class="w-[200px]">ชื่อ-นามสกุล</th>
+            <th class="w-[200px] whitespace-nowrap">ชื่อ-นามสกุล</th>
             <th class="w-[120px]">ชื่อเล่น</th>
             <th class="w-[140px]">ตำแหน่ง</th>
             <th class="w-[120px]">เบอร์โทร</th>
-            <th class="w-[120px]">สถานะ</th>
+            <th class="w-[120px] whitespace-nowrap">สถานะการใช้งาน</th>
             <th class="w-[100px]">ตัวเลือก</th>
           </tr>
         </ng-template>

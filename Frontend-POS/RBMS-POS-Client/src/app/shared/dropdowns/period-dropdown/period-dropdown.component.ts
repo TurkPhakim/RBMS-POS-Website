@@ -1,12 +1,14 @@
 import { Component, forwardRef } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
-
-import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component';
+import {
+  DropdownBaseComponent,
+  DROPDOWN_BASE_TEMPLATE,
+} from '../dropdown-base/dropdown-base.component';
 
 @Component({
   selector: 'app-period-dropdown',
   standalone: false,
-  templateUrl: '../dropdown-base/dropdown-base.component.html',
+  template: DROPDOWN_BASE_TEMPLATE,
   host: { class: 'block' },
   providers: [
     {
@@ -25,7 +27,7 @@ export class PeriodDropdownComponent extends DropdownBaseComponent {
     this.options = [
       { value: 'period1', label: 'ช่วงที่ 1' },
       { value: 'period2', label: 'ช่วงที่ 2' },
-      { value: 'both', label: 'ทั้งสองช่วง' },
+      { value: 'both', label: 'ทั้งวัน' },
     ];
   }
 }

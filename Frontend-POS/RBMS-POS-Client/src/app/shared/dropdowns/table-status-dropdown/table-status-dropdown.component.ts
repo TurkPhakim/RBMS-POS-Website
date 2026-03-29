@@ -1,12 +1,14 @@
 import { Component, forwardRef } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
-
-import { DropdownBaseComponent } from '../dropdown-base/dropdown-base.component';
+import {
+  DropdownBaseComponent,
+  DROPDOWN_BASE_TEMPLATE,
+} from '../dropdown-base/dropdown-base.component';
 
 @Component({
   selector: 'app-table-status-dropdown',
   standalone: false,
-  templateUrl: '../dropdown-base/dropdown-base.component.html',
+  template: DROPDOWN_BASE_TEMPLATE,
   host: { class: 'block' },
   providers: [
     {
@@ -25,9 +27,7 @@ export class TableStatusDropdownComponent extends DropdownBaseComponent {
     this.options = [
       { value: 'Available', label: 'ว่าง' },
       { value: 'Occupied', label: 'มีลูกค้า' },
-      { value: 'Billing', label: 'เช็คบิล' },
-      { value: 'Reserved', label: 'จองแล้ว' },
-      { value: 'Cleaning', label: 'ทำความสะอาด' },
+      { value: 'Reserved', label: 'ติดจอง' },
       { value: 'Unavailable', label: 'ปิดใช้งาน' },
     ];
   }

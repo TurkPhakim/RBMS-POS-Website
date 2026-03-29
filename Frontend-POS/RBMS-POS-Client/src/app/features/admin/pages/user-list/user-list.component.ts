@@ -91,8 +91,11 @@ export class UserListComponent implements OnInit, OnDestroy {
 
   private loadUsers(): void {
     const isActive =
-      this.statusFilter === 'active' ? true :
-      this.statusFilter === 'inactive' ? false : undefined;
+      this.statusFilter === 'active'
+        ? true
+        : this.statusFilter === 'inactive'
+          ? false
+          : undefined;
     const isLocked = this.statusFilter === 'locked' ? true : undefined;
 
     this.usersService

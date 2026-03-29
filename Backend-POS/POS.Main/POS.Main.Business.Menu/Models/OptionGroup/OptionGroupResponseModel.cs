@@ -38,4 +38,6 @@ public class LinkedMenuModel
     public string NameEnglish { get; set; } = string.Empty;
     public string CategoryTypeName { get; set; } = string.Empty;
     public bool IsAvailable { get; set; }
+    public bool IsAvailablePeriod1 { get; set; }
+    public bool IsAvailablePeriod2 { get; set; }
 }

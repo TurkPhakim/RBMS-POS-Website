@@ -9,6 +9,7 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
+import { CurrentPeriodResultModelBaseResponseModel } from '../models/current-period-result-model-base-response-model';
 import { CustomerAuthResponseModelBaseResponseModel } from '../models/customer-auth-response-model-base-response-model';
 import { CustomerMenuCategoriesResponseModelBaseResponseModel } from '../models/customer-menu-categories-response-model-base-response-model';
 import { CustomerMenuDetailResponseModelBaseResponseModel } from '../models/customer-menu-detail-response-model-base-response-model';
@@ -33,6 +34,8 @@ import { selfOrderGetOrdersGet } from '../fn/self-order/self-order-get-orders-ge
 import { SelfOrderGetOrdersGet$Params } from '../fn/self-order/self-order-get-orders-get';
 import { selfOrderGetReceiptGet } from '../fn/self-order/self-order-get-receipt-get';
 import { SelfOrderGetReceiptGet$Params } from '../fn/self-order/self-order-get-receipt-get';
+import { selfOrderGetShopStatusGet } from '../fn/self-order/self-order-get-shop-status-get';
+import { SelfOrderGetShopStatusGet$Params } from '../fn/self-order/self-order-get-shop-status-get';
 import { selfOrderRequestBillPost } from '../fn/self-order/self-order-request-bill-post';
 import { SelfOrderRequestBillPost$Params } from '../fn/self-order/self-order-request-bill-post';
 import { selfOrderRequestCashPaymentPost } from '../fn/self-order/self-order-request-cash-payment-post';
@@ -48,6 +51,31 @@ import { SelfOrderSubmitOrderPost$Params } from '../fn/self-order/self-order-sub
 export class SelfOrderService extends BaseService {
   constructor(config: ApiConfiguration, http: HttpClient) {
     super(config, http);
+  }
+
+  /** Path part for operation `selfOrderGetShopStatusGet()` */
+  static readonly SelfOrderGetShopStatusGetPath = '/api/customer/shop-status';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `selfOrderGetShopStatusGet()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  selfOrderGetShopStatusGet$Response(params?: SelfOrderGetShopStatusGet$Params, context?: HttpContext): Observable<StrictHttpResponse<CurrentPeriodResultModelBaseResponseModel>> {
+    return selfOrderGetShopStatusGet(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `selfOrderGetShopStatusGet$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  selfOrderGetShopStatusGet(params?: SelfOrderGetShopStatusGet$Params, context?: HttpContext): Observable<CurrentPeriodResultModelBaseResponseModel> {
+    return this.selfOrderGetShopStatusGet$Response(params, context).pipe(
+      map((r: StrictHttpResponse<CurrentPeriodResultModelBaseResponseModel>): CurrentPeriodResultModelBaseResponseModel => r.body)
+    );
   }
 
   /** Path part for operation `selfOrderAuthenticatePost()` */

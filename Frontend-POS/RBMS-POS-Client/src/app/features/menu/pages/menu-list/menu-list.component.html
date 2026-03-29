@@ -6,7 +6,7 @@
     >
       <app-generic-icon
         [name]="config.icon"
-        svgClass="w-10 h-10"
+        [svgClass]="config.iconClass"
         class="text-white"
       ></app-generic-icon>
     </div>
@@ -26,15 +26,17 @@
               <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
               <input
                 pInputText
-                placeholder="ค้นหาชื่อเมนู..."
+                placeholder="ค้นหาด้วยชื่อเมนู"
                 class="w-full pr-8"
                 [(ngModel)]="searchTerm"
                 (keyup.enter)="onFilterChange()"
               />
             </p-iconField>
             @if (searchTerm) {
-              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
-                 (click)="searchTerm = ''; onFilterChange()"></i>
+              <i
+                class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                (click)="searchTerm = ''; onFilterChange()"
+              ></i>
             }
           </div>
         </div>
@@ -46,17 +48,7 @@
             [categoryType]="categoryType"
             [(ngModel)]="selectedSubCategoryId"
             (ngModelChange)="onFilterChange()"
-            placeholder="หมวดหมู่ทั้งหมด"
           ></app-sub-category-dropdown>
-        </div>
-
-        <!-- Status Filter -->
-        <div class="flex-1 min-w-[160px]">
-          <label class="block font-semibold mb-2">สถานะ</label>
-          <app-availability-status-dropdown
-            [(ngModel)]="selectedStatus"
-            (ngModelChange)="onFilterChange()"
-          ></app-availability-status-dropdown>
         </div>
 
         <!-- Period Filter -->
@@ -69,6 +61,15 @@
             ></app-period-dropdown>
           </div>
         }
+
+        <!-- Status Filter -->
+        <div class="flex-1 min-w-[160px]">
+          <label class="block font-semibold mb-2">สถานะการขาย</label>
+          <app-availability-status-dropdown
+            [(ngModel)]="selectedStatus"
+            (ngModelChange)="onFilterChange()"
+          ></app-availability-status-dropdown>
+        </div>
       </div>
     </div>
 
@@ -83,24 +84,26 @@
         [rowsPerPageOptions]="[10, 25, 50]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
-
         [totalRecords]="totalRecords()"
         [lazy]="true"
-        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        (onLazyLoad)="
+          onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })
+        "
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr>
             <th class="w-[80px]">รหัส</th>
-            <th class="w-[80px]">รูปเมนู</th>
-            <th class="w-[200px]">ชื่อเมนู</th>
-            <th class="w-[140px]">หมวดหมู่ย่อย</th>
-            <th class="w-[100px]">ราคา</th>
-            <th class="w-[120px]">ช่วงเวลา</th>
-            <th class="w-[160px]">Tags</th>
-            <th class="w-[80px]">ปักหมุด</th>
-            <th class="w-[120px]">สถานะ</th>
-            <th class="w-[100px]">ตัวเลือก</th>
+            <th class="w-[160px] whitespace-nowrap">รูปเมนู</th>
+            <th class="w-[220px] whitespace-nowrap">ชื่อเมนู</th>
+            <th class="w-[140px] whitespace-nowrap">หมวดหมู่ย่อย</th>
+            <th class="w-[140px]">ราคาขาย</th>
+            @if (hasTwoPeriods()) {
+              <th class="w-[120px] whitespace-nowrap">ช่วงเวลาขาย</th>
+            }
+            <th class="w-[200px] whitespace-nowrap">แท็กเมนู</th>
+            <th class="w-[120px] whitespace-nowrap">สถานะการขาย</th>
+            <th class="w-[100px] whitespace-nowrap">ตัวเลือก</th>
           </tr>
         </ng-template>
 
@@ -117,16 +120,16 @@
                 @if (getImageUrl(item.imageFileId)) {
                   <img
                     [src]="getImageUrl(item.imageFileId)"
-                    alt=""
-                    class="h-16 w-16 rounded-lg object-cover"
+                    [alt]="item.nameThai || 'เมนู'"
+                    class="h-20 w-20 rounded-lg object-cover"
                   />
                 } @else {
                   <div
-                    class="h-16 w-16 rounded-lg bg-surface-border flex items-center justify-center"
+                    class="h-20 w-20 rounded-lg bg-surface-border flex items-center justify-center"
                   >
                     <app-generic-icon
                       [name]="config.icon"
-                      svgClass="w-9 h-9"
+                      svgClass="w-12 h-12"
                       class="text-surface-sub opacity-50"
                     ></app-generic-icon>
                   </div>
@@ -146,58 +149,94 @@
 
             <!-- Sub Category -->
             <td class="!text-center whitespace-nowrap">
-              @if (item.subCategoryName) {
-                <p-tag
-                  [value]="item.subCategoryName"
-                  severity="info"
-                ></p-tag>
-              }
+              {{ item.subCategoryName }}
             </td>
 
             <!-- Price -->
-            <td class="!text-center font-semibold">
-              {{ item.price | number : "1.2-2" }}
+            <td class="!text-right font-semibold whitespace-nowrap">
+              {{ item.price | number: "1.2-2" }} บาท
             </td>
 
             <!-- Period -->
-            <td class="!text-center">
-              <p-tag
-                [value]="getPeriodLabel(item).text"
-                [severity]="getPeriodLabel(item).severity"
-              ></p-tag>
-            </td>
+            @if (hasTwoPeriods()) {
+              <td class="!text-center whitespace-nowrap">
+                <span
+                  class="font-bold"
+                  [ngClass]="getPeriodLabel(item).colorClass"
+                >
+                  {{ getPeriodLabel(item).text }}
+                </span>
+              </td>
+            }
 
-            <!-- Tags -->
-            <td class="!text-center">
-              <div class="flex flex-wrap justify-center gap-1">
-                @for (tag of getTagLabels(item.tags); track tag.label) {
-                  <p-tag
-                    [value]="tag.label"
-                    [severity]="tag.severity"
-                  ></p-tag>
-                }
+            <!-- Tags + Pinned -->
+            <td>
+              <div class="flex justify-center gap-1">
+                <div
+                  class="w-12 h-12 rounded-full flex items-center justify-center cursor-default"
+                  [class]="
+                    hasTag(item.tags, 1)
+                      ? 'bg-tag-recommend text-white'
+                      : 'bg-gray-200 text-gray-400'
+                  "
+                  pTooltip="แนะนำ"
+                  tooltipPosition="top"
+                >
+                  <app-generic-icon
+                    name="thumb-tag"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
+                </div>
+                <div
+                  class="w-12 h-12 rounded-full flex items-center justify-center cursor-default"
+                  [class]="
+                    hasTag(item.tags, 2)
+                      ? 'bg-tag-seasonal text-white'
+                      : 'bg-gray-200 text-gray-400'
+                  "
+                  pTooltip="ตามฤดูกาล"
+                  tooltipPosition="top"
+                >
+                  <app-generic-icon
+                    name="clover-tag"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
+                </div>
+                <div
+                  class="w-12 h-12 rounded-full flex items-center justify-center cursor-default"
+                  [class]="
+                    hasTag(item.tags, 4)
+                      ? 'bg-tag-slow text-white'
+                      : 'bg-gray-200 text-gray-400'
+                  "
+                  pTooltip="ใช้เวลานาน"
+                  tooltipPosition="top"
+                >
+                  <app-generic-icon
+                    name="time-tag"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
+                </div>
+                <div
+                  class="w-12 h-12 rounded-full flex items-center justify-center cursor-default"
+                  [class]="
+                    item.isPinned
+                      ? 'bg-tag-pin text-white'
+                      : 'bg-gray-200 text-gray-400'
+                  "
+                  pTooltip="ปักหมุด"
+                  tooltipPosition="top"
+                >
+                  <app-generic-icon
+                    name="pin-tag"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
+                </div>
               </div>
             </td>
 
-            <!-- Pinned -->
-            <td class="!text-center">
-              @if (item.isPinned) {
-                <app-generic-icon
-                  name="pin"
-                  svgClass="w-5 h-5"
-                  class="text-primary"
-                ></app-generic-icon>
-              } @else {
-                <app-generic-icon
-                  name="pin"
-                  svgClass="w-5 h-5"
-                  class="text-surface-placeholder"
-                ></app-generic-icon>
-              }
-            </td>
-
             <!-- Status -->
-            <td class="!text-center">
+            <td class="!text-center whitespace-nowrap">
               @if (item.isAvailable) {
                 <span class="font-bold text-primary">เปิดขาย</span>
               } @else {
@@ -241,7 +280,7 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="10">
+            <td [attr.colspan]="hasTwoPeriods() ? 9 : 8">
               <div class="flex justify-center items-center w-full p-[100px]">
                 <app-empty-view message="ไม่พบข้อมูลเมนู" />
               </div>

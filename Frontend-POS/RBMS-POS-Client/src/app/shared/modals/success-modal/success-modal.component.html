@@ -9,14 +9,24 @@
     <p class="text-surface-sub">{{ config.data?.message }}</p>
   }
 
-  <!-- Button -->
+  <!-- Buttons -->
   @if (config.data?.onConfirm) {
-    <p-button
-      severity="primary"
-      [style]="{ 'min-width': '120px' }"
-      (onClick)="handleConfirm()"
-    >
-      {{ config.data?.confirmButtonLabel ?? "ตกลง" }}
-    </p-button>
+    <div class="flex items-center gap-3">
+      <p-button
+        severity="secondary"
+        [outlined]="true"
+        [style]="{ 'min-width': '80px' }"
+        (onClick)="ref.close()"
+      >
+        ปิด
+      </p-button>
+      <p-button
+        severity="primary"
+        [style]="{ 'min-width': '120px', 'white-space': 'nowrap' }"
+        (onClick)="handleConfirm()"
+      >
+        {{ config.data?.confirmButtonLabel ?? "ตกลง" }}
+      </p-button>
+    </div>
   }
 </div>

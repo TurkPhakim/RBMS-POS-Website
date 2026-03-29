@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
-
 import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 import { CancelModalComponent } from '@app/shared/modals/cancel-modal/cancel-modal.component';
 import { InfoModalComponent } from '@app/shared/modals/info-modal/info-modal.component';
 import { SuccessModalComponent } from '@app/shared/modals/success-modal/success-modal.component';

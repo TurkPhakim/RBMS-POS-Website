@@ -36,6 +36,8 @@ import { tablesSetAvailablePost } from '../fn/tables/tables-set-available-post';
 import { TablesSetAvailablePost$Params } from '../fn/tables/tables-set-available-post';
 import { tablesSetUnavailablePost } from '../fn/tables/tables-set-unavailable-post';
 import { TablesSetUnavailablePost$Params } from '../fn/tables/tables-set-unavailable-post';
+import { tablesUnlinkSingleTableDelete } from '../fn/tables/tables-unlink-single-table-delete';
+import { TablesUnlinkSingleTableDelete$Params } from '../fn/tables/tables-unlink-single-table-delete';
 import { tablesUnlinkTablesDelete } from '../fn/tables/tables-unlink-tables-delete';
 import { TablesUnlinkTablesDelete$Params } from '../fn/tables/tables-unlink-tables-delete';
 import { tablesUpdatePositionsPut } from '../fn/tables/tables-update-positions-put';
@@ -345,6 +347,31 @@ export class TablesService extends BaseService {
    */
   tablesUnlinkTablesDelete(params: TablesUnlinkTablesDelete$Params, context?: HttpContext): Observable<void> {
     return this.tablesUnlinkTablesDelete$Response(params, context).pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
+    );
+  }
+
+  /** Path part for operation `tablesUnlinkSingleTableDelete()` */
+  static readonly TablesUnlinkSingleTableDeletePath = '/api/table/tables/link/single/{tableId}';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `tablesUnlinkSingleTableDelete()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  tablesUnlinkSingleTableDelete$Response(params: TablesUnlinkSingleTableDelete$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    return tablesUnlinkSingleTableDelete(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `tablesUnlinkSingleTableDelete$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  tablesUnlinkSingleTableDelete(params: TablesUnlinkSingleTableDelete$Params, context?: HttpContext): Observable<void> {
+    return this.tablesUnlinkSingleTableDelete$Response(params, context).pipe(
       map((r: StrictHttpResponse<void>): void => r.body)
     );
   }

@@ -79,7 +79,7 @@ export class OrderListComponent implements OnInit {
   }
 
   onViewDetail(orderId: number): void {
-    this.router.navigate(['/order', orderId]);
+    this.router.navigate(['/order', 'list', orderId]);
   }
 
   onGoToCheckout(orderId: number): void {

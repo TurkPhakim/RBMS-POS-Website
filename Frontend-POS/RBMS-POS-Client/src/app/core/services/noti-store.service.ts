@@ -17,7 +17,7 @@ const TOAST_EVENT_TYPES = [
 const FILTER_GROUPS: Record<string, string[]> = {
   NEW_ORDER: ['NEW_ORDER', 'ORDER_CANCELLED'],
   ORDER_READY: ['ORDER_READY'],
-  CALL_WAITER: ['CALL_WAITER'],
+  CALL_WAITER: ['CALL_WAITER', 'RESERVATION_REMINDER'],
   REQUEST_BILL: ['REQUEST_BILL', 'SLIP_UPLOADED', 'PAYMENT_COMPLETED'],
 };
 
@@ -81,7 +81,11 @@ export class NotiStoreService {
         summary: noti.title ?? '',
         detail: noti.message ?? '',
         life: 5000,
-        data: { eventType: noti.eventType, tableName: noti.tableName, zoneName: noti.zoneName },
+        data: {
+          eventType: noti.eventType,
+          tableName: noti.tableName,
+          zoneName: noti.zoneName,
+        },
       });
     }
   }

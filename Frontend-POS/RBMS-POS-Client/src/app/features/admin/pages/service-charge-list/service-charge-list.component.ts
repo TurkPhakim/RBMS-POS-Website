@@ -7,14 +7,12 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DialogService } from 'primeng/dynamicdialog';
-
 import { ServiceChargeResponseModel } from '@app/core/api/models';
 import { ServiceChargesService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { Icon, ModalService } from '@app/core/services/modal.service';
 import { ServiceChargeDialogComponent } from '../../dialogs/service-charge-dialog/service-charge-dialog.component';
-
 const KEY_BTN_ADD = 'add-service-charge';
 
 @Component({
@@ -71,8 +69,8 @@ export class ServiceChargeListComponent implements OnInit, OnDestroy {
     this.openDialog('เพิ่มค่าบริการ');
   }
 
-  onEdit(serviceCharge: ServiceChargeResponseModel): void {
-    this.openDialog('แก้ไขค่าบริการ', serviceCharge);
+  onEdit(serviceChargeId: number): void {
+    this.openDialog('แก้ไขค่าบริการ', serviceChargeId);
   }
 
   onDelete(id: number, name: string): void {
@@ -99,8 +97,11 @@ export class ServiceChargeListComponent implements OnInit, OnDestroy {
 
   private loadServiceCharges(): void {
     const isActive =
-      this.statusFilter === 'active' ? true :
-      this.statusFilter === 'inactive' ? false : undefined;
+      this.statusFilter === 'active'
+        ? true
+        : this.statusFilter === 'inactive'
+          ? false
+          : undefined;
 
     this.serviceChargesService
       .serviceChargesGetAllGet({
@@ -138,14 +139,14 @@ export class ServiceChargeListComponent implements OnInit, OnDestroy {
     }
   }
 
-  private openDialog(header: string, serviceCharge?: ServiceChargeResponseModel): void {
+  private openDialog(header: string, serviceChargeId?: number): void {
     const ref = this.dialogService.open(ServiceChargeDialogComponent, {
       header,
       width: '50vw',
       styleClass: 'card-dialog',
       showHeader: false,
       modal: true,
-      data: { serviceCharge },
+      data: { serviceChargeId },
     });
 
     ref.onClose

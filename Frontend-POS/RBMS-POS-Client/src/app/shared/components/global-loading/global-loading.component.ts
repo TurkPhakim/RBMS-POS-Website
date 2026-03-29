@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { delay } from 'rxjs';
 import { AnimationOptions } from 'ngx-lottie';
 import { LoadingService } from '@app/core/services/loading.service';
 
@@ -6,7 +7,7 @@ import { LoadingService } from '@app/core/services/loading.service';
   selector: 'app-global-loading',
   standalone: false,
   template: `
-    @if (loadingService.loading$ | async) {
+    @if (isLoading$ | async) {
       <div
         class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
       >
@@ -24,5 +25,9 @@ export class GlobalLoadingComponent {
     path: 'animations/loading-animation.json',
   };
 
-  constructor(public readonly loadingService: LoadingService) {}
+  isLoading$;
+
+  constructor(private readonly loadingService: LoadingService) {
+    this.isLoading$ = this.loadingService.loading$.pipe(delay(0));
+  }
 }

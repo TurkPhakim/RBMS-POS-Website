@@ -9,9 +9,10 @@ import { ModalService } from '@app/core/services/modal.service';
 import { markFormDirty } from '@app/shared/utils';
 
 const PRESET_COLORS = [
-  '#4CAF50', '#2196F3', '#FF9800', '#F44336', '#9C27B0',
-  '#00BCD4', '#FF5722', '#795548', '#607D8B', '#E91E63',
-  '#3F51B5', '#009688',
+  '#f97316', '#ef4444', '#ec4899', '#a855f7',
+  '#6366f1', '#3b82f6', '#06b6d4', '#14b8a6',
+  '#10b981', '#84cc16', '#eab308', '#78716c',
+  '#0ea5e9',
 ];
 
 @Component({
@@ -24,10 +25,12 @@ export class ZoneDialogComponent implements OnInit {
   isEditMode = signal(false);
   isSubmitting = signal(false);
 
+  private zoneId: number | null = null;
   zone: ZoneResponseModel | null = null;
   canUpdate: boolean;
 
   readonly presetColors = PRESET_COLORS;
+  showPicker = false;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -42,22 +45,32 @@ export class ZoneDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.zone = this.config.data?.zone ?? null;
-    this.isEditMode.set(!!this.zone);
+    this.zoneId = this.config.data?.zoneId ?? null;
+    this.isEditMode.set(!!this.zoneId);
     this.initForm();
+
+    if (this.zoneId) {
+      this.loadZoneDetail(this.zoneId);
+    }
   }
 
   get selectedColor(): string {
     return this.form.get('color')?.value ?? '#4CAF50';
   }
 
+  isCustomColor(): boolean {
+    return !this.presetColors.includes(this.selectedColor.toUpperCase())
+      && !this.presetColors.includes(this.selectedColor);
+  }
+
   selectColor(color: string): void {
     this.form.get('color')?.setValue(color);
   }
 
-  onColorInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.form.get('color')?.setValue(value);
+  onHexInput(value: string): void {
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      this.form.get('color')?.setValue(value);
+    }
   }
 
   onSubmit(): void {
@@ -81,14 +94,29 @@ export class ZoneDialogComponent implements OnInit {
 
   private initForm(): void {
     this.form = this.fb.group({
-      zoneName: [this.zone?.zoneName ?? '', [Validators.required, Validators.maxLength(100)]],
-      color: [this.zone?.color ?? '#4CAF50', Validators.required],
-      isActive: [this.zone?.isActive ?? true],
+      zoneName: ['', [Validators.required, Validators.maxLength(100)]],
+      color: ['#4CAF50', Validators.required],
+      isActive: [true],
     });
+  }
 
-    if (this.isEditMode() && !this.canUpdate) {
-      this.form.disable();
-    }
+  private loadZoneDetail(zoneId: number): void {
+    this.zonesService
+      .zonesGetZoneGet({ zoneId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.zone = res.result ?? null;
+          if (this.zone) {
+            this.form.patchValue({
+              zoneName: this.zone.zoneName,
+              color: this.zone.color,
+              isActive: this.zone.isActive,
+            });
+            if (!this.canUpdate) this.form.disable();
+          }
+        },
+      });
   }
 
   private createZone(): void {
@@ -119,7 +147,7 @@ export class ZoneDialogComponent implements OnInit {
   private updateZone(): void {
     this.zonesService
       .zonesUpdateZonePut({
-        zoneId: this.zone!.zoneId!,
+        zoneId: this.zoneId!,
         body: {
           zoneName: this.form.value.zoneName,
           color: this.form.value.color,

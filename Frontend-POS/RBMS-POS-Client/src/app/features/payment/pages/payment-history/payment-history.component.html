@@ -53,8 +53,8 @@
             <td>
               @if (payment.paymentMethod === 'Cash') {
                 <span class="text-success font-semibold">เงินสด</span>
-              } @else if (payment.paymentMethod === 'QrCode') {
-                <span class="text-info font-semibold">QR Code</span>
+              } @else if (payment.paymentMethod === 'QrPayment') {
+                <span class="text-info font-semibold">QR-Payment</span>
               } @else {
                 <span>{{ payment.paymentMethod }}</span>
               }

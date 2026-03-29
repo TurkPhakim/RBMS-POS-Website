@@ -1,0 +1,142 @@
+@if (items().length > 0) {
+  <div class="px-4 pt-4 pb-8">
+    <!-- Order Card -->
+    <div class="bg-white rounded-2xl border border-surface-border overflow-hidden">
+      <app-card-header
+        icon="order-dinner"
+        title="ออเดอร์ของคุณ"
+        [subtitle]="orderNumber()"
+        gradient="primary"
+      >
+        <span
+          cardHeaderRight
+          class="relative z-10 bg-white/20 text-white text-sm font-bold px-3 py-1 rounded-full whitespace-nowrap"
+        >
+          {{ filteredItems().length }} รายการ
+        </span>
+      </app-card-header>
+
+      <!-- Filters -->
+      @if (hasMultipleTables() || hasMultipleOrderers()) {
+        <div class="px-4 pt-3 flex gap-2">
+          @if (hasMultipleTables()) {
+            <app-source-table-filter-dropdown
+              class="flex-1"
+              [tableNames]="sourceTableNames()"
+              [ngModel]="sourceTableFilter()"
+              (ngModelChange)="onSourceTableChange($event)"
+            ></app-source-table-filter-dropdown>
+          }
+          @if (hasMultipleOrderers()) {
+            <app-ordered-by-filter-dropdown
+              class="flex-1"
+              [names]="orderedByNames()"
+              [ngModel]="orderedByFilter()"
+              (ngModelChange)="orderedByFilter.set($event ?? null)"
+            ></app-ordered-by-filter-dropdown>
+          }
+        </div>
+      }
+
+      <!-- Order Items -->
+      <div class="px-4 py-3 space-y-2.5">
+        @for (item of filteredItems(); track item.orderItemId) {
+          <div
+            class="rounded-xl border p-3 relative"
+            [class]="getItemBorderClass(item.status!)"
+          >
+            <!-- Status Badge (top-right) -->
+            <span
+              class="absolute top-2 right-2 text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+              [class]="getStatusClass(item.status!)"
+            >
+              {{ getStatusLabel(item.status!) }}
+            </span>
+
+            <div class="flex items-center gap-3">
+              <!-- Menu Image / Status Icon -->
+              @if (getImageUrl(item.menuImageFileId)) {
+                <img
+                  [src]="getImageUrl(item.menuImageFileId)"
+                  alt=""
+                  class="w-14 h-14 rounded-lg object-cover shrink-0"
+                />
+              } @else {
+                <div
+                  class="w-14 h-14 rounded-lg flex items-center justify-center shrink-0"
+                  [class]="getItemIconBgClass(item.status!)"
+                >
+                  <app-generic-icon
+                    [name]="getStatusIcon(item.status!)"
+                    svgClass="w-6 h-6"
+                    [class]="getItemIconTextClass(item.status!)"
+                  ></app-generic-icon>
+                </div>
+              }
+
+              <!-- Info -->
+              <div class="flex-1 min-w-0 pr-16">
+                <p class="font-bold leading-tight truncate">{{ item.menuName }}</p>
+                @if (item.options?.length) {
+                  <div class="flex flex-wrap gap-x-2 mt-0.5">
+                    @for (opt of item.options; track opt.optionItemName) {
+                      <span class="text-xs text-surface-sub">
+                        {{ opt.optionItemName }}@if (opt.additionalPrice) { <span class="text-primary">(+{{ opt.additionalPrice }})</span> }
+                      </span>
+                    }
+                  </div>
+                }
+                @if (item.note) {
+                  <p class="text-xs text-warning-dark italic mt-0.5">{{ item.note }}</p>
+                }
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-sm text-surface-sub">x{{ item.quantity }}</span>
+                  <span class="text-sm font-semibold text-primary"
+                    >{{ item.totalPrice | number: "1.0-0" }} บาท</span
+                  >
+                </div>
+              </div>
+
+              <!-- Ordered By (right side) -->
+              @if (item.orderedBy) {
+                <div class="shrink-0 text-xs text-surface-sub text-right">
+                  <i class="pi pi-user text-[10px] mr-0.5"></i>{{ item.orderedBy }}
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Total -->
+      <div
+        class="border-t-2 px-5 py-4 flex justify-between items-center"
+        [style.backgroundColor]="'rgba(234, 118, 0, 0.05)'"
+        [style.borderColor]="'rgba(234, 118, 0, 0.3)'"
+      >
+        <span class="font-bold text-lg">ยอดรวม</span>
+        <span class="text-2xl font-extrabold text-primary"
+          >{{ subTotal() | number: "1.0-0" }} บาท</span
+        >
+      </div>
+    </div>
+  </div>
+} @else {
+  <!-- Empty State -->
+  <div class="flex flex-col items-center px-6 pb-8">
+    <ng-lottie
+      [options]="lottieOptions"
+      width="280px"
+      height="280px"
+    ></ng-lottie>
+    <p class="text-2xl font-bold mb-4 text-center -mt-6">ยังไม่มีรายการออเดอร์</p>
+    <button pButton class="px-8 gap-2" routerLink="/menu">
+      <app-generic-icon
+        name="menu-restaurant"
+        svgClass="w-6 h-6"
+        class="text-white"
+      ></app-generic-icon>
+      <span class="text-base font-semibold">ออเดอร์เมนู</span>
+    </button>
+  </div>
+}

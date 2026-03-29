@@ -12,7 +12,7 @@ import { Footer } from 'primeng/api';
   template: `
     @if (headerLabel || hasCustomHeader) {
       <div
-        class="px-6 py-4 border-b border-surface-border flex items-center"
+        class="px-6 py-4 border-b border-surface-border flex items-center justify-between"
         [ngClass]="headerClass"
       >
         @if (hasCustomHeader) {
@@ -22,6 +22,7 @@ import { Footer } from 'primeng/api';
             {{ headerLabel }}
           </h3>
         }
+        <ng-content select="[card-header-right]"></ng-content>
       </div>
     }
     <div class="p-6 card-template-body" [ngClass]="contentClass">

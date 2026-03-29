@@ -14,4 +14,5 @@ public class OrderResponseModel
     public string ZoneName { get; set; } = string.Empty;
     public string? GuestType { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool IsLinked { get; set; }
 }

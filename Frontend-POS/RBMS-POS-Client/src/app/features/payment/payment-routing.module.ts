@@ -12,24 +12,26 @@ const routes: Routes = [
   {
     path: '',
     component: PaymentComponent,
+    data: { breadcrumb: 'รอบการขาย' },
   },
   {
     path: 'checkout/:orderId',
     component: CheckoutComponent,
     canActivate: [PermissionGuard],
-    data: { breadcrumb: 'ชำระเงิน', permissions: ['payment-manage.create'] },
+    data: { breadcrumb: 'ชำระบิลออเดอร์', permissions: ['payment-manage.create'] },
   },
   {
     path: 'session-history',
-    component: SessionHistoryComponent,
-    canActivate: [PermissionGuard],
     data: { breadcrumb: 'ประวัติรอบขาย', permissions: ['cashier-session.read'] },
-  },
-  {
-    path: 'session-history/:cashierSessionId',
-    component: SessionDetailComponent,
     canActivate: [PermissionGuard],
-    data: { breadcrumb: 'รายละเอียดรอบขาย', permissions: ['cashier-session.read'] },
+    children: [
+      { path: '', component: SessionHistoryComponent },
+      {
+        path: ':cashierSessionId',
+        component: SessionDetailComponent,
+        data: { breadcrumb: 'รายละเอียดรอบขาย' },
+      },
+    ],
   },
   {
     path: 'payment-history',

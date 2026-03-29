@@ -31,7 +31,7 @@ import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
     <!-- Numeric Keypad -->
     <div class="grid grid-cols-3 gap-1.5 max-w-[250px] mx-auto mt-3">
       @for (key of keys; track key) {
-        @if (key === "") {
+        @if (key === '') {
           @if (leftActionIcon) {
             <button
               type="button"
@@ -47,7 +47,7 @@ import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
           } @else {
             <div></div>
           }
-        } @else if (key === "backspace") {
+        } @else if (key === 'backspace') {
           <button
             type="button"
             class="flex items-center justify-center w-[72px] h-[72px] rounded-full bg-surface-card border border-surface-border hover:bg-primary-subtle hover:border-primary-light active:bg-primary-light transition-colors duration-150 cursor-pointer mx-auto"

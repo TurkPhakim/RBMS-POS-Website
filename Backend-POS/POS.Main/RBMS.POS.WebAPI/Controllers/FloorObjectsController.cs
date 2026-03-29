@@ -26,6 +26,13 @@ public class FloorObjectsController : BaseController
         [FromQuery] int? zoneId, CancellationToken ct = default)
         => ListSuccess(await _floorObjectService.GetFloorObjectsAsync(zoneId, ct));
 
+    [HttpGet("{floorObjectId}")]
+    [PermissionAuthorize(Permissions.FloorPlan.Read)]
+    [ProducesResponseType(typeof(BaseResponseModel<FloorObjectResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetFloorObject(
+        int floorObjectId, CancellationToken ct = default)
+        => Success(await _floorObjectService.GetFloorObjectByIdAsync(floorObjectId, ct));
+
     [HttpPost]
     [PermissionAuthorize(Permissions.FloorPlan.Create)]
     [ProducesResponseType(typeof(BaseResponseModel<FloorObjectResponseModel>), StatusCodes.Status200OK)]

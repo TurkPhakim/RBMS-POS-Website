@@ -1,25 +1,38 @@
-import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import {
+  HttpErrorResponse,
+  HttpEvent,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest,
+} from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
 import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-
   constructor(
     private readonly authService: AuthService,
     private readonly router: Router,
   ) {}
 
-  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+  intercept(
+    request: HttpRequest<unknown>,
+    next: HttpHandler,
+  ): Observable<HttpEvent<unknown>> {
     // Skip interceptor for anonymous auth endpoints only (verify-password needs token)
-    const anonymousAuthPaths = ['/login', '/refresh-token', '/forgot-password', '/verify-otp', '/reset-password'];
-    const isAnonymousAuthEndpoint = request.url.includes('/api/admin/auth/') &&
-      anonymousAuthPaths.some(path => request.url.endsWith(path));
+    const anonymousAuthPaths = [
+      '/login',
+      '/refresh-token',
+      '/forgot-password',
+      '/verify-otp',
+      '/reset-password',
+    ];
+    const isAnonymousAuthEndpoint =
+      request.url.includes('/api/admin/auth/') &&
+      anonymousAuthPaths.some((path) => request.url.endsWith(path));
 
     if (isAnonymousAuthEndpoint) {
       return next.handle(request);
@@ -33,8 +46,8 @@ export class AuthInterceptor implements HttpInterceptor {
     if (token) {
       authReq = request.clone({
         setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
     }
 
@@ -42,7 +55,10 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
           // verify-password / pin/verify ใช้ 401 สำหรับรหัสผ่าน/PIN ผิด — ให้ component จัดการเอง
-          const isCredentialCheck = request.url.endsWith('/verify-password') || request.url.endsWith('/pin/verify') || request.url.endsWith('/change-password');
+          const isCredentialCheck =
+            request.url.endsWith('/verify-password') ||
+            request.url.endsWith('/pin/verify') ||
+            request.url.endsWith('/change-password');
           if (!isCredentialCheck) {
             this.authService.clearAndRedirectToLogin();
           }
@@ -53,7 +69,7 @@ export class AuthInterceptor implements HttpInterceptor {
         }
 
         return throwError(() => error);
-      })
+      }),
     );
   }
 }

@@ -1404,6 +1404,16 @@ namespace POS.Main.Dal.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CustomerSlipFileId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("CustomerSlipOcrAmount")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("CustomerSlipVerificationStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<bool>("DeleteFlag")
                         .HasColumnType("bit");
 
@@ -1474,6 +1484,8 @@ namespace POS.Main.Dal.Migrations
                         .HasDatabaseName("IX_OrderBills_BillNumber");
 
                     b.HasIndex("CreatedBy");
+
+                    b.HasIndex("CustomerSlipFileId");
 
                     b.HasIndex("DeleteFlag")
                         .HasDatabaseName("IX_OrderBills_DeleteFlag");
@@ -2432,6 +2444,10 @@ namespace POS.Main.Dal.Migrations
                         .HasColumnType("float")
                         .HasDefaultValue(0.0);
 
+                    b.Property<string>("QrShortCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<string>("QrToken")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
@@ -2473,14 +2489,17 @@ namespace POS.Main.Dal.Migrations
 
                     b.HasKey("TableId");
 
-                    b.HasIndex("ActiveOrderId")
-                        .IsUnique()
-                        .HasFilter("[ActiveOrderId] IS NOT NULL");
+                    b.HasIndex("ActiveOrderId");
 
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("DeleteFlag")
                         .HasDatabaseName("IX_Tables_DeleteFlag");
+
+                    b.HasIndex("QrShortCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tables_QrShortCode")
+                        .HasFilter("[QrShortCode] IS NOT NULL");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_Tables_Status");
@@ -3972,6 +3991,11 @@ namespace POS.Main.Dal.Migrations
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("POS.Main.Dal.Entities.TbFile", "CustomerSlipFile")
+                        .WithMany()
+                        .HasForeignKey("CustomerSlipFileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("POS.Main.Dal.Entities.TbOrder", "Order")
                         .WithMany("OrderBills")
                         .HasForeignKey("OrderId")
@@ -3989,6 +4013,8 @@ namespace POS.Main.Dal.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedByEmployee");
+
+                    b.Navigation("CustomerSlipFile");
 
                     b.Navigation("Order");
 
@@ -4122,7 +4148,7 @@ namespace POS.Main.Dal.Migrations
                     b.HasOne("POS.Main.Dal.Entities.TbFile", "SlipImageFile")
                         .WithMany()
                         .HasForeignKey("SlipImageFileId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("POS.Main.Dal.Entities.TbEmployee", "UpdatedByEmployee")
                         .WithMany()
@@ -4251,8 +4277,8 @@ namespace POS.Main.Dal.Migrations
             modelBuilder.Entity("POS.Main.Dal.Entities.TbTable", b =>
                 {
                     b.HasOne("POS.Main.Dal.Entities.TbOrder", "ActiveOrder")
-                        .WithOne()
-                        .HasForeignKey("POS.Main.Dal.Entities.TbTable", "ActiveOrderId")
+                        .WithMany()
+                        .HasForeignKey("ActiveOrderId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("POS.Main.Dal.Entities.TbEmployee", "CreatedByEmployee")

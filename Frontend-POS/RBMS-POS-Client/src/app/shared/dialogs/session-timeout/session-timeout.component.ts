@@ -1,7 +1,5 @@
 import { Component, OnDestroy, OnInit, signal } from '@angular/core';
-
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-
 const WARNING_COUNTDOWN_S = 5 * 60; // 5 นาที
 
 @Component({
@@ -23,7 +21,9 @@ export class SessionTimeoutComponent implements OnInit, OnDestroy {
   }
 
   get minutes(): string {
-    return Math.floor(this.countdown() / 60).toString().padStart(2, '0');
+    return Math.floor(this.countdown() / 60)
+      .toString()
+      .padStart(2, '0');
   }
 
   get seconds(): string {

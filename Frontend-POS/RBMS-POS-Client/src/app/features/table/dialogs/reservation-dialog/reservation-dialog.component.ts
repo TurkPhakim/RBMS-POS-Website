@@ -19,6 +19,7 @@ export class ReservationDialogComponent implements OnInit {
   isSubmitting = signal(false);
   minDate = new Date();
 
+  private reservationId: number | null = null;
   reservation: ReservationResponseModel | null = null;
   canUpdate: boolean;
 
@@ -35,9 +36,13 @@ export class ReservationDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.reservation = this.config.data?.reservation ?? null;
-    this.isEditMode.set(!!this.reservation);
+    this.reservationId = this.config.data?.reservationId ?? null;
+    this.isEditMode.set(!!this.reservationId);
     this.initForm();
+
+    if (this.reservationId) {
+      this.loadDetail(this.reservationId);
+    }
   }
 
   onSubmit(): void {
@@ -60,27 +65,48 @@ export class ReservationDialogComponent implements OnInit {
   }
 
   private initForm(): void {
-    let dateTime: Date | null = null;
-    if (this.reservation?.reservationDate) {
-      dateTime = new Date(this.reservation.reservationDate);
-      if (this.reservation.reservationTime) {
-        const [h, m] = this.reservation.reservationTime.split(':').map(Number);
-        dateTime.setHours(h, m, 0, 0);
-      }
-    }
-
     this.form = this.fb.group({
-      customerName: [this.reservation?.customerName ?? '', [Validators.required, Validators.maxLength(100)]],
-      customerPhone: [this.reservation?.customerPhone ?? '', [Validators.required, Validators.maxLength(20)]],
-      reservationDateTime: [dateTime, Validators.required],
-      guestCount: [this.reservation?.guestCount ?? 2, [Validators.required, Validators.min(1), Validators.max(50)]],
-      tableId: [this.reservation?.tableId ?? null],
-      note: [this.reservation?.note ?? ''],
+      customerName: ['', Validators.required],
+      customerPhone: ['', Validators.required],
+      reservationDateTime: [null as Date | null, Validators.required],
+      guestCount: [2, Validators.required],
+      tableId: [null],
+      note: [''],
     });
+  }
 
-    if (this.isEditMode() && !this.canUpdate) {
-      this.form.disable();
-    }
+  private loadDetail(reservationId: number): void {
+    this.reservationsService
+      .reservationsGetReservationGet({ reservationId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.reservation = res.result ?? null;
+          if (this.reservation) {
+            let dateTime: Date | null = null;
+            if (this.reservation.reservationDate) {
+              dateTime = new Date(this.reservation.reservationDate);
+              if (this.reservation.reservationTime) {
+                const [h, m] = this.reservation.reservationTime.split(':').map(Number);
+                dateTime.setHours(h, m, 0, 0);
+              }
+            }
+            this.form.patchValue({
+              customerName: this.reservation.customerName,
+              customerPhone: this.reservation.customerPhone,
+              reservationDateTime: dateTime,
+              guestCount: this.reservation.guestCount,
+              tableId: this.reservation.tableId,
+              note: this.reservation.note,
+            });
+            if (!this.canUpdate) this.form.disable();
+            if (this.reservation.status === 'Confirmed') {
+              this.form.get('reservationDateTime')!.disable();
+              this.form.get('tableId')!.disable();
+            }
+          }
+        },
+      });
   }
 
   private createReservation(): void {
@@ -119,7 +145,7 @@ export class ReservationDialogComponent implements OnInit {
     const dt: Date = val.reservationDateTime;
     this.reservationsService
       .reservationsUpdateReservationPut({
-        reservationId: this.reservation!.reservationId!,
+        reservationId: this.reservationId!,
         body: {
           customerName: val.customerName,
           customerPhone: val.customerPhone,

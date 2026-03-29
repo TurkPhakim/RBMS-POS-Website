@@ -8,18 +8,36 @@
         [class]="getBannerGradient(o.status)"
       >
         <!-- Decorative scattered circles -->
-        <div class="absolute w-32 h-32 rounded-full bg-white/10 -top-12 -left-8"></div>
-        <div class="absolute w-12 h-12 rounded-full bg-white/15 top-2 left-48"></div>
-        <div class="absolute w-20 h-20 rounded-full bg-white/10 -bottom-8 left-80"></div>
-        <div class="absolute w-8 h-8 rounded-full bg-white/20 top-1 right-96"></div>
-        <div class="absolute w-24 h-24 rounded-full bg-white/10 -top-10 right-56"></div>
-        <div class="absolute w-10 h-10 rounded-full bg-white/15 bottom-1 right-36"></div>
-        <div class="absolute w-36 h-36 rounded-full bg-white/10 -bottom-16 -right-10"></div>
-        <div class="absolute w-6 h-6 rounded-full bg-white/20 top-3 left-[30%]"></div>
+        <div
+          class="absolute w-32 h-32 rounded-full bg-white/10 -top-12 -left-8"
+        ></div>
+        <div
+          class="absolute w-12 h-12 rounded-full bg-white/15 top-2 left-48"
+        ></div>
+        <div
+          class="absolute w-20 h-20 rounded-full bg-white/10 -bottom-8 left-80"
+        ></div>
+        <div
+          class="absolute w-8 h-8 rounded-full bg-white/20 top-1 right-96"
+        ></div>
+        <div
+          class="absolute w-24 h-24 rounded-full bg-white/10 -top-10 right-56"
+        ></div>
+        <div
+          class="absolute w-10 h-10 rounded-full bg-white/15 bottom-1 right-36"
+        ></div>
+        <div
+          class="absolute w-36 h-36 rounded-full bg-white/10 -bottom-16 -right-10"
+        ></div>
+        <div
+          class="absolute w-6 h-6 rounded-full bg-white/20 top-3 left-[30%]"
+        ></div>
 
         <!-- Left: Order Info -->
         <div class="relative flex items-center gap-5">
-          <div class="w-20 h-20 rounded-xl bg-white flex items-center justify-center">
+          <div
+            class="w-20 h-20 rounded-xl bg-white flex items-center justify-center"
+          >
             <app-generic-icon
               name="order-dinner"
               svgClass="w-14 h-14"
@@ -29,10 +47,39 @@
           <div>
             <h1 class="text-3xl font-bold text-white">{{ o.orderNumber }}</h1>
             <div class="flex items-center gap-2 mt-1">
-              <span class="text-xl text-white/90 font-medium">โซน{{ o.zoneName }} - โต๊ะ{{ o.tableName }}</span>
+              <span class="text-xl text-white/90 font-medium"
+                >โซน{{ o.zoneName }} - โต๊ะ{{ o.tableName }}</span
+              >
               <span class="text-white/60 mx-1">|</span>
-              <span class="text-xl text-white/90 font-medium">ลูกค้า: {{ o.guestCount }} คน</span>
+              <span class="text-xl text-white/90 font-medium"
+                >ลูกค้า: {{ o.isLinked ? o.totalGuestCount : o.guestCount }} คน</span
+              >
             </div>
+            @if (o.isLinked && o.linkedTables?.length) {
+              <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                <app-generic-icon
+                  name="link"
+                  svgClass="w-6 h-6"
+                  class="text-white/80"
+                ></app-generic-icon>
+                @for (lt of o.linkedTables; track lt.tableName) {
+                  @if (lt.isPrimary) {
+                    <span class="text-white/80 font-medium"
+                      >โต๊ะหลัก: โต๊ะ{{ lt.tableName }} ({{ lt.guestCount }} คน)</span
+                    >
+                  }
+                }
+                @if (getSecondaryTables(o).length) {
+                  <span class="text-white/60 mx-0.5">|</span>
+                  <span class="text-white/80 font-medium"
+                    >โต๊ะรอง:
+                    @for (lt of getSecondaryTables(o); track lt.tableName; let last = $last) {
+                      โต๊ะ{{ lt.tableName }} ({{ lt.guestCount }} คน)@if (!last) {,&nbsp;}
+                    }
+                  </span>
+                }
+              </div>
+            }
           </div>
         </div>
         <!-- Right: Status -->
@@ -48,7 +95,11 @@
       <div class="px-6 py-4 flex items-center justify-end gap-8">
         @if (o.note) {
           <div class="flex items-center gap-2 text-lg mr-auto">
-            <app-generic-icon name="information" svgClass="w-6 h-6" class="text-info"></app-generic-icon>
+            <app-generic-icon
+              name="information"
+              svgClass="w-6 h-6"
+              class="text-info"
+            ></app-generic-icon>
             <span class="font-semibold text-info">หมายเหตุ:</span> {{ o.note }}
           </div>
         }
@@ -87,16 +138,27 @@
     <!-- Order Items -->
     <div class="bg-surface-card rounded-lg">
       <!-- Section Header + Filter + Action Buttons -->
-      <div class="flex items-center justify-between p-4 border-b border-surface-border">
+      <div
+        class="flex items-center justify-between p-4 border-b border-surface-border"
+      >
         <h2 class="text-2xl font-bold">รายการออเดอร์</h2>
         <div class="flex items-center gap-3">
+          @if (order()?.isLinked) {
+            <div class="w-[200px]">
+              <app-source-table-dropdown
+                [tableNames]="sourceTableNames()"
+                [ngModel]="sourceTableFilter()"
+                (ngModelChange)="sourceTableFilter.set($event)"
+              ></app-source-table-dropdown>
+            </div>
+          }
           <div class="w-[200px]">
             <app-menu-category-dropdown
               [ngModel]="categoryFilter()"
               (ngModelChange)="categoryFilter.set($event)"
             ></app-menu-category-dropdown>
           </div>
-          @if (o.status === 'Open' && canUpdate && hasPendingItems()) {
+          @if (o.status === "Open" && canUpdate && hasPendingItems()) {
             <button
               pButton
               label="ส่งครัว"
@@ -104,7 +166,15 @@
               (click)="onSendToKitchen()"
             ></button>
           }
-          @if (o.status === 'Open' && canUpdate && canRequestBill()) {
+          @if (o.status === "Open" && canUpdate && hasReadyItems()) {
+            <button
+              pButton
+              label="เสิร์ฟทั้งหมด"
+              class="p-button-success min-w-[120px] text-lg"
+              (click)="onServeAllReady()"
+            ></button>
+          }
+          @if (o.status === "Open" && canUpdate && canRequestBill()) {
             <button
               pButton
               label="ขอบิล"
@@ -112,7 +182,7 @@
               (click)="onRequestBill()"
             ></button>
           }
-          @if (o.status === 'Billing' && canUpdate) {
+          @if (o.status === "Billing" && canUpdate) {
             <button
               pButton
               label="ชำระเงิน"
@@ -147,8 +217,17 @@
               <th class="w-[160px] whitespace-nowrap">ตัวเลือกเพิ่ม</th>
               <th class="w-[120px] whitespace-nowrap">ราคารวม</th>
               <th class="w-[140px] whitespace-nowrap">สถานะ</th>
+              @if (hasMultipleSourceTables()) {
+                <th class="w-[120px] whitespace-nowrap">โต๊ะต้นทาง</th>
+              }
               <th class="w-[140px] whitespace-nowrap">สั่งรายการโดย</th>
-              <th class="w-[100px] whitespace-nowrap" pFrozenColumn alignFrozen="right">ตัวเลือก</th>
+              <th
+                class="w-[100px] whitespace-nowrap"
+                pFrozenColumn
+                alignFrozen="right"
+              >
+                ตัวเลือก
+              </th>
             </tr>
           </ng-template>
 
@@ -161,7 +240,9 @@
                   <div class="text-surface-sub">{{ item.menuNameEnglish }}</div>
                 }
                 @if (item.note) {
-                  <div class="text-warning-dark italic mt-0.5">{{ item.note }}</div>
+                  <div class="text-warning-dark italic mt-0.5">
+                    {{ item.note }}
+                  </div>
                 }
               </td>
               <!-- รูปเมนู -->
@@ -174,7 +255,9 @@
                       class="h-24 w-24 rounded-lg object-cover"
                     />
                   } @else {
-                    <div class="h-24 w-24 rounded-lg border border-surface-border bg-surface-hover flex items-center justify-center">
+                    <div
+                      class="h-24 w-24 rounded-lg border border-surface-border bg-surface-hover flex items-center justify-center"
+                    >
                       <app-generic-icon
                         [name]="getCategoryIcon(item.categoryType)"
                         svgClass="w-12 h-12"
@@ -186,7 +269,9 @@
               </td>
               <!-- หมวดหมู่ -->
               <td>
-                <div class="font-medium">{{ getCategoryLabel(item.categoryType) }}</div>
+                <div class="font-medium">
+                  {{ getCategoryLabel(item.categoryType) }}
+                </div>
                 @if (item.subCategoryName) {
                   <div class="text-surface-sub">{{ item.subCategoryName }}</div>
                 }
@@ -194,16 +279,20 @@
               <!-- จำนวน -->
               <td class="!text-center">{{ item.quantity }}</td>
               <!-- ราคา/หน่วย -->
-              <td class="!text-right">{{ item.unitPrice | number:'1.2-2' }} บาท</td>
+              <td class="!text-right whitespace-nowrap">
+                {{ item.unitPrice | number: "1.2-2" }} บาท
+              </td>
               <!-- ตัวเลือกเพิ่ม -->
               <td>
                 @if (item.options?.length) {
-                  <div class="flex flex-col gap-0.5">
+                  <div class="flex flex-col gap-0.5 whitespace-nowrap">
                     @for (opt of item.options; track opt.orderItemOptionId) {
                       <span class="text-surface-sub">
                         {{ opt.optionItemName }}
                         @if (opt.additionalPrice) {
-                          <span class="text-primary">(+{{ opt.additionalPrice }})</span>
+                          <span class="text-primary"
+                            >(+{{ opt.additionalPrice }})</span
+                          >
                         }
                       </span>
                     }
@@ -213,19 +302,44 @@
                 }
               </td>
               <!-- ราคารวม -->
-              <td class="!text-right font-semibold">{{ item.totalPrice | number:'1.2-2' }} บาท</td>
+              <td class="!text-right font-semibold whitespace-nowrap">
+                {{ item.totalPrice | number: "1.2-2" }} บาท
+              </td>
               <!-- สถานะ -->
-              <td class="!text-center">
-                <span class="font-bold" [ngClass]="getItemStatusBadge(item.status)">
+              <td class="!text-center whitespace-nowrap">
+                <span
+                  class="font-bold"
+                  [ngClass]="getItemStatusBadge(item.status)"
+                >
                   {{ getStatusLabel(item.status) }}
                 </span>
               </td>
+              @if (hasMultipleSourceTables()) {
+                <!-- โต๊ะต้นทาง -->
+                <td>
+                  <span class="font-semibold text-primary"
+                    >โต๊ะ{{ item.sourceTableName }}</span
+                  >
+                </td>
+              }
               <!-- สั่งรายการโดย -->
-              <td>{{ item.orderedBy }}</td>
+              <td class="whitespace-nowrap">{{ item.orderedBy }}</td>
               <!-- ตัวเลือก -->
               <td class="text-center" pFrozenColumn alignFrozen="right">
                 <div class="flex justify-center gap-1">
-                  @if (item.status === 'Pending' && canUpdate) {
+                  @if (item.status === "Pending" && canUpdate) {
+                    <button
+                      (click)="onSendItemToKitchen(item)"
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-info text-white"
+                      pTooltip="ส่งครัว"
+                      tooltipPosition="top"
+                    >
+                      <app-generic-icon
+                        name="chef"
+                        svgClass="w-6 h-6"
+                        class="text-white"
+                      ></app-generic-icon>
+                    </button>
                     <button
                       (click)="onVoidItem(item)"
                       class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
@@ -235,7 +349,10 @@
                       <i class="pi pi-times"></i>
                     </button>
                   }
-                  @if ((item.status === 'Sent' || item.status === 'Preparing') && canDelete) {
+                  @if (
+                    (item.status === "Sent" || item.status === "Preparing") &&
+                    canDelete
+                  ) {
                     <button
                       (click)="onCancelItem(item)"
                       class="w-10 h-10 flex items-center justify-center rounded-full bg-warning text-white"
@@ -245,7 +362,7 @@
                       <i class="pi pi-ban"></i>
                     </button>
                   }
-                  @if (item.status === 'Ready' && canUpdate) {
+                  @if (item.status === "Ready" && canUpdate) {
                     <button
                       (click)="onServeItem(item)"
                       class="w-10 h-10 flex items-center justify-center rounded-full bg-success text-white"
@@ -255,7 +372,7 @@
                       <i class="pi pi-check"></i>
                     </button>
                   }
-                  @if (item.status === 'Cancelled') {
+                  @if (item.status === "Cancelled") {
                     <span class="text-danger">{{ item.cancelReason }}</span>
                   }
                 </div>
@@ -265,7 +382,7 @@
 
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="10">
+              <td [attr.colspan]="hasMultipleSourceTables() ? 11 : 10">
                 <div class="flex justify-center items-center w-full p-[100px]">
                   <app-empty-view message="ยังไม่มีรายการออเดอร์" />
                 </div>

@@ -10,6 +10,11 @@ public class ReceiptDataModel
     public string TaxId { get; set; } = string.Empty;
     public string? ReceiptHeaderText { get; set; }
     public string? ReceiptFooterText { get; set; }
+    public string? ShopEmail { get; set; }
+    public string? Facebook { get; set; }
+    public string? Instagram { get; set; }
+    public string? Website { get; set; }
+    public string? LineId { get; set; }
 
     // Payment info
     public int PaymentId { get; set; }
@@ -23,7 +28,12 @@ public class ReceiptDataModel
     public int SplitIndex { get; set; }
     public string? OrderNumber { get; set; }
     public string? TableName { get; set; }
+    public string? ZoneName { get; set; }
+    public int GuestCount { get; set; }
+    public string? CompanyNameThai { get; set; }
+    public string? CompanyNameEnglish { get; set; }
     public decimal SubTotal { get; set; }
+    public decimal OriginalSubTotal { get; set; }
     public decimal ServiceChargeRate { get; set; }
     public decimal ServiceChargeAmount { get; set; }
     public decimal VatRate { get; set; }

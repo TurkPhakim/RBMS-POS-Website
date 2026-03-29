@@ -34,8 +34,10 @@
               />
             </p-iconField>
             @if (searchTerm) {
-              <i class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
-                 (click)="searchTerm = ''; onFilterChange()"></i>
+              <i
+                class="pi pi-times absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-surface-sub hover:text-surface-dark"
+                (click)="searchTerm = ''; onFilterChange()"
+              ></i>
             }
           </div>
         </div>
@@ -75,14 +77,16 @@
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
         [totalRecords]="totalRecords()"
         [lazy]="true"
-        (onLazyLoad)="onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })"
+        (onLazyLoad)="
+          onPageChange({ first: $event.first ?? 0, rows: $event.rows ?? 10 })
+        "
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr>
             <th class="w-[100px]">Username</th>
             <th style="min-width: 140px; width: 140px">รูปภาพ</th>
-            <th class="w-[200px]">ชื่อ-นามสกุล</th>
+            <th class="w-[200px] whitespace-nowrap">ชื่อ-นามสกุล</th>
             <th class="w-[120px]">ตำแหน่ง</th>
             <th class="w-[200px]">อีเมล</th>
             <th class="w-[200px]">เบอร์โทร</th>
@@ -114,7 +118,7 @@
                   >
                     <app-generic-icon
                       name="human"
-                      svgClass="w-9 h-9"
+                      svgClass="w-10 h-10"
                       class="text-surface-sub opacity-50"
                     ></app-generic-icon>
                   </div>

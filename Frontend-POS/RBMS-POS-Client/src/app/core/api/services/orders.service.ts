@@ -29,16 +29,26 @@ import { ordersGetOrdersGet } from '../fn/orders/orders-get-orders-get';
 import { OrdersGetOrdersGet$Params } from '../fn/orders/orders-get-orders-get';
 import { ordersRequestBillPost } from '../fn/orders/orders-request-bill-post';
 import { OrdersRequestBillPost$Params } from '../fn/orders/orders-request-bill-post';
+import { ordersSendBillToCustomerPost } from '../fn/orders/orders-send-bill-to-customer-post';
+import { OrdersSendBillToCustomerPost$Params } from '../fn/orders/orders-send-bill-to-customer-post';
+import { ordersSendItemToKitchenPost } from '../fn/orders/orders-send-item-to-kitchen-post';
+import { OrdersSendItemToKitchenPost$Params } from '../fn/orders/orders-send-item-to-kitchen-post';
 import { ordersSendToKitchenPost } from '../fn/orders/orders-send-to-kitchen-post';
 import { OrdersSendToKitchenPost$Params } from '../fn/orders/orders-send-to-kitchen-post';
+import { ordersServeAllReadyPut } from '../fn/orders/orders-serve-all-ready-put';
+import { OrdersServeAllReadyPut$Params } from '../fn/orders/orders-serve-all-ready-put';
 import { ordersServeItemPut } from '../fn/orders/orders-serve-item-put';
 import { OrdersServeItemPut$Params } from '../fn/orders/orders-serve-item-put';
 import { ordersSplitByAmountPost } from '../fn/orders/orders-split-by-amount-post';
 import { OrdersSplitByAmountPost$Params } from '../fn/orders/orders-split-by-amount-post';
 import { ordersSplitByItemPost } from '../fn/orders/orders-split-by-item-post';
 import { OrdersSplitByItemPost$Params } from '../fn/orders/orders-split-by-item-post';
+import { ordersUnsplitBillPost } from '../fn/orders/orders-unsplit-bill-post';
+import { OrdersUnsplitBillPost$Params } from '../fn/orders/orders-unsplit-bill-post';
 import { ordersUpdateBillChargesPut } from '../fn/orders/orders-update-bill-charges-put';
 import { OrdersUpdateBillChargesPut$Params } from '../fn/orders/orders-update-bill-charges-put';
+import { ordersUpdateGuestCountPut } from '../fn/orders/orders-update-guest-count-put';
+import { OrdersUpdateGuestCountPut$Params } from '../fn/orders/orders-update-guest-count-put';
 import { ordersVoidBillPost } from '../fn/orders/orders-void-bill-post';
 import { OrdersVoidBillPost$Params } from '../fn/orders/orders-void-bill-post';
 import { ordersVoidItemPut } from '../fn/orders/orders-void-item-put';
@@ -200,6 +210,31 @@ export class OrdersService extends BaseService {
     );
   }
 
+  /** Path part for operation `ordersSendItemToKitchenPost()` */
+  static readonly OrdersSendItemToKitchenPostPath = '/api/order/orders/items/{orderItemId}/send-kitchen';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `ordersSendItemToKitchenPost()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  ordersSendItemToKitchenPost$Response(params: OrdersSendItemToKitchenPost$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    return ordersSendItemToKitchenPost(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `ordersSendItemToKitchenPost$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  ordersSendItemToKitchenPost(params: OrdersSendItemToKitchenPost$Params, context?: HttpContext): Observable<void> {
+    return this.ordersSendItemToKitchenPost$Response(params, context).pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
+    );
+  }
+
   /** Path part for operation `ordersRequestBillPost()` */
   static readonly OrdersRequestBillPostPath = '/api/order/orders/{orderId}/request-bill';
 
@@ -222,6 +257,31 @@ export class OrdersService extends BaseService {
   ordersRequestBillPost(params: OrdersRequestBillPost$Params, context?: HttpContext): Observable<OrderDetailResponseModelBaseResponseModel> {
     return this.ordersRequestBillPost$Response(params, context).pipe(
       map((r: StrictHttpResponse<OrderDetailResponseModelBaseResponseModel>): OrderDetailResponseModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `ordersSendBillToCustomerPost()` */
+  static readonly OrdersSendBillToCustomerPostPath = '/api/order/orders/{orderId}/send-bill';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `ordersSendBillToCustomerPost()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  ordersSendBillToCustomerPost$Response(params: OrdersSendBillToCustomerPost$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    return ordersSendBillToCustomerPost(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `ordersSendBillToCustomerPost$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  ordersSendBillToCustomerPost(params: OrdersSendBillToCustomerPost$Params, context?: HttpContext): Observable<void> {
+    return this.ordersSendBillToCustomerPost$Response(params, context).pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
     );
   }
 
@@ -325,6 +385,31 @@ export class OrdersService extends BaseService {
     );
   }
 
+  /** Path part for operation `ordersServeAllReadyPut()` */
+  static readonly OrdersServeAllReadyPutPath = '/api/order/orders/{orderId}/serve-all-ready';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `ordersServeAllReadyPut()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  ordersServeAllReadyPut$Response(params: OrdersServeAllReadyPut$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    return ordersServeAllReadyPut(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `ordersServeAllReadyPut$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  ordersServeAllReadyPut(params: OrdersServeAllReadyPut$Params, context?: HttpContext): Observable<void> {
+    return this.ordersServeAllReadyPut$Response(params, context).pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
+    );
+  }
+
   /** Path part for operation `ordersSplitByItemPost()` */
   static readonly OrdersSplitByItemPostPath = '/api/order/orders/{orderId}/split/by-item';
 
@@ -371,6 +456,31 @@ export class OrdersService extends BaseService {
    */
   ordersSplitByAmountPost(params: OrdersSplitByAmountPost$Params, context?: HttpContext): Observable<OrderBillResponseModelListBaseResponseModel> {
     return this.ordersSplitByAmountPost$Response(params, context).pipe(
+      map((r: StrictHttpResponse<OrderBillResponseModelListBaseResponseModel>): OrderBillResponseModelListBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `ordersUnsplitBillPost()` */
+  static readonly OrdersUnsplitBillPostPath = '/api/order/orders/{orderId}/unsplit-bill';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `ordersUnsplitBillPost()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  ordersUnsplitBillPost$Response(params: OrdersUnsplitBillPost$Params, context?: HttpContext): Observable<StrictHttpResponse<OrderBillResponseModelListBaseResponseModel>> {
+    return ordersUnsplitBillPost(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `ordersUnsplitBillPost$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  ordersUnsplitBillPost(params: OrdersUnsplitBillPost$Params, context?: HttpContext): Observable<OrderBillResponseModelListBaseResponseModel> {
+    return this.ordersUnsplitBillPost$Response(params, context).pipe(
       map((r: StrictHttpResponse<OrderBillResponseModelListBaseResponseModel>): OrderBillResponseModelListBaseResponseModel => r.body)
     );
   }
@@ -422,6 +532,31 @@ export class OrdersService extends BaseService {
   ordersUpdateBillChargesPut(params: OrdersUpdateBillChargesPut$Params, context?: HttpContext): Observable<OrderBillResponseModelBaseResponseModel> {
     return this.ordersUpdateBillChargesPut$Response(params, context).pipe(
       map((r: StrictHttpResponse<OrderBillResponseModelBaseResponseModel>): OrderBillResponseModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `ordersUpdateGuestCountPut()` */
+  static readonly OrdersUpdateGuestCountPutPath = '/api/order/orders/{orderId}/update-guest-count';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `ordersUpdateGuestCountPut()` instead.
+   *
+   * This method sends `application/*+json` and handles request body of type `application/*+json`.
+   */
+  ordersUpdateGuestCountPut$Response(params: OrdersUpdateGuestCountPut$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    return ordersUpdateGuestCountPut(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `ordersUpdateGuestCountPut$Response()` instead.
+   *
+   * This method sends `application/*+json` and handles request body of type `application/*+json`.
+   */
+  ordersUpdateGuestCountPut(params: OrdersUpdateGuestCountPut$Params, context?: HttpContext): Observable<void> {
+    return this.ordersUpdateGuestCountPut$Response(params, context).pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
     );
   }
 

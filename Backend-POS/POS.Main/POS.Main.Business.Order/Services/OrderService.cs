@@ -74,9 +74,23 @@ public class OrderService : IOrderService
             .Take(param.Take)
             .ToListAsync(ct);
 
+        var results = items.Select(OrderMapper.ToResponse).ToList();
+
+        // Enrich linked table info
+        var tableIds = results.Select(r => r.TableId).Distinct().ToList();
+        var linkedTableIds = await _unitOfWork.TableLinks.QueryNoTracking()
+            .Where(tl => tableIds.Contains(tl.TableId))
+            .Select(tl => tl.TableId)
+            .ToListAsync(ct);
+
+        foreach (var r in results)
+        {
+            r.IsLinked = linkedTableIds.Contains(r.TableId);
+        }
+
         return new PaginationResult<OrderResponseModel>
         {
-            Results = items.Select(OrderMapper.ToResponse).ToList(),
+            Results = results,
             Page = param.Page,
             Total = total,
             ItemPerPage = param.ItemPerPage
@@ -88,7 +102,10 @@ public class OrderService : IOrderService
         var order = await GetOrderWithDetailsAsync(orderId, ct)
             ?? throw new EntityNotFoundException("Order", orderId);
 
-        return OrderMapper.ToDetailResponse(order);
+        var result = OrderMapper.ToDetailResponse(order);
+        await ResolveOrderedByAsync(result.Items, ct);
+        await EnrichLinkedTableInfoAsync(result, order.TableId, ct);
+        return result;
     }
 
     public async Task<OrderDetailResponseModel> CreateOrderAsync(CreateOrderRequestModel request, CancellationToken ct = default)
@@ -127,15 +144,27 @@ public class OrderService : IOrderService
 
     public async Task<OrderDetailResponseModel?> GetActiveOrderByTableIdAsync(int tableId, CancellationToken ct = default)
     {
+        // ใช้ ActiveOrderId จากโต๊ะ เพื่อรองรับโต๊ะที่เชื่อมกัน (linked tables)
+        var table = await _unitOfWork.Tables.QueryNoTracking()
+            .FirstOrDefaultAsync(t => t.TableId == tableId, ct);
+
+        if (table?.ActiveOrderId == null) return null;
+
         var order = await _unitOfWork.Orders.QueryNoTracking()
             .Include(o => o.Table)
             .Include(o => o.OrderItems)
                 .ThenInclude(i => i.OrderItemOptions)
             .Include(o => o.OrderItems)
                 .ThenInclude(i => i.CancelledByEmployee)
-            .FirstOrDefaultAsync(o => o.TableId == tableId && o.Status == EOrderStatus.Open, ct);
+            .Include(o => o.OrderItems)
+                .ThenInclude(i => i.SourceTable)
+            .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value
+                && (o.Status == EOrderStatus.Open || o.Status == EOrderStatus.Billing), ct);
 
-        return order != null ? OrderMapper.ToDetailResponse(order) : null;
+        if (order == null) return null;
+        var result = OrderMapper.ToDetailResponse(order);
+        await ResolveOrderedByAsync(result.Items, ct);
+        return result;
     }
 
     public async Task<OrderDetailResponseModel> AddOrderItemsAsync(int orderId, AddOrderItemsRequestModel request, CancellationToken ct = default)
@@ -148,7 +177,8 @@ public class OrderService : IOrderService
         if (order.Status != EOrderStatus.Open)
             throw new BusinessException("ไม่สามารถเพิ่มรายการได้ — ออเดอร์ไม่ได้อยู่ในสถานะเปิด");
 
-        var orderedByName = await GetCurrentEmployeeNameAsync(ct);
+        var orderedByName = GetCurrentStaffIdentifier();
+        var newItems = new List<TbOrderItem>();
 
         foreach (var itemReq in request.Items)
         {
@@ -205,6 +235,7 @@ public class OrderService : IOrderService
             orderItem.TotalPrice = (menu.Price + optionsTotal) * itemReq.Quantity;
 
             await _unitOfWork.OrderItems.AddAsync(orderItem, ct);
+            newItems.Add(orderItem);
         }
 
         await _unitOfWork.CommitAsync(ct);
@@ -213,6 +244,34 @@ public class OrderService : IOrderService
         await _unitOfWork.CommitAsync(ct);
 
         _logger.LogInformation("Added {Count} items to Order {OrderId}", request.Items.Count, orderId);
+
+        if (request.SendToKitchen && newItems.Count > 0)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var item in newItems)
+            {
+                item.Status = EOrderItemStatus.Sent;
+                item.SentToKitchenAt = now;
+            }
+
+            _unitOfWork.OrderItems.UpdateRange(newItems);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Sent {Count} new items to kitchen for Order {OrderId}", newItems.Count, orderId);
+
+            await _notificationService.NotifyNewOrderItemsAsync(orderId, order.TableId, ct);
+            await _notificationService.NotifyTableStatusChangedAsync(order.TableId, ETableStatus.Occupied.ToString(), ct);
+
+            await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+            {
+                EventType = "NEW_ORDER",
+                Title = "ออเดอร์ใหม่ส่งครัว",
+                Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} — {newItems.Count} รายการ",
+                TableId = order.TableId,
+                OrderId = orderId,
+                TargetGroup = "Kitchen"
+            }, ct);
+        }
 
         return await GetOrderByIdAsync(orderId, ct);
     }
@@ -244,6 +303,7 @@ public class OrderService : IOrderService
         _logger.LogInformation("Sent {Count} items to kitchen for Order {OrderId}", pendingItems.Count, orderId);
 
         await _notificationService.NotifyNewOrderItemsAsync(orderId, order.TableId, ct);
+        await _notificationService.NotifyTableStatusChangedAsync(order.TableId, ETableStatus.Occupied.ToString(), ct);
 
         await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
         {
@@ -343,11 +403,42 @@ public class OrderService : IOrderService
 
         _logger.LogInformation("Served OrderItem {OrderItemId}", orderItemId);
 
-        await _notificationService.NotifyItemStatusChangedAsync(item.OrderId, orderItemId, "Served", ct);
+        await _notificationService.NotifyItemStatusChangedAsync(item.OrderId, orderItemId, item.Order.TableId, "Served", ct);
         await _notificationService.NotifyTableOrderRefreshAsync(item.Order.TableId, ct);
     }
 
-    public async Task<OrderDetailResponseModel> RequestBillAsync(int orderId, CancellationToken ct = default)
+    public async Task ServeAllReadyItemsAsync(int orderId, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.QueryNoTracking()
+            .FirstOrDefaultAsync(o => o.OrderId == orderId, ct)
+            ?? throw new EntityNotFoundException("Order", orderId);
+
+        var readyItems = await _unitOfWork.OrderItems.GetAll()
+            .Where(i => i.OrderId == orderId && i.Status == EOrderItemStatus.Ready)
+            .ToListAsync(ct);
+
+        if (readyItems.Count == 0)
+            throw new BusinessException("ไม่มีรายการที่พร้อมเสิร์ฟ");
+
+        foreach (var item in readyItems)
+        {
+            item.Status = EOrderItemStatus.Served;
+            item.ServedAt = DateTime.UtcNow;
+            _unitOfWork.OrderItems.Update(item);
+        }
+
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Served all {Count} ready items for Order {OrderId}", readyItems.Count, orderId);
+
+        foreach (var item in readyItems)
+        {
+            await _notificationService.NotifyItemStatusChangedAsync(orderId, item.OrderItemId, order.TableId, "Served", ct);
+        }
+        await _notificationService.NotifyTableOrderRefreshAsync(order.TableId, ct);
+    }
+
+    public async Task<OrderDetailResponseModel> RequestBillAsync(int orderId, bool force = false, CancellationToken ct = default)
     {
         var order = await _unitOfWork.Orders.GetAll()
             .Include(o => o.Table)
@@ -355,8 +446,17 @@ public class OrderService : IOrderService
             .FirstOrDefaultAsync(o => o.OrderId == orderId, ct)
             ?? throw new EntityNotFoundException("Order", orderId);
 
-        if (order.Status != EOrderStatus.Open)
-            throw new BusinessException("ไม่สามารถขอบิลได้ — ออเดอร์ไม่ได้อยู่ในสถานะเปิด");
+        if (order.Status != EOrderStatus.Open && order.Status != EOrderStatus.Billing)
+            throw new BusinessException("ไม่สามารถขอบิลได้ — ออเดอร์ไม่ได้อยู่ในสถานะที่ถูกต้อง");
+
+        // ถ้าสถานะ Billing แล้ว (ลูกค้าขอบิลมาก่อน) ต้องเช็คว่ายังไม่มี bill
+        if (order.Status == EOrderStatus.Billing)
+        {
+            var existingBills = await _unitOfWork.OrderBills.QueryNoTracking()
+                .AnyAsync(b => b.OrderId == orderId, ct);
+            if (existingBills)
+                throw new BusinessException("ออเดอร์นี้มีบิลอยู่แล้ว");
+        }
 
         // Check all items are in final state
         var activeItems = order.OrderItems
@@ -366,26 +466,38 @@ public class OrderService : IOrderService
             .ToList();
 
         if (activeItems.Count > 0)
-            throw new BusinessException("ยังมีรายการที่ยังไม่เสิร์ฟ — กรุณาเสิร์ฟหรือยกเลิกรายการทั้งหมดก่อนขอบิล");
-
-        order.Status = EOrderStatus.Billing;
-        _unitOfWork.Orders.Update(order);
-
-        // Update table status to Billing (+ linked tables)
-        var table = order.Table;
-        table.Status = ETableStatus.Billing;
-        _unitOfWork.Tables.Update(table);
-
-        var linkedTableIds = await GetLinkedTableIdsAsync(table.TableId, ct);
-        if (linkedTableIds != null)
         {
-            foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
+            if (!force)
+                throw new BusinessException("ยังมีรายการที่ยังไม่เสิร์ฟ — กรุณาเสิร์ฟหรือยกเลิกรายการทั้งหมดก่อนขอบิล");
+
+            // force=true → ตรวจว่ามีรายการ served อย่างน้อย 1 รายการ
+            if (!order.OrderItems.Any(i => i.Status == EOrderItemStatus.Served))
+                throw new BusinessException("ไม่มีรายการที่เสิร์ฟแล้ว ไม่สามารถสร้างบิลได้");
+        }
+
+        var table = order.Table;
+
+        // เปลี่ยนสถานะเฉพาะตอน Open → Billing (ถ้า Billing อยู่แล้วไม่ต้องเปลี่ยน)
+        var isStatusChange = order.Status == EOrderStatus.Open;
+        if (isStatusChange)
+        {
+            order.Status = EOrderStatus.Billing;
+            _unitOfWork.Orders.Update(order);
+
+            table.Status = ETableStatus.Billing;
+            _unitOfWork.Tables.Update(table);
+
+            var linkedTableIds = await GetLinkedTableIdsAsync(table.TableId, ct);
+            if (linkedTableIds != null)
             {
-                var lt = await _unitOfWork.Tables.GetByIdAsync(ltId, ct);
-                if (lt != null)
+                foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
                 {
-                    lt.Status = ETableStatus.Billing;
-                    _unitOfWork.Tables.Update(lt);
+                    var lt = await _unitOfWork.Tables.GetByIdAsync(ltId, ct);
+                    if (lt != null)
+                    {
+                        lt.Status = ETableStatus.Billing;
+                        _unitOfWork.Tables.Update(lt);
+                    }
                 }
             }
         }
@@ -396,7 +508,7 @@ public class OrderService : IOrderService
             .ToList();
 
         var subTotal = servedItems.Sum(i => i.TotalPrice);
-        var serviceChargeRate = await GetActiveServiceChargeRateAsync(ct);
+        var (scId, serviceChargeRate) = await GetActiveServiceChargeAsync(ct);
         const decimal vatRate = 7m;
         var serviceChargeAmount = Math.Round(subTotal * serviceChargeRate / 100, 2);
         var vatAmount = Math.Round((subTotal + serviceChargeAmount) * vatRate / 100, 2);
@@ -409,6 +521,7 @@ public class OrderService : IOrderService
             SubTotal = subTotal,
             TotalDiscountAmount = 0,
             NetAmount = subTotal,
+            ServiceChargeId = scId,
             ServiceChargeRate = serviceChargeRate,
             ServiceChargeAmount = serviceChargeAmount,
             VatRate = vatRate,
@@ -423,25 +536,38 @@ public class OrderService : IOrderService
 
         _logger.LogInformation("Order {OrderId} requested bill, Table {TableId} → Billing, Full bill created (GrandTotal: {GrandTotal})", orderId, table.TableId, fullBill.GrandTotal);
 
-        await _notificationService.NotifyOrderUpdatedAsync(orderId, "Billing", ct);
-
-        await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+        if (isStatusChange)
         {
-            EventType = "REQUEST_BILL",
-            Title = "เรียกเก็บเงิน",
-            Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} ขอเรียกเก็บเงิน (ยอด {fullBill.GrandTotal:N2} บาท)",
-            TableId = table.TableId,
-            OrderId = orderId,
-            TargetGroup = "Cashier"
-        }, ct);
+            await _notificationService.NotifyOrderUpdatedAsync(orderId, "Billing", ct);
 
-        if (linkedTableIds != null)
-        {
-            foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))
-                await _notificationService.NotifyTableStatusChangedAsync(ltId, ETableStatus.Billing.ToString(), ct);
+            await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+            {
+                EventType = "REQUEST_BILL",
+                Title = "เรียกเก็บเงิน",
+                Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} ขอเรียกเก็บเงิน\nจำนวนเงิน {fullBill.GrandTotal:N2} บาท",
+                TableId = table.TableId,
+                OrderId = orderId,
+                TargetGroup = "Cashier"
+            }, ct);
         }
 
         return await GetOrderByIdAsync(orderId, ct);
+    }
+
+    public async Task SendBillToCustomerAsync(int orderId, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.QueryNoTracking()
+            .Where(o => o.OrderId == orderId)
+            .Select(o => new { o.OrderId, o.Status, TableId = o.Table!.TableId })
+            .FirstOrDefaultAsync(ct)
+            ?? throw new EntityNotFoundException("Order", orderId);
+
+        if (order.Status != EOrderStatus.Billing)
+            throw new BusinessException("ออเดอร์ไม่ได้อยู่ในสถานะรอชำระ");
+
+        await _notificationService.NotifyTableOrderRefreshAsync(order.TableId, ct);
+
+        _logger.LogInformation("Bill sent to customer for Order {OrderId}, Table {TableId}", orderId, order.TableId);
     }
 
     public async Task<OrderDetailResponseModel> VoidBillAsync(int orderId, CancellationToken ct = default)
@@ -510,8 +636,8 @@ public class OrderService : IOrderService
         if (order.Status != EOrderStatus.Billing)
             throw new BusinessException("ต้องขอบิลก่อนถึงจะแยกบิลได้");
 
-        // Get active service charge rate
-        var serviceChargeRate = await GetActiveServiceChargeRateAsync(ct);
+        // Get active service charge
+        var (scId, serviceChargeRate) = await GetActiveServiceChargeAsync(ct);
         const decimal vatRate = 7m;
 
         var allServedItemIds = order.OrderItems
@@ -558,6 +684,7 @@ public class OrderService : IOrderService
                 SubTotal = subTotal,
                 TotalDiscountAmount = 0,
                 NetAmount = subTotal,
+                ServiceChargeId = scId,
                 ServiceChargeRate = serviceChargeRate,
                 ServiceChargeAmount = serviceChargeAmount,
                 VatRate = vatRate,
@@ -571,14 +698,22 @@ public class OrderService : IOrderService
             await _unitOfWork.OrderBills.AddAsync(bill, ct);
             bills.Add(bill);
 
-            // Link items to this bill
+            // Link items to this bill (use navigation property so EF inserts bill before updating items)
             foreach (var item in groupItems)
-                item.OrderBillId = bill.OrderBillId;
+                item.OrderBill = bill;
         }
 
         await _unitOfWork.CommitAsync(ct);
 
         _logger.LogInformation("Split bill by item for Order {OrderId}, {Count} bills", orderId, bills.Count);
+
+        // Notify customer (Mobile Web) via SignalR
+        var tableId = await _unitOfWork.Orders.QueryNoTracking()
+            .Where(o => o.OrderId == orderId)
+            .Select(o => o.Table!.TableId)
+            .FirstOrDefaultAsync(ct);
+        if (tableId > 0)
+            await _notificationService.NotifyTableOrderRefreshAsync(tableId, ct);
 
         return await GetOrderBillsAsync(orderId, ct);
     }
@@ -593,7 +728,7 @@ public class OrderService : IOrderService
         if (order.Status != EOrderStatus.Billing)
             throw new BusinessException("ต้องขอบิลก่อนถึงจะแยกบิลได้");
 
-        var serviceChargeRate = await GetActiveServiceChargeRateAsync(ct);
+        var (scId, serviceChargeRate) = await GetActiveServiceChargeAsync(ct);
         const decimal vatRate = 7m;
 
         var totalSubTotal = order.OrderItems
@@ -626,6 +761,7 @@ public class OrderService : IOrderService
                 SubTotal = subTotal,
                 TotalDiscountAmount = 0,
                 NetAmount = subTotal,
+                ServiceChargeId = scId,
                 ServiceChargeRate = serviceChargeRate,
                 ServiceChargeAmount = serviceChargeAmount,
                 VatRate = vatRate,
@@ -642,6 +778,85 @@ public class OrderService : IOrderService
         await _unitOfWork.CommitAsync(ct);
 
         _logger.LogInformation("Split bill by amount for Order {OrderId}, {Count} splits", orderId, request.NumberOfSplits);
+
+        // Notify customer (Mobile Web) via SignalR
+        var tableId = await _unitOfWork.Orders.QueryNoTracking()
+            .Where(o => o.OrderId == orderId)
+            .Select(o => o.Table!.TableId)
+            .FirstOrDefaultAsync(ct);
+        if (tableId > 0)
+            await _notificationService.NotifyTableOrderRefreshAsync(tableId, ct);
+
+        return await GetOrderBillsAsync(orderId, ct);
+    }
+
+    public async Task<List<OrderBillResponseModel>> UnsplitBillAsync(int orderId, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.GetAll()
+            .Include(o => o.OrderItems)
+            .FirstOrDefaultAsync(o => o.OrderId == orderId, ct)
+            ?? throw new EntityNotFoundException("Order", orderId);
+
+        if (order.Status != EOrderStatus.Billing)
+            throw new BusinessException("ไม่สามารถรวมบิลได้ — ออเดอร์ไม่ได้อยู่ในสถานะรอชำระ");
+
+        var allBills = await _unitOfWork.OrderBills.GetAll()
+            .Where(b => b.OrderId == orderId)
+            .ToListAsync(ct);
+
+        if (allBills.Count <= 1)
+            throw new BusinessException("ไม่มีบิลที่แยกไว้");
+
+        if (allBills.Any(b => b.Status == EBillStatus.Paid))
+            throw new BusinessException("ไม่สามารถรวมบิลได้ — มีบิลที่ชำระแล้ว");
+
+        // Hard delete all split bills
+        _unitOfWork.OrderBills.DeleteRange(allBills);
+
+        // Clear OrderBillId from items
+        foreach (var item in order.OrderItems)
+            item.OrderBillId = null;
+
+        // Create Full Bill
+        var servedItems = order.OrderItems
+            .Where(i => i.Status == EOrderItemStatus.Served)
+            .ToList();
+
+        var subTotal = servedItems.Sum(i => i.TotalPrice);
+        var (scId, serviceChargeRate) = await GetActiveServiceChargeAsync(ct);
+        const decimal vatRate = 7m;
+        var serviceChargeAmount = Math.Round(subTotal * serviceChargeRate / 100, 2);
+        var vatAmount = Math.Round((subTotal + serviceChargeAmount) * vatRate / 100, 2);
+
+        var fullBill = new TbOrderBill
+        {
+            OrderId = orderId,
+            BillNumber = await GenerateBillNumberAsync(ct),
+            BillType = EBillType.Full,
+            SubTotal = subTotal,
+            TotalDiscountAmount = 0,
+            NetAmount = subTotal,
+            ServiceChargeId = scId,
+            ServiceChargeRate = serviceChargeRate,
+            ServiceChargeAmount = serviceChargeAmount,
+            VatRate = vatRate,
+            VatAmount = vatAmount,
+            GrandTotal = subTotal + serviceChargeAmount + vatAmount,
+            Status = EBillStatus.Pending
+        };
+
+        await _unitOfWork.OrderBills.AddAsync(fullBill, ct);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Unsplit bill for Order {OrderId}, reverted to Full Bill", orderId);
+
+        // Notify customer (Mobile Web) via SignalR
+        var tableId = await _unitOfWork.Orders.QueryNoTracking()
+            .Where(o => o.OrderId == orderId)
+            .Select(o => o.Table!.TableId)
+            .FirstOrDefaultAsync(ct);
+        if (tableId > 0)
+            await _notificationService.NotifyTableOrderRefreshAsync(tableId, ct);
 
         return await GetOrderBillsAsync(orderId, ct);
     }
@@ -690,7 +905,95 @@ public class OrderService : IOrderService
         return OrderBillMapper.ToResponse(bill);
     }
 
+    public async Task SendItemToKitchenAsync(int orderItemId, CancellationToken ct = default)
+    {
+        var item = await _unitOfWork.OrderItems.GetAll()
+            .Include(i => i.Order)
+            .FirstOrDefaultAsync(i => i.OrderItemId == orderItemId, ct)
+            ?? throw new EntityNotFoundException("OrderItem", orderItemId);
+
+        if (item.Status != EOrderItemStatus.Pending)
+            throw new BusinessException("รายการนี้ไม่ได้อยู่ในสถานะรอส่งครัว");
+
+        if (item.Order.Status != EOrderStatus.Open)
+            throw new BusinessException("ไม่สามารถส่งครัวได้ — ออเดอร์ไม่ได้อยู่ในสถานะเปิด");
+
+        item.Status = EOrderItemStatus.Sent;
+        item.SentToKitchenAt = DateTime.UtcNow;
+        _unitOfWork.OrderItems.Update(item);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Sent item {OrderItemId} to kitchen for Order {OrderId}", orderItemId, item.OrderId);
+
+        await _notificationService.NotifyNewOrderItemsAsync(item.OrderId, item.Order.TableId, ct);
+        await _notificationService.NotifyTableStatusChangedAsync(item.Order.TableId, ETableStatus.Occupied.ToString(), ct);
+
+        await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+        {
+            EventType = "NEW_ORDER",
+            Title = "ออเดอร์ส่งครัว",
+            Message = $"ออเดอร์ #{item.Order.OrderNumber.Split('-').Last()} — 1 รายการ",
+            TableId = item.Order.TableId,
+            OrderId = item.OrderId,
+            TargetGroup = "Kitchen"
+        }, ct);
+    }
+
+    public async Task UpdateGuestCountAsync(int orderId, UpdateGuestCountRequestModel request, CancellationToken ct = default)
+    {
+        var order = await _unitOfWork.Orders.GetAll()
+            .FirstOrDefaultAsync(o => o.OrderId == orderId, ct)
+            ?? throw new EntityNotFoundException("Order", orderId);
+
+        if (order.Status != EOrderStatus.Open && order.Status != EOrderStatus.Billing)
+            throw new BusinessException("ไม่สามารถแก้ไขจำนวนลูกค้าได้ — ออเดอร์ไม่ได้อยู่ในสถานะที่ถูกต้อง");
+
+        order.GuestCount = request.GuestCount;
+        _unitOfWork.Orders.Update(order);
+
+        var table = await _unitOfWork.Tables.GetByIdAsync(order.TableId, ct);
+        if (table != null)
+        {
+            table.CurrentGuests = request.GuestCount;
+            _unitOfWork.Tables.Update(table);
+        }
+
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Updated guest count for Order {OrderId} to {GuestCount}", orderId, request.GuestCount);
+
+        await _notificationService.NotifyTableStatusChangedAsync(order.TableId, table?.Status.ToString() ?? "Occupied", ct);
+    }
+
     // ─── Private Helpers ──────────────────────────────
+
+    private async Task EnrichLinkedTableInfoAsync(OrderDetailResponseModel result, int tableId, CancellationToken ct)
+    {
+        var link = await _unitOfWork.TableLinks.QueryNoTracking()
+            .FirstOrDefaultAsync(tl => tl.TableId == tableId, ct);
+
+        if (link == null) return;
+
+        var allLinks = await _unitOfWork.TableLinks.QueryNoTracking()
+            .Where(tl => tl.GroupCode == link.GroupCode)
+            .Join(
+                _unitOfWork.Tables.QueryNoTracking(),
+                tl => tl.TableId,
+                t => t.TableId,
+                (tl, t) => new { tl.IsPrimary, t.TableName, t.CurrentGuests })
+            .ToListAsync(ct);
+
+        result.IsLinked = true;
+        result.PrimaryTableName = allLinks.FirstOrDefault(l => l.IsPrimary)?.TableName;
+        result.SecondaryTableNames = allLinks.Where(l => !l.IsPrimary).Select(l => l.TableName).ToList();
+        result.LinkedTables = allLinks.Select(l => new OrderLinkedTableModel
+        {
+            TableName = l.TableName,
+            GuestCount = l.CurrentGuests ?? 0,
+            IsPrimary = l.IsPrimary
+        }).ToList();
+        result.TotalGuestCount = allLinks.Sum(l => l.CurrentGuests ?? 0);
+    }
 
     private async Task<TbOrder?> GetOrderWithDetailsAsync(int orderId, CancellationToken ct)
     {
@@ -704,6 +1007,8 @@ public class OrderService : IOrderService
             .Include(o => o.OrderItems)
                 .ThenInclude(i => i.Menu)
                 .ThenInclude(m => m.SubCategory)
+            .Include(o => o.OrderItems)
+                .ThenInclude(i => i.SourceTable)
             .FirstOrDefaultAsync(o => o.OrderId == orderId, ct);
     }
 
@@ -771,7 +1076,7 @@ public class OrderService : IOrderService
         return $"BILL-{DateTime.UtcNow:yyyyMMdd}-{sequence:D3}";
     }
 
-    private async Task<decimal> GetActiveServiceChargeRateAsync(CancellationToken ct)
+    private async Task<(int? Id, decimal Rate)> GetActiveServiceChargeAsync(CancellationToken ct)
     {
         var now = DateTime.UtcNow;
         var sc = await _unitOfWork.ServiceCharges.QueryNoTracking()
@@ -781,18 +1086,62 @@ public class OrderService : IOrderService
             .OrderByDescending(s => s.CreatedAt)
             .FirstOrDefaultAsync(ct);
 
-        return sc?.PercentageRate ?? 0;
+        return (sc?.ServiceChargeId, sc?.PercentageRate ?? 0);
     }
 
-    private async Task<string> GetCurrentEmployeeNameAsync(CancellationToken ct)
+    private string GetCurrentStaffIdentifier()
     {
         var employeeId = GetCurrentEmployeeId();
-        if (employeeId == null) return "ระบบ";
+        return employeeId != null ? $"staff:{employeeId}" : "ระบบ";
+    }
 
-        var emp = await _unitOfWork.Employees.QueryNoTracking()
-            .FirstOrDefaultAsync(e => e.EmployeeId == employeeId.Value, ct);
+    private async Task ResolveOrderedByAsync(List<OrderItemResponseModel> items, CancellationToken ct)
+    {
+        if (items.Count == 0) return;
 
-        return emp != null ? $"{emp.FirstNameThai} {emp.LastNameThai}" : "ระบบ";
+        var customerIds = new HashSet<int>();
+        var staffIds = new HashSet<int>();
+
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.OrderedBy)) continue;
+            if (item.OrderedBy.StartsWith("customer:") && int.TryParse(item.OrderedBy[9..], out var cid))
+                customerIds.Add(cid);
+            else if (item.OrderedBy.StartsWith("staff:") && int.TryParse(item.OrderedBy[6..], out var sid))
+                staffIds.Add(sid);
+        }
+
+        var nicknameMap = new Dictionary<int, string>();
+        if (customerIds.Count > 0)
+        {
+            nicknameMap = await _unitOfWork.CustomerSessions.QueryNoTracking()
+                .Where(cs => customerIds.Contains(cs.CustomerSessionId))
+                .ToDictionaryAsync(cs => cs.CustomerSessionId, cs => cs.Nickname ?? "", ct);
+        }
+
+        var staffNameMap = new Dictionary<int, string>();
+        if (staffIds.Count > 0)
+        {
+            staffNameMap = await _unitOfWork.Employees.QueryNoTracking()
+                .Where(e => staffIds.Contains(e.EmployeeId))
+                .ToDictionaryAsync(e => e.EmployeeId, e => e.FirstNameThai, ct);
+        }
+
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.OrderedBy)) continue;
+
+            if (item.OrderedBy.StartsWith("customer:") && int.TryParse(item.OrderedBy[9..], out var cid))
+            {
+                var nick = nicknameMap.GetValueOrDefault(cid, "");
+                item.OrderedBy = string.IsNullOrEmpty(nick) ? "คุณลูกค้า" : $"คุณ{nick}";
+            }
+            else if (item.OrderedBy.StartsWith("staff:") && int.TryParse(item.OrderedBy[6..], out var sid))
+            {
+                var name = staffNameMap.GetValueOrDefault(sid, "");
+                item.OrderedBy = string.IsNullOrEmpty(name) ? "พนักงาน" : $"พนักงาน{name}";
+            }
+        }
     }
 
     private int? GetCurrentEmployeeId()

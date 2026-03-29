@@ -15,6 +15,8 @@ import { floorObjectsCreateFloorObjectPost } from '../fn/floor-objects/floor-obj
 import { FloorObjectsCreateFloorObjectPost$Params } from '../fn/floor-objects/floor-objects-create-floor-object-post';
 import { floorObjectsDeleteFloorObjectDelete } from '../fn/floor-objects/floor-objects-delete-floor-object-delete';
 import { FloorObjectsDeleteFloorObjectDelete$Params } from '../fn/floor-objects/floor-objects-delete-floor-object-delete';
+import { floorObjectsGetFloorObjectGet } from '../fn/floor-objects/floor-objects-get-floor-object-get';
+import { FloorObjectsGetFloorObjectGet$Params } from '../fn/floor-objects/floor-objects-get-floor-object-get';
 import { floorObjectsGetFloorObjectsGet } from '../fn/floor-objects/floor-objects-get-floor-objects-get';
 import { FloorObjectsGetFloorObjectsGet$Params } from '../fn/floor-objects/floor-objects-get-floor-objects-get';
 import { floorObjectsUpdateFloorObjectPut } from '../fn/floor-objects/floor-objects-update-floor-object-put';
@@ -74,6 +76,31 @@ export class FloorObjectsService extends BaseService {
    */
   floorObjectsCreateFloorObjectPost(params?: FloorObjectsCreateFloorObjectPost$Params, context?: HttpContext): Observable<FloorObjectResponseModelBaseResponseModel> {
     return this.floorObjectsCreateFloorObjectPost$Response(params, context).pipe(
+      map((r: StrictHttpResponse<FloorObjectResponseModelBaseResponseModel>): FloorObjectResponseModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `floorObjectsGetFloorObjectGet()` */
+  static readonly FloorObjectsGetFloorObjectGetPath = '/api/table/floor-objects/{floorObjectId}';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `floorObjectsGetFloorObjectGet()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  floorObjectsGetFloorObjectGet$Response(params: FloorObjectsGetFloorObjectGet$Params, context?: HttpContext): Observable<StrictHttpResponse<FloorObjectResponseModelBaseResponseModel>> {
+    return floorObjectsGetFloorObjectGet(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `floorObjectsGetFloorObjectGet$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  floorObjectsGetFloorObjectGet(params: FloorObjectsGetFloorObjectGet$Params, context?: HttpContext): Observable<FloorObjectResponseModelBaseResponseModel> {
+    return this.floorObjectsGetFloorObjectGet$Response(params, context).pipe(
       map((r: StrictHttpResponse<FloorObjectResponseModelBaseResponseModel>): FloorObjectResponseModelBaseResponseModel => r.body)
     );
   }

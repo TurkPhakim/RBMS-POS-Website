@@ -995,6 +995,11 @@ Route prefix: `api/table/tables`
 > - `Move`: Occupied → ย้าย session ไปโต๊ะปลายทาง (Available → Occupied), ต้นทาง reset → Cleaning
 > - QR Token: JWT (HS256) — Claims: tableId, nonce, exp (12hr)
 
+> **TableResponseModel — Computed Fields (ไม่ได้เก็บใน DB):**
+> - `UnservedItemCount` (int) — จำนวน OrderItem ที่ยังไม่เสิร์ฟ (Pending/Sent/Preparing/Ready) ของ ActiveOrder
+> - `TotalActiveItemCount` (int) — จำนวน OrderItem ทั้งหมดที่ไม่ใช่ Voided/Cancelled ของ ActiveOrder
+> - ใช้สำหรับหน้า "ภาพรวมร้าน" (Order Module) เพื่อแบ่ง sub-status ของ Occupied: ยังไม่สั่ง (total=0), รอเสิร์ฟ (unserved>0), เสิร์ฟครบ (unserved=0)
+
 ---
 
 ### Reservations — จัดการการจอง

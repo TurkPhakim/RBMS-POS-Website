@@ -40,6 +40,11 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
     return this.getToastIcon(msg).icon.startsWith('pi ');
   }
 
+  getMessageLines(detail: string | null | undefined): string[] {
+    if (!detail) return [''];
+    return detail.split('\n');
+  }
+
   ngOnInit(): void {
     this.sessionTimeout.start();
     this.notificationSignalR.connect();

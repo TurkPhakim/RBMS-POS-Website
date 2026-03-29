@@ -16,7 +16,10 @@ const routes: Routes = [
   },
   {
     path: 'service-charges',
-    data: { breadcrumb: 'จัดการค่าบริการ', permissions: ['service-charge.read'] },
+    data: {
+      breadcrumb: 'จัดการค่าบริการ',
+      permissions: ['service-charge.read'],
+    },
     canActivate: [PermissionGuard],
     component: ServiceChargeListComponent,
   },
@@ -51,7 +54,7 @@ const routes: Routes = [
   {
     path: 'users',
     data: {
-      breadcrumb: 'รายชื่อผู้ใช้งาน',
+      breadcrumb: 'จัดการผู้ใช้งาน',
       permissions: ['user-management.read'],
     },
     canActivate: [PermissionGuard],

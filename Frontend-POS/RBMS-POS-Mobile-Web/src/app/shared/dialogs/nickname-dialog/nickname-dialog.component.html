@@ -1,0 +1,59 @@
+<!-- Header -->
+<div class="px-5 py-3 border-b border-surface-border">
+  <h3 class="text-lg font-semibold text-primary-dark">ยินดีต้อนรับ</h3>
+</div>
+
+<!-- Content -->
+<div class="p-4 space-y-2">
+  <!-- Row 1: Icon + Description -->
+  <div class="flex items-center gap-2">
+    <div
+      class="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0"
+    >
+      <app-generic-icon
+        name="user-octagon"
+        svgClass="w-8 h-8"
+        class="text-white"
+      ></app-generic-icon>
+    </div>
+    <p class="text-surface-sub font-medium">
+      กรุณาตั้งชื่อเล่น เพื่อใช้แสดงตอนสั่งอาหาร
+    </p>
+  </div>
+
+  <!-- Row 2: Label + Input -->
+  <div>
+    <label class="font-semibold block mb-2"
+      >ชื่อเล่น <span class="text-danger">*</span></label
+    >
+    <input
+      pInputText
+      [(ngModel)]="nickname"
+      placeholder="ชื่อเล่น"
+      maxlength="20"
+      class="w-full"
+      [class.ng-invalid]="showError"
+      [class.ng-dirty]="showError"
+      (keyup.enter)="onConfirm()"
+    />
+    @if (showError) {
+      <small
+        class="text-danger text-xs mt-1 flex items-center gap-1 font-semibold"
+      >
+        <app-generic-icon name="error" svgClass="w-4 h-4"></app-generic-icon>
+        กรุณาระบุ
+      </small>
+    }
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="p-2 border-t border-surface-border flex justify-center">
+  <p-button
+    label="ยืนยัน"
+    severity="primary"
+    [style]="{ 'min-width': '100px' }"
+    [loading]="isSaving"
+    (onClick)="onConfirm()"
+  ></p-button>
+</div>

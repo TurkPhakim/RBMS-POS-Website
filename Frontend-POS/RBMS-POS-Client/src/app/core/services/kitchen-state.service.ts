@@ -1,6 +1,5 @@
 import { DestroyRef, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-
 import { KitchenOrderModel } from '@app/core/api/models';
 import { KitchenService } from '@app/core/api/services';
 import { OrderHubService } from './order-hub.service';
@@ -54,7 +53,10 @@ export class KitchenStateService {
 
     this.isLoading.set(true);
     this.kitchenService
-      .kitchenGetKitchenItemsGet({ categoryType: this.currentCategory, includeReady: true })
+      .kitchenGetKitchenItemsGet({
+        categoryType: this.currentCategory,
+        includeReady: true,
+      })
       .subscribe({
         next: (res) => {
           this.orders.set(res.results ?? []);
@@ -67,14 +69,26 @@ export class KitchenStateService {
   }
 
   startPreparing(orderItemIds: number[], categoryType: number): void {
+    this.optimisticUpdateStatus(orderItemIds, 'Preparing');
     this.kitchenService
       .kitchenStartPreparingPut({ body: { categoryType, orderItemIds } })
-      .subscribe();
+      .subscribe({ error: () => this.loadItems() });
   }
 
   markReady(orderItemIds: number[], categoryType: number): void {
+    this.optimisticUpdateStatus(orderItemIds, 'Ready');
     this.kitchenService
       .kitchenMarkReadyPut({ body: { categoryType, orderItemIds } })
-      .subscribe();
+      .subscribe({ error: () => this.loadItems() });
+  }
+
+  private optimisticUpdateStatus(orderItemIds: number[], newStatus: string): void {
+    const updated = this.orders().map(order => ({
+      ...order,
+      items: order.items?.map(item =>
+        orderItemIds.includes(item.orderItemId!) ? { ...item, status: newStatus } : item
+      ),
+    }));
+    this.orders.set(updated);
   }
 }

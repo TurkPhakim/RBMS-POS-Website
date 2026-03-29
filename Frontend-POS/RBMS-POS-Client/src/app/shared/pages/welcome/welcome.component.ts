@@ -67,6 +67,7 @@ export class WelcomeComponent implements OnInit, OnDestroy {
     return !!info && !!(info.shopNameThai || info.shopNameEnglish);
   });
 
+  profileImageError = signal(false);
   profileImageUrl = computed(() => {
     const fileId =
       this.myProfile()?.imageFileId || this.currentUser()?.profileImageFileId;

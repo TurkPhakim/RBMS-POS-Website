@@ -10,44 +10,22 @@ import { Component, Input } from '@angular/core';
       [ngClass]="gradientClass"
     >
       <!-- Decorative circles -->
-      <div
-        class="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-white/10"
-      ></div>
-      <div
-        class="absolute -bottom-4 -left-4 w-14 h-14 rounded-full bg-white/10"
-      ></div>
-      <div
-        class="absolute top-1/2 right-1/4 w-8 h-8 rounded-full bg-white/5"
-      ></div>
-      <div
-        class="absolute -top-2 left-1/3 w-12 h-12 rounded-full bg-white/[0.06]"
-      ></div>
-      <div
-        class="absolute bottom-0 right-1/2 w-6 h-6 rounded-full bg-white/5"
-      ></div>
-      <div
-        class="absolute top-1 left-2/3 w-5 h-5 rounded-full bg-white/10"
-      ></div>
-      <div
-        class="absolute -bottom-6 right-1/3 w-16 h-16 rounded-full bg-white/[0.06]"
-      ></div>
+      <div class="absolute -top-5 -right-5 w-20 h-20 rounded-full bg-white/10"></div>
+      <div class="absolute -bottom-4 -left-4 w-14 h-14 rounded-full bg-white/10"></div>
+      <div class="absolute top-1/2 right-1/4 w-8 h-8 rounded-full bg-white/5"></div>
+      <div class="absolute -top-2 left-1/3 w-12 h-12 rounded-full bg-white/[0.06]"></div>
+      <div class="absolute bottom-0 right-1/2 w-6 h-6 rounded-full bg-white/5"></div>
+      <div class="absolute top-1 left-2/3 w-5 h-5 rounded-full bg-white/10"></div>
+      <div class="absolute -bottom-6 right-1/3 w-16 h-16 rounded-full bg-white/[0.06]"></div>
 
       <!-- Icon -->
-      <span
-        class="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/25 flex items-center justify-center shrink-0"
-      >
-        <app-generic-icon
-          [name]="icon"
-          [svgClass]="iconSize"
-          class="text-white"
-        ></app-generic-icon>
+      <span class="relative z-10 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/25 flex items-center justify-center shrink-0">
+        <app-generic-icon [name]="icon" [svgClass]="iconSize" class="text-white"></app-generic-icon>
       </span>
 
       <!-- Title + Subtitle -->
       <div class="relative z-10 flex-1 min-w-0">
-        <p class="font-extrabold text-lg sm:text-xl text-white tracking-wide truncate">
-          {{ title }}
-        </p>
+        <p class="font-extrabold text-lg sm:text-xl text-white tracking-wide truncate">{{ title }}</p>
         @if (subtitle) {
           <p class="text-xs sm:text-sm text-white/70 truncate">{{ subtitle }}</p>
         }
