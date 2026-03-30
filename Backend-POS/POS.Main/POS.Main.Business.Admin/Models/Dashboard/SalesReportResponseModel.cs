@@ -15,6 +15,8 @@ public class DailyBreakdownModel
     public int OrderCount { get; set; }
     public int GuestCount { get; set; }
     public decimal AveragePerOrder { get; set; }
+    public decimal TotalCost { get; set; }
+    public decimal GrossProfit { get; set; }
 }
 
 public class CategoryBreakdownModel

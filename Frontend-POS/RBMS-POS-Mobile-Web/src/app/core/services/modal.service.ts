@@ -32,7 +32,7 @@ export class ModalService {
       data,
       styleClass: 'alert-dialog',
       showHeader: false,
-      width: data.width ?? '60vw',
+      width: data.width ?? '40vw',
       modal: true,
       duplicate: true,
     });
@@ -50,7 +50,7 @@ export class ModalService {
       data,
       styleClass: 'alert-dialog',
       showHeader: false,
-      width: data.width ?? '60vw',
+      width: data.width ?? '40vw',
       modal: true,
     });
   }
@@ -60,7 +60,7 @@ export class ModalService {
       data,
       styleClass: 'alert-dialog',
       showHeader: false,
-      width: data.width ?? '60vw',
+      width: data.width ?? '40vw',
       modal: true,
     });
   }

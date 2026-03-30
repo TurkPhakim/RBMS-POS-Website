@@ -208,21 +208,21 @@
           styleClass="p-datatable-clean text-lg"
         >
           <ng-template pTemplate="header">
-            <tr>
-              <th class="w-[200px] whitespace-nowrap">เมนู</th>
-              <th class="w-[140px] whitespace-nowrap">รูป</th>
-              <th class="w-[140px] whitespace-nowrap">หมวดหมู่</th>
-              <th class="w-[80px] whitespace-nowrap">จำนวน</th>
-              <th class="w-[120px] whitespace-nowrap">ราคา/หน่วย</th>
-              <th class="w-[160px] whitespace-nowrap">ตัวเลือกเพิ่ม</th>
-              <th class="w-[120px] whitespace-nowrap">ราคารวม</th>
-              <th class="w-[140px] whitespace-nowrap">สถานะ</th>
+            <tr class="whitespace-nowrap">
+              <th class="w-[200px]">เมนู</th>
+              <th class="w-[140px]">รูป</th>
+              <th class="w-[140px]">หมวดหมู่</th>
+              <th class="w-[80px]">จำนวน</th>
+              <th class="w-[120px]">ราคา/หน่วย</th>
+              <th class="w-[160px]">ตัวเลือกเพิ่ม</th>
+              <th class="w-[120px]">ราคารวม</th>
+              <th class="w-[140px]">สถานะ</th>
               @if (hasMultipleSourceTables()) {
-                <th class="w-[120px] whitespace-nowrap">โต๊ะต้นทาง</th>
+                <th class="w-[120px]">โต๊ะต้นทาง</th>
               }
-              <th class="w-[140px] whitespace-nowrap">สั่งรายการโดย</th>
+              <th class="w-[140px]">สั่งรายการโดย</th>
               <th
-                class="w-[100px] whitespace-nowrap"
+                class="w-[100px]"
                 pFrozenColumn
                 alignFrozen="right"
               >

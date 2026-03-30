@@ -6,7 +6,38 @@ import { DialogData } from '@app/core/services/modal.service';
 @Component({
   selector: 'app-success-modal',
   standalone: false,
-  templateUrl: './success-modal.component.html',
+  template: `
+    <div class="flex flex-col gap-4 items-center text-center">
+      <ng-lottie
+        [options]="lottieOptions"
+        width="120px"
+        height="120px"
+      ></ng-lottie>
+      <div class="text-2xl font-semibold">{{ config.data?.title }}</div>
+      @if (config.data?.message) {
+        <p class="text-surface-sub">{{ config.data?.message }}</p>
+      }
+      @if (config.data?.onConfirm) {
+        <div class="flex items-center gap-3">
+          <p-button
+            severity="secondary"
+            [outlined]="true"
+            [style]="{ 'min-width': '80px' }"
+            (onClick)="ref.close()"
+          >
+            ปิด
+          </p-button>
+          <p-button
+            severity="primary"
+            [style]="{ 'min-width': '120px', 'white-space': 'nowrap' }"
+            (onClick)="handleConfirm()"
+          >
+            {{ config.data?.confirmButtonLabel ?? 'ตกลง' }}
+          </p-button>
+        </div>
+      }
+    </div>
+  `,
 })
 export class SuccessModalComponent implements OnInit, OnDestroy {
   private timer?: ReturnType<typeof setTimeout>;

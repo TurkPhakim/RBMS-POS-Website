@@ -169,7 +169,7 @@
       <!-- Tags -->
       <div class="md:col-span-2 flex items-center justify-around">
         <div
-          class="flex flex-col items-center gap-2.5 cursor-pointer select-none"
+          class="flex flex-col items-center gap-2 cursor-pointer select-none"
           (click)="onTagToggle('recommended')"
         >
           <div
@@ -182,7 +182,7 @@
             ></app-generic-icon>
           </div>
           <span
-            class="font-semibold transition-colors"
+            class="font-semibold text-lg transition-colors"
             [ngClass]="
               tagRecommended() ? 'text-tag-recommend' : 'text-gray-400'
             "
@@ -190,7 +190,7 @@
           >
         </div>
         <div
-          class="flex flex-col items-center gap-2.5 cursor-pointer select-none"
+          class="flex flex-col items-center gap-2 cursor-pointer select-none"
           (click)="onTagToggle('seasonal')"
         >
           <div
@@ -203,13 +203,13 @@
             ></app-generic-icon>
           </div>
           <span
-            class="font-semibold transition-colors"
+            class="font-semibold text-lg transition-colors"
             [ngClass]="tagSeasonal() ? 'text-tag-seasonal' : 'text-gray-400'"
             >ตามฤดูกาล</span
           >
         </div>
         <div
-          class="flex flex-col items-center gap-2.5 cursor-pointer select-none"
+          class="flex flex-col items-center gap-2 cursor-pointer select-none"
           (click)="onTagToggle('slow')"
         >
           <div
@@ -222,13 +222,13 @@
             ></app-generic-icon>
           </div>
           <span
-            class="font-semibold transition-colors"
+            class="font-semibold text-lg transition-colors"
             [ngClass]="tagSlow() ? 'text-tag-slow' : 'text-gray-400'"
             >ใช้เวลานาน</span
           >
         </div>
         <div
-          class="flex flex-col items-center gap-2.5 cursor-pointer select-none"
+          class="flex flex-col items-center gap-2 cursor-pointer select-none"
           (click)="onTagToggle('pinned')"
         >
           <div
@@ -243,7 +243,7 @@
             ></app-generic-icon>
           </div>
           <span
-            class="font-semibold transition-colors"
+            class="font-semibold text-lg transition-colors"
             [ngClass]="
               form.get('isPinned')?.value ? 'text-tag-pin' : 'text-gray-400'
             "
@@ -256,9 +256,9 @@
       @if (hasTwoPeriods()) {
         <div class="md:border-l-2 md:border-surface-border md:pl-6">
           <label class="block font-semibold mb-4">ช่วงเวลาขาย</label>
-          <div class="flex flex-col gap-4">
-            <div class="flex items-center gap-2 pt-2 whitespace-nowrap">
-              <span class="text-sm text-surface-sub">ช่วงที่ 1</span>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-4 pt-2 whitespace-nowrap">
+              <span class="text-surface-sub mb-3">ช่วงที่ 1</span>
               <p-inputSwitch
                 formControlName="isAvailablePeriod1"
                 inputId="isAvailablePeriod1"
@@ -276,8 +276,8 @@
                 }}
               </span>
             </div>
-            <div class="flex items-center gap-2 pt-2 whitespace-nowrap">
-              <span class="text-sm text-surface-sub">ช่วงที่ 2</span>
+            <div class="flex items-center gap-4 pt-2 whitespace-nowrap">
+              <span class="text-surface-sub mb-3">ช่วงที่ 2</span>
               <p-inputSwitch
                 formControlName="isAvailablePeriod2"
                 inputId="isAvailablePeriod2"
@@ -324,12 +324,12 @@
   <app-section-card
     headerLabel="ตัวเลือกเสริม"
     headerIcon="option-extra"
-    contentClass="p-6"
+    contentClass="p-4 px-6"
   >
     <button
       sectionActions
       type="button"
-      class="px-5 py-2 rounded-full bg-white text-primary font-semibold text-sm hover:bg-primary-subtle transition-colors"
+      class="px-4 py-2 rounded-full bg-white text-primary font-semibold hover:bg-primary-subtle transition-colors"
       (click)="openSelectOptionGroupDialog()"
     >
       เพิ่มตัวเลือกเสริม
@@ -339,7 +339,7 @@
       <app-empty-view></app-empty-view>
     } @else {
       <div
-        class="space-y-4"
+        class="space-y-2"
         cdkDropList
         (cdkDropListDropped)="onOptionGroupDrop($event)"
       >
@@ -351,54 +351,76 @@
           <div
             cdkDrag
             [cdkDragData]="group"
-            class="rounded-2xl border-l-4 border-l-primary border border-surface-border bg-surface-card px-6 py-5"
+            class="rounded-2xl border-l-4 border-l-primary border border-surface-border bg-surface-card px-6 py-4"
           >
             <!-- Row: drag + info + actions -->
             <div class="flex items-start gap-4">
               <div class="cursor-move shrink-0 pt-1" cdkDragHandle>
                 <app-generic-icon
                   name="menu-bar"
-                  svgClass="w-6 h-6"
-                  class="text-surface-muted"
+                  svgClass="w-8 h-8"
+                  class="text-surface-dark"
                 ></app-generic-icon>
               </div>
 
               <div class="flex-1 min-w-0">
-                <!-- Name + Info -->
-                <div class="flex items-center gap-4 mb-4">
-                  <h3 class="text-xl font-bold truncate">{{ group.name }}</h3>
-                  <div
-                    class="flex items-center gap-3 text-sm text-surface-sub shrink-0"
-                  >
+                <!-- Name + Status Badges -->
+                <div class="flex items-center gap-3 flex-wrap mb-2">
+                  <h3 class="text-2xl font-semibold truncate">
+                    {{ group.name }}
+                  </h3>
+                  <div class="flex items-center gap-2">
                     @if (group.isRequired) {
-                      <span class="text-primary font-semibold">บังคับ</span>
+                      <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-subtle text-primary"
+                      >
+                        บังคับ
+                      </span>
                     } @else {
-                      <span>ไม่บังคับ</span>
+                      <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-surface text-surface-sub"
+                      >
+                        ไม่บังคับ
+                      </span>
                     }
-                    <span class="text-surface-border">|</span>
-                    <span>ขั้นต่ำ {{ group.minSelect ?? 0 }}</span>
-                    <span class="text-surface-border">|</span>
-                    <span>สูงสุด {{ group.maxSelect ?? "-" }}</span>
+                    @if (group.minSelect) {
+                      <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-subtle text-primary-text"
+                      >
+                        ขั้นต่ำ: {{ group.minSelect }}
+                      </span>
+                    }
+                    @if (group.maxSelect) {
+                      <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-subtle text-primary-text"
+                      >
+                        สูงสุด: {{ group.maxSelect }}
+                      </span>
+                    }
                   </div>
                 </div>
 
                 <!-- Option Items -->
-                <div class="flex flex-wrap items-center gap-2.5">
-                  @for (oi of group.optionItems ?? []; track oi.name) {
-                    <div
-                      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-subtle"
-                    >
-                      <span class="text-base font-semibold text-primary-text">{{
-                        oi.name
-                      }}</span>
-                      @if (oi.additionalPrice) {
-                        <span class="text-primary font-bold text-base"
-                          >+{{ oi.additionalPrice | number: "1.0-0" }}</span
-                        >
-                      }
-                    </div>
-                  }
-                </div>
+                @if ((group.optionItems ?? []).length > 0) {
+                  <div
+                    class="flex flex-wrap items-center gap-2 pt-4 border-t border-surface-border"
+                  >
+                    @for (oi of group.optionItems ?? []; track oi.name) {
+                      <div
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-subtle"
+                      >
+                        <span class="font-semibold text-primary-text">{{
+                          oi.name
+                        }}</span>
+                        @if (oi.additionalPrice) {
+                          <span class="text-primary font-bold"
+                            >+ {{ oi.additionalPrice | number: "1.2-2" }}</span
+                          >
+                        }
+                      </div>
+                    }
+                  </div>
+                }
               </div>
 
               <!-- Actions -->

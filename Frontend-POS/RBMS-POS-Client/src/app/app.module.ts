@@ -16,14 +16,6 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 import { SharedModule } from './shared/shared.module';
 import { layoutReducer } from './store/layout/layout.reducer';
-import { TestDialogPageComponent } from './test-dialog-page/test-dialog-page.component';
-import { TestDashboardOverviewComponent } from './test-dashboard-overview/test-dashboard-overview.component';
-import { TestSalesReportComponent } from './test-sales-report/test-sales-report.component';
-import {
-  BaseChartDirective,
-  provideCharts,
-  withDefaultRegisterables,
-} from 'ng2-charts';
 
 const AppPreset = definePreset(Lara, {
   semantic: {
@@ -46,9 +38,6 @@ const AppPreset = definePreset(Lara, {
 @NgModule({
   declarations: [
     AppComponent,
-    TestDialogPageComponent,
-    TestDashboardOverviewComponent,
-    TestSalesReportComponent,
   ],
   imports: [
     BrowserModule,
@@ -59,7 +48,6 @@ const AppPreset = definePreset(Lara, {
     StoreModule.forRoot({ layout: layoutReducer }),
     EffectsModule.forRoot([]),
     StoreDevtoolsModule.instrument({ maxAge: 25 }),
-    BaseChartDirective,
   ],
   providers: [
     // API Configuration - Sets base URL from environment
@@ -118,8 +106,6 @@ const AppPreset = definePreset(Lara, {
         firstDayOfWeek: 0,
       },
     }),
-    // ng2-charts for test pages
-    provideCharts(withDefaultRegisterables()),
     // PrimeNG MessageService (global singleton for Toast)
     MessageService,
     // HTTP Interceptors

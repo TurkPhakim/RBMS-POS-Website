@@ -161,8 +161,8 @@ export class MenuManageComponent implements OnInit, OnDestroy {
   openSelectOptionGroupDialog(): void {
     const excludeIds = this.linkedOptionGroups().map((g) => g.optionGroupId!);
     const ref = this.dialogService.open(SelectOptionGroupDialogComponent, {
-      header: 'เลือกตัวเลือกเสริม',
-      width: '50vw',
+      header: 'เลือกกลุ่มตัวเลือกเสริม',
+      width: '60vw',
       styleClass: 'card-dialog',
       showHeader: false,
       modal: true,

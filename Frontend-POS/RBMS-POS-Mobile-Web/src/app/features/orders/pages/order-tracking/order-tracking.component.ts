@@ -4,6 +4,7 @@ import { AnimationOptions } from 'ngx-lottie';
 import { SelfOrderService } from '@core/api/services/self-order.service';
 import { SignalRService } from '@core/services/signalr.service';
 import { CustomerTrackingItemModel } from '@core/api/models/customer-tracking-item-model';
+import { CustomerTrackingBillModel } from '@core/api/models/customer-tracking-bill-model';
 import { CustomerOrderTrackingResponseModelBaseResponseModel } from '@core/api/models/customer-order-tracking-response-model-base-response-model';
 import { environment } from '../../../../../environments/environment';
 
@@ -16,7 +17,19 @@ export class OrderTrackingComponent implements OnInit {
   items = signal<CustomerTrackingItemModel[]>([]);
   subTotal = signal(0);
   orderNumber = signal('');
+  orderStatus = signal('');
+  bills = signal<CustomerTrackingBillModel[]>([]);
+  selectedBillIndex = signal(0);
   lottieOptions: AnimationOptions = { path: 'animations/order-waiting.json' };
+
+  hasBills = computed(() => this.bills().length > 0);
+  hasMultipleBills = computed(() => this.bills().length > 1);
+  showBillSummary = computed(() => this.orderStatus() === 'Billing' && this.hasBills());
+  selectedBill = computed(() => {
+    const b = this.bills();
+    const i = this.selectedBillIndex();
+    return b.length > i ? b[i] : null;
+  });
 
   // Filter signals
   sourceTableFilter = signal<string | null>(null);
@@ -72,8 +85,14 @@ export class OrderTrackingComponent implements OnInit {
           this.items.set(res.result?.items ?? []);
           this.subTotal.set(res.result?.subTotal ?? 0);
           this.orderNumber.set(res.result?.orderNumber ?? '');
+          this.orderStatus.set(res.result?.orderStatus ?? '');
+          this.bills.set(res.result?.bills ?? []);
         },
       });
+  }
+
+  onSelectBill(index: number): void {
+    this.selectedBillIndex.set(index);
   }
 
   onSourceTableChange(value: string | null): void {

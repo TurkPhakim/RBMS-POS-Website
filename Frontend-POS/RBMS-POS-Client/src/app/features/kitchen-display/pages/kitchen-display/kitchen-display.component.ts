@@ -250,9 +250,7 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
     return names.size > 1;
   }
 
-  getSourceTableGroups(
-    items: KitchenOrderItemModel[],
-  ): SourceTableGroup[] {
+  getSourceTableGroups(items: KitchenOrderItemModel[]): SourceTableGroup[] {
     const groups = new Map<string, KitchenOrderItemModel[]>();
     for (const item of items) {
       const key = item.sourceTableName ?? '';

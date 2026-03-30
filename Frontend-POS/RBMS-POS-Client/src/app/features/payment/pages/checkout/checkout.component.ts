@@ -1,9 +1,15 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal, computed } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+  computed,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from 'primeng/dynamicdialog';
 import { AnimationOptions } from 'ngx-lottie';
-
 import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { OrdersService } from '@app/core/api/services/orders.service';
 import { PaymentsService } from '@app/core/api/services/payments.service';
@@ -51,16 +57,16 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   allBillsPaid = computed(() => {
     const bills = this.allBills();
-    return bills.length > 0 && bills.every(b => b.status === 'Paid');
+    return bills.length > 0 && bills.every((b) => b.status === 'Paid');
   });
 
   canUnsplit = computed(() => {
     const bills = this.allBills();
-    return bills.length > 1 && bills.every(b => b.status === 'Pending');
+    return bills.length > 1 && bills.every((b) => b.status === 'Pending');
   });
 
   hasAnyPaidBill = computed(() => {
-    return this.allBills().some(b => b.status === 'Paid');
+    return this.allBills().some((b) => b.status === 'Paid');
   });
 
   amountReceived = computed(() => {
@@ -77,7 +83,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   activeItems = computed(() => {
     const detail = this.orderDetail();
     if (!detail?.items) return [];
-    return detail.items.filter(i => i.status !== 'Cancelled' && i.status !== 'Voided');
+    return detail.items.filter(
+      (i) => i.status !== 'Cancelled' && i.status !== 'Voided',
+    );
   });
 
   categoryBreakdown = computed(() => {
@@ -129,7 +137,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private breadcrumbService: BreadcrumbService,
     private orderHubService: OrderHubService,
     private receiptService: ReceiptService,
-    private destroyRef: DestroyRef
+    private destroyRef: DestroyRef,
   ) {}
 
   ngOnInit(): void {
@@ -173,7 +181,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private loadData(): void {
-    this.ordersService.ordersGetOrderGet({ orderId: this.orderId })
+    this.ordersService
+      .ordersGetOrderGet({ orderId: this.orderId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => this.orderDetail.set(res.result ?? null),
@@ -183,7 +192,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private loadBills(): void {
-    this.ordersService.ordersGetBillsGet({ orderId: this.orderId })
+    this.ordersService
+      .ordersGetBillsGet({ orderId: this.orderId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -198,7 +208,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         },
       });
 
-    this.paymentsService.paymentsGetByOrderGet({ orderId: this.orderId })
+    this.paymentsService
+      .paymentsGetByOrderGet({ orderId: this.orderId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => this.payments.set(res.result ?? []),
@@ -208,18 +219,22 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private autoCreateBill(): void {
     const detail = this.orderDetail();
     const unservedItems = (detail?.items ?? []).filter(
-      i => i.status !== 'Served' && i.status !== 'Voided' && i.status !== 'Cancelled',
+      (i) =>
+        i.status !== 'Served' &&
+        i.status !== 'Voided' &&
+        i.status !== 'Cancelled',
     );
 
     if (unservedItems.length > 0) {
-      this.modalService.info({
-        title: 'รายการยังเสิร์ฟไม่ครบ',
-        message: `มี ${unservedItems.length} รายการที่ยังไม่เสิร์ฟ ต้องการสร้างบิลจากเฉพาะรายการที่เสิร์ฟแล้วหรือไม่?`,
-        icon: Icon.Warning,
-        confirmButtonLabel: 'สร้างบิล',
-      }).onClose
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(confirmed => {
+      this.modalService
+        .info({
+          title: 'รายการยังเสิร์ฟไม่ครบ',
+          message: `มี ${unservedItems.length} รายการที่ยังไม่เสิร์ฟ\nต้องการสร้างบิลจากเฉพาะรายการที่เสิร์ฟแล้วหรือไม่?`,
+          icon: Icon.Warning,
+          confirmButtonLabel: 'สร้างบิล',
+        })
+        .onClose.pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((confirmed) => {
           if (confirmed) this.createBill(true);
         });
       return;
@@ -229,21 +244,22 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private createBill(force: boolean): void {
-    this.ordersService.ordersRequestBillPost({ orderId: this.orderId, force })
+    this.ordersService
+      .ordersRequestBillPost({ orderId: this.orderId, force })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.loadBills(),
         error: () => {
           this.modalService.cancel({
             title: 'ไม่สามารถสร้างบิลได้',
-            message: 'กรุณาตรวจสอบว่ามีรายการที่เสิร์ฟแล้วอย่างน้อย 1 รายการ',
+            message: 'กรุณาตรวจสอบว่ามีรายการ\nที่เสิร์ฟแล้วอย่างน้อย 1 รายการ',
           });
         },
       });
   }
 
   private autoSelectPendingBill(bills: OrderBillResponseModel[]): void {
-    const pendingIdx = bills.findIndex(b => b.status === 'Pending');
+    const pendingIdx = bills.findIndex((b) => b.status === 'Pending');
     this.selectedBillIndex.set(pendingIdx >= 0 ? pendingIdx : 0);
     this.numpadDisplay.set('0');
   }
@@ -266,10 +282,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.selectedScId.set(scId);
     this.isUpdatingSc.set(true);
 
-    this.ordersService.ordersUpdateBillChargesPut({
-      orderBillId: bill.orderBillId!,
-      body: { serviceChargeId: scId },
-    })
+    this.ordersService
+      .ordersUpdateBillChargesPut({
+        orderBillId: bill.orderBillId!,
+        body: { serviceChargeId: scId },
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
@@ -337,12 +354,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
 
     this.isSaving.set(true);
-    this.paymentsService.paymentsPayCashPost({
-      body: {
-        orderBillId: bill.orderBillId!,
-        amountReceived: amount,
-      },
-    })
+    this.paymentsService
+      .paymentsPayCashPost({
+        body: {
+          orderBillId: bill.orderBillId!,
+          amountReceived: amount,
+        },
+      })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
@@ -352,7 +370,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
           const dialogRef = this.modalService.success({
             title: 'ชำระเงินสำเร็จ',
-            message: change > 0 ? `เงินทอน ${change.toFixed(2)} บาท` : undefined,
+            message:
+              change > 0 ? `เงินทอน ${change.toFixed(2)} บาท` : undefined,
             confirmButtonLabel: 'ดาวน์โหลดใบเสร็จ',
             onConfirm: () =>
               paymentId
@@ -392,7 +411,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       title: 'ยกเลิกบิล',
       message: 'ต้องการยกเลิกบิลและกลับไปหน้าออเดอร์หรือไม่?',
       onConfirm: () => {
-        this.ordersService.ordersVoidBillPost({ orderId: this.orderId })
+        this.ordersService
+          .ordersVoidBillPost({ orderId: this.orderId })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: () => {
@@ -409,7 +429,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       title: 'ยกเลิกการแยกบิล',
       message: 'ต้องการรวมบิลกลับเป็นบิลเดียวหรือไม่?',
       onConfirm: () => {
-        this.ordersService.ordersUnsplitBillPost({ orderId: this.orderId })
+        this.ordersService
+          .ordersUnsplitBillPost({ orderId: this.orderId })
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe({
             next: () => {
@@ -433,45 +454,56 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       data: { items: order.items },
     });
 
-    ref.onClose
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((result: { mode: string; numberOfSplits?: number; groups?: { orderItemIds: number[] }[] } | undefined) => {
+    ref.onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
+      (
+        result:
+          | {
+              mode: string;
+              numberOfSplits?: number;
+              groups?: { orderItemIds: number[] }[];
+            }
+          | undefined,
+      ) => {
         if (!result) return;
-        const apiCall = result.mode === 'by-amount'
-          ? this.ordersService.ordersSplitByAmountPost({
-              orderId: this.orderId,
-              body: { numberOfSplits: result.numberOfSplits! },
-            })
-          : this.ordersService.ordersSplitByItemPost({
-              orderId: this.orderId,
-              body: { groups: result.groups! },
-            });
-
-        apiCall
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe({
-            next: () => {
-              this.modalService.commonSuccess();
-              this.loadBills();
-            },
-            error: () => {
-              this.modalService.cancel({
-                title: 'แยกบิลไม่สำเร็จ',
-                message: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+        const apiCall =
+          result.mode === 'by-amount'
+            ? this.ordersService.ordersSplitByAmountPost({
+                orderId: this.orderId,
+                body: { numberOfSplits: result.numberOfSplits! },
+              })
+            : this.ordersService.ordersSplitByItemPost({
+                orderId: this.orderId,
+                body: { groups: result.groups! },
               });
-            },
-          });
-      });
+
+        apiCall.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+          next: () => {
+            this.modalService.commonSuccess();
+            this.loadBills();
+          },
+          error: () => {
+            this.modalService.cancel({
+              title: 'แยกบิลไม่สำเร็จ',
+              message: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+            });
+          },
+        });
+      },
+    );
   }
 
   getSlipUrl(bill: OrderBillResponseModel): string | null {
-    const payment = this.payments().find(p => p.orderBillId === bill.orderBillId);
+    const payment = this.payments().find(
+      (p) => p.orderBillId === bill.orderBillId,
+    );
     if (!payment?.slipImageFileId) return null;
     return `${this.apiConfig.rootUrl}/api/admin/file/${payment.slipImageFileId}`;
   }
 
   onViewSlip(bill: OrderBillResponseModel): void {
-    const payment = this.payments().find(p => p.orderBillId === bill.orderBillId);
+    const payment = this.payments().find(
+      (p) => p.orderBillId === bill.orderBillId,
+    );
     if (!payment?.slipImageFileId) return;
     this.dialogService.open(SlipPreviewDialogComponent, {
       header: 'สลิปโอนเงิน',
@@ -483,33 +515,40 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   onDownloadBillReceipt(bill: OrderBillResponseModel): void {
-    const payment = this.payments().find(p => p.orderBillId === bill.orderBillId);
+    const payment = this.payments().find(
+      (p) => p.orderBillId === bill.orderBillId,
+    );
     if (!payment) return;
-    this.receiptService.downloadReceipt(payment.paymentId!)
+    this.receiptService
+      .downloadReceipt(payment.paymentId!)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
 
   onDownloadConsolidatedReceipt(): void {
-    this.receiptService.downloadConsolidatedReceipt(this.orderId)
+    this.receiptService
+      .downloadConsolidatedReceipt(this.orderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
 
   private afterPayment(): void {
-    this.ordersService.ordersGetBillsGet({ orderId: this.orderId })
+    this.ordersService
+      .ordersGetBillsGet({ orderId: this.orderId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
           const bills = res.result ?? [];
-          const allPaid = bills.length > 0 && bills.every(b => b.status === 'Paid');
+          const allPaid =
+            bills.length > 0 && bills.every((b) => b.status === 'Paid');
           if (allPaid) {
             this.allBills.set(bills);
           } else {
             this.allBills.set(bills);
             this.autoSelectPendingBill(bills);
             this.syncScDropdown();
-            this.paymentsService.paymentsGetByOrderGet({ orderId: this.orderId })
+            this.paymentsService
+              .paymentsGetByOrderGet({ orderId: this.orderId })
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe({ next: (pr) => this.payments.set(pr.result ?? []) });
           }
@@ -522,7 +561,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   onSendBillToCustomer(): void {
-    this.ordersService.ordersSendBillToCustomerPost({ orderId: this.orderId })
+    this.ordersService
+      .ordersSendBillToCustomerPost({ orderId: this.orderId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

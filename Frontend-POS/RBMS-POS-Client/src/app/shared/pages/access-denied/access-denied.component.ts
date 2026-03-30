@@ -5,7 +5,55 @@ import { AnimationOptions } from 'ngx-lottie';
 @Component({
   selector: 'app-access-denied',
   standalone: false,
-  templateUrl: './access-denied.component.html',
+  template: `
+    <div
+      class="flex items-center justify-center h-screen bg-gradient-to-br from-primary-badge via-primary-light/60 to-warning-bg"
+    >
+      <div class="w-full text-center px-8">
+        <div
+          class="mb-20 cursor-pointer"
+          style="perspective: 1000px"
+          (click)="toggleFlip()"
+        >
+          <div
+            class="relative w-[36rem] h-[28rem] mx-auto transition-transform duration-700"
+            [style.transform]="isFlipped() ? 'rotateY(180deg)' : 'rotateY(0)'"
+            style="transform-style: preserve-3d"
+          >
+            <div
+              class="absolute inset-0 flex items-center justify-center"
+              style="backface-visibility: hidden"
+            >
+              <ng-lottie
+                [options]="lottieOptions"
+                width="1200px"
+                height="900px"
+              ></ng-lottie>
+            </div>
+            <div
+              class="absolute inset-0 flex items-center justify-center"
+              style="backface-visibility: hidden; transform: rotateY(180deg)"
+              (click)="goHome()"
+            >
+              <img
+                src="images/home-page-image.png"
+                alt="Go Home"
+                class="w-80 drop-shadow-lg hover:scale-110 transition-transform duration-300"
+              />
+            </div>
+          </div>
+        </div>
+        <h1
+          class="text-8xl font-bold my-5 whitespace-nowrap bg-gradient-to-r from-primary via-primary-badge to-warning bg-clip-text text-transparent drop-shadow-md animate-glitch"
+        >
+          Access Denied
+        </h1>
+        <p class="text-3xl text-surface-dark/70">
+          คุณไม่มีสิทธิ์ในการเข้าถึงหน้านี้
+        </p>
+      </div>
+    </div>
+  `,
 })
 export class AccessDeniedComponent {
   isFlipped = signal(false);

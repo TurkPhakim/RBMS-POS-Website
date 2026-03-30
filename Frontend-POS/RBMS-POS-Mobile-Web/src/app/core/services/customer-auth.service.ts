@@ -7,11 +7,12 @@ const QR_TOKEN_KEY = 'customer_qr_token';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerAuthService {
-
-  saveSession(data: {
-    token: string;
-    qrToken?: string;
-  } & CustomerAuthResponseModel): void {
+  saveSession(
+    data: {
+      token: string;
+      qrToken?: string;
+    } & CustomerAuthResponseModel,
+  ): void {
     localStorage.setItem(TOKEN_KEY, data.token);
     const session: CustomerAuthResponseModel = {
       tableId: data.tableId,
@@ -71,7 +72,7 @@ export class CustomerAuthService {
     if (!token) return null;
     const exp = this.decodeTokenExp(token);
     if (exp === null) return null;
-    return (exp * 1000) - Date.now();
+    return exp * 1000 - Date.now();
   }
 
   private isTokenExpired(token: string): boolean {

@@ -1,14 +1,16 @@
 <app-card-template headerLabel="ย้ายโต๊ะ">
-  <div class="flex items-center gap-4">
+  <div class="flex items-start gap-4">
     <!-- โต๊ะต้นทาง (ซ้าย) -->
     <div
-      class="flex-1 p-4 rounded-xl bg-primary-subtle border border-primary-light"
+      class="flex-1 p-4 rounded-xl bg-primary-subtle border-2 border-primary-light"
     >
       <div class="flex items-center justify-between mb-2">
-        <p class="text-lg font-semibold text-primary uppercase tracking-wide">
+        <p
+          class="text-lg font-semibold text-primary-dark uppercase tracking-wide"
+        >
           ต้นทาง
         </p>
-        <span class="text-surface-sub"
+        <span class="text-surface-sub text-sm font-bold"
           >{{ table.currentGuests ?? 0 }}/{{ table.capacity }} คน</span
         >
       </div>
@@ -29,7 +31,7 @@
     </div>
 
     <!-- ลูกศรย้าย -->
-    <div class="shrink-0">
+    <div class="shrink-0 pt-10">
       <div
         class="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
       >

@@ -1,4 +1,10 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,7 +21,10 @@ import { markFormDirty } from '@app/shared/utils';
 
 const KEY_BTN_BACK = 'back-sub-category';
 const KEY_BTN_SAVE = 'save-sub-category';
-const CATEGORY_CONFIG: Record<number, { label: string; icon: string; svgClass: string }> = {
+const CATEGORY_CONFIG: Record<
+  number,
+  { label: string; icon: string; svgClass: string }
+> = {
   1: { label: 'อาหาร', icon: 'chicken-drumstick', svgClass: 'w-10 h-10' },
   2: { label: 'เครื่องดื่ม', icon: 'drinks-glass', svgClass: 'w-7 h-7' },
   3: { label: 'ของหวาน', icon: 'dessert', svgClass: 'w-10 h-10' },
@@ -37,7 +46,8 @@ export class SubCategoryManageComponent implements OnInit, OnDestroy {
 
   readonly categoryLabel = () => CATEGORY_CONFIG[this.categoryType()]?.label;
   readonly categoryIcon = () => CATEGORY_CONFIG[this.categoryType()]?.icon;
-  readonly categoryIconClass = () => CATEGORY_CONFIG[this.categoryType()]?.svgClass;
+  readonly categoryIconClass = () =>
+    CATEGORY_CONFIG[this.categoryType()]?.svgClass;
 
   private subCategoryId = 0;
 
@@ -59,7 +69,9 @@ export class SubCategoryManageComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initForm();
-    this.subCategoryId = +(this.route.snapshot.paramMap.get('subCategoryId') ?? 0);
+    this.subCategoryId = +(
+      this.route.snapshot.paramMap.get('subCategoryId') ?? 0
+    );
     this.loadSubCategory(this.subCategoryId);
     this.setupBreadcrumbButtons();
   }
@@ -82,7 +94,10 @@ export class SubCategoryManageComponent implements OnInit, OnDestroy {
     return fileId ? `${this.apiConfig.rootUrl}/api/admin/file/${fileId}` : null;
   }
 
-  getPeriodLabel(item: MenuResponseModel): { text: string; colorClass: string } {
+  getPeriodLabel(item: MenuResponseModel): {
+    text: string;
+    colorClass: string;
+  } {
     const p1 = item.isAvailablePeriod1 ?? false;
     const p2 = item.isAvailablePeriod2 ?? false;
     if (p1 && p2) return { text: 'ทั้งวัน', colorClass: 'text-success' };
@@ -112,8 +127,13 @@ export class SubCategoryManageComponent implements OnInit, OnDestroy {
           this.loadMenus(id);
         },
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถโหลดข้อมูลได้' });
-          this.router.navigate(['/menu/categories'], { queryParams: { tab: this.categoryType() } });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถโหลดข้อมูลได้',
+          });
+          this.router.navigate(['/menu/categories'], {
+            queryParams: { tab: this.categoryType() },
+          });
         },
       });
   }
@@ -135,16 +155,24 @@ export class SubCategoryManageComponent implements OnInit, OnDestroy {
     this.menuCategoriesService
       .menuCategoriesUpdateSubCategoryPut({
         subCategoryId: this.subCategoryId,
-        body: { name: this.form.value.name, isActive: this.form.value.isActive },
+        body: {
+          name: this.form.value.name,
+          isActive: this.form.value.isActive,
+        },
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.modalService.commonSuccess();
-          this.router.navigate(['/menu/categories'], { queryParams: { tab: this.categoryType() } });
+          this.router.navigate(['/menu/categories'], {
+            queryParams: { tab: this.categoryType() },
+          });
         },
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถบันทึกข้อมูลได้' });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถบันทึกข้อมูลได้',
+          });
           this.resetSavingState();
         },
       });
@@ -159,7 +187,10 @@ export class SubCategoryManageComponent implements OnInit, OnDestroy {
         label: 'ย้อนกลับ',
         severity: 'secondary',
         variant: 'outlined',
-        callback: () => this.router.navigate(['/menu/categories'], { queryParams: { tab: this.categoryType() } }),
+        callback: () =>
+          this.router.navigate(['/menu/categories'], {
+            queryParams: { tab: this.categoryType() },
+          }),
       },
     });
 

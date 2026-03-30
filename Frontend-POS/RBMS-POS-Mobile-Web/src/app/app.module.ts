@@ -9,7 +9,7 @@ import { SharedModule } from '@shared/shared.module';
 import { providePrimeNG } from 'primeng/config';
 import Lara from '@primeng/themes/lara';
 import { definePreset } from '@primeng/themes';
-import { provideApiConfig } from '@core/providers/api-config.provider';
+import { apiConfigurationProvider } from '@core/providers/api-config.provider';
 import { CustomerTokenInterceptor } from '@core/interceptors/customer-token.interceptor';
 import { LoadingInterceptor } from '@core/interceptors/loading.interceptor';
 
@@ -50,7 +50,7 @@ const RbmsPreset = definePreset(Lara, {
     SharedModule,
   ],
   providers: [
-    provideApiConfig(),
+    apiConfigurationProvider,
     { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: CustomerTokenInterceptor, multi: true },
     providePrimeNG({

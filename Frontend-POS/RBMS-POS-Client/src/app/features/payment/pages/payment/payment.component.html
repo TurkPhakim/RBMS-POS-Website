@@ -109,7 +109,7 @@
         </p>
       </div>
 
-      <!-- 3. ยอดขาย QR Code -->
+      <!-- 3. ยอดขาย QR Payment -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
           class="absolute top-4 right-4 w-14 h-14 rounded-full bg-info flex items-center justify-center"
@@ -120,7 +120,7 @@
             class="text-white"
           ></app-generic-icon>
         </div>
-        <span class="text-lg font-semibold text-info">ยอดขาย QR Code</span>
+        <span class="text-lg font-semibold text-info">ยอดขาย QR Payment</span>
         <p class="text-3xl font-bold tracking-tight text-info mt-3">
           {{ session.totalQrSales | number: "1.2-2" }}
         </p>
@@ -227,7 +227,7 @@
       >
         <ng-template pTemplate="header">
           <tr class="whitespace-nowrap">
-            <th class="w-[200px]">เลขออเดอร์</th>
+            <th class="w-[200px]">หมายเลขออเดอร์</th>
             <th class="w-[200px]">โซน - โต๊ะ</th>
             <th class="w-[120px]">ประเภทลูกค้า</th>
             <th class="w-[120px]">จำนวนรายการ</th>
@@ -245,7 +245,7 @@
             <td class="!text-center whitespace-nowrap">
               โซน{{ order.zoneName }} - โต๊ะ{{ order.tableName }}
             </td>
-            <td class="!text-center">
+            <td class="!text-center whitespace-nowrap">
               {{ order.guestType === "Reserved" ? "ลูกค้าจอง" : "Walk-In" }}
             </td>
             <td class="!text-center">{{ order.itemCount }}</td>
@@ -253,18 +253,20 @@
             <td class="!text-right font-semibold whitespace-nowrap">
               {{ order.subTotal | number: "1.2-2" }} บาท
             </td>
-            <td>{{ order.createdAt | dateFormat: "DATE_TIME" }}</td>
+            <td class="whitespace-nowrap">
+              {{ order.createdAt | dateFormat: "DATE_TIME" }}
+            </td>
             <td class="text-center">
               @if (canPayment) {
                 <div class="flex justify-center">
                   <button
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-success text-white"
                     pTooltip="ชำระเงิน"
                     tooltipPosition="top"
                     (click)="onCheckout(order)"
                   >
                     <app-generic-icon
-                      name="eye"
+                      name="payment-bath"
                       svgClass="w-6 h-6"
                     ></app-generic-icon>
                   </button>
@@ -323,11 +325,11 @@
             <td class="!text-center whitespace-nowrap">
               โซน{{ group.zoneName }} - โต๊ะ{{ group.tableName }}
             </td>
-            <td class="!text-center">
+            <td class="!text-center whitespace-nowrap">
               {{ group.guestType === "Reserved" ? "ลูกค้าจอง" : "Walk-In" }}
             </td>
             <td class="!text-center">{{ group.guestCount }}</td>
-            <td class="!text-center">
+            <td class="!text-center whitespace-nowrap">
               @if (!group.isSplit) {
                 @if (group.payments[0].paymentMethod === "Cash") {
                   <span class="font-semibold text-success">เงินสด</span>
@@ -343,7 +345,9 @@
             <td class="!text-right font-semibold whitespace-nowrap">
               {{ group.totalGrandTotal | number: "1.2-2" }} บาท
             </td>
-            <td>{{ group.paidAt | dateFormat: "DATE_TIME" }}</td>
+            <td class="whitespace-nowrap">
+              {{ group.paidAt | dateFormat: "DATE_TIME" }}
+            </td>
             <td class="text-center">
               <div class="flex justify-center gap-2">
                 <!-- ปุ่มใบเสร็จ (รวม/เดี่ยว) -->
@@ -390,7 +394,10 @@
                     tooltipPosition="top"
                     (click)="onViewSlip(group.slipPayment.slipImageFileId)"
                   >
-                    <app-generic-icon name="receipt" svgClass="w-5 h-5"></app-generic-icon>
+                    <app-generic-icon
+                      name="receipt"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
                   </button>
                 }
               </div>
@@ -409,7 +416,21 @@
       </p-table>
 
       <!-- Popup menu ใบเสร็จแยก -->
-      <p-menu #billMenu [model]="billMenuItems" [popup]="true"></p-menu>
+      <p-menu #billMenu [model]="billMenuItems" [popup]="true">
+        <ng-template pTemplate="item" let-item>
+          <a
+            class="flex items-center gap-2 px-3 py-2 cursor-pointer"
+            (click)="item.command()"
+          >
+            <app-generic-icon
+              name="cloud-download"
+              svgClass="w-5 h-5"
+              class="text-primary"
+            ></app-generic-icon>
+            <span>{{ item.label }}</span>
+          </a>
+        </ng-template>
+      </p-menu>
     </app-section-card>
 
     <!-- Cash Drawer Transactions -->
@@ -437,8 +458,8 @@
           <ng-template pTemplate="header">
             <tr class="whitespace-nowrap">
               <th class="w-[160px]">เวลา</th>
-              <th class="w-[140px] whitespace-nowrap">ประเภท</th>
-              <th class="w-[140px] whitespace-nowrap">จำนวนเงิน</th>
+              <th class="w-[140px]">ประเภท</th>
+              <th class="w-[140px]">จำนวนเงิน</th>
               <th class="w-[280px]">เหตุผล</th>
             </tr>
           </ng-template>

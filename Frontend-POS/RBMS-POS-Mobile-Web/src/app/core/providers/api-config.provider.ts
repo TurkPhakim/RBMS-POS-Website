@@ -1,20 +1,12 @@
-import { APP_INITIALIZER, EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
+import { Provider } from '@angular/core';
 import { ApiConfiguration } from '@core/api/api-configuration';
 import { environment } from '@env/environment';
 
-function initApiConfig(config: ApiConfiguration): () => void {
-  return () => {
+export const apiConfigurationProvider: Provider = {
+  provide: ApiConfiguration,
+  useFactory: (): ApiConfiguration => {
+    const config = new ApiConfiguration();
     config.rootUrl = environment.apiUrl;
-  };
-}
-
-export function provideApiConfig(): EnvironmentProviders {
-  return makeEnvironmentProviders([
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initApiConfig,
-      deps: [ApiConfiguration],
-      multi: true,
-    },
-  ]);
-}
+    return config;
+  },
+};

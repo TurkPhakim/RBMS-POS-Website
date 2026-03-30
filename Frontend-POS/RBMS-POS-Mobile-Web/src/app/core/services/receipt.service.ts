@@ -1,16 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, switchMap, of, map } from 'rxjs';
-
 import { SelfOrderService } from '@core/api/services/self-order.service';
 import { ReceiptDataModel } from '@core/api/models/receipt-data-model';
 import { CustomerAuthService } from './customer-auth.service';
 import { environment } from '../../../environments/environment';
-
 import pdfMake from 'pdfmake/build/pdfmake';
 import { sarabunVfs } from './receipt-fonts';
 
-// pdfmake 0.3.7 — ใช้ addVirtualFileSystem + addFonts (ไม่ใช่ createPdf args 3-4)
+// pdfmake 0.3.7 — ใช้ addVirtualFileSystem + addFonts
 (pdfMake as any).addVirtualFileSystem(sarabunVfs);
 (pdfMake as any).addFonts({
   Sarabun: {
@@ -36,7 +34,9 @@ export class ReceiptService {
 
   downloadReceipt(orderBillId: number): Observable<void> {
     return this.ensureLogo().pipe(
-      switchMap(() => this.selfOrderService.selfOrderGetReceiptGet({ orderBillId })),
+      switchMap(() =>
+        this.selfOrderService.selfOrderGetReceiptGet({ orderBillId }),
+      ),
       map((res) => {
         if (res.result) {
           this.generatePdf(res.result);
@@ -47,7 +47,9 @@ export class ReceiptService {
 
   downloadConsolidatedReceipt(): Observable<void> {
     return this.ensureLogo().pipe(
-      switchMap(() => this.selfOrderService.selfOrderGetConsolidatedReceiptGet()),
+      switchMap(() =>
+        this.selfOrderService.selfOrderGetConsolidatedReceiptGet(),
+      ),
       map((res) => {
         if (res.result) {
           this.generatePdf(res.result);
@@ -92,9 +94,9 @@ export class ReceiptService {
 
   private generatePdf(data: ReceiptDataModel): void {
     const docDefinition = this.buildDocDefinition(data);
-    pdfMake.createPdf(docDefinition as any).download(
-      `receipt-${data.billNumber ?? data.paymentId}.pdf`,
-    );
+    pdfMake
+      .createPdf(docDefinition as any)
+      .download(`receipt-${data.billNumber ?? data.paymentId}.pdf`);
   }
 
   private buildDocDefinition(d: ReceiptDataModel): object {
@@ -104,16 +106,7 @@ export class ReceiptService {
     // ═══════════════ HEADER ═══════════════
     content.push(this.thickLine(W));
 
-    if (d.receiptHeaderText) {
-      content.push({
-        text: d.receiptHeaderText,
-        fontSize: 7,
-        alignment: 'center',
-        color: '#555',
-        margin: [0, 4, 0, 2],
-      });
-    }
-
+    // Logo
     if (this.logoBase64) {
       content.push({
         image: this.logoBase64,
@@ -123,6 +116,7 @@ export class ReceiptService {
       });
     }
 
+    // Shop name (Thai)
     content.push({
       text: d.shopNameThai ?? d.shopNameEnglish ?? '',
       fontSize: 16,
@@ -131,28 +125,64 @@ export class ReceiptService {
       margin: [0, 4, 0, 0],
     });
 
+    // Shop name (English)
     if (d.shopNameEnglish && d.shopNameThai) {
       content.push({
         text: d.shopNameEnglish,
-        fontSize: 9,
+        fontSize: 10,
         alignment: 'center',
         color: '#555',
         margin: [0, 1, 0, 0],
       });
     }
 
-    const contactParts: string[] = [];
-    if (d.address) contactParts.push(d.address);
-    if (d.phoneNumber) contactParts.push(`โทร ${d.phoneNumber}`);
-    if (d.taxId) contactParts.push(`เลขผู้เสียภาษี ${d.taxId}`);
-    if (contactParts.length > 0) {
+    // Custom header text (แยกบรรทัด)
+    if (d.receiptHeaderText) {
       content.push({
-        text: contactParts.join('\n'),
+        text: d.receiptHeaderText,
+        fontSize: 7,
+        alignment: 'center',
+        color: '#555',
+        lineHeight: 1.3,
+        margin: [0, 2, 0, 0],
+      });
+    }
+
+    // Company name (ถ้ามี) — ไทย - อังกฤษ
+    const companyName = d.companyNameThai
+      ? d.companyNameEnglish
+        ? `${d.companyNameThai} - ${d.companyNameEnglish}`
+        : d.companyNameThai
+      : d.companyNameEnglish ?? null;
+    if (companyName) {
+      content.push({
+        text: companyName,
+        fontSize: 7,
+        bold: true,
+        alignment: 'center',
+        margin: [0, 2, 0, 0],
+      });
+    }
+
+    // Phone
+    if (d.phoneNumber) {
+      content.push({
+        text: `เบอร์โทรศัพท์: ${this.formatPhone(d.phoneNumber)}`,
         fontSize: 7,
         alignment: 'center',
         color: '#666',
-        lineHeight: 1.3,
-        margin: [0, 3, 0, 4],
+        margin: [0, 2, 0, 0],
+      });
+    }
+
+    // TaxId
+    if (d.taxId) {
+      content.push({
+        text: `เลขประจำตัวผู้เสียภาษี: ${this.formatTaxId(d.taxId)}`,
+        fontSize: 7,
+        alignment: 'center',
+        color: '#666',
+        margin: [0, 2, 0, 0],
       });
     }
 
@@ -160,43 +190,91 @@ export class ReceiptService {
 
     // ═══════════════ BILL INFO ═══════════════
     if (d.isConsolidated) {
-      content.push(this.infoRow('ใบเสร็จรวม', d.orderNumber ?? '-'));
+      // แถว 1: ออเดอร์ที่ + วันที่
+      content.push(
+        this.infoRow(
+          'ออเดอร์ที่',
+          d.orderNumber ?? '-',
+          'วันที่',
+          d.paidAt ? this.formatDate(d.paidAt) : '-',
+        ),
+      );
+
+      // แถว 2: โซน-โต๊ะ + แคชเชียร์
+      const tableDisplay = d.tableName
+        ? `${d.zoneName ?? ''} - ${d.tableName}${d.guestCount ? ` (${d.guestCount} คน)` : ''}`
+        : '-';
+      content.push(
+        this.infoRow(
+          'โซน-โต๊ะ',
+          tableDisplay,
+          'แคชเชียร์',
+          d.cashierName ?? '-',
+        ),
+      );
     } else {
       const paymentMethodText =
-        d.paymentMethod === 'Cash' ? 'เงินสด' :
-        d.paymentMethod === 'QrCode' ? 'QR Code' :
-        (d.paymentMethod ?? '-');
+        d.paymentMethod === 'Cash'
+          ? 'เงินสด'
+          : d.paymentMethod === 'QrPayment'
+            ? 'QR-Payment'
+            : (d.paymentMethod ?? '-');
 
-      content.push(this.infoRow('บิล', d.billNumber ?? '-', 'ออเดอร์', d.orderNumber ?? '-'));
-      content.push(this.infoRow('โต๊ะ', d.tableName ?? '-', 'ชำระ', paymentMethodText));
+      // แถว 1: บิลเลขที่ + วันที่
+      content.push(
+        this.infoRow(
+          'บิลเลขที่',
+          d.billNumber ?? '-',
+          'วันที่',
+          d.paidAt ? this.formatDate(d.paidAt) : '-',
+        ),
+      );
 
-      if (d.paidAt) {
-        content.push(this.infoRow('วันที่', this.formatDate(d.paidAt)));
-      }
+      // แถว 2: ออเดอร์ + โซน-โต๊ะ
+      const tableDisplay = d.tableName
+        ? `${d.zoneName ?? ''} - ${d.tableName}${d.guestCount ? ` (${d.guestCount} คน)` : ''}`
+        : '-';
+      content.push(
+        this.infoRow(
+          'ออเดอร์ที่',
+          d.orderNumber ?? '-',
+          'โซน-โต๊ะ',
+          tableDisplay,
+        ),
+      );
 
-      if (d.cashierName) {
-        content.push(this.infoRow('แคชเชียร์', d.cashierName));
-      }
+      // แถว 3: ชำระด้วย + แคชเชียร์
+      content.push(
+        this.infoRow(
+          'ชำระด้วย',
+          paymentMethodText,
+          'แคชเชียร์',
+          d.cashierName ?? '-',
+        ),
+      );
     }
 
     // ═══════════════ ITEMS / SPLIT INFO ═══════════════
     content.push(this.thinLine(W));
 
     if (d.billType === 'ByAmount' && d.splitCount && d.splitCount > 0) {
-      // หารเท่า — ไม่แสดงตารางรายการ แสดงข้อความแทน
+      // หารเท่า — แสดงรายการออเดอร์ + ยอดรวมก่อนหาร + ข้อความหารเท่า
+      this.pushItemsTable(content, d);
+      content.push(this.thinLine(W));
+      content.push(this.summaryRow('ยอดรวมก่อนหาร', this.fmt(d.originalSubTotal)));
       content.push({
         text: `หารเท่า ${d.splitCount} ส่วน`,
         fontSize: 12,
         bold: true,
         alignment: 'center',
-        margin: [0, 8, 0, 2],
+        margin: [0, 4, 0, 2],
       });
       content.push({
         text: `ส่วนที่ ${d.splitIndex} จาก ${d.splitCount}`,
         fontSize: 10,
         alignment: 'center',
         color: '#555',
-        margin: [0, 0, 0, 8],
+        margin: [0, 0, 0, 4],
       });
     } else {
       // Full / ByItem / Consolidated — แสดงตารางรายการ
@@ -206,24 +284,34 @@ export class ReceiptService {
     // ═══════════════ SUMMARY ═══════════════
     content.push(this.thinLine(W));
 
-    content.push(this.summaryRow('ยอดรวมอาหาร', this.fmt(d.subTotal)));
+    const subTotalLabel =
+      d.billType === 'ByAmount' && d.splitCount && d.splitCount > 0
+        ? 'ยอดต่อส่วน'
+        : 'ยอดรวมรายการ';
+    content.push(this.summaryRow(subTotalLabel, this.fmt(d.subTotal)));
 
     if (d.totalDiscountAmount && d.totalDiscountAmount > 0) {
-      content.push(this.summaryRow('ส่วนลด', '-' + this.fmt(d.totalDiscountAmount)));
+      content.push(
+        this.summaryRow('ส่วนลด', '-' + this.fmt(d.totalDiscountAmount)),
+      );
     }
 
     if (d.serviceChargeAmount && d.serviceChargeAmount > 0) {
-      content.push(this.summaryRow(
-        `ค่าบริการ (${this.fmt(d.serviceChargeRate)}%)`,
-        this.fmt(d.serviceChargeAmount),
-      ));
+      content.push(
+        this.summaryRow(
+          `ค่าบริการ (${this.fmt(d.serviceChargeRate)}%)`,
+          this.fmt(d.serviceChargeAmount),
+        ),
+      );
     }
 
     if (d.vatAmount && d.vatAmount > 0) {
-      content.push(this.summaryRow(
-        `ภาษีมูลค่าเพิ่ม (${this.fmt(d.vatRate)}%)`,
-        this.fmt(d.vatAmount),
-      ));
+      content.push(
+        this.summaryRow(
+          `ภาษีมูลค่าเพิ่ม (${this.fmt(d.vatRate)}%)`,
+          this.fmt(d.vatAmount),
+        ),
+      );
     }
 
     // ═══════════════ GRAND TOTAL ═══════════════
@@ -232,7 +320,13 @@ export class ReceiptService {
     content.push({
       columns: [
         { text: 'ยอดชำระสุทธิ', fontSize: 14, bold: true, width: '*' },
-        { text: this.fmt(d.grandTotal), fontSize: 14, bold: true, alignment: 'right', width: 'auto' },
+        {
+          text: this.fmt(d.grandTotal),
+          fontSize: 14,
+          bold: true,
+          alignment: 'right',
+          width: 'auto',
+        },
       ],
       margin: [0, 4, 0, 4],
     });
@@ -242,22 +336,55 @@ export class ReceiptService {
     // ═══════════════ PAYMENT INFO ═══════════════
     if (d.isConsolidated && d.payments && d.payments.length > 0) {
       // Consolidated — แสดงรายละเอียดการชำระแต่ละบิล
+      const allEqual =
+        d.payments.length > 1 &&
+        d.payments.every((p) => p.amountPaid === d.payments![0].amountPaid);
+      const splitLabel = allEqual
+        ? `หารเท่า ${d.payments.length} บิล`
+        : `แยก ${d.payments.length} บิล`;
+
       content.push({
-        text: 'รายละเอียดการชำระเงิน',
+        text: `รายละเอียดการชำระเงิน (${splitLabel})`,
         fontSize: 9,
         bold: true,
         margin: [0, 2, 0, 4],
       });
+
+      const payRows: any[][] = [];
+      payRows.push([
+        { text: 'หมายเลขบิล', fontSize: 7, bold: true },
+        { text: 'ชำระด้วย', fontSize: 7, bold: true, alignment: 'center' },
+        { text: 'จำนวนเงิน', fontSize: 7, bold: true, alignment: 'right' },
+      ]);
       d.payments.forEach((p) => {
-        const method = p.paymentMethod === 'Cash' ? 'เงินสด' :
-          p.paymentMethod === 'QrCode' ? 'QR Code' : (p.paymentMethod ?? '-');
-        content.push({
-          columns: [
-            { text: `${p.billNumber}  ${method}`, fontSize: 8, width: '*' },
-            { text: this.fmt(p.amountPaid), fontSize: 8, alignment: 'right', width: 'auto' },
-          ],
-          margin: [0, 1, 0, 1],
-        });
+        const method =
+          p.paymentMethod === 'Cash'
+            ? 'เงินสด'
+            : p.paymentMethod === 'QrPayment'
+              ? 'QR-Payment'
+              : (p.paymentMethod ?? '-');
+        payRows.push([
+          { text: p.billNumber ?? '-', fontSize: 8 },
+          { text: method, fontSize: 8, alignment: 'center' },
+          { text: this.fmt(p.amountPaid), fontSize: 8, alignment: 'right' },
+        ]);
+      });
+      content.push({
+        table: {
+          headerRows: 1,
+          widths: ['*', 50, 55],
+          body: payRows,
+        },
+        layout: {
+          hLineWidth: (i: number) => (i === 1 ? 0.5 : 0),
+          vLineWidth: () => 0,
+          hLineColor: () => '#bbb',
+          paddingLeft: () => 1,
+          paddingRight: () => 1,
+          paddingTop: () => 2,
+          paddingBottom: () => 2,
+        },
+        margin: [0, 0, 0, 2],
       });
     } else if (!d.isConsolidated) {
       content.push(this.summaryRow('รับเงิน', this.fmt(d.amountReceived)));
@@ -266,7 +393,13 @@ export class ReceiptService {
         content.push({
           columns: [
             { text: 'เงินทอน', fontSize: 10, bold: true, width: '*' },
-            { text: this.fmt(d.changeAmount), fontSize: 10, bold: true, alignment: 'right', width: 'auto' },
+            {
+              text: this.fmt(d.changeAmount),
+              fontSize: 10,
+              bold: true,
+              alignment: 'right',
+              width: 'auto',
+            },
           ],
           margin: [0, 1, 0, 1],
         });
@@ -276,28 +409,36 @@ export class ReceiptService {
     // ═══════════════ FOOTER ═══════════════
     content.push(this.thinLine(W));
 
-    if (d.receiptFooterText) {
+    // Contact info (ถ้ามี)
+    const contactLines: string[] = [];
+    if (d.shopEmail) contactLines.push(`Email: ${d.shopEmail}`);
+    if (d.facebook) contactLines.push(`Facebook: ${d.facebook}`);
+    if (d.instagram) contactLines.push(`Instagram: ${d.instagram}`);
+    if (d.lineId) contactLines.push(`LINE: ${d.lineId}`);
+    if (d.website) contactLines.push(d.website);
+    if (contactLines.length > 0) {
       content.push({
-        text: d.receiptFooterText,
-        fontSize: 7,
-        alignment: 'center',
-        color: '#666',
-        margin: [0, 3, 0, 0],
-      });
-    }
-
-    // Shop address + phone (footer)
-    const footerContact: string[] = [];
-    if (d.address) footerContact.push(d.address);
-    if (d.phoneNumber) footerContact.push(`โทร ${d.phoneNumber}`);
-    if (footerContact.length > 0) {
-      content.push({
-        text: footerContact.join('\n'),
+        text: contactLines.join('\n'),
         fontSize: 7,
         alignment: 'center',
         color: '#666',
         lineHeight: 1.3,
         margin: [0, 3, 0, 0],
+      });
+    }
+
+    // Shop address + footer text
+    const footerLines: string[] = [];
+    if (d.address) footerLines.push(d.address);
+    if (d.receiptFooterText) footerLines.push(d.receiptFooterText);
+    if (footerLines.length > 0) {
+      content.push({
+        text: footerLines.join('\n'),
+        fontSize: 7,
+        alignment: 'center',
+        color: '#666',
+        lineHeight: 1.3,
+        margin: [0, 2, 0, 0],
       });
     }
 
@@ -323,6 +464,7 @@ export class ReceiptService {
     const items = d.items ?? [];
     const itemRows: any[][] = [];
 
+    // Table header
     itemRows.push([
       { text: 'รายการ', fontSize: 8, bold: true },
       { text: 'จำนวน', fontSize: 8, bold: true, alignment: 'center' },
@@ -346,7 +488,9 @@ export class ReceiptService {
             color: '#666',
             colSpan: 4,
           },
-          {}, {}, {},
+          {},
+          {},
+          {},
         ]);
       }
 
@@ -359,7 +503,9 @@ export class ReceiptService {
             color: '#888',
             colSpan: 4,
           },
-          {}, {}, {},
+          {},
+          {},
+          {},
         ]);
       }
     });
@@ -387,32 +533,63 @@ export class ReceiptService {
 
   private thickLine(w: number): object {
     return {
-      canvas: [{ type: 'line', x1: 0, y1: 0, x2: w, y2: 0, lineWidth: 1.2, lineColor: '#333' }],
-      margin: [0, 2, 0, 2],
+      canvas: [
+        {
+          type: 'line',
+          x1: 0,
+          y1: 0,
+          x2: w,
+          y2: 0,
+          lineWidth: 1.2,
+          lineColor: '#333',
+        },
+      ],
+      margin: [0, 4, 0, 4],
     };
   }
 
   private thinLine(w: number): object {
     return {
-      canvas: [{ type: 'line', x1: 0, y1: 0, x2: w, y2: 0, dash: { length: 3, space: 2 }, lineColor: '#aaa' }],
-      margin: [0, 3, 0, 3],
+      canvas: [
+        {
+          type: 'line',
+          x1: 0,
+          y1: 0,
+          x2: w,
+          y2: 0,
+          dash: { length: 3, space: 2 },
+          lineColor: '#aaa',
+        },
+      ],
+      margin: [0, 4, 0, 4],
     };
   }
 
-  private infoRow(label1: string, value1: string, label2?: string, value2?: string): object {
+  private infoRow(
+    label1: string,
+    value1: string,
+    label2?: string,
+    value2?: string,
+  ): object {
+    const labelValue = (label: string, value: string) => ({
+      text: [
+        { text: `${label}: `, bold: true, fontSize: 8 },
+        { text: value, fontSize: 8 },
+      ],
+    });
+
     if (label2 && value2) {
       return {
         columns: [
-          { text: `${label1}: ${value1}`, fontSize: 8, width: '*' },
-          { text: `${label2}: ${value2}`, fontSize: 8, width: 'auto' },
+          { ...labelValue(label1, value1), width: '*' },
+          { ...labelValue(label2, value2), width: 'auto' },
         ],
         margin: [0, 1, 0, 1],
       };
     }
     return {
-      text: `${label1}: ${value1}`,
-      fontSize: 8,
-      margin: [0, 1, 0, 1],
+      ...labelValue(label1, value1),
+      margin: [0, 3, 0, 3],
     };
   }
 
@@ -441,6 +618,25 @@ export class ReceiptService {
     const yyyy = d.getFullYear();
     const hh = String(d.getHours()).padStart(2, '0');
     const min = String(d.getMinutes()).padStart(2, '0');
-    return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+    return `${dd}/${mm}/${yyyy} - ${hh}:${min}`;
+  }
+
+  private formatPhone(phone: string): string {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    if (digits.length === 9) {
+      return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5)}`;
+    }
+    return phone;
+  }
+
+  private formatTaxId(taxId: string): string {
+    const digits = taxId.replace(/\D/g, '');
+    if (digits.length === 13) {
+      return `${digits[0]}-${digits.slice(1, 5)}-${digits.slice(5, 10)}-${digits.slice(10, 12)}-${digits[12]}`;
+    }
+    return taxId;
   }
 }

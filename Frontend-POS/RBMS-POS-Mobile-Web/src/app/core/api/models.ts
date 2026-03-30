@@ -59,6 +59,7 @@ export type { CustomerOrderTrackingResponseModel } from './models/customer-order
 export type { CustomerOrderTrackingResponseModelBaseResponseModel } from './models/customer-order-tracking-response-model-base-response-model';
 export type { CustomerSubCategoryModel } from './models/customer-sub-category-model';
 export type { CustomerSubmitOrderRequestModel } from './models/customer-submit-order-request-model';
+export type { CustomerTrackingBillModel } from './models/customer-tracking-bill-model';
 export type { CustomerTrackingItemModel } from './models/customer-tracking-item-model';
 export type { CustomerTrackingOptionModel } from './models/customer-tracking-option-model';
 export type { DailyBreakdownModel } from './models/daily-breakdown-model';

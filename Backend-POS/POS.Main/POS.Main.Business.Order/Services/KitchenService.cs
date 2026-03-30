@@ -185,9 +185,15 @@ public class KitchenService : IKitchenService
         {
             var firstItem = group.First();
             var menuNames = string.Join(", ", group.Select(i => i.MenuNameThai));
-            var categoryName = firstItem.Menu.SubCategory?.Name;
-            var title = categoryName != null
-                ? $"ออเดอร์พร้อมเสิร์ฟ — {categoryName}"
+            var categoryLabel = firstItem.CategoryType switch
+            {
+                (int)EMenuCategory.Food => "อาหาร",
+                (int)EMenuCategory.Beverage => "เครื่องดื่ม",
+                (int)EMenuCategory.Dessert => "ของหวาน",
+                _ => null
+            };
+            var title = categoryLabel != null
+                ? $"ออเดอร์พร้อมเสิร์ฟ — {categoryLabel}"
                 : "ออเดอร์พร้อมเสิร์ฟ";
             await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
             {

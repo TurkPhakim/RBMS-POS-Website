@@ -108,17 +108,105 @@
         }
       </div>
 
-      <!-- Total -->
-      <div
-        class="border-t-2 px-5 py-4 flex justify-between items-center"
-        [style.backgroundColor]="'rgba(234, 118, 0, 0.05)'"
-        [style.borderColor]="'rgba(234, 118, 0, 0.3)'"
-      >
-        <span class="font-bold text-lg">ยอดรวม</span>
-        <span class="text-2xl font-extrabold text-primary"
-          >{{ subTotal() | number: "1.0-0" }} บาท</span
+      <!-- Bill Summary -->
+      @if (showBillSummary()) {
+        <!-- Bill Tabs (เฉพาะหลายบิล) -->
+        @if (hasMultipleBills()) {
+          <div class="flex items-center gap-2 px-4 py-2.5 overflow-x-auto border-t border-surface-border">
+            @for (b of bills(); track b.orderBillId; let i = $index) {
+              <button
+                type="button"
+                class="px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap flex items-center gap-1.5 border transition-colors"
+                [class]="i === selectedBillIndex()
+                  ? (b.status === 'Paid'
+                    ? 'bg-success text-white border-success'
+                    : 'bg-primary text-white border-primary')
+                  : (b.status === 'Paid'
+                    ? 'bg-success-bg text-success border-success-bg'
+                    : 'bg-white text-surface-sub border-surface-border')"
+                (click)="onSelectBill(i)"
+              >
+                @if (b.status === 'Paid') {
+                  <i class="pi pi-check-circle text-xs"></i>
+                }
+                <span>บิลที่ {{ i + 1 }}:</span>
+                <span class="font-bold">{{ b.grandTotal | number:'1.0-0' }} บาท</span>
+              </button>
+            }
+          </div>
+        }
+
+        @if (selectedBill(); as bill) {
+          <!-- Status Badge (เฉพาะหลายบิล) -->
+          @if (hasMultipleBills()) {
+            <div class="px-5 pt-3">
+              @if (bill.status === 'Paid') {
+                <div class="flex items-center gap-2 text-sm font-semibold text-success bg-success-bg rounded-lg px-3 py-2">
+                  <app-generic-icon name="check-in" svgClass="w-4 h-4" class="text-success"></app-generic-icon>
+                  ชำระแล้ว
+                </div>
+              } @else {
+                <div class="flex items-center gap-2 text-sm font-semibold text-warning-dark bg-warning-bg rounded-lg px-3 py-2">
+                  <i class="pi pi-clock text-xs"></i>
+                  รอชำระเงิน
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Charges Detail -->
+          <div class="px-5 py-3 space-y-1.5"
+               [class.border-t]="!hasMultipleBills()"
+               [class.border-surface-border]="!hasMultipleBills()">
+            <div class="flex justify-between text-sm">
+              <span>ยอดรวมรายการ</span>
+              <span class="font-semibold">{{ bill.subTotal | number:'1.2-2' }} บาท</span>
+            </div>
+            @if (bill.serviceChargeAmount) {
+              <div class="flex justify-between text-sm text-surface-sub">
+                <span>ค่าบริการ</span>
+                <span>{{ bill.serviceChargeAmount | number:'1.2-2' }} บาท</span>
+              </div>
+            }
+            @if (bill.vatAmount) {
+              <div class="flex justify-between text-sm text-surface-sub">
+                <span>ภาษีมูลค่าเพิ่ม</span>
+                <span>{{ bill.vatAmount | number:'1.2-2' }} บาท</span>
+              </div>
+            }
+            @if (bill.totalDiscountAmount) {
+              <div class="flex justify-between text-sm text-success">
+                <span>ส่วนลด</span>
+                <span>-{{ bill.totalDiscountAmount | number:'1.2-2' }} บาท</span>
+              </div>
+            }
+          </div>
+
+          <!-- Grand Total -->
+          <div
+            class="border-t-2 px-5 py-4 flex justify-between items-center"
+            [style.backgroundColor]="'rgba(234, 118, 0, 0.05)'"
+            [style.borderColor]="'rgba(234, 118, 0, 0.3)'"
+          >
+            <span class="font-bold text-base">ยอดรวมสุทธิ</span>
+            <span class="text-xl font-extrabold text-primary"
+              >{{ bill.grandTotal | number:'1.2-2' }} บาท</span
+            >
+          </div>
+        }
+      } @else {
+        <!-- Original SubTotal (ไม่มีบิล) -->
+        <div
+          class="border-t-2 px-5 py-4 flex justify-between items-center"
+          [style.backgroundColor]="'rgba(234, 118, 0, 0.05)'"
+          [style.borderColor]="'rgba(234, 118, 0, 0.3)'"
         >
-      </div>
+          <span class="font-bold text-lg">ยอดรวม</span>
+          <span class="text-2xl font-extrabold text-primary"
+            >{{ subTotal() | number: "1.0-0" }} บาท</span
+          >
+        </div>
+      }
     </div>
   </div>
 } @else {

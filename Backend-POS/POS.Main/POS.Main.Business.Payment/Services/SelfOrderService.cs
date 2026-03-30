@@ -431,6 +431,7 @@ public class SelfOrderService : ISelfOrderService
                 .ThenInclude(i => i.SourceTable)
             .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided))
                 .ThenInclude(i => i.OrderItemOptions)
+            .Include(o => o.OrderBills)
             .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value, ct);
 
         if (order == null)
@@ -456,6 +457,7 @@ public class SelfOrderService : ISelfOrderService
         {
             OrderId = order.OrderId,
             OrderNumber = order.OrderNumber,
+            OrderStatus = order.Status.ToString(),
             SubTotal = order.SubTotal,
             Items = order.OrderItems
                 .OrderByDescending(i => i.CreatedAt)
@@ -475,6 +477,24 @@ public class SelfOrderService : ISelfOrderService
                         OptionItemName = o.OptionItemName,
                         AdditionalPrice = o.AdditionalPrice
                     }).ToList()
+                }).ToList(),
+            Bills = order.OrderBills
+                .Where(b => !b.DeleteFlag)
+                .OrderBy(b => b.SplitIndex)
+                .ThenBy(b => b.OrderBillId)
+                .Select(b => new CustomerTrackingBillModel
+                {
+                    OrderBillId = b.OrderBillId,
+                    BillNumber = b.BillNumber,
+                    SplitIndex = b.SplitIndex,
+                    SplitCount = b.SplitCount,
+                    BillType = b.BillType.ToString(),
+                    SubTotal = b.SubTotal,
+                    ServiceChargeAmount = b.ServiceChargeAmount,
+                    VatAmount = b.VatAmount,
+                    TotalDiscountAmount = b.TotalDiscountAmount,
+                    GrandTotal = b.GrandTotal,
+                    Status = b.Status.ToString(),
                 }).ToList()
         };
     }

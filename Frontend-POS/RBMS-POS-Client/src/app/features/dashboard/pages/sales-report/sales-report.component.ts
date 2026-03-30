@@ -6,6 +6,16 @@ import { DailyBreakdownModel } from '@app/core/api/models/daily-breakdown-model'
 import { ModalService } from '@app/core/services/modal.service';
 import { ChartData, ChartOptions } from 'chart.js';
 
+const USE_MOCK = true;
+
+const CATEGORY_CONFIG: Record<number, { iconName: string; color: string; bgStyle: string; borderColor: string }> = {
+  1: { iconName: 'food', color: 'text-cat-food', bgStyle: 'rgba(249, 115, 22, 0.1)', borderColor: 'border-cat-food' },
+  2: { iconName: 'drinks-glass', color: 'text-cat-drink', bgStyle: 'rgba(14, 165, 233, 0.1)', borderColor: 'border-cat-drink' },
+  3: { iconName: 'dessert', color: 'text-cat-dessert', bgStyle: 'rgba(236, 72, 153, 0.1)', borderColor: 'border-cat-dessert' },
+};
+
+const PIE_COLORS: Record<number, string> = { 1: '#f97316', 2: '#0EA5E9', 3: '#EC4899' };
+
 @Component({
   selector: 'app-sales-report',
   standalone: false,
@@ -19,7 +29,6 @@ export class SalesReportComponent implements OnInit {
   minEndDate = signal<Date | null>(null);
   activePreset: string | null = 'today';
 
-  // Pie chart
   categoryPieData = signal<ChartData<'pie'>>({ labels: [], datasets: [] });
   categoryPieOptions: ChartOptions<'pie'> = {
     responsive: true,
@@ -94,38 +103,51 @@ export class SalesReportComponent implements OnInit {
       {
         label: 'ยอดขาย',
         value: this.formatCurrency(s?.totalSales ?? 0),
-        icon: 'pi pi-dollar',
+        icon: 'coin',
+        accentColor: 'primary' as const,
       },
       {
         label: 'จำนวนออเดอร์',
         value: (s?.orderCount ?? 0).toLocaleString(),
-        icon: 'pi pi-shopping-cart',
+        icon: 'bill-rastaurant',
+        accentColor: 'info' as const,
       },
       {
         label: 'จำนวนลูกค้า',
         value: (s?.guestCount ?? 0).toLocaleString(),
-        icon: 'pi pi-users',
+        icon: 'people-rate',
+        accentColor: 'success' as const,
       },
       {
         label: 'เฉลี่ย/ออเดอร์',
         value: this.formatCurrency(s?.averagePerOrder ?? 0),
-        icon: 'pi pi-chart-bar',
+        icon: 'cash-inflow',
+        accentColor: 'warning' as const,
       },
     ];
   }
 
   get kitchenItems() {
-    const colors: Record<number, string> = { 1: 'bg-primary', 2: 'bg-success', 3: 'bg-warning' };
-    return (this.report()?.kitchenBreakdown ?? []).map((k) => ({
-      categoryName: k.categoryName ?? '',
-      itemCount: k.itemCount ?? 0,
-      percentage: k.percentage ?? 0,
-      barColor: colors[k.categoryType ?? 0] ?? 'bg-surface-sub',
-    }));
+    return (this.report()?.kitchenBreakdown ?? []).map((k) => {
+      const c = CATEGORY_CONFIG[k.categoryType ?? 0] ?? CATEGORY_CONFIG[1];
+      return {
+        categoryName: k.categoryName ?? '',
+        itemCount: k.itemCount ?? 0,
+        percentage: k.percentage ?? 0,
+        iconName: c.iconName,
+        color: c.color,
+        bgStyle: c.bgStyle,
+        borderColor: c.borderColor,
+      };
+    });
   }
 
   get dailyBreakdown(): DailyBreakdownModel[] {
     return this.report()?.dailyBreakdown ?? [];
+  }
+
+  get hasPieData(): boolean {
+    return (this.report()?.categoryBreakdown?.length ?? 0) > 0;
   }
 
   formatDate(dateStr: string): string {
@@ -140,6 +162,10 @@ export class SalesReportComponent implements OnInit {
   // ─── Private ──────────────────────────────────────────
 
   private loadReport(): void {
+    if (USE_MOCK) {
+      this.loadMockReport();
+      return;
+    }
     const from = this.formatDateParam(this.dateFrom);
     const to = this.formatDateParam(this.dateTo);
     this.dashboardService
@@ -155,13 +181,12 @@ export class SalesReportComponent implements OnInit {
 
   private updatePieChart(): void {
     const cats = this.report()?.categoryBreakdown ?? [];
-    const colors = ['#f97316', '#14b8a6', '#fbbf24'];
     this.categoryPieData.set({
       labels: cats.map((c) => c.categoryName ?? ''),
       datasets: [
         {
           data: cats.map((c) => c.totalSales ?? 0),
-          backgroundColor: cats.map((_, i) => colors[i] ?? '#94a3b8'),
+          backgroundColor: cats.map((c) => PIE_COLORS[c.categoryType ?? 0] ?? '#94a3b8'),
         },
       ],
     });
@@ -170,6 +195,48 @@ export class SalesReportComponent implements OnInit {
   private formatDateParam(date: Date): string {
     return date.toISOString().split('T')[0];
   }
+
+  // ─── Mock ─────────────────────────────────────────────
+
+  private loadMockReport(): void {
+    const today = new Date();
+    const daily: DailyBreakdownModel[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const sales = 20000 + Math.floor(Math.random() * 25000);
+      const orders = 30 + Math.floor(Math.random() * 40);
+      const guests = orders * 2 + Math.floor(Math.random() * 30);
+      daily.push({
+        date: d.toISOString().split('T')[0],
+        totalSales: sales,
+        orderCount: orders,
+        guestCount: guests,
+        averagePerOrder: Math.round((sales / orders) * 100) / 100,
+      });
+    }
+
+    this.report.set({
+      summary: {
+        totalSales: 245000,
+        orderCount: 387,
+        guestCount: 892,
+        averagePerOrder: 633.07,
+      },
+      kitchenBreakdown: [
+        { categoryName: 'อาหาร', categoryType: 1, itemCount: 527, percentage: 33.8 },
+        { categoryName: 'เครื่องดื่ม', categoryType: 2, itemCount: 711, percentage: 45.6 },
+        { categoryName: 'ของหวาน', categoryType: 3, itemCount: 320, percentage: 20.6 },
+      ],
+      categoryBreakdown: [
+        { categoryName: 'อาหาร', categoryType: 1, totalSales: 98000, percentage: 40 },
+        { categoryName: 'เครื่องดื่ม', categoryType: 2, totalSales: 105000, percentage: 42.9 },
+        { categoryName: 'ของหวาน', categoryType: 3, totalSales: 42000, percentage: 17.1 },
+      ],
+      dailyBreakdown: daily,
+    });
+    this.updatePieChart();
+  }
 }
 
 // ─── Date helpers ──────────────────────────────────────
@@ -177,7 +244,7 @@ export class SalesReportComponent implements OnInit {
 function startOfWeek(d: Date): Date {
   const result = new Date(d);
   const day = result.getDay();
-  const diff = day === 0 ? 6 : day - 1; // Monday = start
+  const diff = day === 0 ? 6 : day - 1;
   result.setDate(result.getDate() - diff);
   return result;
 }

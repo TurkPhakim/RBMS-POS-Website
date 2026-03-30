@@ -4,10 +4,9 @@ import { CustomerAuthService } from '../services/customer-auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class CustomerAuthGuard implements CanActivate {
-
   constructor(
     private customerAuth: CustomerAuthService,
-    private router: Router
+    private router: Router,
   ) {}
 
   canActivate(): boolean {

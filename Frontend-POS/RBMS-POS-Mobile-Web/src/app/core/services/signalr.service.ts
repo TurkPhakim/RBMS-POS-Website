@@ -28,23 +28,23 @@ export class SignalRService {
 
     // Listen for events that should trigger a refresh
     this.connection.on('RefreshOrders', () => {
-      this.refreshOrders.update(v => v + 1);
+      this.refreshOrders.update((v) => v + 1);
     });
 
     this.connection.on('NewOrderItems', () => {
-      this.refreshOrders.update(v => v + 1);
+      this.refreshOrders.update((v) => v + 1);
     });
 
     this.connection.on('ItemStatusChanged', () => {
-      this.refreshOrders.update(v => v + 1);
+      this.refreshOrders.update((v) => v + 1);
     });
 
     this.connection.on('BillPrepared', () => {
-      this.refreshOrders.update(v => v + 1);
+      this.refreshOrders.update((v) => v + 1);
     });
 
     this.connection.on('PaymentCompleted', () => {
-      this.refreshOrders.update(v => v + 1);
+      this.refreshOrders.update((v) => v + 1);
     });
 
     try {
@@ -70,7 +70,9 @@ export class SignalRService {
     if (this.currentGroup) {
       try {
         await this.connection.invoke('LeaveGroup', this.currentGroup);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       this.currentGroup = null;
     }
 

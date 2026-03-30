@@ -73,15 +73,32 @@ module.exports = {
           food: {
             DEFAULT: "var(--color-cat-food)",        // #f97316 — ส้ม
             dark: "var(--color-cat-food-dark)",       // #ea580c
+            light: "var(--color-cat-food-light)",     // #fed7aa — border อ่อน
+            bg: "var(--color-cat-food-bg)",           // #fed7aa — platform bg
           },
           drink: {
             DEFAULT: "var(--color-cat-drink)",        // #0EA5E9 — ฟ้า
             dark: "var(--color-cat-drink-dark)",       // #0284C7
+            light: "var(--color-cat-drink-light)",     // #7dd3fc — border อ่อน
+            bg: "var(--color-cat-drink-bg)",           // #7dd3fc — platform bg
           },
           dessert: {
             DEFAULT: "var(--color-cat-dessert)",      // #EC4899 — ชมพู
             dark: "var(--color-cat-dessert-dark)",     // #DB2777
+            light: "var(--color-cat-dessert-light)",   // #f9a8d4 — border อ่อน
+            bg: "var(--color-cat-dessert-bg)",         // #f9a8d4 — platform bg
           },
+        },
+
+        // ─── Rank Colors (Podium: 1st–5th) ─────────────────────────────
+        // ใช้: bg-rank-1, bg-rank-2, bg-rank-3, bg-rank-4, bg-rank-5 (badge ลำดับ)
+        // ใช้ hex ตรง (ไม่ผ่าน CSS variable) เพราะไม่ต้อง theme + ให้ text-white ทำงานได้
+        rank: {
+          1: "#fbbf24",   // ทอง
+          2: "#6b7280",   // เงิน
+          3: "#cd7f32",   // ทองแดง
+          4: "#64748b",   // เทาเข้ม
+          5: "#64748b",   // เทาเข้ม
         },
 
         // ─── Tag Colors ───────────────────────────────────────────────
@@ -225,10 +242,16 @@ module.exports = {
           // Category
           "--color-cat-food": "#f97316",
           "--color-cat-food-dark": "#ea580c",
+          "--color-cat-food-light": "#fed7aa",
+          "--color-cat-food-bg": "#fed7aa",
           "--color-cat-drink": "#0EA5E9",
           "--color-cat-drink-dark": "#0284C7",
+          "--color-cat-drink-light": "#7dd3fc",
+          "--color-cat-drink-bg": "#7dd3fc",
           "--color-cat-dessert": "#EC4899",
           "--color-cat-dessert-dark": "#DB2777",
+          "--color-cat-dessert-light": "#f9a8d4",
+          "--color-cat-dessert-bg": "#f9a8d4",
 
           // Tag
           "--color-tag-recommend": "#EF4444",

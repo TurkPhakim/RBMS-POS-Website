@@ -18,4 +18,6 @@ public class TbOrderItemOption
     public string OptionItemName { get; set; } = string.Empty;
 
     public decimal AdditionalPrice { get; set; }
+
+    public decimal? CostPrice { get; set; }
 }

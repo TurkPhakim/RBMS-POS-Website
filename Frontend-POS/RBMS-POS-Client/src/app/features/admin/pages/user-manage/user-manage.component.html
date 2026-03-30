@@ -129,7 +129,9 @@
               <p-inputSwitch formControlName="isActive"></p-inputSwitch>
               <span
                 class="font-semibold mb-2"
-                [ngClass]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
+                [ngClass]="
+                  form.get('isActive')?.value ? 'text-success' : 'text-danger'
+                "
               >
                 {{ form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน" }}
               </span>
@@ -143,7 +145,11 @@
               <p-inputSwitch formControlName="isLockedByAdmin"></p-inputSwitch>
               <span
                 class="font-semibold mb-2"
-                [ngClass]="form.get('isLockedByAdmin')?.value ? 'text-success' : 'text-danger'"
+                [ngClass]="
+                  form.get('isLockedByAdmin')?.value
+                    ? 'text-success'
+                    : 'text-danger'
+                "
               >
                 {{
                   form.get("isLockedByAdmin")?.value

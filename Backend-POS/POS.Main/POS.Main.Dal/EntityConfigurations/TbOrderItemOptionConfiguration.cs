@@ -28,6 +28,9 @@ public class TbOrderItemOptionConfiguration : IEntityTypeConfiguration<TbOrderIt
             .HasColumnType("decimal(10,2)")
             .HasDefaultValue(0m);
 
+        builder.Property(oio => oio.CostPrice)
+            .HasColumnType("decimal(10,2)");
+
         // Relationships
         builder.HasOne(oio => oio.OrderItem)
             .WithMany(oi => oi.OrderItemOptions)

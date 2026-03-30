@@ -7,9 +7,7 @@
       class="text-white"
     ></app-generic-icon>
   </div>
-  <h1 class="text-page-title">
-    แก้ไขหมวดหมู่เมนู
-  </h1>
+  <h1 class="text-page-title">แก้ไขหมวดหมู่เมนู</h1>
 </div>
 
 <form [formGroup]="form" class="flex flex-col gap-4">
@@ -56,7 +54,9 @@
         ></p-inputSwitch>
         <span
           class="font-semibold mb-2"
-          [ngClass]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
+          [ngClass]="
+            form.get('isActive')?.value ? 'text-success' : 'text-danger'
+          "
         >
           {{ form.get("isActive")?.value ? "เปิดขาย" : "ปิดขาย" }}
         </span>
@@ -77,16 +77,16 @@
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
-          <tr>
+          <tr class="whitespace-nowrap">
             <th class="w-[80px]">รหัส</th>
             <th class="w-[160px]">รูปเมนู</th>
-            <th class="w-[200px] whitespace-nowrap">ชื่อเมนู (ภาษาไทย)</th>
-            <th class="w-[200px] whitespace-nowrap">ชื่อเมนู (ภาษาอังกฤษ)</th>
-            <th class="w-[140px] whitespace-nowrap">ราคาขาย</th>
+            <th class="w-[200px]">ชื่อเมนู (ภาษาไทย)</th>
+            <th class="w-[200px]">ชื่อเมนู (ภาษาอังกฤษ)</th>
+            <th class="w-[140px]">ราคาขาย</th>
             @if (hasTwoPeriods()) {
-              <th class="w-[120px] whitespace-nowrap">ช่วงเวลาขาย</th>
+              <th class="w-[120px]">ช่วงเวลาขาย</th>
             }
-            <th class="w-[120px] whitespace-nowrap">สถานะการขาย</th>
+            <th class="w-[120px]">สถานะการขาย</th>
           </tr>
         </ng-template>
 

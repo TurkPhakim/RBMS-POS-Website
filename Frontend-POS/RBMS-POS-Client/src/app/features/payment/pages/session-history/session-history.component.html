@@ -10,7 +10,7 @@
         class="text-white"
       ></app-generic-icon>
     </div>
-    <h1 class="text-page-title">ประวัติรอบขาย</h1>
+    <h1 class="text-page-title">ประวัติรอบการขาย</h1>
   </div>
 
   <!-- Content (Filter + Table) -->
@@ -78,7 +78,7 @@
         <ng-template pTemplate="header">
           <tr class="whitespace-nowrap">
             <th class="w-[80px]">รหัส</th>
-            <th class="w-[140px]">ผู้เปิดรอบ</th>
+            <th class="w-[120px]">ผู้เปิดรอบ</th>
             @if (hasTwoPeriods()) {
               <th class="w-[100px]">ช่วงเวลา</th>
             }
@@ -86,57 +86,71 @@
             <th class="w-[160px]">เวลาปิดรอบ</th>
             <th class="w-[100px]">สถานะ</th>
             <th class="w-[140px]">เงินเปิดรอบ</th>
-            <th class="w-[140px]">ยอดเงินสด</th>
-            <th class="w-[120px]">ยอด QR</th>
+            <th class="w-[140px]">ยอดขายเงินสด</th>
+            <th class="w-[140px]">ยอดขาย QR Payment</th>
             <th class="w-[120px]">จำนวนบิล</th>
-            <th class="w-[140px]">ผลต่าง</th>
+            <th class="w-[140px]">ยอดผลต่าง</th>
             <th class="w-[100px]">ตัวเลือก</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-session>
           <tr>
-            <td class="!text-center font-semibold">{{ session.cashierSessionId }}</td>
-            <td class="whitespace-nowrap">{{ session.userName }}</td>
+            <td class="!text-center font-semibold">
+              {{ session.cashierSessionId }}
+            </td>
+            <td class="whitespace-nowrap">
+              {{ session.fullNameThai || session.userName }}
+            </td>
             @if (hasTwoPeriods()) {
               <td class="!text-center">
                 @if (session.shiftPeriod) {
-                  <span class="font-semibold">ช่วงที่ {{ session.shiftPeriod }}</span>
+                  <span class="font-semibold"
+                    >ช่วงที่ {{ session.shiftPeriod }}</span
+                  >
                 } @else {
                   <span class="text-surface-sub">-</span>
                 }
               </td>
             }
-            <td>{{ session.openedAt | dateFormat: "DATE_TIME" }}</td>
-            <td>
+            <td class="whitespace-nowrap">
+              {{ session.openedAt | dateFormat: "DATE_TIME" }}
+            </td>
+            <td class="whitespace-nowrap">
               @if (session.closedAt) {
                 {{ session.closedAt | dateFormat: "DATE_TIME" }}
               } @else {
                 <span class="text-surface-sub">-</span>
               }
             </td>
-            <td class="!text-center">
+            <td class="!text-center whitespace-nowrap">
               @if (session.status === "Open") {
                 <span class="font-bold text-success">เปิดอยู่</span>
               } @else {
                 <span class="font-bold text-surface-sub">ปิดแล้ว</span>
               }
             </td>
-            <td class="!text-right font-semibold">{{ session.openingCash | number: "1.2-2" }}</td>
-            <td class="!text-right text-success font-semibold">
-              {{ session.totalCashSales | number: "1.2-2" }}
+            <td class="!text-right font-semibold whitespace-nowrap">
+              {{ session.openingCash | number: "1.2-2" }} บาท
             </td>
-            <td class="!text-right text-info font-semibold">
-              {{ session.totalQrSales | number: "1.2-2" }}
+            <td
+              class="!text-right text-success font-semibold whitespace-nowrap"
+            >
+              {{ session.totalCashSales | number: "1.2-2" }} บาท
             </td>
-            <td class="!text-center">{{ session.billCount }} รายการ</td>
+            <td class="!text-right text-info font-semibold whitespace-nowrap">
+              {{ session.totalQrSales | number: "1.2-2" }} บาท
+            </td>
+            <td class="!text-center whitespace-nowrap">
+              {{ session.billCount }} รายการ
+            </td>
             <td class="!text-right">
               @if (session.variance != null) {
                 <span
-                  class="font-semibold"
+                  class="font-semibold whitespace-nowrap"
                   [class.text-success]="session.variance >= 0"
                   [class.text-danger]="session.variance < 0"
                 >
-                  {{ session.variance | number: "1.2-2" }}
+                  {{ session.variance | number: "1.2-2" }} บาท
                 </span>
               } @else {
                 <span class="text-surface-sub">-</span>
@@ -150,7 +164,10 @@
                   tooltipPosition="top"
                   (click)="onViewDetail(session)"
                 >
-                  <app-generic-icon name="eye" svgClass="w-6 h-6"></app-generic-icon>
+                  <app-generic-icon
+                    name="eye"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
                 </button>
               </div>
             </td>

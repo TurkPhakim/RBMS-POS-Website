@@ -225,7 +225,8 @@ public class OrderService : IOrderService
                     OptionItemId = optReq.OptionItemId,
                     OptionGroupName = optionGroup.Name,
                     OptionItemName = optItem.Name,
-                    AdditionalPrice = optItem.AdditionalPrice
+                    AdditionalPrice = optItem.AdditionalPrice,
+                    CostPrice = optItem.CostPrice
                 });
 
                 optionsTotal += optItem.AdditionalPrice;
@@ -262,15 +263,26 @@ public class OrderService : IOrderService
             await _notificationService.NotifyNewOrderItemsAsync(orderId, order.TableId, ct);
             await _notificationService.NotifyTableStatusChangedAsync(order.TableId, ETableStatus.Occupied.ToString(), ct);
 
-            await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+            var groupedByCategory = newItems.GroupBy(i => i.CategoryType);
+            foreach (var catGroup in groupedByCategory)
             {
-                EventType = "NEW_ORDER",
-                Title = "ออเดอร์ใหม่ส่งครัว",
-                Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} — {newItems.Count} รายการ",
-                TableId = order.TableId,
-                OrderId = orderId,
-                TargetGroup = "Kitchen"
-            }, ct);
+                var categoryLabel = catGroup.Key switch
+                {
+                    (int)EMenuCategory.Food => "ครัวอาหาร",
+                    (int)EMenuCategory.Beverage => "บาร์เครื่องดื่ม",
+                    (int)EMenuCategory.Dessert => "ครัวของหวาน",
+                    _ => "ครัว"
+                };
+                await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+                {
+                    EventType = "NEW_ORDER",
+                    Title = $"ออเดอร์ใหม่ส่ง{categoryLabel}",
+                    Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} — {catGroup.Count()} รายการ",
+                    TableId = order.TableId,
+                    OrderId = orderId,
+                    TargetGroup = "Kitchen"
+                }, ct);
+            }
         }
 
         return await GetOrderByIdAsync(orderId, ct);
@@ -305,15 +317,26 @@ public class OrderService : IOrderService
         await _notificationService.NotifyNewOrderItemsAsync(orderId, order.TableId, ct);
         await _notificationService.NotifyTableStatusChangedAsync(order.TableId, ETableStatus.Occupied.ToString(), ct);
 
-        await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+        var groupedByCategory = pendingItems.GroupBy(i => i.CategoryType);
+        foreach (var catGroup in groupedByCategory)
         {
-            EventType = "NEW_ORDER",
-            Title = "ออเดอร์ใหม่ส่งครัว",
-            Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} — {pendingItems.Count} รายการ",
-            TableId = order.TableId,
-            OrderId = orderId,
-            TargetGroup = "Kitchen"
-        }, ct);
+            var categoryLabel = catGroup.Key switch
+            {
+                (int)EMenuCategory.Food => "ครัวอาหาร",
+                (int)EMenuCategory.Beverage => "บาร์เครื่องดื่ม",
+                (int)EMenuCategory.Dessert => "ครัวของหวาน",
+                _ => "ครัว"
+            };
+            await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+            {
+                EventType = "NEW_ORDER",
+                Title = $"ออเดอร์ใหม่ส่ง{categoryLabel}",
+                Message = $"ออเดอร์ #{order.OrderNumber.Split('-').Last()} — {catGroup.Count()} รายการ",
+                TableId = order.TableId,
+                OrderId = orderId,
+                TargetGroup = "Kitchen"
+            }, ct);
+        }
 
         return await GetOrderByIdAsync(orderId, ct);
     }
@@ -928,10 +951,17 @@ public class OrderService : IOrderService
         await _notificationService.NotifyNewOrderItemsAsync(item.OrderId, item.Order.TableId, ct);
         await _notificationService.NotifyTableStatusChangedAsync(item.Order.TableId, ETableStatus.Occupied.ToString(), ct);
 
+        var categoryLabel = item.CategoryType switch
+        {
+            (int)EMenuCategory.Food => "ครัวอาหาร",
+            (int)EMenuCategory.Beverage => "บาร์เครื่องดื่ม",
+            (int)EMenuCategory.Dessert => "ครัวของหวาน",
+            _ => "ครัว"
+        };
         await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
         {
             EventType = "NEW_ORDER",
-            Title = "ออเดอร์ส่งครัว",
+            Title = $"ออเดอร์ส่ง{categoryLabel}",
             Message = $"ออเดอร์ #{item.Order.OrderNumber.Split('-').Last()} — 1 รายการ",
             TableId = item.Order.TableId,
             OrderId = item.OrderId,

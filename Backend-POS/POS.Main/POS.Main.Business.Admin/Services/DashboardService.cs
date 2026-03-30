@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using POS.Main.Business.Admin.Interfaces;
 using POS.Main.Business.Admin.Models.Dashboard;
+using System.Linq.Expressions;
 using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
+using POS.Main.Dal.Entities;
 using POS.Main.Repositories.UnitOfWork;
 
 namespace POS.Main.Business.Admin.Services;
@@ -122,12 +124,19 @@ public class DashboardService : IDashboardService
             .Where(o => o.CreatedAt.Date == date)
             .SumAsync(o => (int?)o.GuestCount, ct) ?? 0;
 
+        var totalCost = await GetTotalCostAsync(
+            i => i.CreatedAt.Date == date, ct);
+        var grossProfit = totalSales - totalCost;
+
         return new DashboardKpiModel
         {
             TotalSales = totalSales,
             OrderCount = orderCount,
             GuestCount = guestCount,
-            AveragePerOrder = orderCount > 0 ? Math.Round(totalSales / orderCount, 2) : 0
+            AveragePerOrder = orderCount > 0 ? Math.Round(totalSales / orderCount, 2) : 0,
+            TotalCost = totalCost,
+            GrossProfit = grossProfit,
+            GrossMarginPercent = totalSales > 0 ? Math.Round(grossProfit / totalSales * 100, 1) : 0
         };
     }
 
@@ -146,12 +155,19 @@ public class DashboardService : IDashboardService
             .Where(o => o.CreatedAt.Date >= from && o.CreatedAt.Date <= to)
             .SumAsync(o => (int?)o.GuestCount, ct) ?? 0;
 
+        var totalCost = await GetTotalCostAsync(
+            i => i.CreatedAt.Date >= from && i.CreatedAt.Date <= to, ct);
+        var grossProfit = totalSales - totalCost;
+
         return new DashboardKpiModel
         {
             TotalSales = totalSales,
             OrderCount = orderCount,
             GuestCount = guestCount,
-            AveragePerOrder = orderCount > 0 ? Math.Round(totalSales / orderCount, 2) : 0
+            AveragePerOrder = orderCount > 0 ? Math.Round(totalSales / orderCount, 2) : 0,
+            TotalCost = totalCost,
+            GrossProfit = grossProfit,
+            GrossMarginPercent = totalSales > 0 ? Math.Round(grossProfit / totalSales * 100, 1) : 0
         };
     }
 
@@ -219,7 +235,7 @@ public class DashboardService : IDashboardService
 
     private async Task<List<TopSellingItemModel>> GetTopSellingByCategoryAsync(int categoryType, DateTime startDate, DateTime endDate, CancellationToken ct)
     {
-        return await _unitOfWork.OrderItems.QueryNoTracking()
+        var topItems = await _unitOfWork.OrderItems.QueryNoTracking()
             .Where(i => i.CreatedAt.Date >= startDate && i.CreatedAt.Date <= endDate
                 && i.CategoryType == categoryType
                 && i.Status != EOrderItemStatus.Voided
@@ -234,6 +250,18 @@ public class DashboardService : IDashboardService
             .OrderByDescending(x => x.TotalQuantity)
             .Take(5)
             .ToListAsync(ct);
+
+        var menuIds = topItems.Select(x => x.MenuId).ToList();
+        var menuImages = await _unitOfWork.Menus.QueryNoTracking()
+            .Where(m => menuIds.Contains(m.MenuId))
+            .Select(m => new { m.MenuId, m.ImageFileId })
+            .ToListAsync(ct);
+
+        var imageDict = menuImages.ToDictionary(m => m.MenuId, m => m.ImageFileId);
+        foreach (var item in topItems)
+            item.ImageFileId = imageDict.GetValueOrDefault(item.MenuId);
+
+        return topItems;
     }
 
     private async Task<List<DailyBreakdownModel>> GetDailyBreakdownAsync(DateTime from, DateTime to, CancellationToken ct)
@@ -251,8 +279,26 @@ public class DashboardService : IDashboardService
             .Select(g => new { Date = g.Key, OrderCount = g.Count(), GuestCount = g.Sum(x => x.GuestCount) })
             .ToListAsync(ct);
 
+        var validItems = _unitOfWork.OrderItems.QueryNoTracking()
+            .Where(i => i.CreatedAt.Date >= from && i.CreatedAt.Date <= to
+                && i.Status != EOrderItemStatus.Voided
+                && i.Status != EOrderItemStatus.Cancelled);
+
+        var menuCostByDate = await validItems
+            .GroupBy(i => i.CreatedAt.Date)
+            .Select(g => new { Date = g.Key, Cost = g.Sum(i => (decimal?)((i.CostPrice ?? 0) * i.Quantity)) ?? 0 })
+            .ToListAsync(ct);
+
+        var optionCostByDate = await validItems
+            .SelectMany(i => i.OrderItemOptions, (i, o) => new { i.CreatedAt, i.Quantity, o.CostPrice })
+            .GroupBy(x => x.CreatedAt.Date)
+            .Select(g => new { Date = g.Key, Cost = g.Sum(x => (decimal?)((x.CostPrice ?? 0) * x.Quantity)) ?? 0 })
+            .ToListAsync(ct);
+
         var salesDict = salesByDate.ToDictionary(x => x.Date, x => x.TotalSales);
         var ordersDict = ordersByDate.ToDictionary(x => x.Date);
+        var menuCostDict = menuCostByDate.ToDictionary(x => x.Date, x => x.Cost);
+        var optionCostDict = optionCostByDate.ToDictionary(x => x.Date, x => x.Cost);
 
         var allDates = salesDict.Keys.Union(ordersDict.Keys).Distinct().OrderByDescending(d => d);
 
@@ -262,6 +308,8 @@ public class DashboardService : IDashboardService
             var orders = ordersDict.TryGetValue(date, out var o) ? o : null;
             var orderCount = orders?.OrderCount ?? 0;
             var guestCount = orders?.GuestCount ?? 0;
+            var totalCost = menuCostDict.GetValueOrDefault(date, 0) + optionCostDict.GetValueOrDefault(date, 0);
+            var grossProfit = sales - totalCost;
 
             return new DailyBreakdownModel
             {
@@ -269,7 +317,9 @@ public class DashboardService : IDashboardService
                 TotalSales = sales,
                 OrderCount = orderCount,
                 GuestCount = guestCount,
-                AveragePerOrder = orderCount > 0 ? Math.Round(sales / orderCount, 2) : 0
+                AveragePerOrder = orderCount > 0 ? Math.Round(sales / orderCount, 2) : 0,
+                TotalCost = totalCost,
+                GrossProfit = grossProfit
             };
         }).ToList();
     }
@@ -297,6 +347,24 @@ public class DashboardService : IDashboardService
         }
 
         return items.OrderBy(x => x.CategoryType).ToList();
+    }
+
+    private async Task<decimal> GetTotalCostAsync(
+        Expression<Func<TbOrderItem, bool>> filter, CancellationToken ct)
+    {
+        var query = _unitOfWork.OrderItems.QueryNoTracking()
+            .Where(filter)
+            .Where(i => i.Status != EOrderItemStatus.Voided
+                && i.Status != EOrderItemStatus.Cancelled);
+
+        var menuCost = await query
+            .SumAsync(i => (decimal?)((i.CostPrice ?? 0) * i.Quantity), ct) ?? 0;
+
+        var optionCost = await query
+            .SelectMany(i => i.OrderItemOptions, (i, o) => new { i.Quantity, o.CostPrice })
+            .SumAsync(x => (decimal?)((x.CostPrice ?? 0) * x.Quantity), ct) ?? 0;
+
+        return menuCost + optionCost;
     }
 
     private static string GetCategoryName(int categoryType) => categoryType switch

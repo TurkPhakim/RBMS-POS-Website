@@ -27,19 +27,19 @@ import { Component, Input } from '@angular/core';
 
         <!-- Header Content -->
         <div class="relative z-10 flex items-center justify-between">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             @if (headerIcon) {
               <div
-                class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"
+                class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center"
               >
                 <app-generic-icon
                   [name]="headerIcon"
-                  svgClass="w-5 h-5"
+                  [svgClass]="headerIconSize"
                   class="text-white"
                 ></app-generic-icon>
               </div>
             }
-            <h3 class="text-lg font-bold text-white">{{ headerLabel }}</h3>
+            <h3 class="text-xl font-bold text-white">{{ headerLabel }}</h3>
           </div>
           <ng-content select="[sectionActions]"></ng-content>
         </div>
@@ -55,6 +55,7 @@ import { Component, Input } from '@angular/core';
 export class SectionMiniCardComponent {
   @Input() headerLabel = '';
   @Input() headerIcon = '';
+  @Input() headerIconSize = 'w-5 h-5';
   @Input() headerClass = 'bg-gradient-to-r from-primary to-primary-dark';
   @Input() contentClass = '';
 }

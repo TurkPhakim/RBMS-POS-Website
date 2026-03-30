@@ -55,11 +55,11 @@ export class VerifyPinDialogComponent {
           this.attempts.set(newAttempts);
 
           if (newAttempts >= MAX_ATTEMPTS) {
-            this.modalService.cancel({
+            const cancelRef = this.modalService.cancel({
               title: 'ยืนยันตัวตนล้มเหลว',
               message: 'กรอกรหัส PIN ผิด\nเกินจำนวนครั้งที่กำหนด',
-              onConfirm: () => this.ref.close('max-attempts'),
             });
+            cancelRef.onClose.subscribe(() => this.ref.close('max-attempts'));
             return;
           }
 

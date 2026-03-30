@@ -1,4 +1,4 @@
-<div class="space-y-5">
+<div class="space-y-4">
   @if (session(); as session) {
     <!-- Page Header + Operator Card -->
     <div class="flex items-center justify-between">
@@ -43,7 +43,7 @@
           />
         } @else {
           <div
-            class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center shrink-0"
+            class="w-20 h-20 rounded-full bg-primary-subtle flex items-center justify-center shrink-0"
           >
             <app-generic-icon
               name="cashier"
@@ -93,11 +93,11 @@
       <!-- 1. เงินเปิดรอบ -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
-          class="absolute top-4 right-4 w-12 h-12 rounded-full bg-primary flex items-center justify-center"
+          class="absolute top-4 right-4 w-14 h-14 rounded-full bg-primary flex items-center justify-center"
         >
           <app-generic-icon
-            name="coin"
-            svgClass="w-7 h-7"
+            name="cloud-cash"
+            svgClass="w-8 h-8"
             class="text-white"
           ></app-generic-icon>
         </div>
@@ -110,11 +110,11 @@
       <!-- 2. ยอดขายเงินสด -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
-          class="absolute top-4 right-4 w-12 h-12 rounded-full bg-success flex items-center justify-center"
+          class="absolute top-4 right-4 w-14 h-14 rounded-full bg-success flex items-center justify-center"
         >
           <app-generic-icon
-            name="coin"
-            svgClass="w-7 h-7"
+            name="cash-sales"
+            svgClass="w-9 h-9"
             class="text-white"
           ></app-generic-icon>
         </div>
@@ -124,18 +124,18 @@
         </p>
       </div>
 
-      <!-- 3. ยอดขาย QR Code -->
+      <!-- 3. ยอดขาย QR Payment -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
-          class="absolute top-4 right-4 w-12 h-12 rounded-full bg-info flex items-center justify-center"
+          class="absolute top-4 right-4 w-14 h-14 rounded-full bg-info flex items-center justify-center"
         >
           <app-generic-icon
-            name="telephone"
-            svgClass="w-7 h-7"
+            name="cash-qrcode"
+            svgClass="w-8 h-8"
             class="text-white"
           ></app-generic-icon>
         </div>
-        <span class="text-lg font-semibold text-info">ยอดขาย QR Code</span>
+        <span class="text-lg font-semibold text-info">ยอดขาย QR Payment</span>
         <p class="text-3xl font-bold tracking-tight text-info mt-3">
           {{ session.totalQrSales | number: "1.2-2" }}
         </p>
@@ -144,11 +144,11 @@
       <!-- 4. เงินสดคงเหลือ (computed) -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
-          class="absolute top-4 right-4 w-12 h-12 rounded-full bg-warning-dark flex items-center justify-center"
+          class="absolute top-4 right-4 w-14 h-14 rounded-full bg-warning-dark flex items-center justify-center"
         >
           <app-generic-icon
-            name="piggy-bank"
-            svgClass="w-7 h-7"
+            name="cash-balance"
+            svgClass="w-9 h-9"
             class="text-white"
           ></app-generic-icon>
         </div>
@@ -164,11 +164,11 @@
       <!-- 5. ยอดขายสุทธิ -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
-          class="absolute top-4 right-4 w-12 h-12 rounded-full bg-primary-dark flex items-center justify-center"
+          class="absolute top-4 right-4 w-14 h-14 rounded-full bg-primary-dark flex items-center justify-center"
         >
           <app-generic-icon
-            name="bill-invoice"
-            svgClass="w-7 h-7"
+            name="cash-bag"
+            svgClass="w-8 h-8"
             class="text-white"
           ></app-generic-icon>
         </div>
@@ -181,11 +181,11 @@
       <!-- 6. จำนวนบิล -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
-          class="absolute top-4 right-4 w-12 h-12 rounded-full bg-danger flex items-center justify-center"
+          class="absolute top-4 right-4 w-14 h-14 rounded-full bg-danger flex items-center justify-center"
         >
           <app-generic-icon
-            name="bill-rastaurant"
-            svgClass="w-7 h-7"
+            name="bill"
+            svgClass="w-9 h-9"
             class="text-white"
           ></app-generic-icon>
         </div>
@@ -198,11 +198,11 @@
       <!-- 7. เงินสดจริง (actualCash) -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
-          class="absolute top-4 right-4 w-12 h-12 rounded-full bg-success flex items-center justify-center"
+          class="absolute top-4 right-4 w-14 h-14 rounded-full bg-success flex items-center justify-center"
         >
           <app-generic-icon
-            name="piggy-bank"
-            svgClass="w-7 h-7"
+            name="money"
+            svgClass="w-9 h-9"
             class="text-white"
           ></app-generic-icon>
         </div>
@@ -219,31 +219,46 @@
       <!-- 8. ผลต่าง (variance) -->
       <div class="relative bg-surface-card rounded-xl p-5">
         <div
-          class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center"
-          [class.bg-success]="(session.variance ?? 0) >= 0"
-          [class.bg-danger]="(session.variance ?? 0) < 0"
+          class="absolute top-4 right-4 w-14 h-14 rounded-full flex items-center justify-center"
+          [class.bg-cleaning]="
+            session.status !== 'Open' && (session.variance ?? 0) >= 0
+          "
+          [class.bg-danger]="
+            session.status !== 'Open' && (session.variance ?? 0) < 0
+          "
+          [class.bg-surface-border]="session.status === 'Open'"
         >
           <app-generic-icon
-            name="coin"
-            svgClass="w-7 h-7"
+            name="cash-pie"
+            svgClass="w-8 h-8"
             class="text-white"
           ></app-generic-icon>
         </div>
         <span
           class="text-lg font-semibold"
-          [class.text-success]="(session.variance ?? 0) >= 0"
-          [class.text-danger]="(session.variance ?? 0) < 0"
+          [class.text-cleaning]="
+            session.status !== 'Open' && (session.variance ?? 0) >= 0
+          "
+          [class.text-danger]="
+            session.status !== 'Open' && (session.variance ?? 0) < 0
+          "
+          [class.text-surface-sub]="session.status === 'Open'"
           >ผลต่าง</span
         >
         <p
           class="text-3xl font-bold tracking-tight mt-3"
-          [class.text-success]="(session.variance ?? 0) >= 0"
-          [class.text-danger]="(session.variance ?? 0) < 0"
+          [class.text-cleaning]="
+            session.status !== 'Open' && (session.variance ?? 0) >= 0
+          "
+          [class.text-danger]="
+            session.status !== 'Open' && (session.variance ?? 0) < 0
+          "
+          [class.text-surface-sub]="session.status === 'Open'"
         >
-          @if (session.variance != null) {
+          @if (session.status !== "Open" && session.variance != null) {
             {{ session.variance | number: "1.2-2" }}
           } @else {
-            <span class="text-surface-sub">-</span>
+            -
           }
         </p>
       </div>
@@ -263,110 +278,121 @@
         [showCurrentPageReport]="true"
         currentPageReportTemplate="{first} - {last} of {totalRecords}"
         [stripedRows]="true"
+        [scrollable]="true"
+        [tableStyle]="{ 'min-width': '70rem' }"
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
           <tr class="whitespace-nowrap">
             <th class="w-[200px]">หมายเลขออเดอร์</th>
-            <th class="w-[160px]">โซน - โต๊ะ</th>
-            <th class="w-[140px]">ประเภทลูกค้า</th>
+            <th class="w-[200px]">โซน - โต๊ะ</th>
+            <th class="w-[120px]">ประเภทลูกค้า</th>
+            <th class="w-[120px]">จำนวนลูกค้า</th>
             <th class="w-[120px]">วิธีชำระเงิน</th>
             <th class="w-[120px]">ยอดชำระเงิน</th>
             <th class="w-[160px]">เวลาชำระเงิน</th>
-            <th class="w-[80px]">ตัวเลือก</th>
+            <th class="w-[160px]">ตัวเลือก</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-group>
           <tr>
-            <td>
-              <div class="font-semibold">{{ group.orderNumber }}</div>
-              @if (group.payments.length > 1) {
-                <span
-                  class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-warning/15 text-warning-dark mt-0.5"
-                >
-                  แยกบิล {{ group.payments.length }} บิล
-                </span>
-              }
+            <td class="font-semibold whitespace-nowrap">
+              {{ group.orderNumber }}
             </td>
-            <td>
+            <td class="!text-center whitespace-nowrap">
               @if (group.tableName) {
-                {{ group.zoneName }} - {{ group.tableName }}
+                โซน{{ group.zoneName }} - โต๊ะ{{ group.tableName }}
               } @else {
                 <span class="text-surface-sub">-</span>
               }
             </td>
-            <td>
-              <div class="flex items-center gap-1.5">
-                @if (group.guestType === "Reserved") {
-                  <span
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-info/10 text-info"
-                  >
-                    จอง
-                  </span>
-                } @else {
-                  <span class="text-surface-sub">Walk-in</span>
-                }
-                <span>{{ group.guestCount }} คน</span>
-              </div>
+            <td class="!text-center whitespace-nowrap">
+              {{ group.guestType === "Reserved" ? "ลูกค้าจอง" : "Walk-In" }}
             </td>
-            <td class="whitespace-nowrap">
-              @for (
-                method of group.paymentMethods;
-                track method;
-                let last = $last
-              ) {
-                @if (method === "Cash") {
+            <td class="!text-center">{{ group.guestCount }}</td>
+            <td class="!text-center whitespace-nowrap">
+              @if (group.payments.length === 1) {
+                @if (group.payments[0].paymentMethod === "Cash") {
                   <span class="font-semibold text-success">เงินสด</span>
                 } @else {
-                  <span class="font-semibold text-info">QR</span>
+                  <span class="font-semibold text-info">QR-Payment</span>
                 }
-                @if (!last) {
-                  <span class="text-surface-sub">, </span>
-                }
+              } @else {
+                <span class="font-semibold text-primary"
+                  >แยก {{ group.payments.length }} บิล</span
+                >
               }
             </td>
-            <td class="text-right font-semibold">
-              {{ group.totalAmount | number: "1.2-2" }}
+            <td class="!text-right font-semibold whitespace-nowrap">
+              {{ group.totalAmount | number: "1.2-2" }} บาท
             </td>
-            <td class="text-surface-sub">
+            <td class="whitespace-nowrap">
               {{ group.latestPaidAt | dateFormat: "DATE_TIME" }}
             </td>
             <td class="text-center">
-              @if (group.payments.length > 1) {
-                <button
-                  class="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white mx-auto"
-                  pTooltip="ใบเสร็จ"
-                  tooltipPosition="top"
-                  (click)="onOpenMenu($event, group)"
-                >
-                  <i class="pi pi-ellipsis-v text-sm"></i>
-                </button>
-              } @else {
-                <button
-                  class="w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white mx-auto"
-                  pTooltip="ดาวน์โหลดใบเสร็จ"
-                  tooltipPosition="top"
-                  (click)="onDownloadReceipt(group.payments[0].paymentId!)"
-                >
-                  <i class="pi pi-download text-sm"></i>
-                </button>
-              }
+              <div class="flex justify-center gap-2">
+                @if (group.payments.length > 1) {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                    pTooltip="ใบเสร็จรวม"
+                    tooltipPosition="top"
+                    (click)="onDownloadConsolidatedReceipt(group.orderId)"
+                  >
+                    <i class="pi pi-download text-lg"></i>
+                  </button>
+                } @else {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                    pTooltip="ดาวน์โหลดใบเสร็จ"
+                    tooltipPosition="top"
+                    (click)="onDownloadReceipt(group.payments[0].paymentId!)"
+                  >
+                    <i class="pi pi-download text-lg"></i>
+                  </button>
+                }
+
+                @if (group.payments.length > 1) {
+                  <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-border text-surface-dark"
+                    pTooltip="ใบเสร็จแยก"
+                    tooltipPosition="top"
+                    (click)="onOpenMenu($event, group)"
+                  >
+                    <app-generic-icon
+                      name="dot-menu"
+                      svgClass="w-6 h-6"
+                    ></app-generic-icon>
+                  </button>
+                }
+              </div>
             </td>
           </tr>
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="7" class="text-center py-8 text-surface-sub">
-              ยังไม่มีออเดอร์ที่ชำระเงินเสร็จสิ้น
+            <td colspan="8">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่มีออเดอร์ชำระเงินเสร็จสิ้น" />
+              </div>
             </td>
           </tr>
         </ng-template>
       </p-table>
-      <p-tieredMenu
-        #actionMenu
-        [model]="currentMenuItems"
-        [popup]="true"
-      ></p-tieredMenu>
+      <p-tieredMenu #actionMenu [model]="currentMenuItems" [popup]="true">
+        <ng-template pTemplate="item" let-item>
+          <a
+            class="flex items-center gap-2 px-3 py-2 cursor-pointer"
+            (click)="item.command()"
+          >
+            <app-generic-icon
+              name="cloud-download"
+              svgClass="w-6 h-6"
+              class="text-primary"
+            ></app-generic-icon>
+            <span>{{ item.label }}</span>
+          </a>
+        </ng-template>
+      </p-tieredMenu>
     </app-section-card>
 
     <!-- Cash Drawer Transactions -->
@@ -387,36 +413,42 @@
           [showCurrentPageReport]="true"
           currentPageReportTemplate="{first} - {last} of {totalRecords}"
           [stripedRows]="true"
+          [scrollable]="true"
+          [tableStyle]="{ 'min-width': '40rem' }"
           styleClass="p-datatable-clean"
         >
           <ng-template pTemplate="header">
             <tr class="whitespace-nowrap">
               <th class="w-[160px]">เวลา</th>
-              <th class="w-[120px]">ประเภท</th>
+              <th class="w-[140px]">ประเภท</th>
               <th class="w-[140px]">จำนวนเงิน</th>
-              <th>เหตุผล</th>
+              <th class="w-[280px]">เหตุผล</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-tx>
             <tr>
-              <td>{{ tx.createdAt | dateFormat: "DATE_TIME" }}</td>
-              <td>
+              <td class="!text-center whitespace-nowrap">
+                {{ tx.createdAt | dateFormat: "DATE_TIME" }}
+              </td>
+              <td class="!text-center">
                 @if (tx.transactionType === "CashIn") {
                   <span class="font-bold text-success">เงินเข้า</span>
                 } @else {
                   <span class="font-bold text-danger">เงินออก</span>
                 }
               </td>
-              <td class="font-semibold">
-                {{ tx.amount | number: "1.2-2" }}
+              <td class="!text-right font-semibold whitespace-nowrap">
+                {{ tx.amount | number: "1.2-2" }} บาท
               </td>
               <td class="text-surface-sub">{{ tx.reason }}</td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="4" class="text-center py-8 text-surface-sub">
-                ไม่มีรายการ
+              <td colspan="4">
+                <div class="flex justify-center items-center w-full p-[100px]">
+                  <app-empty-view message="ไม่มีรายการทางการเงิน" />
+                </div>
               </td>
             </tr>
           </ng-template>

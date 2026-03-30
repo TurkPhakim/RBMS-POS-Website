@@ -103,19 +103,10 @@ export class SessionDetailComponent implements OnInit, OnDestroy {
   }
 
   onOpenMenu(event: Event, group: OrderGroup): void {
-    this.currentMenuItems = [
-      {
-        label: 'ใบเสร็จรวมทุกบิล',
-        icon: 'pi pi-file',
-        command: () => this.onDownloadConsolidatedReceipt(group.orderId),
-      },
-      { separator: true },
-      ...group.payments.map(p => ({
-        label: p.billNumber ?? 'ใบเสร็จ',
-        icon: 'pi pi-download',
-        command: () => this.onDownloadReceipt(p.paymentId!),
-      })),
-    ];
+    this.currentMenuItems = group.payments.map(p => ({
+      label: `${p.billNumber ?? 'ใบเสร็จ'} (${p.paymentMethod === 'Cash' ? 'เงินสด' : 'QR Code'})`,
+      command: () => this.onDownloadReceipt(p.paymentId!),
+    }));
     this.actionMenu.toggle(event);
   }
 

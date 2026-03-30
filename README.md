@@ -1,199 +1,297 @@
-# RBMS-POS — ระบบ Point of Sale
+<p align="center">
+  <img src="Frontend-POS/RBMS-POS-Client/public/images/RBMS_Logo.png" alt="RBMS-POS Logo" width="180" />
+</p>
 
-> อัพเดตล่าสุด: 2026-03-12
+<h1 align="center">RBMS-POS</h1>
 
-ระบบ Point of Sale (POS) สำหรับจัดการการขาย สินค้าคงคลัง และพนักงาน สร้างด้วย **Angular + ASP.NET Core 9** ในรูปแบบ N-Tier Layered Architecture
+<p align="center">
+  <strong>ระบบ Point of Sale แบบครบวงจร สำหรับร้านอาหารและเครื่องดื่ม</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Angular-19.1-DD0031?logo=angular&logoColor=white" alt="Angular" />
+  <img src="https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white" alt=".NET" />
+  <img src="https://img.shields.io/badge/SQL%20Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white" alt="SQL Server" />
+  <img src="https://img.shields.io/badge/SignalR-Real--time-512BD4?logo=dotnet&logoColor=white" alt="SignalR" />
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white" alt="Docker" />
+</p>
 
 ---
 
-## เทคโนโลยีที่ใช้
+## Overview
 
-| ส่วน | เทคโนโลยี |
-|------|-----------|
-| **Frontend** | Angular 19.1, Tailwind CSS 3.4, PrimeNG, Angular Signals, SignalR Client |
-| **Backend** | ASP.NET Core 9.0, Entity Framework Core, SignalR |
-| **ฐานข้อมูล** | SQL Server |
-| **เอกสาร API** | Swagger / OpenAPI (ng-openapi-gen) |
+**RBMS-POS** คือระบบ POS ที่ออกแบบมาเพื่อร้านอาหาร ร้านกาแฟ และร้านเครื่องดื่มโดยเฉพาะ ครอบคลุมตั้งแต่การจัดการเมนู สั่งอาหาร จอแสดงครัว ไปจนถึงการชำระเงินและรายงานยอดขาย พร้อมระบบ QR Self-Order ให้ลูกค้าสั่งอาหารผ่านมือถือ
+
+ทุกฟีเจอร์ทำงานแบบ **Real-time** ผ่าน SignalR ทำให้ทุกหน้าจอ (แคชเชียร์, ครัว, บาร์, ลูกค้า) อัพเดตทันทีโดยไม่ต้องรีเฟรช
+
+### เหมาะสำหรับธุรกิจ
+
+- ร้านอาหาร / ภัตตาคาร / บุฟเฟ่ต์
+- ร้านกาแฟ / ร้านเครื่องดื่ม / ร้านชา-นม
+- ร้านขนมหวาน / เบเกอรี่ / คาเฟ่
+- Food Court / ศูนย์อาหาร (รองรับหลายโซน)
 
 ---
 
-## โครงสร้างโปรเจค
+## Tech Stack
+
+### Frontend
+
+| เทคโนโลยี            | ใช้ทำอะไร                                        |
+| -------------------- | ------------------------------------------------ |
+| **Angular 19.1**     | Framework หลัก + Signals สำหรับ State Management |
+| **Tailwind CSS 3.4** | Styling ด้วย Design Tokens                       |
+| **PrimeNG 19**       | UI Components (Table, Dialog, Form, etc.)        |
+| **SignalR Client**   | Real-time Communication กับ Backend              |
+| **ng-openapi-gen**   | Auto-generate TypeScript API Client จาก Swagger  |
+| **ng2-charts**       | กราฟและแผนภูมิบน Dashboard                       |
+
+### Backend
+
+| เทคโนโลยี                   | ใช้ทำอะไร                             |
+| --------------------------- | ------------------------------------- |
+| **ASP.NET Core 9.0**        | Web API (N-Tier Architecture)         |
+| **Entity Framework Core 9** | ORM + Migration                       |
+| **SignalR**                 | Real-time Hub (Order, Kitchen, Table) |
+| **JWT + Refresh Token**     | Authentication & Authorization        |
+| **Swagger / OpenAPI**       | API Documentation                     |
+
+### Infrastructure
+
+| เทคโนโลยี           | ใช้ทำอะไร                                                |
+| ------------------- | -------------------------------------------------------- |
+| **SQL Server 2022** | Database หลัก                                            |
+| **MinIO**           | S3-compatible Object Storage (รูปเมนู, Logo, รูปพนักงาน) |
+| **Nginx**           | Reverse Proxy + SSL/TLS                                  |
+| **Docker Compose**  | Container Orchestration                                  |
+| **Certbot**         | Auto SSL Certificate Renewal                             |
+
+---
+
+## Modules & Features
+
+### Order & Operations
+
+| Module                    | รายละเอียด                                                           |
+| ------------------------- | -------------------------------------------------------------------- |
+| **ภาพรวมร้าน**            | แสดงสถานะโต๊ะทั้งร้านแบบ Real-time (ว่าง, กำลังใช้, จอง)             |
+| **รายการออเดอร์**         | ดูออเดอร์ทั้งหมด พร้อม filter สถานะ, ค้นหา, pagination               |
+| **สั่งอาหาร (Staff)**     | พนักงานสั่งอาหารหน้าร้าน พร้อมตัวเลือกเสริมและหมายเหตุ               |
+| **Kitchen Display (KDS)** | จอแสดงออเดอร์แยกตามสถานี (อาหาร / เครื่องดื่ม / ของหวาน) พร้อม Timer |
+| **ชำระเงิน**              | รับชำระเงินสด / QR Payment, แบ่งบิล (Split Bill), ใบเสร็จ            |
+| **รอบการขาย**             | เปิด-ปิดกะแคชเชียร์, สรุปยอดรอบขาย                                   |
+
+### Menu Management
+
+| Module                                | รายละเอียด                                              |
+| ------------------------------------- | ------------------------------------------------------- |
+| **หมวดหมู่เมนู**                      | จัดการหมวดย่อย ลากเรียงลำดับ (Drag & Drop)              |
+| **เมนูอาหาร / เครื่องดื่ม / ของหวาน** | CRUD เมนูพร้อมรูปภาพ, ราคา, Tags, ช่วงเวลาขาย           |
+| **ตัวเลือกเสริม**                     | กลุ่มตัวเลือก (เช่น ระดับความหวาน, ท็อปปิ้ง) ผูกกับเมนู |
+
+### Table & Reservation
+
+| Module                       | รายละเอียด                               |
+| ---------------------------- | ---------------------------------------- |
+| **ผังร้าน (Floor Plan)**     | ออกแบบผังร้านด้วย Drag & Drop, แยกตามโซน |
+| **จัดการโซน/โต๊ะ**           | สร้างโซน, จำนวนโต๊ะ, จำนวนที่นั่ง        |
+| **เชื่อมโต๊ะ (Link Tables)** | รวมบิลหลายโต๊ะเข้าด้วยกัน                |
+| **จองโต๊ะ**                  | ระบบจองล่วงหน้า พร้อมปฏิทิน              |
+
+### QR Self-Order (Mobile Web)
+
+| Feature                | รายละเอียด                                         |
+| ---------------------- | -------------------------------------------------- |
+| **สแกน QR**            | ลูกค้าสแกน QR Code บนโต๊ะ เข้า Mobile Web ทันที    |
+| **ดูเมนู + สั่งอาหาร** | Browse เมนูพร้อมรูป, เลือกตัวเลือกเสริม, ใส่ตะกร้า |
+| **ติดตามออเดอร์**      | ดูสถานะอาหาร Real-time (กำลังทำ / พร้อมเสิร์ฟ)     |
+| **ดูบิล**              | ดูยอดรวมบิลปัจจุบัน                                |
+
+### HR & Admin
+
+| Module                  | รายละเอียด                                                    |
+| ----------------------- | ------------------------------------------------------------- |
+| **พนักงาน**             | ข้อมูลส่วนตัว, ที่อยู่, ประวัติการศึกษา/การทำงาน, รูปภาพ      |
+| **ผู้ใช้งาน**           | สร้าง/จัดการบัญชี Login, ผูกกับตำแหน่ง                        |
+| **ตำแหน่งงาน + สิทธิ์** | RBAC — กำหนดสิทธิ์แต่ละ Module ตามตำแหน่ง (Permission Matrix) |
+| **ค่าบริการ**           | จัดการ Service Charge (%, บาท)                                |
+| **ตั้งค่าร้าน**         | ข้อมูลร้าน, Logo, Branding, เวลาเปิด-ปิดร้าน                  |
+
+### Dashboard & Analytics
+
+| Module           | รายละเอียด                                         |
+| ---------------- | -------------------------------------------------- |
+| **ภาพรวม**       | KPI ยอดขายวันนี้/เดือนนี้, จำนวนออเดอร์, เมนูขายดี |
+| **รายงานยอดขาย** | กราฟยอดขายรายวัน/รายเดือน, ช่วงเวลาขายดี           |
+
+---
+
+## Architecture
 
 ```
-RBMS-POS/
-├── Backend-POS/
-│   └── POS.Main/
-│       ├── RBMS.POS.WebAPI/              # Controllers, Filters, Hubs, Program.cs
-│       ├── POS.Main.Business.Admin/      # Auth, ServiceCharge, File
-│       ├── POS.Main.Business.Menu/       # Menu management
-│       ├── POS.Main.Business.HumanResource/ # Employee management
-│       ├── POS.Main.Business.Authorization/ # Position-Based RBAC, Permissions
-│       ├── POS.Main.Repositories/        # Repository interfaces + UnitOfWork
-│       ├── POS.Main.Dal/                 # Entities, DbContext, Migrations
-│       └── POS.Main.Core/                # Enums, Constants, Exceptions, Helpers
-│
-├── Frontend-POS/
-│   └── RBMS-POS-Client/
-│       └── src/app/
-│           ├── core/                 # API clients (generated), guards, interceptors
-│           ├── shared/               # Shared components, modals, pipes
-│           ├── layouts/              # main-layout, auth-layout
-│           └── features/             # Feature modules (lazy-loaded)
-│
-└── doc/                              # เอกสารทั้งหมดของโปรเจค
-    ├── agents/                       # AI Agent specs
-    ├── architecture/                 # System design, technical architecture
-    ├── development/                  # Developer guides, setup, how-to
-    ├── features/                     # Feature implementation notes
-    ├── tasks/                        # Task tracking
-    └── requirements/                 # Business & functional requirements
+┌─────────────────────────────────────────────────────────┐
+│                     Nginx (Reverse Proxy + SSL)         │
+├──────────────┬──────────────┬───────────────────────────┤
+│  Admin Client│  Mobile Web  │         Backend API        │
+│  (Angular)   │  (Angular)   │     (ASP.NET Core 9)       │
+│  port 4300   │  port 4400   │       port 5300            │
+├──────────────┴──────────────┼───────────────────────────┤
+│                             │  SignalR Hubs (Real-time)  │
+│          Frontend           ├───────────────────────────┤
+│                             │  Controllers (thin)        │
+│  Angular 19 + Signals       │  Services (business logic) │
+│  PrimeNG + Tailwind         │  Repositories + UnitOfWork │
+│  ng-openapi-gen (API)       │  EF Core + SQL Server      │
+│  SignalR Client             │  MinIO (S3 Storage)        │
+└─────────────────────────────┴───────────────────────────┘
 ```
+
+**Backend — N-Tier Layered Architecture:**
+
+```
+WebAPI → Business Services → Repositories → Dal (EF Core) → Core
+```
+
+- **Controller** รับ request → เรียก Service → return response (ไม่มี business logic)
+- **Service** จัดการ business logic → เรียก Repository
+- **Repository** จัดการ database query → ผ่าน UnitOfWork
+- **Global Exception Filter** จัดการ errors ทั้งระบบอัตโนมัติ
+
+**Real-time — SignalR:**
+
+- Order Hub — broadcast เมื่อมีออเดอร์ใหม่ / เปลี่ยนสถานะ
+- Kitchen Hub — ครัวเห็นออเดอร์ทันทีพร้อม Timer
+- Table Hub — สถานะโต๊ะอัพเดตทุกหน้าจอ
+- Notification Hub — แจ้งเตือน Toast + Drawer แบบ Real-time
 
 ---
 
-## เริ่มต้นใช้งาน
+## Quick Start
 
-### รัน Backend
+### Prerequisites
+
+- [.NET 9 SDK](https://dotnet.microsoft.com/download)
+- [Node.js 20+](https://nodejs.org/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+
+### 1. Start Dependencies (Docker)
+
+```bash
+docker compose up -d sqlserver minio minio-init
+```
+
+### 2. Run Backend
 
 ```bash
 cd Backend-POS/POS.Main/RBMS.POS.WebAPI
 dotnet run
 ```
 
-API + Swagger จะอยู่ที่ `https://localhost:5300/swagger`
+Swagger: `https://localhost:5300/swagger`
 
-### รัน Frontend
+### 3. Run Frontend (Admin Client)
 
 ```bash
 cd Frontend-POS/RBMS-POS-Client
 npm install
-ng serve
+npx ng serve
 ```
 
-เปิดเบราว์เซอร์ที่ `http://localhost:4300`
+Admin Client: `http://localhost:4300`
 
-> ดูขั้นตอนแบบละเอียดได้ที่ [doc/development/quick-start.md](doc/development/quick-start.md)
+### 4. Run Frontend (Mobile Web - Customer QR)
 
-### บัญชีทดสอบ
-
-| ชื่อผู้ใช้ | รหัสผ่าน | ตำแหน่ง |
-|------------|----------|---------|
-| `Admin` | `P@ssw0rd` | ผู้ดูแลระบบ (สิทธิ์เต็ม) |
-
----
-
-## สถาปัตยกรรม
-
-**Backend** ใช้ N-Tier Layered Architecture เรียงตาม dependency direction (ห้ามมี circular reference):
-
-```
-WebAPI → Business.* (Services) → Repositories → Dal (EF Core) → Core
+```bash
+cd Frontend-POS/RBMS-POS-Mobile-Web
+npm install
+npx ng serve
 ```
 
-**Frontend** ใช้ Module-based Angular พร้อม Lazy Loading ทุก Feature Module, Angular Signals สำหรับ state, และ Generated API clients จาก ng-openapi-gen
+Mobile Web: `http://localhost:4400`
 
-**Real-time** ใช้ SignalR Hub (Backend) + SignalR Client (Frontend) + Angular Signals สำหรับ real-time updates (Order, Table, Kitchen)
+### Default Login
 
----
+| Username | Password   | Role                        |
+| -------- | ---------- | --------------------------- |
+| `admin`  | `P@ssw0rd` | Administrator (Full Access) |
 
-## สารบัญเอกสาร
-
-เอกสารทั้งหมดอยู่ในโฟลเดอร์ `doc/`
-
----
-
-### สถาปัตยกรรมระบบ (`doc/architecture/`)
-
-| เอกสาร | รายละเอียด |
-|--------|------------|
-| [project-structure.md](doc/architecture/project-structure.md) | โครงสร้างไฟล์จริงทั้งหมด — แยกตาม layer และ module |
-| [system-overview.md](doc/architecture/system-overview.md) | ภาพรวม Tech Stack, N-Tier Architecture, Frontend/Backend pattern, Data flow |
-| [design-system.md](doc/architecture/design-system.md) | Design System — Color tokens, Typography, Component patterns |
-| [icon-system.md](doc/architecture/icon-system.md) | ระบบจัดการ Icon — GenericIconComponent + PrimeIcons, คู่มือเพิ่ม icon ใหม่ |
-| [file-management.md](doc/architecture/file-management.md) | สถาปัตยกรรมการจัดการไฟล์ — TbFile Entity, S3 Storage, Upload/Download Flow |
-| [database-api-reference.md](doc/architecture/database-api-reference.md) | อ้างอิงฐานข้อมูลและ API — ตารางทั้งหมด, Endpoints, ความสัมพันธ์, Enum |
-| [auto-cleanup.md](doc/architecture/auto-cleanup.md) | ระบบ Auto-Cleanup — Background Service ลบข้อมูลชั่วคราวอัตโนมัติ (Tokens, Sessions, Notifications) |
-| [https-security.md](doc/architecture/https-security.md) | สถาปัตยกรรม HTTPS Security — TLS, HSTS, Security Headers, FR-SECURITY-003 |
+> รายละเอียดเพิ่มเติม: [doc/development/quick-start.md](doc/development/quick-start.md)
 
 ---
 
-### คู่มือพัฒนา (`doc/development/`)
-
-| เอกสาร | รายละเอียด |
-|--------|------------|
-| [quick-start.md](doc/development/quick-start.md) | รันโปรเจคครั้งแรก — database → backend → frontend + Docker setup (SQL Server, MinIO) |
-| [module-development-workflow.md](doc/development/module-development-workflow.md) | End-to-End Workflow 16 ขั้นตอน — Backend → Frontend พร้อม checklist |
-| [backend-guide.md](doc/development/backend-guide.md) | คู่มือ Backend — Architecture, Patterns ทุก Layer, 10-Step Workflow, Common Errors |
-| [backend-coding-standards.md](doc/development/backend-coding-standards.md) | มาตรฐานโค้ด Backend — DO/DON'T: naming, entity, repo, service, controller, DTO, query |
-| [frontend-guidelines.md](doc/development/frontend-guidelines.md) | สถาปัตยกรรม Frontend — Component patterns, Signals, API usage, Tailwind tokens |
-| [frontend-coding-standards.md](doc/development/frontend-coding-standards.md) | มาตรฐานโค้ด Frontend — DO/DON'T: Signals, takeUntilDestroyed, forms, routing, tokens |
-| [ai-prompting-guide.md](doc/development/ai-prompting-guide.md) | คู่มือใช้ AI Agents — SA→Backend→Frontend workflow, prompt templates |
-
----
-
-### AI Agent Specs (`doc/agents/`)
-
-| เอกสาร | หน้าที่ |
-|--------|---------|
-| [system-analyst.md](doc/agents/system-analyst.md) | SA Agent — ออกแบบ Entity, API, DTOs, Business Rules |
-| [backend-expert.md](doc/agents/backend-expert.md) | Backend Agent — เขียน/review .NET code ทุก layer |
-| [frontend-expert.md](doc/agents/frontend-expert.md) | Frontend Agent — เขียน/review Angular code, Signals, Tailwind, UX/UI Design |
-| [code-reviewer.md](doc/agents/code-reviewer.md) | Code Review Agent — 6 priority levels, severity checklist |
-
----
-
-### บันทึกฟีเจอร์ (`doc/features/`)
-
-| เอกสาร | รายละเอียด |
-|--------|------------|
-| [project-status.md](doc/features/project-status.md) | สถานะโปรเจคปัจจุบัน — Endpoints ทั้งหมด, สิ่งที่ยังขาด, Priority ถัดไป |
-
----
-
-### Business Requirements (`doc/requirements/`)
-
-| เอกสาร | รายละเอียด |
-|--------|------------|
-| [REQ-menu-system.md](doc/requirements/REQ-menu-system.md) | Requirements ระบบจัดการเมนูอาหาร — หมวดหมู่, เมนู, ตัวเลือกเสริม, ช่วงเวลาขาย, Tags |
-| [REQ-order-system.md](doc/requirements/REQ-order-system.md) | Requirements ระบบออเดอร์ — สั่งอาหาร, สถานะ, ตะกร้า, ส่งครัว, Split Bill |
-| [REQ-table-system.md](doc/requirements/REQ-table-system.md) | Requirements ระบบโต๊ะ — Floor Plan, เปิด/ปิดโต๊ะ, QR Code, จอง, เชื่อมโต๊ะ |
-| [REQ-kitchen-system.md](doc/requirements/REQ-kitchen-system.md) | Requirements ระบบครัว (KDS) — หน้าจอครัว, สถานะอาหาร, Timer, Sound, SignalR |
-| [REQ-payment-system.md](doc/requirements/REQ-payment-system.md) | Requirements ระบบชำระเงิน — เงินสด, QR Payment, กะแคชเชียร์, ใบเสร็จ |
-| [REQ-noti-system.md](doc/requirements/REQ-noti-system.md) | Requirements ระบบแจ้งเตือน — SignalR Hubs, Sidebar Drawer, Toast, Filter, Events |
-| [REQ-self-order-system.md](doc/requirements/REQ-self-order-system.md) | Requirements ระบบ QR Self-Order — ลูกค้าสแกน QR สั่งอาหารผ่าน Mobile Web, Guest Token, Nickname, Cart, Order Tracking |
-| [REQ-dashboard-system.md](doc/requirements/REQ-dashboard-system.md) | Requirements ระบบแดชบอร์ด — KPI ยอดขาย, เมนูขายดี, ช่วงเวลาขายดี, รายงานยอดขาย, ng2-charts |
-
----
-
-### ติดตาม Task งาน (`doc/tasks/`)
-
-| เอกสาร | รายละเอียด |
-|--------|------------|
-| [README.md](doc/tasks/README.md) | รูปแบบและกฎการใช้งาน Task tracking system |
-| [TASK-ui-redesign.md](doc/tasks/TASK-ui-redesign.md) | Task: UI Redesign — กฎ icon, token class, ลำดับการทำ Phase 1-6 |
-| [TASK-backend-patterns.md](doc/tasks/TASK-backend-patterns.md) | Task: Reusable Backend Patterns — BaseEntity, Response Models, BaseController, GlobalExceptionFilter (6 Phases) |
-| [TASK-file-management.md](doc/tasks/TASK-file-management.md) | Task: File Management System — S3 Storage, TbFile Entity, Menu/Employee Migration (4 Phases) |
-| [TASK-fe-layout-redesign.md](doc/tasks/TASK-fe-layout-redesign.md) | Task: Frontend Layout Redesign — main-layout, header, sidebar, breadcrumb, welcome (5 Phases) |
-| [TASK-login-redesign.md](doc/tasks/TASK-login-redesign.md) | Task: Login Page Redesign — ปรับหน้า login ให้ตรง design system |
-| [TASK-icon-system.md](doc/tasks/TASK-icon-system.md) | Task: Icon System — GenericIconComponent + PrimeIcons, ย้ายจาก `<img>` CSS filter |
-| [TASK-development-roadmap.md](doc/tasks/TASK-development-roadmap.md) | Development Roadmap — ลำดับการพัฒนาระบบ 6 Phases (Table → Order → Kitchen/Payment → Notification → Self-Order → Dashboard) |
-
----
-
-## เพิ่มเอกสารใหม่
-
-วางไฟล์ตามหมวดหมู่แล้ว **อัปเดตตารางในไฟล์นี้ (README.md) เสมอ**
+## Project Structure
 
 ```
-doc/
-├── architecture/     ← สถาปัตยกรรม, Technical design
-├── development/      ← Setup guides, How-to, คู่มือ Developer
-├── features/         ← สรุปฟีเจอร์ที่พัฒนา, Implementation notes
-├── agents/           ← AI Agent specs
-├── requirements/     ← Business requirements, Functional specs
-└── tasks/            ← Task tracking (TASK-{ชื่อ}.md)
+RBMS-POS/
+├── Backend-POS/POS.Main/
+│   ├── RBMS.POS.WebAPI/                 # Controllers, Hubs, Filters, Program.cs
+│   ├── POS.Main.Business.Admin/         # Auth, ServiceCharge, ShopSettings, File
+│   ├── POS.Main.Business.Menu/          # Menu, Category, Options
+│   ├── POS.Main.Business.HumanResource/ # Employee
+│   ├── POS.Main.Business.Authorization/ # Position-Based RBAC
+│   ├── POS.Main.Repositories/           # Repository + UnitOfWork
+│   ├── POS.Main.Dal/                    # Entities, DbContext, Migrations
+│   └── POS.Main.Core/                   # Enums, Exceptions, Helpers
+│
+├── Frontend-POS/
+│   ├── RBMS-POS-Client/                 # Admin/Staff Client (Angular)
+│   └── RBMS-POS-Mobile-Web/             # Customer Mobile Web (Angular)
+│
+├── doc/                                 # Documentation
+│   ├── architecture/                    # System design, Database reference
+│   ├── development/                     # Developer guides, Coding standards
+│   ├── requirements/                    # Business requirements (8 modules)
+│   ├── agents/                          # AI Agent specs (SA, BE, FE, Review)
+│   └── tasks/                           # Task tracking
+│
+└── docker-compose.yml                   # Full-stack deployment
 ```
 
 ---
 
-*RBMS-POS v1.0 | Angular 19.1 + ASP.NET Core 9.0 | SQL Server*
+## Documentation
+
+| หมวด                         | เอกสาร                                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| **Quick Start**              | [quick-start.md](doc/development/quick-start.md)                                 |
+| **System Overview**          | [system-overview.md](doc/architecture/system-overview.md)                        |
+| **Database & API Reference** | [database-api-reference.md](doc/architecture/database-api-reference.md)          |
+| **Backend Guide**            | [backend-guide.md](doc/development/backend-guide.md)                             |
+| **Frontend Guide**           | [frontend-guidelines.md](doc/development/frontend-guidelines.md)                 |
+| **Design System**            | [design-system.md](doc/architecture/design-system.md)                            |
+| **Development Workflow**     | [module-development-workflow.md](doc/development/module-development-workflow.md) |
+| **Project Status**           | [project-status.md](doc/features/project-status.md)                              |
+
+---
+
+## Deployment
+
+Production deployment ใช้ **Docker Compose** พร้อม Nginx reverse proxy + SSL auto-renewal:
+
+```bash
+docker compose up -d
+```
+
+| Service       | Port            |
+| ------------- | --------------- |
+| Nginx (HTTPS) | 443             |
+| Backend API   | 5000 (internal) |
+| Admin Client  | /client         |
+| Mobile Web    | /mobile         |
+| SQL Server    | 1433 (internal) |
+| MinIO         | 9000 (internal) |
+
+> รายละเอียด: [doc/development/DEPLOYMENT-GUIDE.md](doc/development/DEPLOYMENT-GUIDE.md)
+
+---
+
+## License
+
+This project is proprietary. All rights reserved.
+
+---
+
+<p align="center">
+  <sub>Built with Angular 19 + ASP.NET Core 9 + SignalR + SQL Server</sub>
+</p>

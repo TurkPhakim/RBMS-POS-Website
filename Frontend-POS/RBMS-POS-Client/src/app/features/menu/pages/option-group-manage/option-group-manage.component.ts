@@ -1,4 +1,12 @@
-import { Component, DestroyRef, OnDestroy, OnInit, QueryList, signal, ViewChildren } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  signal,
+  ViewChildren,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, NgModel, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,7 +21,6 @@ import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { ShopBrandingService } from '@app/core/services/shop-branding.service';
 import { markFormDirty } from '@app/shared/utils';
-
 const KEY_BTN_BACK = 'back-option-group';
 const KEY_BTN_SAVE = 'save-option-group';
 
@@ -77,7 +84,9 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
       hasError = true;
     } else {
       const hasEmptyName = items.some((i) => !i.name.trim());
-      const hasNullPrice = items.some((i) => i.additionalPrice == null || i.costPrice == null);
+      const hasNullPrice = items.some(
+        (i) => i.additionalPrice == null || i.costPrice == null,
+      );
       if (hasEmptyName || hasNullPrice) {
         this.hasItemError.set(true);
         this.ngModels?.forEach((m) => m.control.markAsDirty());
@@ -129,10 +138,14 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
 
   getCategoryColorClass(name: string | null | undefined): string {
     switch (name) {
-      case 'อาหาร': return 'text-cat-food';
-      case 'เครื่องดื่ม': return 'text-cat-drink';
-      case 'ของหวาน': return 'text-cat-dessert';
-      default: return '';
+      case 'อาหาร':
+        return 'text-cat-food';
+      case 'เครื่องดื่ม':
+        return 'text-cat-drink';
+      case 'ของหวาน':
+        return 'text-cat-dessert';
+      default:
+        return '';
     }
   }
 
@@ -170,8 +183,9 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
       isActive: [true],
     });
 
-    this.form.get('isRequired')?.valueChanges
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.form
+      .get('isRequired')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((isRequired: boolean) => {
         const minCtrl = this.form.get('minSelect');
         if (isRequired) {
@@ -240,19 +254,24 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
             this.form.get('maxSelect')?.disable();
           }
 
-          const items: OptionItemForm[] = (data.optionItems ?? []).map((oi) => ({
-            optionItemId: oi.optionItemId ?? null,
-            name: oi.name ?? '',
-            additionalPrice: oi.additionalPrice ?? 0,
-            costPrice: oi.costPrice ?? null,
-            isActive: oi.isActive ?? true,
-          }));
+          const items: OptionItemForm[] = (data.optionItems ?? []).map(
+            (oi) => ({
+              optionItemId: oi.optionItemId ?? null,
+              name: oi.name ?? '',
+              additionalPrice: oi.additionalPrice ?? 0,
+              costPrice: oi.costPrice ?? null,
+              isActive: oi.isActive ?? true,
+            }),
+          );
           this.optionItems.set(items);
 
           if (!this.canUpdate) this.form.disable();
         },
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถโหลดข้อมูลได้' });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถโหลดข้อมูลได้',
+          });
           this.router.navigate(['/menu/options']);
         },
       });
@@ -290,7 +309,10 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
           this.router.navigate(['/menu/options']);
         },
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถสร้างกลุ่มตัวเลือกได้' });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถสร้างกลุ่มตัวเลือกได้',
+          });
           this.resetSavingState();
         },
       });
@@ -317,7 +339,10 @@ export class OptionGroupManageComponent implements OnInit, OnDestroy {
           this.router.navigate(['/menu/options']);
         },
         error: () => {
-          this.modalService.cancel({ title: 'เกิดข้อผิดพลาด', message: 'ไม่สามารถบันทึกข้อมูลได้' });
+          this.modalService.cancel({
+            title: 'เกิดข้อผิดพลาด',
+            message: 'ไม่สามารถบันทึกข้อมูลได้',
+          });
           this.resetSavingState();
         },
       });

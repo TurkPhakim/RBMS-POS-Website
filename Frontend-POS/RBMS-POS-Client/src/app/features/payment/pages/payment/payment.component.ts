@@ -10,10 +10,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
-
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ApiConfiguration } from '@app/core/api/api-configuration';
-
 import { CashierSessionsService } from '@app/core/api/services/cashier-sessions.service';
 import { OrdersService } from '@app/core/api/services/orders.service';
 import { CashierSessionResponseModel } from '@app/core/api/models/cashier-session-response-model';
@@ -27,7 +25,6 @@ import { CloseSessionDialogComponent } from '../../dialogs/close-session-dialog/
 import { CashDrawerDialogComponent } from '../../dialogs/cash-drawer-dialog/cash-drawer-dialog.component';
 import { ReceiptService } from '@app/core/services/receipt.service';
 import { SlipPreviewDialogComponent } from '../../dialogs/slip-preview-dialog/slip-preview-dialog.component';
-
 const KEY_BTN_CLOSE = 'close-session';
 
 @Component({
@@ -81,12 +78,19 @@ export class PaymentComponent implements OnInit, OnDestroy {
         guestCount: first.guestCount,
         totalGrandTotal: group.reduce((sum, p) => sum + (p.grandTotal ?? 0), 0),
         paidAt: group.reduce(
-          (latest, p) => (!p.paidAt ? latest : !latest || p.paidAt > latest ? p.paidAt : latest),
+          (latest, p) =>
+            !p.paidAt
+              ? latest
+              : !latest || p.paidAt > latest
+                ? p.paidAt
+                : latest,
           '' as string,
         ),
         payments: group,
         isSplit: group.length > 1,
-        slipPayment: group.find((p) => p.paymentMethod === 'QrPayment' && p.slipImageFileId),
+        slipPayment: group.find(
+          (p) => p.paymentMethod === 'QrPayment' && p.slipImageFileId,
+        ),
       };
     });
   });
@@ -217,7 +221,9 @@ export class PaymentComponent implements OnInit, OnDestroy {
     ref.onClose
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((result) => {
-        if (result) this.loadCurrentSession();
+        if (result === 'success') {
+          this.router.navigate(['/']);
+        }
       });
   }
 
@@ -263,7 +269,6 @@ export class PaymentComponent implements OnInit, OnDestroy {
             : (p.paymentMethod ?? '-');
       return {
         label: `${p.billNumber} (${method})`,
-        icon: 'pi pi-download',
         command: () => this.onDownloadReceipt(p.paymentId!),
       };
     });

@@ -104,7 +104,8 @@ input[type="password"]::-ms-clear {
 .p-select.ng-invalid:not(.ng-dirty),
 .p-dropdown.ng-invalid:not(.ng-dirty),
 .ng-invalid:not(.ng-dirty) > .p-inputtext,
-.ng-invalid:not(.ng-dirty) > .p-dropdown {
+.ng-invalid:not(.ng-dirty) > .p-dropdown,
+p-inputnumber.ng-invalid:not(.ng-dirty) .p-inputnumber-input {
   border-color: var(--p-inputtext-border-color) !important;
 }
 
@@ -122,12 +123,14 @@ textarea:user-invalid {
 .p-select.ng-invalid.ng-dirty,
 .p-dropdown.ng-invalid.ng-dirty,
 .ng-invalid.ng-dirty > .p-inputtext,
-.ng-invalid.ng-dirty > .p-dropdown {
+.ng-invalid.ng-dirty > .p-dropdown,
+p-inputnumber.ng-invalid.ng-dirty .p-inputnumber-input {
   border-color: var(--color-danger) !important;
 }
 
 /* Override: ไม่เปลี่ยนสี placeholder ตอน error (PrimeNG default เปลี่ยนเป็นแดง) */
-.p-inputtext.ng-invalid.ng-dirty::placeholder {
+.p-inputtext.ng-invalid.ng-dirty::placeholder,
+p-inputnumber.ng-invalid.ng-dirty .p-inputnumber-input::placeholder {
   color: var(--p-inputtext-placeholder-color) !important;
 }
 
@@ -224,47 +227,6 @@ textarea:user-invalid {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25) !important;
 }
 
-/* ─── Dropdown — host element block ───────────────────────────────────────── */
-
-p-dropdown,
-p-select {
-  display: block;
-}
-
-/* Paginator — dropdown ขนาดเล็ก ไม่ยืดเต็มแถว */
-.p-paginator p-dropdown,
-.p-paginator p-select {
-  display: inline-flex;
-  width: auto;
-}
-
-/* ─── Compact Dropdown (ลดความสูง ใช้ใน split-bill) ─────────────────────── */
-
-.compact-dropdown .p-dropdown-label {
-  padding: 0.15rem 0.4rem !important;
-  font-size: 0.8rem;
-  line-height: 1.2;
-}
-
-.compact-dropdown .p-dropdown-trigger {
-  width: 1.4rem;
-  padding: 0;
-}
-
-.compact-dropdown .p-dropdown-trigger .p-dropdown-trigger-icon {
-  font-size: 0.6rem;
-}
-
-.compact-dropdown-panel {
-  min-width: 100px !important;
-}
-
-.compact-dropdown-panel .p-dropdown-item {
-  padding: 0.3rem 0.5rem !important;
-  font-size: 0.75rem;
-  line-height: 1.2;
-}
-
 /* ─── DatePicker ─────────────────────────────────────────────────────────── */
 
 /* ป้องกัน datepicker ถูกทับโดย element อื่น (dynamic overlay ใช้ Tailwind ไม่ได้) */
@@ -329,6 +291,47 @@ p-datepicker.has-clear-icon .p-datepicker-clear-icon {
   font-size: 2rem !important;
   font-weight: 700;
   color: var(--color-surface-muted);
+}
+
+/* ─── Dropdown — host element block ───────────────────────────────────────── */
+
+p-dropdown,
+p-select {
+  display: block;
+}
+
+/* Paginator — dropdown ขนาดเล็ก ไม่ยืดเต็มแถว */
+.p-paginator p-dropdown,
+.p-paginator p-select {
+  display: inline-flex;
+  width: auto;
+}
+
+/* ─── Compact Dropdown (ลดความสูง ใช้ใน split-bill) ─────────────────────── */
+
+.compact-dropdown .p-dropdown-label {
+  padding: 0.15rem 0.4rem !important;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.compact-dropdown .p-dropdown-trigger {
+  width: 1.4rem;
+  padding: 0;
+}
+
+.compact-dropdown .p-dropdown-trigger .p-dropdown-trigger-icon {
+  font-size: 0.6rem;
+}
+
+.compact-dropdown-panel {
+  min-width: 100px !important;
+}
+
+.compact-dropdown-panel .p-dropdown-item {
+  padding: 0.3rem 0.5rem !important;
+  font-size: 0.75rem;
+  line-height: 1.2;
 }
 
 /* ─── Image Preview (p-image) ────────────────────────────────────────────── */
@@ -427,6 +430,11 @@ p-datepicker.has-clear-icon .p-datepicker-clear-icon {
   background: var(--color-primary-subtle) !important;
   color: var(--color-primary) !important;
   font-weight: 600 !important;
+}
+
+/* Paginator dropdown — appendTo="body" ทำให้ panel หลุดจาก .p-select → min-width:100% หาย */
+body > .p-overlay .p-select-overlay {
+  min-width: 100% !important;
 }
 
 /* ─── RadioButton ────────────────────────────────────────────────────────── */
@@ -536,6 +544,41 @@ p-datepicker.has-clear-icon .p-datepicker-clear-icon {
   background: var(--color-surface) !important;
 }
 
+/* ─── Toast (Notification Phone Banner) ─────────────────────────────────── */
+
+.noti-toast {
+  top: 1rem !important;
+  width: 32rem !important;
+}
+
+.noti-toast .p-toast-message {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.noti-toast .p-toast-message-content {
+  padding: 0 !important;
+}
+
+.noti-toast .p-toast-icon-close,
+.noti-toast .p-toast-close-button,
+.noti-toast button[aria-label="Close"] {
+  display: none !important;
+}
+
+.noti-toast .p-toast-message-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.noti-toast app-generic-icon,
+.noti-toast app-generic-icon > span {
+  display: inline-flex !important;
+  align-items: center;
+}
+
 /* ─── ToggleSwitch ───────────────────────────────────────────────────────── */
 
 /* Reset ALL PrimeNG default styles */
@@ -608,41 +651,6 @@ p-inputswitch + span {
   display: inline-block;
 }
 
-/* ─── Notification Toast (Phone Banner) ───────────────────────────────────── */
-
-.noti-toast {
-  top: 1rem !important;
-  width: 32rem !important;
-}
-
-.noti-toast .p-toast-message {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  margin-bottom: 0.5rem !important;
-}
-
-.noti-toast .p-toast-message-content {
-  padding: 0 !important;
-}
-
-.noti-toast .p-toast-icon-close,
-.noti-toast .p-toast-close-button,
-.noti-toast button[aria-label="Close"] {
-  display: none !important;
-}
-
-.noti-toast .p-toast-message-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.noti-toast app-generic-icon,
-.noti-toast app-generic-icon > span {
-  display: inline-flex !important;
-  align-items: center;
-}
-
 /* ╔═══════════════════════════════════════════════════════════════════════════╗
    ║ 6. DIALOG OVERRIDES                                                     ║
    ╚═══════════════════════════════════════════════════════════════════════════╝ */
@@ -711,6 +719,37 @@ app-card-template p-footer {
    ║ 7. CUSTOM COMPONENTS — App-specific elements                            ║
    ╚═══════════════════════════════════════════════════════════════════════════╝ */
 
+/* ─── CDK Drag & Drop ──────────────────────────────────────────────────── */
+
+/* Placeholder — ช่องว่างแสดงตำแหน่งที่จะวาง */
+.cdk-drag-placeholder {
+  background: var(--color-primary-subtle) !important;
+  border: 2px dashed var(--color-primary) !important;
+  border-radius: 0.5rem;
+}
+
+.cdk-drag-placeholder > * {
+  visibility: hidden;
+}
+
+/* Preview — ตัวที่ลากตามเมาส์ ไฮไลต์สีส้มอ่อน */
+.cdk-drag-preview {
+  background: var(--color-primary-subtle);
+  border: 2px solid var(--color-primary);
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+}
+
+/* Animation — แถวอื่นเลื่อนหลีกทางอย่างนุ่มนวล */
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* ระหว่าง drag — แถวอื่น transition ตำแหน่ง */
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
 /* ─── Custom Checkbox (Permission Tree) ──────────────────────────────────── */
 
 .custom-checkbox {
@@ -764,37 +803,6 @@ app-card-template p-footer {
   cursor: not-allowed;
 }
 
-/* ─── CDK Drag & Drop ──────────────────────────────────────────────────── */
-
-/* Placeholder — ช่องว่างแสดงตำแหน่งที่จะวาง */
-.cdk-drag-placeholder {
-  background: var(--color-primary-subtle) !important;
-  border: 2px dashed var(--color-primary) !important;
-  border-radius: 0.5rem;
-}
-
-.cdk-drag-placeholder > * {
-  visibility: hidden;
-}
-
-/* Preview — ตัวที่ลากตามเมาส์ ไฮไลต์สีส้มอ่อน */
-.cdk-drag-preview {
-  background: var(--color-primary-subtle);
-  border: 2px solid var(--color-primary);
-  border-radius: 0.5rem;
-  box-sizing: border-box;
-}
-
-/* Animation — แถวอื่นเลื่อนหลีกทางอย่างนุ่มนวล */
-.cdk-drag-animating {
-  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-/* ระหว่าง drag — แถวอื่น transition ตำแหน่ง */
-.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
-  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
 /* ─── Password Input ────────────────────────────────────────────────────── */
 
 .password-input::-ms-reveal,
@@ -814,11 +822,22 @@ app-card-template p-footer {
 /* ─── Shake Animation ──────────────────────────────────────────────────── */
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-6px); }
-  40% { transform: translateX(6px); }
-  60% { transform: translateX(-4px); }
-  80% { transform: translateX(4px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
 }
 
 .animate-shake {

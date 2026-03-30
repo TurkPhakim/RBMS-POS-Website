@@ -1,9 +1,12 @@
 <div class="space-y-6">
   <!-- Period Filter -->
-  <div class="bg-surface-card rounded-xl p-5">
-    <div class="flex flex-wrap items-center gap-3">
-      <span class="text-sm text-surface-sub">ช่วงเวลา:</span>
-      <div class="flex gap-2">
+  <div class="bg-surface-card rounded-xl px-6 py-5 space-y-4">
+    <!-- Row 1: Preset buttons (Sliding Tab) -->
+    <div class="flex items-center gap-4">
+      <span class="text-xl font-semibold text-surface-sub w-[110px] shrink-0"
+        >ช่วงเวลา:</span
+      >
+      <div class="flex flex-1 bg-surface rounded-lg p-1 gap-1">
         @for (
           p of [
             { key: 'today', label: 'วันนี้' },
@@ -14,40 +17,51 @@
           track p.key
         ) {
           <button
-            pButton
             type="button"
-            [label]="p.label"
-            [class]="
+            class="flex-1 px-5 py-2 text-xl font-medium rounded-md transition-all cursor-pointer text-center"
+            [ngClass]="
               activePreset === p.key
-                ? 'p-button-sm'
-                : 'p-button-sm p-button-outlined p-button-secondary'
+                ? 'bg-white text-primary'
+                : 'text-surface-sub hover:text-surface-dark'
             "
             (click)="setPreset(p.key)"
-          ></button>
+          >
+            {{ p.label }}
+          </button>
         }
       </div>
     </div>
-    <div class="flex flex-wrap items-center gap-3 mt-3">
-      <span class="text-sm text-surface-sub">กำหนดเอง:</span>
-      <p-datepicker
-        [(ngModel)]="dateFrom"
-        (ngModelChange)="onDateFromChange()"
-        dateFormat="dd/mm/yy"
-        styleClass="w-[170px]"
-      ></p-datepicker>
-      <span class="text-sm text-surface-sub">ถึง</span>
-      <p-datepicker
-        [(ngModel)]="dateTo"
-        dateFormat="dd/mm/yy"
-        [minDate]="minEndDate()!"
-        styleClass="w-[170px]"
-      ></p-datepicker>
+
+    <!-- Row 2: Custom date range -->
+    <div class="flex items-center gap-4">
+      <span class="text-xl font-semibold text-surface-sub w-[110px] shrink-0"
+        >กำหนดเอง:</span
+      >
+      <div class="flex-1">
+        <p-datepicker
+          [(ngModel)]="dateFrom"
+          (ngModelChange)="onDateFromChange()"
+          dateFormat="dd/mm/yy"
+          styleClass="w-full"
+          inputStyleClass="text-xl"
+        ></p-datepicker>
+      </div>
+      <span class="text-xl text-surface-sub shrink-0">ถึง</span>
+      <div class="flex-1">
+        <p-datepicker
+          [(ngModel)]="dateTo"
+          dateFormat="dd/mm/yy"
+          [minDate]="minEndDate()!"
+          styleClass="w-full"
+          inputStyleClass="text-xl"
+        ></p-datepicker>
+      </div>
       <button
         pButton
         type="button"
         label="ค้นหา"
         icon="pi pi-search"
-        class="p-button-sm"
+        class="shrink-0"
         (click)="onSearch()"
       ></button>
     </div>
@@ -60,6 +74,7 @@
         [label]="card.label"
         [value]="card.value"
         [icon]="card.icon"
+        [accentColor]="card.accentColor"
         [showComparison]="false"
       ></app-kpi-card>
     }
@@ -70,7 +85,7 @@
     <!-- Category Pie -->
     <div class="bg-surface-card rounded-xl p-5">
       <h3 class="text-section-title mb-4">สัดส่วนยอดขายตามหมวดหมู่</h3>
-      @if ((report()?.categoryBreakdown?.length ?? 0) > 0) {
+      @if (hasPieData) {
         <div class="h-[280px] flex items-center justify-center">
           <canvas
             baseChart
@@ -92,25 +107,33 @@
     <div class="bg-surface-card rounded-xl p-5">
       <h3 class="text-section-title mb-4">รายการแยกครัว</h3>
       @if (kitchenItems.length > 0) {
-        <div class="space-y-4 pt-2">
+        <div class="space-y-3 pt-2">
           @for (item of kitchenItems; track item.categoryName) {
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-sm font-medium">{{
-                  item.categoryName
-                }}</span>
-                <span class="text-sm text-surface-sub"
-                  >{{ item.itemCount | number }} ชิ้น ({{
-                    item.percentage | number: '1.1-1'
-                  }}%)</span
-                >
+            <div
+              class="flex items-center gap-4 p-4 rounded-xl border-l-4"
+              [ngClass]="item.borderColor"
+            >
+              <div
+                class="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center"
+                [style.backgroundColor]="item.bgStyle"
+              >
+                <app-generic-icon
+                  [name]="item.iconName"
+                  svgClass="w-7 h-7"
+                  [class]="item.color"
+                ></app-generic-icon>
               </div>
-              <div class="w-full bg-surface rounded-full h-3">
-                <div
-                  class="h-3 rounded-full transition-all duration-300"
-                  [ngClass]="item.barColor"
-                  [style.width.%]="item.percentage"
-                ></div>
+              <div class="flex flex-col">
+                <span class="text-surface-sub">{{ item.categoryName }}</span>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-2xl font-bold">{{
+                    item.itemCount | number
+                  }}</span>
+                  <span class="text-surface-sub">ชิ้น</span>
+                </div>
+                <span [class]="item.color"
+                  >{{ item.percentage | number: '1.1-1' }}% ของทั้งหมด</span
+                >
               </div>
             </div>
           }
@@ -126,49 +149,58 @@
   </div>
 
   <!-- Daily Breakdown Table -->
-  <div class="bg-surface-card rounded-xl p-5">
-    <h3 class="text-section-title mb-4">ยอดขายรายวัน</h3>
-    <p-table
-      [value]="dailyBreakdown"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      [showCurrentPageReport]="true"
-      currentPageReportTemplate="{first} - {last} of {totalRecords}"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th class="w-[120px]">วันที่</th>
-          <th class="w-[140px] text-right">ยอดขาย</th>
-          <th class="w-[120px] text-center">จำนวนออเดอร์</th>
-          <th class="w-[120px] text-center">จำนวนลูกค้า</th>
-          <th class="w-[140px] text-right">เฉลี่ย/ออเดอร์</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-row>
-        <tr>
-          <td class="w-[120px]">{{ formatDate(row.date) }}</td>
-          <td class="w-[140px] text-right">
-            {{ formatCurrency(row.totalSales) }}
-          </td>
-          <td class="w-[120px] text-center">
-            {{ row.orderCount | number }}
-          </td>
-          <td class="w-[120px] text-center">
-            {{ row.guestCount | number }}
-          </td>
-          <td class="w-[140px] text-right">
-            {{ formatCurrency(row.averagePerOrder) }}
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="5" class="text-center py-8 text-surface-sub">
-            ยังไม่มีข้อมูล
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+  <div class="bg-surface-card rounded-lg">
+    <div class="p-4">
+      <h3 class="text-section-title">ยอดขายรายวัน</h3>
+    </div>
+    <div class="px-4 pb-4">
+      <p-table
+        [value]="dailyBreakdown"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} - {last} of {totalRecords}"
+        [stripedRows]="true"
+        [scrollable]="true"
+        styleClass="p-datatable-clean"
+      >
+        <ng-template pTemplate="header">
+          <tr class="whitespace-nowrap">
+            <th class="w-[160px]">วันที่</th>
+            <th class="w-[160px] !text-right">ยอดขาย</th>
+            <th class="w-[120px] !text-center">จำนวนออเดอร์</th>
+            <th class="w-[120px] !text-center">จำนวนลูกค้า</th>
+            <th class="w-[160px] !text-right">เฉลี่ย/ออเดอร์</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-row>
+          <tr>
+            <td class="whitespace-nowrap">{{ formatDate(row.date) }}</td>
+            <td class="!text-right font-semibold whitespace-nowrap">
+              {{ formatCurrency(row.totalSales) }}
+            </td>
+            <td class="!text-center whitespace-nowrap">
+              {{ row.orderCount | number }}
+            </td>
+            <td class="!text-center whitespace-nowrap">
+              {{ row.guestCount | number }}
+            </td>
+            <td class="!text-right font-semibold whitespace-nowrap">
+              {{ formatCurrency(row.averagePerOrder) }}
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5">
+              <div class="flex justify-center items-center w-full p-[100px]">
+                <app-empty-view message="ไม่มีข้อมูลยอดขาย" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   </div>
 </div>

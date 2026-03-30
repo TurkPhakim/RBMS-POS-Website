@@ -299,14 +299,14 @@
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
-          <tr>
+          <tr class="whitespace-nowrap">
             <th class="w-[80px]">รหัส</th>
             <th class="w-[160px]">รูปเมนู</th>
-            <th class="w-[200px] whitespace-nowrap">ชื่อเมนู (ภาษาไทย)</th>
-            <th class="w-[200px] whitespace-nowrap">ชื่อเมนู (ภาษาอังกฤษ)</th>
+            <th class="w-[200px]">ชื่อเมนู (ภาษาไทย)</th>
+            <th class="w-[200px]">ชื่อเมนู (ภาษาอังกฤษ)</th>
             <th class="w-[140px]">ประเภท</th>
             @if (hasTwoPeriods()) {
-              <th class="w-[120px] whitespace-nowrap">ช่วงเวลาขาย</th>
+              <th class="w-[120px]">ช่วงเวลาขาย</th>
             }
             <th class="w-[140px]">สถานะการขาย</th>
           </tr>

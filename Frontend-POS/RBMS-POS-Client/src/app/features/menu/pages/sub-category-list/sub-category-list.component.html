@@ -84,14 +84,14 @@
         styleClass="p-datatable-clean"
       >
         <ng-template pTemplate="header">
-          <tr>
+          <tr class="whitespace-nowrap">
             @if (canUpdate) {
               <th class="w-[40px]">ลำดับ</th>
             }
             <th class="w-[80px]">รหัส</th>
-            <th class="w-[200px] whitespace-nowrap">ชื่อหมวดหมู่เมนู</th>
-            <th class="w-[160px] whitespace-nowrap">จำนวนเมนูที่ใช้งาน</th>
-            <th class="w-[140px] whitespace-nowrap">สถานะการขาย</th>
+            <th class="w-[200px]">ชื่อหมวดหมู่เมนู</th>
+            <th class="w-[160px]">จำนวนเมนูที่ใช้งาน</th>
+            <th class="w-[140px]">สถานะการขาย</th>
             <th class="w-[100px]">ตัวเลือก</th>
           </tr>
         </ng-template>

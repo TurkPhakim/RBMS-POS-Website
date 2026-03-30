@@ -1,16 +1,18 @@
 import { Component, DestroyRef, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
+import { DialogService, DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { CashierSessionsService } from '@app/core/api/services/cashier-sessions.service';
 import { CashierSessionResponseModel } from '@app/core/api/models/cashier-session-response-model';
 import { ModalService } from '@app/core/services/modal.service';
+import { VerifyPinDialogComponent } from '@app/shared/dialogs/verify-pin/verify-pin-dialog.component';
 import { markFormDirty } from '@app/shared/utils';
 
 @Component({
   selector: 'app-close-session-dialog',
   standalone: false,
   templateUrl: './close-session-dialog.component.html',
+  providers: [DialogService],
 })
 export class CloseSessionDialogComponent {
   form: FormGroup;
@@ -25,6 +27,7 @@ export class CloseSessionDialogComponent {
     private fb: FormBuilder,
     private ref: DynamicDialogRef,
     public config: DynamicDialogConfig,
+    private dialogService: DialogService,
     private cashierSessionsService: CashierSessionsService,
     private modalService: ModalService,
     private destroyRef: DestroyRef,
@@ -53,26 +56,35 @@ export class CloseSessionDialogComponent {
     markFormDirty(this.form);
     if (this.form.invalid) return;
 
-    this.modalService.info({
-      title: 'ยืนยันปิดรอบการขาย',
-      message: 'คุณแน่ใจหรือไม่ว่าต้องการปิดรอบแคชเชียร์?',
-      onConfirm: () => {
-        this.isSaving.set(true);
-        this.cashierSessionsService
-          .cashierSessionsCloseSessionPost({
-            cashierSessionId: this.session.cashierSessionId!,
-            body: this.form.value,
-          })
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe({
-            next: () => {
-              this.modalService.commonSuccess();
-              this.ref.close(true);
-            },
-            error: () => this.isSaving.set(false),
-          });
-      },
+    const pinRef = this.dialogService.open(VerifyPinDialogComponent, {
+      header: 'ยืนยันตัวตน',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      width: '35vw',
     });
+
+    pinRef.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result === true) {
+          this.isSaving.set(true);
+          this.cashierSessionsService
+            .cashierSessionsCloseSessionPost({
+              cashierSessionId: this.session.cashierSessionId!,
+              body: this.form.value,
+            })
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => {
+                this.modalService.commonSuccess();
+                this.ref.close('success');
+              },
+              error: () => this.isSaving.set(false),
+            });
+        } else if (result === 'max-attempts') {
+          this.ref.close(false);
+        }
+      });
   }
 
   onCancel(): void {

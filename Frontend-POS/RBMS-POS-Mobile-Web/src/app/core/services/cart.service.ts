@@ -5,16 +5,20 @@ const CART_KEY = 'customer_cart';
 @Injectable({ providedIn: 'root' })
 export class CartService {
   items = signal<CartItem[]>(this.loadFromStorage());
-  itemCount = computed(() => this.items().reduce((sum, i) => sum + i.quantity, 0));
-  totalPrice = computed(() => this.items().reduce((sum, i) => sum + i.itemTotal, 0));
+  itemCount = computed(() =>
+    this.items().reduce((sum, i) => sum + i.quantity, 0),
+  );
+  totalPrice = computed(() =>
+    this.items().reduce((sum, i) => sum + i.itemTotal, 0),
+  );
 
   addItem(item: CartItem): void {
-    this.items.update(items => [...items, item]);
+    this.items.update((items) => [...items, item]);
     this.saveToStorage();
   }
 
   updateQuantity(index: number, quantity: number): void {
-    this.items.update(items => {
+    this.items.update((items) => {
       const updated = [...items];
       const item = { ...updated[index] };
       item.quantity = quantity;
@@ -26,7 +30,7 @@ export class CartService {
   }
 
   updateNote(index: number, note: string): void {
-    this.items.update(items => {
+    this.items.update((items) => {
       const updated = [...items];
       updated[index] = { ...updated[index], note: note || undefined };
       return updated;
@@ -35,7 +39,7 @@ export class CartService {
   }
 
   removeItem(index: number): void {
-    this.items.update(items => items.filter((_, i) => i !== index));
+    this.items.update((items) => items.filter((_, i) => i !== index));
     this.saveToStorage();
   }
 
@@ -45,7 +49,10 @@ export class CartService {
   }
 
   private calcTotal(item: CartItem): number {
-    const optPrice = item.selectedOptions.reduce((s, o) => s + o.additionalPrice, 0);
+    const optPrice = item.selectedOptions.reduce(
+      (s, o) => s + o.additionalPrice,
+      0,
+    );
     return (item.price + optPrice) * item.quantity;
   }
 

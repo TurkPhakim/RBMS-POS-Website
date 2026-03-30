@@ -64,7 +64,9 @@
           ></p-inputSwitch>
           <span
             class="font-semibold mb-2"
-            [ngClass]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
+            [ngClass]="
+              form.get('isActive')?.value ? 'text-success' : 'text-danger'
+            "
             >{{
               form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน"
             }}</span
@@ -92,10 +94,10 @@
           styleClass="p-datatable-clean"
         >
           <ng-template pTemplate="header">
-            <tr>
+            <tr class="whitespace-nowrap">
               <th class="w-[80px]">รหัส</th>
               <th class="w-[120px]">รูปภาพ</th>
-              <th class="w-[220px] whitespace-nowrap">ชื่อ-นามสกุล</th>
+              <th class="w-[220px]">ชื่อ-นามสกุล</th>
               <th class="w-[200px]">อีเมล</th>
               <th class="w-[120px] text-center">ประเภทการจ้าง</th>
               <th class="w-[120px] text-center">สถานะ</th>

@@ -12,4 +12,5 @@ public class TopSellingItemModel
     public int MenuId { get; set; }
     public string MenuName { get; set; } = string.Empty;
     public int TotalQuantity { get; set; }
+    public int? ImageFileId { get; set; }
 }

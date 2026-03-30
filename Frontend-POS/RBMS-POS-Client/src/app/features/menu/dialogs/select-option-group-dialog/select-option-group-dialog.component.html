@@ -8,11 +8,11 @@
     [rowsPerPageOptions]="[10, 25, 50]"
     [showCurrentPageReport]="true"
     currentPageReportTemplate="{first} - {last} of {totalRecords}"
+    paginatorDropdownAppendTo="body"
     styleClass="p-datatable-clean"
-    [paginatorDropdownAppendTo]="'body'"
   >
     <ng-template pTemplate="header">
-      <tr>
+      <tr class="whitespace-nowrap">
         <th class="w-[50px] !text-center">
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
         </th>
@@ -31,7 +31,7 @@
           <p-tableCheckbox [value]="group"></p-tableCheckbox>
         </td>
         <td class="text-center">{{ group.optionGroupId }}</td>
-        <td>{{ group.name }}</td>
+        <td class="whitespace-nowrap">{{ group.name }}</td>
         <td class="text-center">{{ group.optionItems?.length ?? 0 }}</td>
         <td class="text-center">
           @if (group.isRequired) {
@@ -48,10 +48,8 @@
     <ng-template pTemplate="emptymessage">
       <tr>
         <td [attr.colspan]="7">
-          <div
-            class="flex justify-center items-center w-full py-8 text-surface-placeholder"
-          >
-            ไม่มีกลุ่มตัวเลือกที่สามารถเพิ่มได้
+          <div class="flex justify-center items-center w-full p-[100px]">
+            <app-empty-view message="ไม่มีกลุ่มตัวเลือกที่สามารถเพิ่มได้" />
           </div>
         </td>
       </tr>
@@ -60,7 +58,7 @@
 
   <p-footer>
     <p-button
-      label="ยกเลิก"
+      label="ปิด"
       severity="secondary"
       [outlined]="true"
       [style]="{ 'min-width': '100px' }"

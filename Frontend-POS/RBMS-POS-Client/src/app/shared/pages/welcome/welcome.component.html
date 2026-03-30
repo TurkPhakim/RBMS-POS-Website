@@ -198,7 +198,10 @@
                           [src]="brandingService.logoUrl()"
                           alt="Shop Logo"
                           class="relative z-10 w-24 h-24 rounded-2xl object-contain flex-shrink-0 bg-white/90 p-1"
-                          (error)="brandingService.logoUrl.set('images/RBMS_Logo.png'); brandingService.hasCustomLogo.set(false)"
+                          (error)="
+                            brandingService.logoUrl.set('images/RBMS_Logo.png');
+                            brandingService.hasCustomLogo.set(false)
+                          "
                         />
                       } @else {
                         <div
