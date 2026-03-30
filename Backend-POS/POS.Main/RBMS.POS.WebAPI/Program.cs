@@ -346,7 +346,23 @@ app.UseSwaggerUI(options =>
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<POSMainContext>();
-    await context.Database.MigrateAsync();
+    try
+    {
+        await context.Database.MigrateAsync();
+    }
+    catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801)
+    {
+        // Database already exists แต่ EF Core ตรวจไม่เจอ (race condition กับ SQL Server startup)
+        // รอให้ DB พร้อมรับ connection แล้ว retry
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogWarning("Database already exists, waiting for connection then retrying migration...");
+        for (var i = 0; i < 15; i++)
+        {
+            if (await context.Database.CanConnectAsync()) break;
+            await Task.Delay(2000);
+        }
+        await context.Database.MigrateAsync();
+    }
 }
 
 // Seed admin user (ทุก environment — สร้างเฉพาะเมื่อยังไม่มี)
