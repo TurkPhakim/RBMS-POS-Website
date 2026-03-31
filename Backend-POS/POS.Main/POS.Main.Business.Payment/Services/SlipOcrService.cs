@@ -50,6 +50,7 @@ public class SlipOcrService : ISlipOcrService
             var text = await RunTesseractCliAsync(tempFile, ct);
 
             _logger.LogInformation("OCR extracted text length: {Length}", text.Length);
+            _logger.LogInformation("OCR raw text:\n{Text}", text);
 
             result.Amount = ParseAmount(text);
             result.TransferDate = ParseDate(text);
