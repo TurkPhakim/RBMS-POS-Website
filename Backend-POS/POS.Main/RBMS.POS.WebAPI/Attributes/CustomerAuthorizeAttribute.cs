@@ -76,7 +76,7 @@ public class CustomerAuthorizeAttribute : Attribute, IAsyncAuthorizationFilter
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.TableId == tableId && !t.DeleteFlag);
 
-            if (table == null || (table.Status != ETableStatus.Occupied && table.Status != ETableStatus.Billing))
+            if (table == null || (table.Status != ETableStatus.Occupied && table.Status != ETableStatus.Billing && table.Status != ETableStatus.Cleaning))
             {
                 context.Result = new UnauthorizedObjectResult(new { message = "โต๊ะถูกปิดแล้ว" });
                 return;

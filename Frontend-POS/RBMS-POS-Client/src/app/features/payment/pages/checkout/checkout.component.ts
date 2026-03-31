@@ -381,10 +381,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
             message:
               change > 0 ? `เงินทอน ${change.toFixed(2)} บาท` : undefined,
             confirmButtonLabel: 'ดาวน์โหลดใบเสร็จ',
-            onConfirm: () =>
-              paymentId
-                ? this.receiptService.downloadReceipt(paymentId)
-                : undefined,
+            onConfirm: () => {
+              if (paymentId) {
+                this.receiptService
+                  .downloadReceipt(paymentId)
+                  .pipe(takeUntilDestroyed(this.destroyRef))
+                  .subscribe();
+              }
+            },
           });
 
           dialogRef.onClose

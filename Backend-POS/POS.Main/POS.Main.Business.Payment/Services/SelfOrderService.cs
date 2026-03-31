@@ -199,6 +199,11 @@ public class SelfOrderService : ISelfOrderService
 
         // Auto-filter ตามช่วงเวลาเปิด-ปิดร้าน
         var periodResult = await _shopSettingsService.GetCurrentPeriodAsync(ct);
+
+        // ร้านปิด (นอกช่วงเวลา / วันหยุด / ระหว่างช่วง) → ไม่แสดงเมนูให้ลูกค้า
+        if (!periodResult.IsOpen)
+            return new List<CustomerMenuItemResponseModel>();
+
         if (periodResult.CurrentPeriod == "period1")
             query = query.Where(m => m.IsAvailablePeriod1);
         else if (periodResult.CurrentPeriod == "period2")

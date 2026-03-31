@@ -267,8 +267,7 @@ export class KitchenDisplayComponent implements OnInit, OnDestroy {
 
   getElapsedMinutes(dateStr: string | null | undefined): number {
     if (!dateStr) return 0;
-    const utcStr = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z';
-    return Math.floor((Date.now() - new Date(utcStr).getTime()) / 60000);
+    return Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
   }
 
   getTimeBadgeClass(minutes: number): string {

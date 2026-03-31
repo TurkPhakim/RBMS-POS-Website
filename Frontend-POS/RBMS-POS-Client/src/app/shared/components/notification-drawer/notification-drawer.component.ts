@@ -51,6 +51,7 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   ORDER_READY: { icon: 'food', color: 'text-success' },
   CALL_WAITER: { icon: 'food-waiter', color: 'text-warning-dark' },
   REQUEST_BILL: { icon: 'bill-rastaurant', color: 'text-info' },
+  REQUEST_SPLIT_BILL: { icon: 'bill-splitting', color: 'text-info' },
   RESERVATION_REMINDER: { icon: 'reservation', color: 'text-warning-dark' },
   ORDER_CANCELLED: { icon: 'cancel', color: 'text-danger' },
   SLIP_UPLOADED: { icon: 'receipt', color: 'text-info' },
@@ -64,6 +65,7 @@ const NAV_MAP: Record<string, (n: NotificationResponseModel) => string[]> = {
   ORDER_READY: (n) => ['/order/list', String(n.orderId)],
   CALL_WAITER: () => ['/order/overview'],
   REQUEST_BILL: (n) => ['/payment/checkout', String(n.orderId)],
+  REQUEST_SPLIT_BILL: (n) => ['/payment/checkout', String(n.orderId)],
   RESERVATION_REMINDER: () => ['/table/reservations'],
   ORDER_CANCELLED: (n) => ['/order/list', String(n.orderId)],
   SLIP_UPLOADED: (n) => ['/payment/checkout', String(n.orderId)],
@@ -128,9 +130,7 @@ export class NotificationDrawerComponent {
   relativeTime(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
     const now = Date.now();
-    const utcStr =
-      dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z';
-    const date = new Date(utcStr).getTime();
+    const date = new Date(dateStr).getTime();
     const diff = Math.floor((now - date) / 1000);
 
     if (diff < 60) return 'เมื่อสักครู่';

@@ -1,16 +1,15 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using POS.Main.Business.Payment.Interfaces;
 using POS.Main.Business.Payment.Models.Payment;
-using Tesseract;
 
 namespace POS.Main.Business.Payment.Services;
 
 public class SlipOcrService : ISlipOcrService
 {
     private readonly ILogger<SlipOcrService> _logger;
-    private readonly string _tessDataPath;
 
     // Thai month abbreviations → month number
     private static readonly Dictionary<string, int> ThaiMonthMap = new(StringComparer.OrdinalIgnoreCase)
@@ -32,41 +31,23 @@ public class SlipOcrService : ISlipOcrService
     public SlipOcrService(ILogger<SlipOcrService> logger)
     {
         _logger = logger;
-        _tessDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tessdata");
     }
 
     public async Task<SlipOcrResultModel> ExtractSlipDataAsync(Stream imageStream, CancellationToken ct = default)
     {
         var result = new SlipOcrResultModel();
-
-        if (!Directory.Exists(_tessDataPath))
-        {
-            _logger.LogWarning("tessdata directory not found at {Path}, OCR disabled", _tessDataPath);
-            return result;
-        }
+        string? tempFile = null;
 
         try
         {
-            using var ms = new MemoryStream();
-            await imageStream.CopyToAsync(ms, ct);
-            var imageBytes = ms.ToArray();
-
-            var text = await Task.Run(() =>
+            // Save image to temp file for Tesseract CLI
+            tempFile = Path.Combine(Path.GetTempPath(), $"slip-ocr-{Guid.NewGuid()}.png");
+            await using (var fs = File.Create(tempFile))
             {
-                using var engine = new TesseractEngine(_tessDataPath, "eng+tha", EngineMode.Default);
-                engine.SetVariable("preserve_interword_spaces", "1");
+                await imageStream.CopyToAsync(fs, ct);
+            }
 
-                using var pix = Pix.LoadFromMemory(imageBytes);
-
-                // Preprocessing: grayscale → upscale → adaptive binarize → deskew
-                using var gray = pix.ConvertRGBToGray();
-                using var scaled = gray.Scale(2.0f, 2.0f);
-                using var binarized = scaled.BinarizeOtsuAdaptiveThreshold(200, 200, 0, 0, 0.0f);
-                using var deskewed = binarized.Deskew();
-
-                using var page = engine.Process(deskewed, PageSegMode.SingleColumn);
-                return page.GetText();
-            }, ct);
+            var text = await RunTesseractCliAsync(tempFile, ct);
 
             _logger.LogInformation("OCR extracted text length: {Length}", text.Length);
 
@@ -81,6 +62,41 @@ public class SlipOcrService : ISlipOcrService
             _logger.LogError(ex, "OCR processing failed");
             return result;
         }
+        finally
+        {
+            if (tempFile != null && File.Exists(tempFile))
+            {
+                try { File.Delete(tempFile); } catch { /* cleanup */ }
+            }
+        }
+    }
+
+    private async Task<string> RunTesseractCliAsync(string imagePath, CancellationToken ct)
+    {
+        using var process = new Process();
+        process.StartInfo = new ProcessStartInfo
+        {
+            FileName = "tesseract",
+            Arguments = $"\"{imagePath}\" stdout -l eng+tha --psm 4",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        process.Start();
+
+        var output = await process.StandardOutput.ReadToEndAsync(ct);
+        var error = await process.StandardError.ReadToEndAsync(ct);
+
+        await process.WaitForExitAsync(ct);
+
+        if (process.ExitCode != 0)
+        {
+            _logger.LogWarning("Tesseract CLI exited with code {ExitCode}: {Error}", process.ExitCode, error);
+        }
+
+        return output;
     }
 
     private decimal? ParseAmount(string text)

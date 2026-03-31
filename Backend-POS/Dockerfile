@@ -35,11 +35,12 @@ RUN dotnet publish POS.Main/RBMS.POS.WebAPI/RBMS.POS.WebAPI.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 
-# Install curl for healthcheck + Tesseract OCR native libraries for slip verification
+# Install curl for healthcheck + Tesseract OCR CLI for slip verification
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    libtesseract-dev \
-    libleptonica-dev \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    tesseract-ocr-tha \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/publish .

@@ -9,9 +9,6 @@
     <ProjectReference Include="..\POS.Main.Repositories\POS.Main.Repositories.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Tesseract" Version="5.2.0" />
-  </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
