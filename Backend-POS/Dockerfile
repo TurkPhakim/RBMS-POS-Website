@@ -35,13 +35,15 @@ RUN dotnet publish POS.Main/RBMS.POS.WebAPI/RBMS.POS.WebAPI.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 
-# Install curl for healthcheck + Tesseract OCR CLI for slip verification
+# Install curl for healthcheck + Tesseract OCR CLI + ImageMagick for slip verification
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     tesseract-ocr \
     tesseract-ocr-eng \
     tesseract-ocr-tha \
-    && rm -rf /var/lib/apt/lists/*
+    imagemagick \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i 's/rights="none" pattern="PDF"/rights="read|write" pattern="PDF"/' /etc/ImageMagick-6/policy.xml 2>/dev/null || true
 
 COPY --from=build /app/publish .
 

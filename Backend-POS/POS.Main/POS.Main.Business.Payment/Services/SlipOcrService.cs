@@ -37,20 +37,32 @@ public class SlipOcrService : ISlipOcrService
     {
         var result = new SlipOcrResultModel();
         string? tempFile = null;
+        string? preprocessedFile = null;
 
         try
         {
-            // Save image to temp file for Tesseract CLI
+            // Save image to temp file
             tempFile = Path.Combine(Path.GetTempPath(), $"slip-ocr-{Guid.NewGuid()}.png");
             await using (var fs = File.Create(tempFile))
             {
                 await imageStream.CopyToAsync(fs, ct);
             }
 
-            var text = await RunTesseractCliAsync(tempFile, ct);
+            // Preprocess image for better OCR accuracy
+            preprocessedFile = Path.Combine(Path.GetTempPath(), $"slip-ocr-prep-{Guid.NewGuid()}.png");
+            await PreprocessImageAsync(tempFile, preprocessedFile, ct);
+
+            // Use preprocessed file if available, otherwise original
+            var ocrInput = File.Exists(preprocessedFile) ? preprocessedFile : tempFile;
+
+            var text = await RunTesseractCliAsync(ocrInput, ct);
 
             _logger.LogInformation("OCR extracted text length: {Length}", text.Length);
-            _logger.LogInformation("OCR raw text:\n{Text}", text);
+            // Log raw text line by line for easier grep
+            foreach (var line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                _logger.LogInformation("OCR line: {Line}", line.Trim());
+            }
 
             result.Amount = ParseAmount(text);
             result.TransferDate = ParseDate(text);
@@ -69,6 +81,45 @@ public class SlipOcrService : ISlipOcrService
             {
                 try { File.Delete(tempFile); } catch { /* cleanup */ }
             }
+            if (preprocessedFile != null && File.Exists(preprocessedFile))
+            {
+                try { File.Delete(preprocessedFile); } catch { /* cleanup */ }
+            }
+        }
+    }
+
+    /// <summary>Preprocess image with ImageMagick for better OCR: resize 2x, grayscale, sharpen, threshold</summary>
+    private async Task PreprocessImageAsync(string inputPath, string outputPath, CancellationToken ct)
+    {
+        try
+        {
+            using var process = new Process();
+            process.StartInfo = new ProcessStartInfo
+            {
+                FileName = "convert",
+                Arguments = $"\"{inputPath}\" -resize 200% -colorspace Gray -sharpen 0x1 -threshold 60% \"{outputPath}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            process.Start();
+            var error = await process.StandardError.ReadToEndAsync(ct);
+            await process.WaitForExitAsync(ct);
+
+            if (process.ExitCode != 0)
+            {
+                _logger.LogWarning("ImageMagick preprocessing failed (code {ExitCode}): {Error}", process.ExitCode, error);
+            }
+            else
+            {
+                _logger.LogInformation("OCR image preprocessed successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "ImageMagick not available, skipping preprocessing");
         }
     }
 
@@ -78,7 +129,7 @@ public class SlipOcrService : ISlipOcrService
         process.StartInfo = new ProcessStartInfo
         {
             FileName = "tesseract",
-            Arguments = $"\"{imagePath}\" stdout -l eng+tha --psm 4",
+            Arguments = $"\"{imagePath}\" stdout -l eng+tha --psm 6",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
