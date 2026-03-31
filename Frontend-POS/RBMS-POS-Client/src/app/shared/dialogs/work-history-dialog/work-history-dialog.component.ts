@@ -1,7 +1,7 @@
 import { Component, DestroyRef, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { linkDateRange, markFormDirty } from '@app/shared/utils';
+import { linkDateRange, markFormDirty, toLocalDateString } from '@app/shared/utils';
 
 @Component({
   selector: 'app-work-history-dialog',
@@ -57,9 +57,9 @@ export class WorkHistoryDialogComponent {
     this.ref.close({
       ...value,
       startDate: value.startDate
-        ? (value.startDate as Date).toISOString()
+        ? toLocalDateString(value.startDate as Date)
         : null,
-      endDate: value.endDate ? (value.endDate as Date).toISOString() : null,
+      endDate: value.endDate ? toLocalDateString(value.endDate as Date) : null,
     });
   }
 

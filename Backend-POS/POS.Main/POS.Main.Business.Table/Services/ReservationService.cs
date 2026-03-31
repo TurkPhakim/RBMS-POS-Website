@@ -5,6 +5,7 @@ using POS.Main.Business.Table.Interfaces;
 using POS.Main.Business.Table.Models.Reservation;
 using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
+using POS.Main.Core.Helpers;
 using POS.Main.Core.Models;
 using POS.Main.Repositories.UnitOfWork;
 
@@ -17,11 +18,8 @@ public class ReservationService : IReservationService
     private readonly IOrderNotificationService _notificationService;
     private readonly ILogger<ReservationService> _logger;
 
-    private static readonly TimeZoneInfo ThaiTimeZone =
-        TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
-
     private static DateOnly ThaiToday =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, ThaiTimeZone));
+        DateOnly.FromDateTime(DateTimeHelper.BangkokNow());
 
     public ReservationService(
         IUnitOfWork unitOfWork,

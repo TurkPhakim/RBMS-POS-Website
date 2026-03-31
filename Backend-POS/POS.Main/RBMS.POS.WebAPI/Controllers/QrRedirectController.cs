@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using POS.Main.Core.Helpers;
 using POS.Main.Repositories.UnitOfWork;
 
 namespace RBMS.POS.WebAPI.Controllers;
@@ -34,7 +35,7 @@ public class QrRedirectController : ControllerBase
             return NotFound("QR Code ไม่ถูกต้องหรือหมดอายุ");
         }
 
-        if (table.QrTokenExpiresAt.HasValue && table.QrTokenExpiresAt.Value < DateTime.UtcNow)
+        if (table.QrTokenExpiresAt.HasValue && table.QrTokenExpiresAt.Value < DateTimeHelper.BangkokNow())
         {
             _logger.LogWarning("QR Token expired for code: {Code}", code);
             return NotFound("QR Code หมดอายุแล้ว");

@@ -411,8 +411,8 @@ export class TableActionDialogComponent {
             {
               header: 'แก้ไขจำนวนลูกค้า',
               showHeader: false,
-              styleClass: 'card-dialog',
-              width: '30vw',
+              styleClass: 'card-dialog card-dialog--visible',
+              width: '35vw',
               data: {
                 orderId,
                 currentGuests: this.table.currentGuests ?? 1,

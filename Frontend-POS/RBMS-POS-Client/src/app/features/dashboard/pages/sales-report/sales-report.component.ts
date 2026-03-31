@@ -1,12 +1,14 @@
-import { Component, DestroyRef, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DashboardService } from '@app/core/api/services/dashboard.service';
 import { SalesReportResponseModel } from '@app/core/api/models/sales-report-response-model';
 import { DailyBreakdownModel } from '@app/core/api/models/daily-breakdown-model';
+import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
+import { toLocalDateString } from '@app/shared/utils';
 import { ChartData, ChartOptions } from 'chart.js';
 
-const USE_MOCK = true;
+const KEY_BTN_MOCK = 'toggle-mock-sales';
 
 const CATEGORY_CONFIG: Record<number, { iconName: string; color: string; bgStyle: string; borderColor: string }> = {
   1: { iconName: 'food', color: 'text-cat-food', bgStyle: 'rgba(249, 115, 22, 0.1)', borderColor: 'border-cat-food' },
@@ -21,8 +23,9 @@ const PIE_COLORS: Record<number, string> = { 1: '#f97316', 2: '#0EA5E9', 3: '#EC
   standalone: false,
   templateUrl: './sales-report.component.html',
 })
-export class SalesReportComponent implements OnInit {
+export class SalesReportComponent implements OnInit, OnDestroy {
   report = signal<SalesReportResponseModel | null>(null);
+  useMock = true;
 
   dateFrom: Date = new Date();
   dateTo: Date = new Date();
@@ -40,12 +43,51 @@ export class SalesReportComponent implements OnInit {
 
   constructor(
     private dashboardService: DashboardService,
+    private breadcrumbService: BreadcrumbService,
     private modalService: ModalService,
     private destroyRef: DestroyRef,
   ) {}
 
   ngOnInit(): void {
-    this.setPreset('today');
+    this.setupBreadcrumbButtons();
+    this.setPreset('month');
+  }
+
+  ngOnDestroy(): void {
+    this.breadcrumbService.clearButtons();
+  }
+
+  toggleMock(): void {
+    this.useMock = !this.useMock;
+    this.updateMockButton();
+    this.loadReport();
+  }
+
+  private setupBreadcrumbButtons(): void {
+    this.breadcrumbService.addOrUpdateButton({
+      key: KEY_BTN_MOCK,
+      type: 'button',
+      item: {
+        key: KEY_BTN_MOCK,
+        label: 'Mock: ON',
+        severity: 'success',
+        callback: () => this.toggleMock(),
+      },
+    });
+  }
+
+  private updateMockButton(): void {
+    this.breadcrumbService.addOrUpdateButton({
+      key: KEY_BTN_MOCK,
+      type: 'button',
+      item: {
+        key: KEY_BTN_MOCK,
+        label: this.useMock ? 'Mock: ON' : 'Mock: OFF',
+        severity: this.useMock ? 'success' : 'secondary',
+        variant: this.useMock ? undefined : 'outlined',
+        callback: () => this.toggleMock(),
+      },
+    });
   }
 
   setPreset(preset: string): void {
@@ -162,7 +204,7 @@ export class SalesReportComponent implements OnInit {
   // ─── Private ──────────────────────────────────────────
 
   private loadReport(): void {
-    if (USE_MOCK) {
+    if (this.useMock) {
       this.loadMockReport();
       return;
     }
@@ -193,45 +235,102 @@ export class SalesReportComponent implements OnInit {
   }
 
   private formatDateParam(date: Date): string {
-    return date.toISOString().split('T')[0];
+    return toLocalDateString(date).split('T')[0];
   }
 
   // ─── Mock ─────────────────────────────────────────────
 
   private loadMockReport(): void {
-    const today = new Date();
+    const from = new Date(this.dateFrom);
+    const to = new Date(this.dateTo);
+    from.setHours(0, 0, 0, 0);
+    to.setHours(0, 0, 0, 0);
+
+    // Seed จาก dateFrom เพื่อให้ค่าคงที่เมื่อเลือกวันเดิม
+    let seed = from.getTime() % 100000;
+    const seededRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+
     const daily: DailyBreakdownModel[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const sales = 20000 + Math.floor(Math.random() * 25000);
-      const orders = 30 + Math.floor(Math.random() * 40);
-      const guests = orders * 2 + Math.floor(Math.random() * 30);
+    const current = new Date(from);
+    let totalSales = 0;
+    let totalOrders = 0;
+    let totalGuests = 0;
+
+    // Day-of-week multiplier (จันทร์ซึม → ศุกร์-เสาร์คึกคัก)
+    const dayMultiplier: Record<number, number> = {
+      0: 1.15, // อาทิตย์ — ค่อนข้างดี
+      1: 0.75, // จันทร์ — ซึมสุด
+      2: 0.85, // อังคาร
+      3: 0.90, // พุธ
+      4: 0.95, // พฤหัส
+      5: 1.25, // ศุกร์ — คึกคัก
+      6: 1.35, // เสาร์ — คึกคักสุด
+    };
+
+    while (current <= to) {
+      const dow = current.getDay();
+      const mult = dayMultiplier[dow];
+
+      // วันพิเศษ spike ~10% ของวัน (เช่น มีงานเลี้ยง/โปรโมชั่น)
+      const isSpecialDay = seededRandom() < 0.1;
+      const specialBoost = isSpecialDay ? 1.4 + seededRandom() * 0.3 : 1.0;
+
+      const baseSales = 28000;
+      const baseOrders = 45;
+
+      const sales = Math.round(baseSales * mult * specialBoost * (0.85 + seededRandom() * 0.30));
+      const orders = Math.round(baseOrders * mult * specialBoost * (0.85 + seededRandom() * 0.30));
+      const guestsPerOrder = 1.6 + seededRandom() * 1.0; // 1.6–2.6 คนต่อออเดอร์
+      const guests = Math.round(orders * guestsPerOrder);
+
       daily.push({
-        date: d.toISOString().split('T')[0],
+        date: toLocalDateString(current).split('T')[0],
         totalSales: sales,
         orderCount: orders,
         guestCount: guests,
-        averagePerOrder: Math.round((sales / orders) * 100) / 100,
+        averagePerOrder: Math.round((sales / (orders || 1)) * 100) / 100,
       });
+
+      totalSales += sales;
+      totalOrders += orders;
+      totalGuests += guests;
+      current.setDate(current.getDate() + 1);
     }
+
+    // สัดส่วนหมวดหมู่ — ยอดขาย (บาท)
+    const foodPct = 0.42 + seededRandom() * 0.06;  // 42-48%
+    const drinkPct = 0.28 + seededRandom() * 0.06;  // 28-34%
+    const dessertPct = 1 - foodPct - drinkPct;       // ส่วนที่เหลือ
+
+    const foodSales = Math.round(totalSales * foodPct);
+    const drinkSales = Math.round(totalSales * drinkPct);
+    const dessertSales = totalSales - foodSales - drinkSales;
+
+    // สัดส่วนหมวดหมู่ — จำนวนชิ้น
+    const totalItems = Math.round(totalOrders * (3.2 + seededRandom() * 1.2)); // 3.2–4.4 ชิ้นต่อออเดอร์
+    const foodItems = Math.round(totalItems * (0.30 + seededRandom() * 0.06));
+    const drinkItems = Math.round(totalItems * (0.42 + seededRandom() * 0.06));
+    const dessertItems = totalItems - foodItems - drinkItems;
 
     this.report.set({
       summary: {
-        totalSales: 245000,
-        orderCount: 387,
-        guestCount: 892,
-        averagePerOrder: 633.07,
+        totalSales,
+        orderCount: totalOrders,
+        guestCount: totalGuests,
+        averagePerOrder: Math.round((totalSales / (totalOrders || 1)) * 100) / 100,
       },
       kitchenBreakdown: [
-        { categoryName: 'อาหาร', categoryType: 1, itemCount: 527, percentage: 33.8 },
-        { categoryName: 'เครื่องดื่ม', categoryType: 2, itemCount: 711, percentage: 45.6 },
-        { categoryName: 'ของหวาน', categoryType: 3, itemCount: 320, percentage: 20.6 },
+        { categoryName: 'อาหาร', categoryType: 1, itemCount: foodItems, percentage: Math.round((foodItems / totalItems) * 1000) / 10 },
+        { categoryName: 'เครื่องดื่ม', categoryType: 2, itemCount: drinkItems, percentage: Math.round((drinkItems / totalItems) * 1000) / 10 },
+        { categoryName: 'ของหวาน', categoryType: 3, itemCount: dessertItems, percentage: Math.round((dessertItems / totalItems) * 1000) / 10 },
       ],
       categoryBreakdown: [
-        { categoryName: 'อาหาร', categoryType: 1, totalSales: 98000, percentage: 40 },
-        { categoryName: 'เครื่องดื่ม', categoryType: 2, totalSales: 105000, percentage: 42.9 },
-        { categoryName: 'ของหวาน', categoryType: 3, totalSales: 42000, percentage: 17.1 },
+        { categoryName: 'อาหาร', categoryType: 1, totalSales: foodSales, percentage: Math.round((foodSales / totalSales) * 1000) / 10 },
+        { categoryName: 'เครื่องดื่ม', categoryType: 2, totalSales: drinkSales, percentage: Math.round((drinkSales / totalSales) * 1000) / 10 },
+        { categoryName: 'ของหวาน', categoryType: 3, totalSales: dessertSales, percentage: Math.round((dessertSales / totalSales) * 1000) / 10 },
       ],
       dailyBreakdown: daily,
     });

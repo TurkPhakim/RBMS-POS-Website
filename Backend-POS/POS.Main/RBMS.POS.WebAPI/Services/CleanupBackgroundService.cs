@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using POS.Main.Business.Admin.Interfaces;
+using POS.Main.Core.Helpers;
 using POS.Main.Dal;
 
 namespace RBMS.POS.WebAPI.Services;
@@ -62,7 +63,7 @@ public class CleanupBackgroundService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<POSMainContext>();
 
-        var cutoff = DateTime.UtcNow.Subtract(NotificationMaxAge);
+        var cutoff = DateTimeHelper.BangkokNow().Subtract(NotificationMaxAge);
 
         // Delete reads first (FK constraint)
         var oldReads = await db.NotificationReads
@@ -96,7 +97,7 @@ public class CleanupBackgroundService : BackgroundService
         var db = scope.ServiceProvider.GetRequiredService<POSMainContext>();
         var s3 = scope.ServiceProvider.GetRequiredService<IS3StorageService>();
 
-        var cutoff = DateTime.UtcNow.Subtract(SlipFileMaxAge);
+        var cutoff = DateTimeHelper.BangkokNow().Subtract(SlipFileMaxAge);
 
         // Find slip file IDs from old payments
         var oldSlipFileIds = await db.Payments

@@ -59,6 +59,14 @@ module.exports = {
           dark: "var(--color-billing-dark)", // #7C3AED — gradient end
           bg: "var(--color-billing-bg)", // #F5F3FF — badge background
         },
+        compare: {
+          DEFAULT: "var(--color-compare)",       // #0d9488 — teal เปรียบเทียบ
+          dark: "var(--color-compare-dark)",      // #0f766e — gradient end
+        },
+        peak: {
+          DEFAULT: "var(--color-peak)",           // #6366f1 — indigo ช่วงพีค
+          dark: "var(--color-peak-dark)",          // #4f46e5 — gradient end
+        },
         cleaning: {
           DEFAULT: "var(--color-cleaning)", // #14b8a6 — teal cleaning
         },
@@ -97,8 +105,8 @@ module.exports = {
           1: "#fbbf24",   // ทอง
           2: "#6b7280",   // เงิน
           3: "#cd7f32",   // ทองแดง
-          4: "#64748b",   // เทาเข้ม
-          5: "#64748b",   // เทาเข้ม
+          4: "#475569",   // เทาเข้ม
+          5: "#475569",   // เทาเข้ม
         },
 
         // ─── Tag Colors ───────────────────────────────────────────────
@@ -231,6 +239,14 @@ module.exports = {
           "--color-billing": "#8B5CF6",
           "--color-billing-dark": "#7C3AED",
           "--color-billing-bg": "#F5F3FF",
+
+          // Compare (เปรียบเทียบยอดขาย)
+          "--color-compare": "#0d9488",
+          "--color-compare-dark": "#0f766e",
+
+          // Peak (ช่วงเวลาขายดี)
+          "--color-peak": "#6366f1",
+          "--color-peak-dark": "#4f46e5",
 
           // Cleaning
           "--color-cleaning": "#14b8a6",

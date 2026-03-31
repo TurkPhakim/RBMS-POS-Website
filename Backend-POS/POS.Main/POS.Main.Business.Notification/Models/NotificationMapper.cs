@@ -1,3 +1,4 @@
+using POS.Main.Core.Helpers;
 using POS.Main.Dal.Entities;
 
 namespace POS.Main.Business.Notification.Models;
@@ -16,7 +17,7 @@ public static class NotificationMapper
             ReservationId = model.ReservationId,
             TargetGroup = model.TargetGroup,
             Payload = model.Payload,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.BangkokNow()
         };
     }
 

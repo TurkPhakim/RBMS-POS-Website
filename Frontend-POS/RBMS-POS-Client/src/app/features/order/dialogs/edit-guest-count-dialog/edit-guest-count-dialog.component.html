@@ -1,47 +1,87 @@
 <app-card-template [headerLabel]="config.header!">
-  <div class="flex items-center gap-4">
+  <div class="flex items-start gap-4">
     <!-- จำนวนเดิม (ซ้าย) -->
-    <div class="flex-1 p-4 rounded-xl bg-primary-subtle border border-primary-light min-h-[100px]">
-      <p class="text-lg font-semibold text-primary uppercase tracking-wide mb-2">จำนวนเดิม</p>
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
-          <app-generic-icon name="human" svgClass="w-8 h-8" class="text-white"></app-generic-icon>
+    <div
+      class="flex-1 p-4 rounded-xl bg-primary-subtle border-2 border-primary-light"
+    >
+      <p
+        class="text-lg font-semibold text-primary-dark uppercase tracking-wide mb-2"
+      >
+        จำนวนเดิม
+      </p>
+      <div class="flex items-center gap-4">
+        <div
+          class="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0"
+        >
+          <app-generic-icon
+            name="human"
+            svgClass="w-8 h-8"
+            class="text-white"
+          ></app-generic-icon>
         </div>
-        <p class="font-bold text-2xl text-primary">{{ currentGuests }} คน</p>
+        <p class="font-bold text-xl text-primary whitespace-nowrap">
+          {{ currentGuests }} คน
+        </p>
       </div>
     </div>
 
     <!-- ลูกศร -->
-    <div class="shrink-0">
-      <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+    <div class="shrink-0 pt-10">
+      <div
+        class="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
+      >
         <i class="pi pi-arrow-right text-white text-lg"></i>
       </div>
     </div>
 
     <!-- จำนวนใหม่ (ขวา) -->
-    <div class="flex-1 p-4 rounded-xl border-2 border-dashed border-surface-border min-h-[100px]">
-      <p class="text-lg font-semibold text-surface-sub uppercase tracking-wide mb-2">จำนวนใหม่</p>
-      <div class="flex items-center gap-3">
-        <button type="button"
-                class="w-11 h-11 rounded-full bg-danger flex items-center justify-center shrink-0 text-white hover:bg-danger-soft transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                [disabled]="guestCount() <= 1"
-                (click)="decrement()">
+    <div
+      class="flex-1 p-4 rounded-xl border-[3px] border-dashed border-surface-border"
+    >
+      <p
+        class="text-lg font-semibold text-surface-sub mb-2 uppercase tracking-wide"
+      >
+        จำนวนใหม่
+      </p>
+      <div class="flex items-center gap-4">
+        <button
+          type="button"
+          class="w-11 h-11 rounded-full bg-danger flex items-center justify-center shrink-0 text-white hover:bg-danger-soft transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          [disabled]="guestCount() <= 1"
+          (click)="decrement()"
+        >
           <i class="pi pi-minus text-sm font-bold"></i>
         </button>
-        <span class="text-2xl font-bold text-primary min-w-[40px] text-center">{{ guestCount() }}</span>
-        <button type="button"
-                class="w-11 h-11 rounded-full bg-success flex items-center justify-center shrink-0 text-white hover:bg-success-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                [disabled]="guestCount() >= 100"
-                (click)="increment()">
+        <span
+          class="text-3xl font-bold text-primary min-w-[40px] text-center"
+          >{{ guestCount() }}</span
+        >
+        <button
+          type="button"
+          class="w-11 h-11 rounded-full bg-success flex items-center justify-center shrink-0 text-white hover:bg-success-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          [disabled]="guestCount() >= 100"
+          (click)="increment()"
+        >
           <i class="pi pi-plus text-sm font-bold"></i>
         </button>
-        <span class="text-lg text-surface-sub">คน</span>
+        <span class="text-xl font-bold text-surface-sub">คน</span>
       </div>
     </div>
   </div>
 
   <p-footer>
-    <p-button label="ยกเลิก" severity="secondary" [outlined]="true" (onClick)="onClose()"></p-button>
-    <p-button label="บันทึก" severity="primary" [loading]="isSaving()" [disabled]="guestCount() === currentGuests" (onClick)="onSave()"></p-button>
+    <p-button
+      label="ยกเลิก"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="onClose()"
+    ></p-button>
+    <p-button
+      label="บันทึก"
+      severity="primary"
+      [loading]="isSaving()"
+      [disabled]="guestCount() === currentGuests"
+      (onClick)="onSave()"
+    ></p-button>
   </p-footer>
 </app-card-template>

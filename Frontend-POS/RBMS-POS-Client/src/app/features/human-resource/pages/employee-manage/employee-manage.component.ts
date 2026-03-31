@@ -17,7 +17,7 @@ import { HumanResourceService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
-import { linkDateRange, markFormDirty } from '@app/shared/utils';
+import { linkDateRange, markFormDirty, toLocalDateString } from '@app/shared/utils';
 import { AddressDialogComponent } from '@app/shared/dialogs/address-dialog/address-dialog.component';
 import { EducationDialogComponent } from '@app/shared/dialogs/education-dialog/education-dialog.component';
 import { WorkHistoryDialogComponent } from '@app/shared/dialogs/work-history-dialog/work-history-dialog.component';
@@ -262,9 +262,9 @@ export class EmployeeManageComponent implements OnDestroy {
       LastNameEnglish: f.lastNameEnglish as string,
       Nickname: (f.nickname ?? '') as string,
       Gender: f.gender as EGender,
-      DateOfBirth: f.dateOfBirth ? (f.dateOfBirth as Date).toISOString() : '',
-      StartDate: (f.startDate as Date).toISOString(),
-      EndDate: f.endDate ? (f.endDate as Date).toISOString() : undefined,
+      DateOfBirth: f.dateOfBirth ? toLocalDateString(f.dateOfBirth as Date) : '',
+      StartDate: toLocalDateString(f.startDate as Date),
+      EndDate: f.endDate ? toLocalDateString(f.endDate as Date) : undefined,
       NationalId: (f.nationalId ?? '') as string,
       BankAccountNumber: f.bankAccountNumber as string | undefined,
       BankName: f.bankName as string | undefined,

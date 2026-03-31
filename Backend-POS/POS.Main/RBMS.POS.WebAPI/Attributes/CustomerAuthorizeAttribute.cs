@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using POS.Main.Core.Enums;
+using POS.Main.Core.Helpers;
 using POS.Main.Dal;
 
 namespace RBMS.POS.WebAPI.Attributes;
@@ -62,7 +63,7 @@ public class CustomerAuthorizeAttribute : Attribute, IAsyncAuthorizationFilter
             // Validate session is active
             var session = await dbContext.CustomerSessions
                 .AsNoTracking()
-                .FirstOrDefaultAsync(cs => cs.CustomerSessionId == sessionId && cs.IsActive && cs.ExpiresAt > DateTime.UtcNow);
+                .FirstOrDefaultAsync(cs => cs.CustomerSessionId == sessionId && cs.IsActive && cs.ExpiresAt > DateTimeHelper.BangkokNow());
 
             if (session == null)
             {

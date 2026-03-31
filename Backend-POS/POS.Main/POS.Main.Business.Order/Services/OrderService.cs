@@ -248,7 +248,7 @@ public class OrderService : IOrderService
 
         if (request.SendToKitchen && newItems.Count > 0)
         {
-            var now = DateTime.UtcNow;
+            var now = DateTimeHelper.BangkokNow();
             foreach (var item in newItems)
             {
                 item.Status = EOrderItemStatus.Sent;
@@ -302,7 +302,7 @@ public class OrderService : IOrderService
         if (pendingItems.Count == 0)
             throw new BusinessException("ไม่มีรายการที่รอส่งครัว");
 
-        var now = DateTime.UtcNow;
+        var now = DateTimeHelper.BangkokNow();
         foreach (var item in pendingItems)
         {
             item.Status = EOrderItemStatus.Sent;
@@ -420,7 +420,7 @@ public class OrderService : IOrderService
             throw new BusinessException("สามารถเสิร์ฟได้เฉพาะรายการที่พร้อมเสิร์ฟ (สถานะ Ready เท่านั้น)");
 
         item.Status = EOrderItemStatus.Served;
-        item.ServedAt = DateTime.UtcNow;
+        item.ServedAt = DateTimeHelper.BangkokNow();
         _unitOfWork.OrderItems.Update(item);
         await _unitOfWork.CommitAsync(ct);
 
@@ -446,7 +446,7 @@ public class OrderService : IOrderService
         foreach (var item in readyItems)
         {
             item.Status = EOrderItemStatus.Served;
-            item.ServedAt = DateTime.UtcNow;
+            item.ServedAt = DateTimeHelper.BangkokNow();
             _unitOfWork.OrderItems.Update(item);
         }
 
@@ -942,7 +942,7 @@ public class OrderService : IOrderService
             throw new BusinessException("ไม่สามารถส่งครัวได้ — ออเดอร์ไม่ได้อยู่ในสถานะเปิด");
 
         item.Status = EOrderItemStatus.Sent;
-        item.SentToKitchenAt = DateTime.UtcNow;
+        item.SentToKitchenAt = DateTimeHelper.BangkokNow();
         _unitOfWork.OrderItems.Update(item);
         await _unitOfWork.CommitAsync(ct);
 
@@ -1056,7 +1056,7 @@ public class OrderService : IOrderService
 
     private async Task<string> GenerateOrderNumberAsync(CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        var today = DateTimeHelper.BangkokNow().Date;
         var prefix = $"ORD-{today:yyyyMMdd}-";
 
         var lastOrder = await _unitOfWork.Orders.QueryNoTracking()
@@ -1083,7 +1083,7 @@ public class OrderService : IOrderService
 
     private async Task<int> GetNextBillSequenceAsync(CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        var today = DateTimeHelper.BangkokNow().Date;
         var prefix = $"BILL-{today:yyyyMMdd}-";
 
         var lastBill = await _unitOfWork.OrderBills.QueryNoTracking()
@@ -1103,12 +1103,12 @@ public class OrderService : IOrderService
 
     private static string FormatBillNumber(int sequence)
     {
-        return $"BILL-{DateTime.UtcNow:yyyyMMdd}-{sequence:D3}";
+        return $"BILL-{DateTimeHelper.BangkokNow():yyyyMMdd}-{sequence:D3}";
     }
 
     private async Task<(int? Id, decimal Rate)> GetActiveServiceChargeAsync(CancellationToken ct)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeHelper.BangkokNow();
         var sc = await _unitOfWork.ServiceCharges.QueryNoTracking()
             .Where(s => s.IsActive
                 && (!s.StartDate.HasValue || s.StartDate.Value <= now)

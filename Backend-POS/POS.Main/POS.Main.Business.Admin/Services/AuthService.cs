@@ -87,7 +87,7 @@ public class AuthService : IAuthService
         user.FailedLoginAttempts = 0;
         user.LockoutCount = 0;
         user.LockedUntil = null;
-        user.LastLoginDate = DateTime.UtcNow;
+        user.LastLoginDate = DateTimeHelper.BangkokNow();
 
         var employee = await _unitOfWork.Employees.GetByUserIdAsync(user.UserId, ct);
 
@@ -119,7 +119,7 @@ public class AuthService : IAuthService
         if (token != null && token.UserId == userId && token.IsActive)
         {
             token.IsRevoked = true;
-            token.RevokedAt = DateTime.UtcNow;
+            token.RevokedAt = DateTimeHelper.BangkokNow();
             await _unitOfWork.CommitAsync(ct);
 
             _logger.LogInformation("User logged out: {UserId}", userId);
@@ -138,7 +138,7 @@ public class AuthService : IAuthService
             throw new InvalidRefreshTokenException();
 
         token.IsRevoked = true;
-        token.RevokedAt = DateTime.UtcNow;
+        token.RevokedAt = DateTimeHelper.BangkokNow();
         token.RevokedByIp = ipAddress;
 
         var employee = await _unitOfWork.Employees.GetByUserIdAsync(user.UserId, ct);
@@ -201,7 +201,7 @@ public class AuthService : IAuthService
             UserId = user.UserId,
             OtpCode = otpCode,
             OtpExpiresAt = DateTime.UtcNow.AddMinutes(OtpExpiryMinutes),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.BangkokNow()
         };
 
         await _unitOfWork.PasswordResetTokens.AddAsync(token, ct);
@@ -301,12 +301,12 @@ public class AuthService : IAuthService
         {
             UserId = user.UserId,
             PasswordHash = user.PasswordHash,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.BangkokNow()
         }, ct);
 
         // อัพเดตรหัสผ่านใหม่
         user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
-        user.LastPasswordChangedDate = DateTime.UtcNow;
+        user.LastPasswordChangedDate = DateTimeHelper.BangkokNow();
         user.FailedLoginAttempts = 0;
         user.LockoutCount = 0;
         user.LockedUntil = null;
@@ -363,12 +363,12 @@ public class AuthService : IAuthService
         {
             UserId = user.UserId,
             PasswordHash = user.PasswordHash,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeHelper.BangkokNow()
         }, ct);
 
         // อัพเดตรหัสผ่านใหม่
         user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
-        user.LastPasswordChangedDate = DateTime.UtcNow;
+        user.LastPasswordChangedDate = DateTimeHelper.BangkokNow();
 
         await _unitOfWork.CommitAsync(ct);
 

@@ -20,7 +20,7 @@ import {
 import { HumanResourceService } from '@app/core/api/services';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
-import { linkDateRange, markFormDirty } from '@app/shared/utils';
+import { linkDateRange, markFormDirty, toLocalDateString } from '@app/shared/utils';
 import { AddressDialogComponent } from '@app/shared/dialogs/address-dialog/address-dialog.component';
 import { EducationDialogComponent } from '@app/shared/dialogs/education-dialog/education-dialog.component';
 import { WorkHistoryDialogComponent } from '@app/shared/dialogs/work-history-dialog/work-history-dialog.component';
@@ -273,7 +273,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           LineId: f.lineId,
           BankName: f.bankName,
           BankAccountNumber: f.bankAccountNumber,
-          EndDate: f.endDate ? (f.endDate as Date).toISOString() : undefined,
+          EndDate: f.endDate ? toLocalDateString(f.endDate as Date) : undefined,
           Phone: f.phone,
           RemoveImage: this.imageRemoved(),
           imageFile: this.selectedFile() ?? undefined,

@@ -10,6 +10,7 @@ using POS.Main.Business.Payment.Models.Customer;
 using POS.Main.Business.Payment.Models.Payment;
 using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
+using POS.Main.Core.Helpers;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.UnitOfWork;
 
@@ -174,7 +175,7 @@ public class CustomerService : ICustomerService
             .FirstOrDefaultAsync(t => t.QrToken == qrToken, ct)
             ?? throw new BusinessException("QR Token ไม่ถูกต้องหรือหมดอายุ");
 
-        if (table.QrTokenExpiresAt.HasValue && table.QrTokenExpiresAt.Value < DateTime.UtcNow)
+        if (table.QrTokenExpiresAt.HasValue && table.QrTokenExpiresAt.Value < DateTimeHelper.BangkokNow())
             throw new BusinessException("QR Token หมดอายุแล้ว กรุณาสแกน QR ใหม่");
 
         return table;

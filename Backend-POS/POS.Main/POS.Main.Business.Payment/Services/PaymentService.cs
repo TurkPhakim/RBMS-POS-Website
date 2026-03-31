@@ -79,7 +79,7 @@ public class PaymentService : IPaymentService
                 AmountReceived = request.AmountReceived,
                 ChangeAmount = request.AmountReceived - bill.GrandTotal,
                 SlipVerificationStatus = ESlipVerificationStatus.None,
-                PaidAt = DateTime.UtcNow,
+                PaidAt = DateTimeHelper.BangkokNow(),
                 Note = request.Note,
             };
 
@@ -87,7 +87,7 @@ public class PaymentService : IPaymentService
 
             // 5. Update bill status
             bill.Status = EBillStatus.Paid;
-            bill.PaidAt = DateTime.UtcNow;
+            bill.PaidAt = DateTimeHelper.BangkokNow();
             _unitOfWork.OrderBills.Update(bill);
 
             // 6. Update cashier session totals
@@ -242,7 +242,7 @@ public class PaymentService : IPaymentService
                 SlipOcrAmount = ocrAmount,
                 SlipVerificationStatus = verificationStatus,
                 PaymentReference = request.PaymentReference,
-                PaidAt = DateTime.UtcNow,
+                PaidAt = DateTimeHelper.BangkokNow(),
                 Note = request.Note,
             };
 
@@ -250,7 +250,7 @@ public class PaymentService : IPaymentService
 
             // 4. Update bill status
             bill.Status = EBillStatus.Paid;
-            bill.PaidAt = DateTime.UtcNow;
+            bill.PaidAt = DateTimeHelper.BangkokNow();
             _unitOfWork.OrderBills.Update(bill);
 
             // 5. Update cashier session totals

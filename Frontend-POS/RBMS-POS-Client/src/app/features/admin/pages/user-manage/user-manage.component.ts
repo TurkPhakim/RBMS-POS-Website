@@ -14,6 +14,7 @@ import { UsersService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { BreadcrumbService } from '@app/core/services/breadcrumb.service';
 import { ModalService } from '@app/core/services/modal.service';
+import { toLocalDateString } from '@app/shared/utils';
 const KEY_BTN_BACK = 'back';
 const KEY_BTN_SAVE = 'save-user';
 
@@ -161,7 +162,7 @@ export class UserManageComponent implements OnInit, OnDestroy {
       isLockedByAdmin: value.isLockedByAdmin,
       autoUnlockDate:
         value.isLockedByAdmin && value.autoUnlockDate
-          ? value.autoUnlockDate.toISOString()
+          ? toLocalDateString(value.autoUnlockDate)
           : null,
     };
 

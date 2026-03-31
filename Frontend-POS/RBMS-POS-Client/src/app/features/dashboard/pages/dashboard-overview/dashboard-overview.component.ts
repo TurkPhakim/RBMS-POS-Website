@@ -21,9 +21,7 @@ import { ChartData, ChartOptions } from 'chart.js';
 import { forkJoin } from 'rxjs';
 
 const KEY_BTN_REFRESH = 'refresh-dashboard';
-const USE_MOCK = true;
-const PLACEHOLDER_IMAGE =
-  'https://placehold.co/120x120/e2e8f0/94a3b8?text=No+Img';
+const KEY_BTN_MOCK = 'toggle-mock';
 
 @Component({
   selector: 'app-dashboard-overview',
@@ -35,6 +33,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
   today: Date = new Date();
   trendDays: 7 | 30 = 7;
   periodDays: 7 | 30 = 7;
+  useMock = false;
 
   revenueTrendData = signal<ChartData<'line'>>({ labels: [], datasets: [] });
   revenueTrendOptions: ChartOptions<'line'> = {
@@ -68,6 +67,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
       legend: {
         display: true,
         position: 'top',
+        align: 'end',
         labels: {
           usePointStyle: true,
           pointStyle: 'circle',
@@ -103,36 +103,36 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.breadcrumbService.addOrUpdateButton({
-      key: KEY_BTN_REFRESH,
-      type: 'button',
-      item: {
-        key: KEY_BTN_REFRESH,
-        label: 'Refresh',
-        severity: 'primary',
-        callback: () => this.onRefresh(),
-      },
-    });
-
-    if (USE_MOCK) {
-      this.loadMockData();
-    } else {
-      this.loadDashboard();
-    }
+    this.setupBreadcrumbButtons();
+    this.loadDashboard();
   }
 
   ngOnDestroy(): void {
     this.breadcrumbService.clearButtons();
   }
 
+  private setupBreadcrumbButtons(): void {
+    this.updateMockButton();
+    this.breadcrumbService.addOrUpdateButton({
+      key: KEY_BTN_REFRESH,
+      type: 'button',
+      item: {
+        key: KEY_BTN_REFRESH,
+        label: 'รีเฟรช',
+        severity: 'primary',
+        callback: () => this.onRefresh(),
+      },
+    });
+  }
+
   onDateChange(): void {
-    if (USE_MOCK) return;
+    if (this.useMock) return;
     this.loadDashboard();
   }
 
   onTrendToggle(days: 7 | 30): void {
     this.trendDays = days;
-    if (USE_MOCK) {
+    if (this.useMock) {
       this.buildRevenueTrendMock();
     } else {
       this.loadOverviewOnly();
@@ -141,7 +141,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
 
   onPeriodToggle(days: 7 | 30): void {
     this.periodDays = days;
-    if (USE_MOCK) {
+    if (this.useMock) {
       this.buildPeriodComparisonMock();
     } else {
       this.loadPeriodOnly();
@@ -149,11 +149,31 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
   }
 
   onRefresh(): void {
-    if (USE_MOCK) {
+    this.loadDashboard();
+  }
+
+  onToggleMock(): void {
+    this.useMock = !this.useMock;
+    this.updateMockButton();
+    if (this.useMock) {
       this.loadMockData();
     } else {
       this.loadDashboard();
     }
+  }
+
+  private updateMockButton(): void {
+    this.breadcrumbService.addOrUpdateButton({
+      key: KEY_BTN_MOCK,
+      type: 'button',
+      item: {
+        key: KEY_BTN_MOCK,
+        label: this.useMock ? 'Mock: ON' : 'Mock: OFF',
+        severity: this.useMock ? 'success' : 'secondary',
+        variant: this.useMock ? undefined : 'outlined',
+        callback: () => this.onToggleMock(),
+      },
+    });
   }
 
   // ─── API Mode ─────────────────────────────────────
@@ -388,8 +408,8 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
     ov: DashboardOverviewResponseModel,
   ): void {
     this.hasTwoPeriods.set(ov.hasTwoPeriods ?? false);
-    this.period1Label = ov.period1Label ?? 'ช่วงที่ 1';
-    this.period2Label = ov.period2Label ?? 'ช่วงที่ 2';
+    this.period1Label = this.stripParentheses(ov.period1Label ?? 'ช่วงที่ 1');
+    this.period2Label = this.stripParentheses(ov.period2Label ?? 'ช่วงที่ 2');
 
     const trend = ov.periodRevenueTrend ?? [];
     if (!ov.hasTwoPeriods || trend.length === 0) return;
@@ -439,7 +459,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
       qty: item.totalQuantity ?? 0,
       image: item.imageFileId
         ? `${this.apiConfig.rootUrl}/api/admin/file/${item.imageFileId}`
-        : PLACEHOLDER_IMAGE,
+        : '',
     }));
   }
 
@@ -474,6 +494,10 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
     );
   }
 
+  private stripParentheses(label: string): string {
+    return label.replace(/[()]/g, '');
+  }
+
   private formatDateParam(date: Date): string {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -494,8 +518,8 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
 
     // Mock period comparison (สมมติร้านเปิด 2 ช่วง)
     this.hasTwoPeriods.set(true);
-    this.period1Label = 'ช่วงที่ 1 (10:00-14:00)';
-    this.period2Label = 'ช่วงที่ 2 (17:00-22:00)';
+    this.period1Label = 'ช่วงที่ 1 10:00-14:00';
+    this.period2Label = 'ช่วงที่ 2 17:00-22:00';
     this.buildPeriodComparisonMock();
   }
 
@@ -669,102 +693,27 @@ const MOCK_KITCHEN_ITEMS: KitchenItem[] = [
 ];
 
 const MOCK_TOP_FOOD: TopSellingItem[] = [
-  {
-    rank: 1,
-    name: 'ผัดกะเพราหมูสับ',
-    qty: 145,
-    image: 'https://placehold.co/120x120/f97316/white?text=1',
-  },
-  {
-    rank: 2,
-    name: 'ข้าวมันไก่',
-    qty: 128,
-    image: 'https://placehold.co/120x120/fb923c/white?text=2',
-  },
-  {
-    rank: 3,
-    name: 'ต้มยำกุ้ง',
-    qty: 97,
-    image: 'https://placehold.co/120x120/fdba74/white?text=3',
-  },
-  {
-    rank: 4,
-    name: 'ส้มตำไทย',
-    qty: 85,
-    image: 'https://placehold.co/120x120/fed7aa/333?text=4',
-  },
-  {
-    rank: 5,
-    name: 'แกงเขียวหวาน',
-    qty: 72,
-    image: 'https://placehold.co/120x120/ffedd5/333?text=5',
-  },
+  { rank: 1, name: 'ผัดกะเพราหมูสับ', qty: 145, image: '' },
+  { rank: 2, name: 'ข้าวมันไก่', qty: 128, image: '' },
+  { rank: 3, name: 'ต้มยำกุ้ง', qty: 97, image: '' },
+  { rank: 4, name: 'ส้มตำไทย', qty: 85, image: '' },
+  { rank: 5, name: 'แกงเขียวหวาน', qty: 72, image: '' },
 ];
 
 const MOCK_TOP_BEVERAGE: TopSellingItem[] = [
-  {
-    rank: 1,
-    name: 'ชาเย็น',
-    qty: 210,
-    image: 'https://placehold.co/120x120/0EA5E9/white?text=1',
-  },
-  {
-    rank: 2,
-    name: 'กาแฟเย็น',
-    qty: 185,
-    image: 'https://placehold.co/120x120/38bdf8/white?text=2',
-  },
-  {
-    rank: 3,
-    name: 'น้ำมะนาว',
-    qty: 142,
-    image: 'https://placehold.co/120x120/7dd3fc/white?text=3',
-  },
-  {
-    rank: 4,
-    name: 'โกโก้เย็น',
-    qty: 98,
-    image: 'https://placehold.co/120x120/bae6fd/333?text=4',
-  },
-  {
-    rank: 5,
-    name: 'ชาเขียว',
-    qty: 76,
-    image: 'https://placehold.co/120x120/e0f2fe/333?text=5',
-  },
+  { rank: 1, name: 'ชาเย็น', qty: 210, image: '' },
+  { rank: 2, name: 'กาแฟเย็น', qty: 185, image: '' },
+  { rank: 3, name: 'น้ำมะนาว', qty: 142, image: '' },
+  { rank: 4, name: 'โกโก้เย็น', qty: 98, image: '' },
+  { rank: 5, name: 'ชาเขียว', qty: 76, image: '' },
 ];
 
 const MOCK_TOP_DESSERT: TopSellingItem[] = [
-  {
-    rank: 1,
-    name: 'ไอศกรีมกะทิ',
-    qty: 88,
-    image: 'https://placehold.co/120x120/EC4899/white?text=1',
-  },
-  {
-    rank: 2,
-    name: 'บัวลอย',
-    qty: 72,
-    image: 'https://placehold.co/120x120/f472b6/white?text=2',
-  },
-  {
-    rank: 3,
-    name: 'ขนมปังปิ้ง',
-    qty: 65,
-    image: 'https://placehold.co/120x120/f9a8d4/333?text=3',
-  },
-  {
-    rank: 4,
-    name: 'เครปเค้ก',
-    qty: 54,
-    image: 'https://placehold.co/120x120/fbcfe8/333?text=4',
-  },
-  {
-    rank: 5,
-    name: 'ทับทิมกรอบ',
-    qty: 41,
-    image: 'https://placehold.co/120x120/fce7f3/333?text=5',
-  },
+  { rank: 1, name: 'ไอศกรีมกะทิ', qty: 88, image: '' },
+  { rank: 2, name: 'บัวลอย', qty: 72, image: '' },
+  { rank: 3, name: 'ขนมปังปิ้ง', qty: 65, image: '' },
+  { rank: 4, name: 'เครปเค้ก', qty: 54, image: '' },
+  { rank: 5, name: 'ทับทิมกรอบ', qty: 41, image: '' },
 ];
 
 // ─── Local Interfaces ─────────────────────────────────

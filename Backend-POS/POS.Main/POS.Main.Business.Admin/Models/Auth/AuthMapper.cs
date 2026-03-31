@@ -1,3 +1,4 @@
+using POS.Main.Core.Helpers;
 using POS.Main.Dal.Entities;
 
 namespace POS.Main.Business.Admin.Models.Auth;
@@ -49,7 +50,7 @@ public static class AuthMapper
             UserId = userId,
             Token = token,
             ExpiresAt = expiresAt,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTimeHelper.BangkokNow(),
             CreatedByIp = ipAddress
         };
     }

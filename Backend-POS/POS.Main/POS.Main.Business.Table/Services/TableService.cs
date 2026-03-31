@@ -295,14 +295,14 @@ public class TableService : ITableService
         entity.Status = ETableStatus.Occupied;
         entity.CurrentGuests = request.GuestCount;
         entity.GuestType = guestType;
-        entity.OpenedAt = DateTime.UtcNow;
+        entity.OpenedAt = DateTimeHelper.BangkokNow();
         entity.Note = request.Note;
 
         // Generate QR Token + Short Code
         var nonce = GenerateNonce();
         entity.QrTokenNonce = nonce;
         entity.QrToken = GenerateQrToken(tableId, nonce);
-        entity.QrTokenExpiresAt = DateTime.UtcNow.AddHours(12);
+        entity.QrTokenExpiresAt = DateTimeHelper.BangkokNow().AddHours(12);
         entity.QrShortCode = await GenerateUniqueShortCodeAsync(ct);
 
         _unitOfWork.Tables.Update(entity);
@@ -478,7 +478,7 @@ public class TableService : ITableService
         var nonce = GenerateNonce();
         target.QrTokenNonce = nonce;
         target.QrToken = GenerateQrToken(request.TargetTableId, nonce);
-        target.QrTokenExpiresAt = DateTime.UtcNow.AddHours(12);
+        target.QrTokenExpiresAt = DateTimeHelper.BangkokNow().AddHours(12);
         target.QrShortCode = await GenerateUniqueShortCodeAsync(ct);
 
         // Update Order.TableId to point to the new table
@@ -942,7 +942,7 @@ public class TableService : ITableService
 
     private async Task<string> GenerateOrderNumberAsync(CancellationToken ct)
     {
-        var today = DateTime.UtcNow.Date;
+        var today = DateTimeHelper.BangkokNow().Date;
         var prefix = $"ORD-{today:yyyyMMdd}-";
 
         var lastOrder = await _unitOfWork.Orders.QueryNoTracking()
@@ -983,7 +983,7 @@ public class TableService : ITableService
             issuer: _configuration["Jwt:Issuer"] ?? "RBMS.POS.API",
             audience: "RBMS.POS.QR",
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(12),
+            expires: DateTimeHelper.BangkokNow().AddHours(12),
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

@@ -39,7 +39,7 @@ import { Component, Input } from '@angular/core';
                 ></app-generic-icon>
               </div>
             }
-            <h3 class="text-xl font-bold text-white">{{ headerLabel }}</h3>
+            <h3 class="text-2xl font-bold text-white">{{ headerLabel }}</h3>
           </div>
           <ng-content select="[sectionActions]"></ng-content>
         </div>
@@ -55,7 +55,7 @@ import { Component, Input } from '@angular/core';
 export class SectionMiniCardComponent {
   @Input() headerLabel = '';
   @Input() headerIcon = '';
-  @Input() headerIconSize = 'w-5 h-5';
+  @Input() headerIconSize = 'w-6 h-6';
   @Input() headerClass = 'bg-gradient-to-r from-primary to-primary-dark';
   @Input() contentClass = '';
 }

@@ -116,7 +116,7 @@ public class KitchenService : IKitchenService
                 throw new BusinessException($"รายการ #{item.OrderItemId} ไม่อยู่ในสถานะ 'ส่งครัวแล้ว'");
 
             item.Status = EOrderItemStatus.Preparing;
-            item.CookingStartedAt = DateTime.UtcNow;
+            item.CookingStartedAt = DateTimeHelper.BangkokNow();
             _unitOfWork.OrderItems.Update(item);
         }
 
@@ -160,7 +160,7 @@ public class KitchenService : IKitchenService
                 throw new BusinessException($"รายการ #{item.OrderItemId} ไม่อยู่ในสถานะ 'กำลังทำ'");
 
             item.Status = EOrderItemStatus.Ready;
-            item.ReadyAt = DateTime.UtcNow;
+            item.ReadyAt = DateTimeHelper.BangkokNow();
             _unitOfWork.OrderItems.Update(item);
         }
 

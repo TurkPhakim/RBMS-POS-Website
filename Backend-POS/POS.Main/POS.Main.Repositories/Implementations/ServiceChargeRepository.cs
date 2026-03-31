@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using POS.Main.Core.Helpers;
 using POS.Main.Dal;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.Interfaces;
@@ -22,7 +23,7 @@ public class ServiceChargeRepository : GenericRepository<TbServiceCharge>, IServ
 
     public async Task<IEnumerable<TbServiceCharge>> GetActiveInDateRangeForDropdownAsync(CancellationToken ct = default)
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeHelper.BangkokNow();
 
         return await QueryNoTracking()
             .Where(sc => sc.IsActive)

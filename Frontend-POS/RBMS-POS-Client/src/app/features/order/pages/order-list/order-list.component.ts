@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { OrderResponseModel } from '@app/core/api/models';
 import { OrdersService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
+import { toLocalDateString } from '@app/shared/utils';
 
 @Component({
   selector: 'app-order-list',
@@ -49,8 +50,8 @@ export class OrderListComponent implements OnInit {
         Search: this.searchTerm || undefined,
         status: this.statusFilter || undefined,
         tableId: this.tableFilter ?? undefined,
-        dateFrom: this.dateFrom?.toISOString(),
-        dateTo: this.dateTo?.toISOString(),
+        dateFrom: this.dateFrom ? toLocalDateString(this.dateFrom) : undefined,
+        dateTo: this.dateTo ? toLocalDateString(this.dateTo) : undefined,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

@@ -1,15 +1,31 @@
 <div class="space-y-6">
-  <!-- Header: Date (right-aligned) -->
-  <div class="flex items-center justify-end gap-4">
-    <span class="text-xl text-surface-sub">ในวันที่:</span>
-    <p-datepicker
-      [(ngModel)]="selectedDate"
-      (ngModelChange)="onDateChange()"
-      dateFormat="dd/mm/yy"
-      [maxDate]="today"
-      styleClass="w-[400px]"
-      inputStyleClass="text-xl"
-    ></p-datepicker>
+  <!-- Header: Page Title + Date -->
+  <div class="flex items-center justify-between gap-4">
+    <!-- Left: Page Title -->
+    <div class="flex items-center gap-3">
+      <div
+        class="w-16 h-16 rounded-xl bg-primary flex items-center justify-center shrink-0"
+      >
+        <app-generic-icon
+          name="bar-chart"
+          svgClass="w-10 h-10"
+          class="text-white"
+        ></app-generic-icon>
+      </div>
+      <h1 class="text-page-title">ภาพรวม</h1>
+    </div>
+    <!-- Right: Date -->
+    <div class="flex items-center gap-4">
+      <span class="text-xl text-surface-sub">ในวันที่:</span>
+      <p-datepicker
+        [(ngModel)]="selectedDate"
+        (ngModelChange)="onDateChange()"
+        dateFormat="dd/mm/yy"
+        [maxDate]="today"
+        styleClass="w-[400px]"
+        inputStyleClass="text-xl"
+      ></p-datepicker>
+    </div>
   </div>
 
   <!-- Row 1: KPI Cards -->
@@ -30,42 +46,76 @@
     </div>
   }
 
-  <!-- Row 2: Kitchen Breakdown — Donut + Chips -->
+  <!-- Row 2: Kitchen Breakdown — Donut + Details -->
   @if (kitchenItems.length > 0) {
-    <div class="bg-surface-card rounded-xl p-5 text-center">
-      <h3 class="text-section-title mb-4">สัดส่วนยอดขายตามหมวดหมู่</h3>
-      <!-- Donut -->
-      <div class="relative mx-auto w-[200px] h-[200px]">
-        <svg width="200" height="200" viewBox="0 0 160 160">
-          @for (seg of donutSegments; track seg.color) {
-            <circle
-              cx="80" cy="80" r="70"
-              fill="none"
-              [attr.stroke]="seg.color"
-              stroke-width="20"
-              [attr.stroke-dasharray]="seg.length + ' ' + (2 * 3.14159 * 70 - seg.length)"
-              [attr.stroke-dashoffset]="-(seg.offset)"
-              transform="rotate(-90 80 80)"
-            />
+    <app-section-mini-card
+      headerLabel="สัดส่วนยอดขายตามหมวดหมู่"
+      headerIcon="category"
+      headerIconSize="w-7 h-7"
+      headerClass="bg-gradient-to-r from-primary to-primary-dark"
+      contentClass="p-6"
+    >
+      <div class="flex items-center gap-10">
+        <!-- Left: Donut -->
+        <div class="relative shrink-0 w-[200px] h-[200px]">
+          <svg width="200" height="200" viewBox="0 0 160 160">
+            @for (seg of donutSegments; track seg.color) {
+              <circle
+                cx="80"
+                cy="80"
+                r="70"
+                fill="none"
+                [attr.stroke]="seg.color"
+                stroke-width="20"
+                [attr.stroke-dasharray]="
+                  seg.length + ' ' + (2 * 3.14159 * 70 - seg.length)
+                "
+                [attr.stroke-dashoffset]="-seg.offset"
+                transform="rotate(-90 80 80)"
+              />
+            }
+          </svg>
+          <div
+            class="absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <span class="text-3xl font-bold">{{ kitchenTotal | number }}</span>
+            <span class="text-lg text-surface-sub">รายการ</span>
+          </div>
+        </div>
+        <!-- Right: Category Details with Progress Bars -->
+        <div class="flex-1 space-y-5">
+          @for (item of kitchenItems; track item.label) {
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <app-generic-icon
+                    [name]="item.icon"
+                    svgClass="w-6 h-6"
+                    [class]="item.textClass"
+                  ></app-generic-icon>
+                  <span class="font-semibold text-lg">{{ item.label }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-bold text-xl" [class]="item.textClass">{{
+                    item.count | number
+                  }}</span>
+                  <span class="text-surface-sub text-lg"
+                    >{{ item.percentage | number: "1.1-1" }}%</span
+                  >
+                </div>
+              </div>
+              <div class="w-full h-3 rounded-full bg-surface">
+                <div
+                  class="h-3 rounded-full transition-all duration-500"
+                  [style.width.%]="item.percentage"
+                  [style.backgroundColor]="item.color"
+                ></div>
+              </div>
+            </div>
           }
-        </svg>
-        <div class="absolute inset-0 flex flex-col items-center justify-center">
-          <span class="text-3xl font-bold">{{ kitchenTotal | number }}</span>
-          <span class="text-lg text-surface-sub">รายการ</span>
         </div>
       </div>
-      <!-- Bottom Chips -->
-      <div class="flex justify-center gap-6 mt-5">
-        @for (item of kitchenItems; track item.label) {
-          <div class="flex items-center gap-2">
-            <div class="w-3 h-3 rounded-full" [style.backgroundColor]="item.color"></div>
-            <app-generic-icon [name]="item.icon" svgClass="w-5 h-5" [class]="item.textClass"></app-generic-icon>
-            <span class="font-medium">{{ item.label }}</span>
-            <span class="font-bold" [class]="item.textClass">{{ item.count | number }}</span>
-          </div>
-        }
-      </div>
-    </div>
+    </app-section-mini-card>
   }
 
   <!-- Row 3: Revenue Trend -->
@@ -80,15 +130,27 @@
       <button
         type="button"
         class="px-5 py-2 text-lg font-medium rounded-md transition-all cursor-pointer"
-        [ngClass]="trendDays === 7 ? 'bg-white text-billing' : 'text-white/70 hover:text-white'"
+        [ngClass]="
+          trendDays === 7
+            ? 'bg-white text-billing'
+            : 'text-white/70 hover:text-white'
+        "
         (click)="onTrendToggle(7)"
-      >7 วัน</button>
+      >
+        7 วัน
+      </button>
       <button
         type="button"
         class="px-5 py-2 text-lg font-medium rounded-md transition-all cursor-pointer"
-        [ngClass]="trendDays === 30 ? 'bg-white text-billing' : 'text-white/70 hover:text-white'"
+        [ngClass]="
+          trendDays === 30
+            ? 'bg-white text-billing'
+            : 'text-white/70 hover:text-white'
+        "
         (click)="onTrendToggle(30)"
-      >30 วัน</button>
+      >
+        30 วัน
+      </button>
     </div>
     <div class="h-[300px]">
       <canvas
@@ -102,33 +164,38 @@
 
   <!-- Row 3.5: Period Comparison (แสดงเฉพาะเมื่อเปิด 2 ช่วงเวลา) -->
   @if (hasTwoPeriods()) {
-    <div class="bg-surface-card rounded-xl p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-section-title">เปรียบเทียบยอดขายตามช่วงเวลา</h3>
-        <div class="flex gap-2">
-          <button
-            pButton
-            type="button"
-            label="7 วัน"
-            [class]="
-              periodDays === 7
-                ? 'p-button-sm'
-                : 'p-button-sm p-button-outlined p-button-secondary'
-            "
-            (click)="onPeriodToggle(7)"
-          ></button>
-          <button
-            pButton
-            type="button"
-            label="30 วัน"
-            [class]="
-              periodDays === 30
-                ? 'p-button-sm'
-                : 'p-button-sm p-button-outlined p-button-secondary'
-            "
-            (click)="onPeriodToggle(30)"
-          ></button>
-        </div>
+    <app-section-mini-card
+      headerLabel="เปรียบเทียบยอดขายตามช่วงเวลา"
+      headerIcon="bar-analytics"
+      headerIconSize="w-7 h-7"
+      headerClass="bg-gradient-to-r from-compare to-compare-dark"
+      contentClass="p-5"
+    >
+      <div sectionActions class="flex bg-white/15 rounded-lg p-1 gap-1">
+        <button
+          type="button"
+          class="px-5 py-2 text-lg font-medium rounded-md transition-all cursor-pointer"
+          [ngClass]="
+            periodDays === 7
+              ? 'bg-white text-compare'
+              : 'text-white/70 hover:text-white'
+          "
+          (click)="onPeriodToggle(7)"
+        >
+          7 วัน
+        </button>
+        <button
+          type="button"
+          class="px-5 py-2 text-lg font-medium rounded-md transition-all cursor-pointer"
+          [ngClass]="
+            periodDays === 30
+              ? 'bg-white text-compare'
+              : 'text-white/70 hover:text-white'
+          "
+          (click)="onPeriodToggle(30)"
+        >
+          30 วัน
+        </button>
       </div>
       <div class="h-[300px]">
         <canvas
@@ -138,7 +205,7 @@
           [options]="periodComparisonOptions"
         ></canvas>
       </div>
-    </div>
+    </app-section-mini-card>
   }
 
   <!-- Row 4: Top Selling — Podium -->
@@ -151,7 +218,7 @@
           $implicit: topSellingFood,
           title: 'อาหารขายดี Top 5',
           icon: 'chicken-drumstick',
-          iconSize: 'w-10 h-10',
+          iconSize: 'w-11 h-11',
           gradient: 'bg-gradient-to-r from-cat-food to-cat-food-dark',
           borderColor: 'border-cat-food',
           textColor: 'text-cat-food',
@@ -214,19 +281,30 @@
       [headerIcon]="icon"
       [headerIconSize]="iconSize"
       [headerClass]="gradient"
-      contentClass="pt-7 px-5 pb-5"
+      contentClass="pt-10 pb-6 px-6"
     >
       @if (items.length >= 3) {
         <!-- Podium: 2nd | 1st | 3rd -->
         <div class="flex items-end justify-center gap-4 mb-4">
           <!-- 2nd Place -->
-          <div class="flex flex-col items-center w-[110px]">
+          <div class="flex flex-col items-center w-[120px]">
             <div class="relative mb-2">
-              <img
-                [src]="items[1].image"
-                [alt]="items[1].name"
-                class="w-20 h-20 rounded-full object-cover"
-              />
+              @if (items[1].image) {
+                <img
+                  [src]="items[1].image"
+                  [alt]="items[1].name"
+                  class="w-24 h-24 rounded-full object-cover"
+                />
+              } @else {
+                <div
+                  class="w-24 h-24 rounded-full flex items-center justify-center"
+                  [ngClass]="platformBg"
+                >
+                  <span class="text-4xl font-bold" [ngClass]="textColor"
+                    >2</span
+                  >
+                </div>
+              }
               <div
                 class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-rank-2 flex items-center justify-center"
               >
@@ -245,18 +323,29 @@
           </div>
 
           <!-- 1st Place -->
-          <div class="flex flex-col items-center w-[120px]">
+          <div class="flex flex-col items-center w-[130px]">
             <div class="relative mb-2">
               <app-generic-icon
                 name="crown-star"
-                svgClass="w-7 h-7"
-                class="absolute -top-6 left-1/2 -translate-x-1/2 text-rank-1"
+                svgClass="w-10 h-10"
+                class="absolute -top-8 left-1/2 -translate-x-1/2 text-rank-1"
               ></app-generic-icon>
-              <img
-                [src]="items[0].image"
-                [alt]="items[0].name"
-                class="w-24 h-24 rounded-full object-cover"
-              />
+              @if (items[0].image) {
+                <img
+                  [src]="items[0].image"
+                  [alt]="items[0].name"
+                  class="w-28 h-28 rounded-full object-cover"
+                />
+              } @else {
+                <div
+                  class="w-28 h-28 rounded-full flex items-center justify-center"
+                  [ngClass]="platformBg"
+                >
+                  <span class="text-5xl font-bold" [ngClass]="textColor"
+                    >1</span
+                  >
+                </div>
+              }
               <div
                 class="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-rank-1 flex items-center justify-center"
               >
@@ -275,13 +364,24 @@
           </div>
 
           <!-- 3rd Place -->
-          <div class="flex flex-col items-center w-[110px]">
+          <div class="flex flex-col items-center w-[120px]">
             <div class="relative mb-2">
-              <img
-                [src]="items[2].image"
-                [alt]="items[2].name"
-                class="w-16 h-16 rounded-full object-cover"
-              />
+              @if (items[2].image) {
+                <img
+                  [src]="items[2].image"
+                  [alt]="items[2].name"
+                  class="w-20 h-20 rounded-full object-cover"
+                />
+              } @else {
+                <div
+                  class="w-20 h-20 rounded-full flex items-center justify-center"
+                  [ngClass]="platformBg"
+                >
+                  <span class="text-3xl font-bold" [ngClass]="textColor"
+                    >3</span
+                  >
+                </div>
+              }
               <div
                 class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-rank-3 flex items-center justify-center"
               >
@@ -305,17 +405,32 @@
           <div class="border-t border-surface pt-3 space-y-2">
             @for (item of items.slice(3); track item.rank) {
               <div class="flex items-center gap-3">
-                <div
-                  class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  [ngClass]="item.rank === 4 ? 'bg-rank-4' : 'bg-rank-5'"
-                >
-                  <span class="font-bold text-white">{{ item.rank }}</span>
+                <div class="relative flex-shrink-0">
+                  @if (item.image) {
+                    <img
+                      [src]="item.image"
+                      [alt]="item.name"
+                      class="w-[72px] h-[72px] rounded-full object-cover"
+                    />
+                  } @else {
+                    <div
+                      class="w-[72px] h-[72px] rounded-full flex items-center justify-center"
+                      [ngClass]="platformBg"
+                    >
+                      <span class="text-2xl font-bold" [ngClass]="textColor">{{
+                        item.rank
+                      }}</span>
+                    </div>
+                  }
+                  <div
+                    class="absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                    [ngClass]="item.rank === 4 ? 'bg-rank-4' : 'bg-rank-5'"
+                  >
+                    <span class="text-sm font-bold text-white">{{
+                      item.rank
+                    }}</span>
+                  </div>
                 </div>
-                <img
-                  [src]="item.image"
-                  [alt]="item.name"
-                  class="w-11 h-11 rounded-full object-cover"
-                />
                 <span class="flex-1 text-lg truncate">{{ item.name }}</span>
                 <span class="text-lg font-semibold">{{ item.qty }} ชิ้น</span>
               </div>
@@ -331,13 +446,20 @@
   </ng-template>
 
   <!-- Row 5: Peak Hours -->
-  <div class="bg-surface-card rounded-xl p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-section-title">ช่วงเวลาขายดี</h3>
-      <div class="flex items-center gap-2 text-surface-sub">
-        <div class="w-3 h-3 rounded-sm bg-primary"></div>
+  <app-section-mini-card
+    headerLabel="ช่วงเวลาขายดี"
+    headerIcon="clock-activity"
+    headerIconSize="w-7 h-7"
+    headerClass="bg-gradient-to-r from-peak to-peak-dark"
+    contentClass="p-5"
+  >
+    <div sectionActions class="flex items-center gap-4 text-white text-xl">
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-info"></div>
         <span>ออเดอร์</span>
-        <div class="w-3 h-3 rounded-sm bg-danger ml-2"></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-full bg-danger"></div>
         <span>ช่วงพีค</span>
       </div>
     </div>
@@ -356,9 +478,9 @@
             <div
               class="w-full rounded-t-md transition-all duration-300 min-h-[4px]"
               [style.backgroundColor]="
-                h.isPeak ? 'var(--color-danger)' : 'var(--color-primary)'
+                h.isPeak ? 'var(--color-danger)' : 'var(--color-info)'
               "
-              [style.opacity]="h.isPeak ? 1 : 0.7"
+              [style.opacity]="h.isPeak ? 1 : 0.6"
               [style.height.%]="h.heightPercent"
             ></div>
             <span class="text-surface-sub leading-none mt-1">{{
@@ -372,5 +494,5 @@
         <app-empty-view message="ยังไม่มีข้อมูล" />
       </div>
     }
-  </div>
+  </app-section-mini-card>
 </div>

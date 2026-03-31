@@ -357,7 +357,7 @@ public class EmployeeService : IEmployeeService
             Email = employee.Email,
             PasswordHash = passwordHash,
             IsActive = true,
-            LastPasswordChangedDate = DateTime.UtcNow
+            LastPasswordChangedDate = DateTimeHelper.BangkokNow()
         };
 
         await _unitOfWork.Users.AddAsync(user, ct);

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using POS.Main.Business.Notification.Interfaces;
 using POS.Main.Business.Notification.Models;
+using POS.Main.Core.Helpers;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.UnitOfWork;
 
@@ -124,7 +125,7 @@ public class NotificationService : INotificationService
 
         if (existing != null)
         {
-            existing.ReadAt = DateTime.UtcNow;
+            existing.ReadAt = DateTimeHelper.BangkokNow();
         }
         else
         {
@@ -132,7 +133,7 @@ public class NotificationService : INotificationService
             {
                 NotificationId = notificationId,
                 UserId = userId,
-                ReadAt = DateTime.UtcNow
+                ReadAt = DateTimeHelper.BangkokNow()
             }, ct);
         }
 
@@ -158,7 +159,7 @@ public class NotificationService : INotificationService
 
             if (existing != null)
             {
-                existing.ReadAt = DateTime.UtcNow;
+                existing.ReadAt = DateTimeHelper.BangkokNow();
             }
             else
             {
@@ -166,7 +167,7 @@ public class NotificationService : INotificationService
                 {
                     NotificationId = notificationId,
                     UserId = userId,
-                    ReadAt = DateTime.UtcNow
+                    ReadAt = DateTimeHelper.BangkokNow()
                 }, ct);
             }
         }
@@ -184,7 +185,7 @@ public class NotificationService : INotificationService
 
         if (existing != null)
         {
-            existing.ClearedAt = DateTime.UtcNow;
+            existing.ClearedAt = DateTimeHelper.BangkokNow();
         }
         else
         {
@@ -200,8 +201,8 @@ public class NotificationService : INotificationService
                 {
                     NotificationId = latestNotificationId,
                     UserId = userId,
-                    ReadAt = DateTime.UtcNow,
-                    ClearedAt = DateTime.UtcNow
+                    ReadAt = DateTimeHelper.BangkokNow(),
+                    ClearedAt = DateTimeHelper.BangkokNow()
                 }, ct);
             }
         }

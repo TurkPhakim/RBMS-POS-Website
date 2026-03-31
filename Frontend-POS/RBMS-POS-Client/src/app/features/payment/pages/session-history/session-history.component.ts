@@ -6,6 +6,7 @@ import { TableLazyLoadEvent } from 'primeng/table';
 import { CashierSessionResponseModel } from '@app/core/api/models/cashier-session-response-model';
 import { CashierSessionsService } from '@app/core/api/services/cashier-sessions.service';
 import { ShopBrandingService } from '@app/core/services/shop-branding.service';
+import { toLocalDateString } from '@app/shared/utils';
 
 @Component({
   selector: 'app-session-history',
@@ -44,8 +45,8 @@ export class SessionHistoryComponent implements OnInit {
     this.cashierSessionsService.cashierSessionsGetSessionHistoryGet({
       Page: page,
       ItemPerPage: itemPerPage,
-      dateFrom: this.dateFrom?.toISOString(),
-      dateTo: this.dateTo?.toISOString(),
+      dateFrom: this.dateFrom ? toLocalDateString(this.dateFrom) : undefined,
+      dateTo: this.dateTo ? toLocalDateString(this.dateTo) : undefined,
       shiftPeriod: this.shiftPeriod ?? undefined,
     })
       .pipe(takeUntilDestroyed(this.destroyRef))

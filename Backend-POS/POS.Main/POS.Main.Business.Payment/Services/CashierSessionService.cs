@@ -6,6 +6,7 @@ using POS.Main.Business.Payment.Interfaces;
 using POS.Main.Business.Payment.Models.CashierSession;
 using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
+using POS.Main.Core.Helpers;
 using POS.Main.Core.Models;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.UnitOfWork;
@@ -127,7 +128,7 @@ public class CashierSessionService : ICashierSessionService
         {
             UserId = userId,
             Status = ECashierSessionStatus.Open,
-            OpenedAt = DateTime.UtcNow,
+            OpenedAt = DateTimeHelper.BangkokNow(),
             OpeningCash = request.OpeningCash,
             ShiftPeriod = request.ShiftPeriod
         };
@@ -238,7 +239,7 @@ public class CashierSessionService : ICashierSessionService
         var expectedCash = session.OpeningCash + session.TotalCashSales + totalCashIn - totalCashOut;
 
         session.Status = ECashierSessionStatus.Closed;
-        session.ClosedAt = DateTime.UtcNow;
+        session.ClosedAt = DateTimeHelper.BangkokNow();
         session.ExpectedCash = expectedCash;
         session.ActualCash = request.ActualCash;
         session.Variance = request.ActualCash - expectedCash;

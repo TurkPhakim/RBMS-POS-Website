@@ -10,7 +10,7 @@ import {
 import { ServiceChargesService } from '@app/core/api/services';
 import { AuthService } from '@app/core/services/auth.service';
 import { ModalService } from '@app/core/services/modal.service';
-import { linkDateRange, markFormDirty } from '@app/shared/utils';
+import { linkDateRange, markFormDirty, toLocalDateString } from '@app/shared/utils';
 
 @Component({
   selector: 'app-service-charge-dialog',
@@ -68,10 +68,10 @@ export class ServiceChargeDialogComponent implements OnInit {
     const data = {
       ...formValue,
       startDate: formValue.startDate
-        ? new Date(formValue.startDate).toISOString()
+        ? toLocalDateString(formValue.startDate)
         : null,
       endDate: formValue.endDate
-        ? new Date(formValue.endDate).toISOString()
+        ? toLocalDateString(formValue.endDate)
         : null,
     };
 

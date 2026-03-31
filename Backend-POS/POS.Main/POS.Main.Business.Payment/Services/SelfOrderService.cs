@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using POS.Main.Business.Admin.Interfaces;
 using POS.Main.Business.Admin.Services;
 using POS.Main.Business.Notification.Interfaces;
+using POS.Main.Core.Helpers;
 using POS.Main.Business.Notification.Models;
 using POS.Main.Business.Order.Interfaces;
 using POS.Main.Business.Payment.Interfaces;
@@ -101,8 +102,8 @@ public class SelfOrderService : ISelfOrderService
                 QrTokenNonce = nonce,
                 Nickname = previousNickname,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddHours(1)
+                CreatedAt = DateTimeHelper.BangkokNow(),
+                ExpiresAt = DateTimeHelper.BangkokNow().AddHours(1)
             };
 
             await _unitOfWork.CustomerSessions.AddAsync(session, ct);
@@ -335,7 +336,7 @@ public class SelfOrderService : ISelfOrderService
                 Note = itemReq.Note,
                 OrderedBy = orderedBy,
                 Status = EOrderItemStatus.Sent,
-                SentToKitchenAt = DateTime.UtcNow,
+                SentToKitchenAt = DateTimeHelper.BangkokNow(),
                 SourceTableId = tableId
             };
 

@@ -169,7 +169,7 @@ modelBuilder.ApplyConfiguration(new TbPasswordResetTokenConfiguration());
 
     private void StampTrackingFields()
     {
-        var now = DateTime.UtcNow;
+        var now = POS.Main.Core.Helpers.DateTimeHelper.BangkokNow();
         var userId = GetCurrentUserId();
 
         foreach (var entry in ChangeTracker.Entries<BaseEntity>())

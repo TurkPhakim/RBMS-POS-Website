@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using POS.Main.Core.Helpers;
 using POS.Main.Dal;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.Interfaces;
@@ -19,7 +20,7 @@ public class CustomerSessionRepository : ICustomerSessionRepository
 
     public async Task<TbCustomerSession?> GetByIdAsync(int sessionId, CancellationToken ct = default)
         => await _context.CustomerSessions
-            .FirstOrDefaultAsync(cs => cs.CustomerSessionId == sessionId && cs.IsActive && cs.ExpiresAt > DateTime.UtcNow, ct);
+            .FirstOrDefaultAsync(cs => cs.CustomerSessionId == sessionId && cs.IsActive && cs.ExpiresAt > DateTimeHelper.BangkokNow(), ct);
 
     public async Task<TbCustomerSession?> GetBySessionTokenAsync(string sessionToken, CancellationToken ct = default)
         => await _context.CustomerSessions
@@ -31,11 +32,11 @@ public class CustomerSessionRepository : ICustomerSessionRepository
             .FirstOrDefaultAsync(cs => cs.TableId == tableId
                 && cs.DeviceFingerprint == deviceFingerprint
                 && cs.IsActive
-                && cs.ExpiresAt > DateTime.UtcNow, ct);
+                && cs.ExpiresAt > DateTimeHelper.BangkokNow(), ct);
 
     public async Task<List<TbCustomerSession>> GetActiveByTableAsync(int tableId, CancellationToken ct = default)
         => await _context.CustomerSessions
-            .Where(cs => cs.TableId == tableId && cs.IsActive && cs.ExpiresAt > DateTime.UtcNow)
+            .Where(cs => cs.TableId == tableId && cs.IsActive && cs.ExpiresAt > DateTimeHelper.BangkokNow())
             .ToListAsync(ct);
 
     public async Task<string?> GetLastNicknameByTableAndDeviceAsync(int tableId, string deviceFingerprint, CancellationToken ct = default)

@@ -10,10 +10,10 @@ import { DialogData } from '@app/core/services/modal.service';
     <div class="flex flex-col gap-4 items-center text-center">
       <ng-lottie
         [options]="lottieOptions"
-        width="120px"
-        height="120px"
+        width="130px"
+        height="130px"
       ></ng-lottie>
-      <div class="text-2xl font-semibold">{{ config.data?.title }}</div>
+      <div class="text-3xl font-semibold">{{ config.data?.title }}</div>
       @if (config.data?.message) {
         <p class="text-surface-sub">{{ config.data?.message }}</p>
       }
