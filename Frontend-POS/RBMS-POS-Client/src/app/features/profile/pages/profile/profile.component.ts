@@ -265,7 +265,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           if (res.result) {
-            control.setErrors({ ...control.errors, duplicate: 'Username นี้ถูกใช้งานแล้ว' });
+            control.setErrors({ ...control.errors, duplicate: 'ชื่อผู้ใช้งานนี้ถูกใช้งานแล้ว' });
           } else if (control.hasError('duplicate')) {
             const { duplicate, ...rest } = control.errors!;
             control.setErrors(Object.keys(rest).length ? rest : null);

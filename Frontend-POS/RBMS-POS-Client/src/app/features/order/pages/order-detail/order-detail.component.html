@@ -373,10 +373,12 @@
                     </button>
                   }
                   @if (item.status === "Cancelled") {
-                    <span class="text-danger">{{ item.cancelReason }}</span>
-                    @if (item.cancelledByName) {
-                      <div class="text-surface-sub text-sm">{{ item.cancelledByName }}</div>
-                    }
+                    <div class="flex flex-col items-center">
+                      <span class="text-danger">{{ item.cancelReason }}</span>
+                      @if (item.cancelledByName) {
+                        <span class="text-surface-sub text-sm">{{ item.cancelledByName }}</span>
+                      }
+                    </div>
                   }
                 </div>
               </td>
