@@ -158,6 +158,12 @@
           <div
             class="flex items-center gap-2 px-5 py-2.5 overflow-x-auto flex-1 min-w-0"
           >
+            @if (slipPendingCount() > 0) {
+              <span class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-info-bg text-info text-xs font-semibold border border-info shrink-0">
+                <i class="pi pi-image text-xs"></i>
+                สลิปรอยืนยัน {{ slipPendingCount() }}
+              </span>
+            }
             @for (b of allBills(); track b.orderBillId; let i = $index) {
               <button
                 type="button"
