@@ -55,13 +55,22 @@ public class SlipOcrService : ISlipOcrService
             // Use preprocessed file if available, otherwise original
             var ocrInput = File.Exists(preprocessedFile) ? preprocessedFile : tempFile;
 
-            var text = await RunTesseractCliAsync(ocrInput, ct);
+            var rawText = await RunTesseractCliAsync(ocrInput, ct);
 
-            _logger.LogInformation("OCR extracted text length: {Length}", text.Length);
+            _logger.LogInformation("OCR extracted text length: {Length}", rawText.Length);
             // Log raw text line by line for easier grep
+            foreach (var line in rawText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                _logger.LogInformation("OCR raw: {Line}", line.Trim());
+            }
+
+            // Normalize: collapse spaces between Thai characters (OCR artifact)
+            var text = NormalizeThaiText(rawText);
+
+            _logger.LogInformation("OCR normalized text length: {Length}", text.Length);
             foreach (var line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
             {
-                _logger.LogInformation("OCR line: {Line}", line.Trim());
+                _logger.LogInformation("OCR norm: {Line}", line.Trim());
             }
 
             result.Amount = ParseAmount(text);
@@ -97,7 +106,7 @@ public class SlipOcrService : ISlipOcrService
             process.StartInfo = new ProcessStartInfo
             {
                 FileName = "convert",
-                Arguments = $"\"{inputPath}\" -resize 200% -colorspace Gray -sharpen 0x1 -threshold 60% \"{outputPath}\"",
+                Arguments = $"\"{inputPath}\" -resize 200% -colorspace Gray -sharpen 0x1 -normalize \"{outputPath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -324,17 +333,28 @@ public class SlipOcrService : ISlipOcrService
             }
         }
 
-        // Pattern 2: Masked account "xxx-x-x4400-x" or "XXX-X-X4400-X"
+        // Pattern 2: Masked account formats (เอาตัวสุดท้าย = ปลายทาง)
         // OCR อาจอ่าน x เป็น ×, *, X, หรืออักษรอื่น
-        // สลิปมี 2 บัญชี (ผู้โอน + ปลายทาง) — เอาตัวสุดท้าย (ปลายทางอยู่ด้านล่าง)
-        var maskedMatches = Regex.Matches(text, @"[xX×\*\d]{3}[\-\s][xX×\*\d]{1,4}[\-\s][xX×\*\d]{4,6}[\-\s][xX×\*\d]{1,2}");
-        if (maskedMatches.Count > 0)
+        // Format: xxx-x-x4400-x (bank 3-1-5-1), xxx-xxxxxxxx-5657 (PromptPay 3-8-4)
+        var maskedPatterns = new[]
         {
-            var lastMatch = maskedMatches[^1];
+            @"[xX×\*\d]{3}[\-\s][xX×\*\d]{5,10}[\-\s][xX×\*\d]{2,6}",       // PromptPay: xxx-xxxxxxxx-5657
+            @"[xX×\*\d]{3}[\-\s][xX×\*\d]{1,4}[\-\s][xX×\*\d]{4,6}[\-\s][xX×\*\d]{1,2}", // Bank: xxx-x-x4400-x
+        };
+        var allMaskedMatches = new List<Match>();
+        foreach (var mp in maskedPatterns)
+        {
+            foreach (Match m in Regex.Matches(text, mp))
+                allMaskedMatches.Add(m);
+        }
+        if (allMaskedMatches.Count > 0)
+        {
+            // เอาตัวสุดท้ายตามตำแหน่งในข้อความ (ปลายทางอยู่ด้านล่าง)
+            var lastMatch = allMaskedMatches.OrderByDescending(m => m.Index).First();
             var cleaned = CleanAccountNumber(lastMatch.Value);
             if (cleaned.Length >= 2)
             {
-                _logger.LogInformation("OCR parsed masked account (last of {Count}): {Account}", maskedMatches.Count, cleaned);
+                _logger.LogInformation("OCR parsed masked account (last of {Count}): {Account}", allMaskedMatches.Count, cleaned);
                 return cleaned;
             }
         }
@@ -350,6 +370,26 @@ public class SlipOcrService : ISlipOcrService
 
         _logger.LogWarning("OCR could not parse any account number from text");
         return null;
+    }
+
+    /// <summary>ลบช่องว่างระหว่างตัวอักษรไทยที่เกิดจาก OCR artifact</summary>
+    private static string NormalizeThaiText(string text)
+    {
+        // Thai Unicode range: \u0E00-\u0E7F (includes vowels, tone marks, digits)
+        // Collapse spaces between Thai chars/marks/dots repeatedly until stable
+        string prev;
+        do
+        {
+            prev = text;
+            // Space between two Thai characters/marks
+            text = Regex.Replace(text, @"([\u0E00-\u0E7F])\s+([\u0E00-\u0E7F])", "$1$2");
+            // Space between Thai char and dot (for abbreviations like มี.ค.)
+            text = Regex.Replace(text, @"([\u0E00-\u0E7F])\s+\.", "$1.");
+            // Space between dot and Thai char
+            text = Regex.Replace(text, @"\.\s+([\u0E00-\u0E7F])", ".$1");
+        } while (text != prev);
+
+        return text;
     }
 
     /// <summary>แปลงปี พ.ศ. หรือ 2 หลัก เป็น ค.ศ. 4 หลัก</summary>
