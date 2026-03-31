@@ -147,6 +147,7 @@ export class SalesReportComponent implements OnInit, OnDestroy {
         value: this.formatCurrency(s?.totalSales ?? 0),
         icon: 'coin',
         accentColor: 'primary' as const,
+        unit: 'บาท',
       },
       {
         label: 'จำนวนออเดอร์',
@@ -167,6 +168,7 @@ export class SalesReportComponent implements OnInit, OnDestroy {
         value: this.formatCurrency(s?.averagePerOrder ?? 0),
         icon: 'cash-inflow',
         accentColor: 'warning' as const,
+        unit: 'บาท',
       },
     ];
   }
@@ -220,7 +222,7 @@ export class SalesReportComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return value.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+    return value.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   // ─── Private ──────────────────────────────────────────

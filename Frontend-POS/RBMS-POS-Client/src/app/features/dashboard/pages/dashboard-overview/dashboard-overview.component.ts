@@ -263,6 +263,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
       {
         label: 'ยอดขาย',
         value: this.formatCurrency(selected.totalSales ?? 0),
+        unit: 'บาท',
         icon: 'coin',
         accentColor: 'primary',
         changePercent: this.calcChange(
@@ -304,6 +305,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
       {
         label: 'เฉลี่ย/ออเดอร์',
         value: this.formatCurrency(selected.averagePerOrder ?? 0),
+        unit: 'บาท',
         icon: 'cash-inflow',
         accentColor: 'warning',
         changePercent: this.calcChange(
@@ -317,6 +319,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
       {
         label: 'กำไรขั้นต้น',
         value: this.formatCurrency(selected.grossProfit ?? 0),
+        unit: 'บาท',
         icon: 'cash-balance',
         accentColor: 'success',
         changePercent: this.calcChange(
@@ -488,12 +491,10 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
   }
 
   private formatCurrency(value: number): string {
-    return (
-      value.toLocaleString('th-TH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }) + ' บาท'
-    );
+    return value.toLocaleString('th-TH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   private stripParentheses(label: string): string {
@@ -628,7 +629,8 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
 const MOCK_KPI_CARDS: KpiCardItem[] = [
   {
     label: 'ยอดขาย',
-    value: '34,500.00 บาท',
+    value: '34,500.00',
+    unit: 'บาท',
     icon: 'coin',
     accentColor: 'primary',
     changePercent: 12.5,
@@ -639,6 +641,7 @@ const MOCK_KPI_CARDS: KpiCardItem[] = [
   {
     label: 'จำนวนออเดอร์',
     value: '52',
+    unit: 'บิล',
     icon: 'bill-rastaurant',
     accentColor: 'info',
     changePercent: 8.3,
@@ -649,6 +652,7 @@ const MOCK_KPI_CARDS: KpiCardItem[] = [
   {
     label: 'จำนวนลูกค้า',
     value: '128',
+    unit: 'คน',
     icon: 'people-rate',
     accentColor: 'teal',
     changePercent: -3.2,
@@ -658,7 +662,8 @@ const MOCK_KPI_CARDS: KpiCardItem[] = [
   },
   {
     label: 'เฉลี่ย/ออเดอร์',
-    value: '663.46 บาท',
+    value: '663.46',
+    unit: 'บาท',
     icon: 'cash-inflow',
     accentColor: 'warning',
     changePercent: 4.1,
@@ -668,7 +673,8 @@ const MOCK_KPI_CARDS: KpiCardItem[] = [
   },
   {
     label: 'กำไรขั้นต้น',
-    value: '12,075.00 บาท',
+    value: '12,075.00',
+    unit: 'บาท',
     icon: 'cash-balance',
     accentColor: 'success',
     changePercent: 15.2,

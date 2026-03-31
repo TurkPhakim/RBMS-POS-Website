@@ -158,6 +158,7 @@
       [label]="isEditMode() && !canUpdate ? 'ปิด' : 'ยกเลิก'"
       severity="secondary"
       variant="outlined"
+      [styleClass]="isEditMode() && !canUpdate ? '!w-[120px]' : ''"
       (onClick)="onCancel()"
       [disabled]="isSubmitting()"
     />

@@ -326,14 +326,16 @@
     headerIcon="option-extra"
     contentClass="p-4 px-6"
   >
-    <button
-      sectionActions
-      type="button"
-      class="px-4 py-2 rounded-full bg-white text-primary font-semibold hover:bg-primary-subtle transition-colors"
-      (click)="openSelectOptionGroupDialog()"
-    >
-      เพิ่มตัวเลือกเสริม
-    </button>
+    @if (canUpdate) {
+      <button
+        sectionActions
+        type="button"
+        class="px-4 py-2 rounded-full bg-white text-primary font-semibold hover:bg-primary-subtle transition-colors"
+        (click)="openSelectOptionGroupDialog()"
+      >
+        เพิ่มตัวเลือกเสริม
+      </button>
+    }
 
     @if (linkedOptionGroups().length === 0) {
       <app-empty-view></app-empty-view>
@@ -351,11 +353,12 @@
           <div
             cdkDrag
             [cdkDragData]="group"
+            [cdkDragDisabled]="!canUpdate"
             class="rounded-2xl border-l-4 border-l-primary border border-surface-border bg-surface-card px-6 py-4"
           >
             <!-- Row: drag + info + actions -->
             <div class="flex items-start gap-4">
-              <div class="cursor-move shrink-0 pt-1" cdkDragHandle>
+              <div class="shrink-0 pt-1" [class.cursor-move]="canUpdate" cdkDragHandle>
                 <app-generic-icon
                   name="menu-bar"
                   svgClass="w-8 h-8"
@@ -424,20 +427,22 @@
               </div>
 
               <!-- Actions -->
-              <div class="shrink-0">
-                <button
-                  type="button"
-                  class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
-                  pTooltip="นำออก"
-                  tooltipPosition="top"
-                  (click)="removeOptionGroup(i)"
-                >
-                  <app-generic-icon
-                    name="trash"
-                    svgClass="w-5 h-5"
-                  ></app-generic-icon>
-                </button>
-              </div>
+              @if (canUpdate) {
+                <div class="shrink-0">
+                  <button
+                    type="button"
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                    pTooltip="นำออก"
+                    tooltipPosition="top"
+                    (click)="removeOptionGroup(i)"
+                  >
+                    <app-generic-icon
+                      name="trash"
+                      svgClass="w-5 h-5"
+                    ></app-generic-icon>
+                  </button>
+                </div>
+              }
             </div>
           </div>
         }
