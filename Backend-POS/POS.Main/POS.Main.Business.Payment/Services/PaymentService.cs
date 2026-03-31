@@ -153,7 +153,7 @@ public class PaymentService : IPaymentService
             ? ocrResult.TransferDate.Value.Date == DateTime.Today
             : null;
 
-        // 6. Determine account verification
+        // 6. Determine account verification (เช็คทั้งเลขบัญชีธนาคาร + PromptPay)
         bool? isAccountMatched = null;
         string? shopAccountNumber = null;
         if (!string.IsNullOrEmpty(ocrResult.AccountNumber))
@@ -163,14 +163,29 @@ public class PaymentService : IPaymentService
                 .FirstOrDefaultAsync(ct);
 
             shopAccountNumber = shopSettings?.AccountNumber;
+            var shopPromptPay = shopSettings?.PromptPayNumber;
 
+            var ocrDigits = System.Text.RegularExpressions.Regex.Replace(ocrResult.AccountNumber, @"[^0-9]", "");
+
+            // เช็คกับเลขบัญชีธนาคาร
             if (!string.IsNullOrEmpty(shopAccountNumber))
             {
-                // normalize: ลบ - และช่องว่าง แล้วเทียบ
-                var ocrDigits = System.Text.RegularExpressions.Regex.Replace(ocrResult.AccountNumber, @"[^0-9]", "");
                 var shopDigits = System.Text.RegularExpressions.Regex.Replace(shopAccountNumber, @"[^0-9]", "");
-                isAccountMatched = shopDigits.Contains(ocrDigits) || ocrDigits.Contains(shopDigits);
+                if (shopDigits.Contains(ocrDigits) || ocrDigits.Contains(shopDigits))
+                    isAccountMatched = true;
             }
+
+            // เช็คกับเลข PromptPay (ถ้ายังไม่ตรง)
+            if (isAccountMatched != true && !string.IsNullOrEmpty(shopPromptPay))
+            {
+                var promptPayDigits = System.Text.RegularExpressions.Regex.Replace(shopPromptPay, @"[^0-9]", "");
+                if (promptPayDigits.Contains(ocrDigits) || ocrDigits.Contains(promptPayDigits))
+                    isAccountMatched = true;
+            }
+
+            // ถ้ามีเลขร้านแต่ไม่ตรงทั้ง 2 → false
+            if (isAccountMatched == null && (!string.IsNullOrEmpty(shopAccountNumber) || !string.IsNullOrEmpty(shopPromptPay)))
+                isAccountMatched = false;
         }
 
         _logger.LogInformation("Slip uploaded for Bill {OrderBillId}, FileId: {FileId}, OCR Amount: {OcrAmount}, Date: {Date}, Account: {Account}, Status: {Status}",

@@ -32,6 +32,7 @@ public static class ShopSettingsMapper
             BankName = entity.BankName,
             AccountNumber = entity.AccountNumber,
             AccountName = entity.AccountName,
+            PromptPayNumber = entity.PromptPayNumber,
             WifiSsid = entity.WifiSsid,
             WifiPassword = entity.WifiPassword,
             OperatingHours = entity.OperatingHours
@@ -107,6 +108,7 @@ public static class ShopSettingsMapper
         entity.BankName = request.BankName;
         entity.AccountNumber = request.AccountNumber;
         entity.AccountName = request.AccountName;
+        entity.PromptPayNumber = request.PromptPayNumber;
         entity.WifiSsid = request.WifiSsid;
         entity.WifiPassword = request.WifiPassword;
     }

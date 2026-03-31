@@ -81,6 +81,7 @@ export class ShopSettingsComponent implements OnDestroy {
       bankName: ['', [Validators.required, Validators.maxLength(200)]],
       accountNumber: ['', [Validators.required, Validators.maxLength(50)]],
       accountName: ['', [Validators.required, Validators.maxLength(200)]],
+      promptPayNumber: ['', [Validators.maxLength(20)]],
       wifiSsid: ['', [Validators.maxLength(100)]],
       wifiPassword: ['', [Validators.maxLength(200)]],
       operatingHours: this.fb.array(
@@ -181,6 +182,7 @@ export class ShopSettingsComponent implements OnDestroy {
       bankName: data.bankName ?? '',
       accountNumber: data.accountNumber ?? '',
       accountName: data.accountName ?? '',
+      promptPayNumber: data.promptPayNumber ?? '',
       wifiSsid: data.wifiSsid ?? '',
       wifiPassword: data.wifiPassword ?? '',
     });
@@ -260,6 +262,7 @@ export class ShopSettingsComponent implements OnDestroy {
     if (f.bankName) body['BankName'] = f.bankName;
     if (f.accountNumber) body['AccountNumber'] = f.accountNumber;
     if (f.accountName) body['AccountName'] = f.accountName;
+    if (f.promptPayNumber) body['PromptPayNumber'] = f.promptPayNumber;
     if (f.wifiSsid) body['WifiSsid'] = f.wifiSsid;
     if (f.wifiPassword) body['WifiPassword'] = f.wifiPassword;
 

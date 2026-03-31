@@ -22,6 +22,7 @@ export interface ShopSettingsResponseModel {
   paymentQrCodeFileId?: number | null;
   paymentQrCodeFileName?: string | null;
   phoneNumber?: string | null;
+  promptPayNumber?: string | null;
   receiptFooterText?: string | null;
   receiptHeaderText?: string | null;
   shopEmail?: string | null;

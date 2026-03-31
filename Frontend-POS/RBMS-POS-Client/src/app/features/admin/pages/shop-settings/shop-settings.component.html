@@ -423,8 +423,8 @@
         (imageRemoved)="onQrCodeRemoved()"
       />
 
-      <!-- Bank Info -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <!-- Bank Info (2 แถว x 2 ช่อง) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label for="bankName" class="block font-semibold mb-2">
             ธนาคาร <span class="text-danger">*</span>
@@ -466,6 +466,19 @@
             class="w-full"
           />
           <app-field-error [control]="form.get('accountName')" type="text" />
+        </div>
+        <div>
+          <label for="promptPayNumber" class="block font-semibold mb-2">
+            เลขพร้อมเพย์
+          </label>
+          <input
+            id="promptPayNumber"
+            type="text"
+            pInputText
+            formControlName="promptPayNumber"
+            placeholder="เลขพร้อมเพย์ (เบอร์โทร / เลขบัตรประชาชน)"
+            class="w-full"
+          />
         </div>
       </div>
     </app-section-card>

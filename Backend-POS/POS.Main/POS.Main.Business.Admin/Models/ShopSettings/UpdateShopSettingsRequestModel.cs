@@ -74,6 +74,9 @@ public class UpdateShopSettingsRequestModel
     [StringLength(200)]
     public string AccountName { get; set; } = string.Empty;
 
+    [StringLength(20)]
+    public string? PromptPayNumber { get; set; }
+
     [StringLength(100)]
     public string? WifiSsid { get; set; }
 

@@ -37,6 +37,7 @@ public class TbShopSettings : BaseEntity
     public string? BankName { get; set; }
     public string? AccountNumber { get; set; }
     public string? AccountName { get; set; }
+    public string? PromptPayNumber { get; set; }
 
     // WiFi
     public string? WifiSsid { get; set; }

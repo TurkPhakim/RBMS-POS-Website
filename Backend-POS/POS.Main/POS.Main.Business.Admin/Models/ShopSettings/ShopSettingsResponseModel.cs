@@ -29,6 +29,7 @@ public class ShopSettingsResponseModel
     public string? BankName { get; set; }
     public string? AccountNumber { get; set; }
     public string? AccountName { get; set; }
+    public string? PromptPayNumber { get; set; }
     public string? WifiSsid { get; set; }
     public string? WifiPassword { get; set; }
     public List<OperatingHourModel> OperatingHours { get; set; } = new();
