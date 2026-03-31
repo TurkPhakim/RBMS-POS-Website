@@ -24,7 +24,6 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
   hasContactInfo = false;
   nickname = signal('');
   waiterCooldown = signal(0);
-  billRequested = signal(false);
   hasServedItems = signal(false);
   isBillPage = signal(false);
   isCartPage = signal(false);
@@ -172,7 +171,6 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.billRequested.set(true);
           this.modalService.success({
             title: 'ขอบิลสำเร็จ',
             message: 'กรุณารอพนักงานจัดเตรียมบิล',

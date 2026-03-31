@@ -45,8 +45,6 @@
         @if (!isBillPage() && hasServedItems()) {
           <button
             class="w-12 h-12 xs:w-14 xs:h-14 rounded-full bg-billing flex items-center justify-center transition-colors"
-            [class.opacity-50]="billRequested()"
-            [disabled]="billRequested()"
             (click)="requestBill()"
           >
             <app-generic-icon

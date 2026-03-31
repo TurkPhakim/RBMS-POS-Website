@@ -13,7 +13,6 @@ const COOLDOWN_SECONDS = 60;
 })
 export class ActionsComponent {
   waiterCooldown = signal(0);
-  billRequested = signal(false);
 
   private cooldownTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -47,6 +46,28 @@ export class ActionsComponent {
   }
 
   requestBill(): void {
+    this.selfOrderService.selfOrderGetOrdersGet()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const orderStatus = res.result?.orderStatus;
+          const bills = res.result?.bills ?? [];
+
+          if (orderStatus === 'Billing') {
+            if (bills.length > 0) {
+              this.router.navigate(['/bill/summary'], { replaceUrl: true });
+            } else {
+              this.router.navigate(['/bill/waiting'], { replaceUrl: true });
+            }
+            return;
+          }
+
+          this.showBillConfirmDialog();
+        },
+      });
+  }
+
+  private showBillConfirmDialog(): void {
     this.modalService.info({
       title: 'ยืนยันขอบิล',
       message: 'ต้องการเช็คบิลเพื่อชำระเงินใช่ไหม?',
@@ -64,7 +85,6 @@ export class ActionsComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.billRequested.set(true);
           this.modalService.success({
             title: 'ขอบิลสำเร็จ',
             message: 'กรุณารอพนักงานจัดเตรียมบิล',

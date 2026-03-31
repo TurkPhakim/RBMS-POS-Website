@@ -126,6 +126,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   private orderId = 0;
   private pendingAutoOpenSlip = false;
+  private isCreatingBill = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -225,6 +226,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private autoCreateBill(): void {
+    if (this.isCreatingBill) return;
+
     const detail = this.orderDetail();
     const unservedItems = (detail?.items ?? []).filter(
       (i) =>
@@ -252,17 +255,36 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   }
 
   private createBill(force: boolean): void {
+    this.isCreatingBill = true;
     this.ordersService
       .ordersRequestBillPost({ orderId: this.orderId, force })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.loadBills(),
-        error: () => {
-          this.modalService.cancel({
-            title: 'ไม่สามารถสร้างบิลได้',
-            message: 'กรุณาตรวจสอบว่ามีรายการ\nที่เสิร์ฟแล้วอย่างน้อย 1 รายการ',
-          });
+        next: () => {
+          this.isCreatingBill = false;
+          this.loadBills();
         },
+        error: (err) => {
+          this.isCreatingBill = false;
+          const backendMsg = err?.error?.message;
+          this.modalService
+            .cancel({
+              title: 'ไม่สามารถสร้างบิลได้',
+              message: backendMsg || 'เกิดข้อผิดพลาดในการสร้างบิล',
+            })
+            .onClose.pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.revertBillingAndGoBack());
+        },
+      });
+  }
+
+  private revertBillingAndGoBack(): void {
+    this.ordersService
+      .ordersVoidBillPost({ orderId: this.orderId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.router.navigate(['/order', 'list', this.orderId]),
+        error: () => this.router.navigate(['/order', 'list', this.orderId]),
       });
   }
 
