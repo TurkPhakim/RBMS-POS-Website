@@ -1094,7 +1094,9 @@ Route prefix: `api/customer` — **AllowAnonymous** (ไม่ต้องมี
 
 | Method | Endpoint                                | วัตถุประสงค์                               | Permission | Request                                       | Response                                             |
 | ------ | --------------------------------------- | ------------------------------------------ | ---------- | --------------------------------------------- | ---------------------------------------------------- |
-| GET    | `/{qrToken}/bill`                       | ลูกค้าดูบิล + รายการอาหารตาม QR Token      | ❌ ไม่ต้อง  | URL param: qrToken                            | `BaseResponseModel<CustomerBillResponseModel>`       |
+| GET    | `/{qrToken}/bill`                       | ลูกค้าดูบิล + รายการอาหารตาม QR Token      | CustomerAuthorize | URL param: qrToken                     | `BaseResponseModel<CustomerBillResponseModel>`       |
+| POST   | `/{qrToken}/bills/{orderBillId}/claim`  | ลูกค้าจองบิล (เลือกวิธีชำระ)               | CustomerAuthorize | JSON: `ClaimBillRequestModel` (paymentMethod: Cash/Transfer) | `BaseResponseModel<object>` |
+| POST   | `/{qrToken}/bills/{orderBillId}/release`| ลูกค้าปล่อยบิลที่จองไว้                    | CustomerAuthorize | URL params: qrToken, orderBillId       | `BaseResponseModel<object>`                          |
 | POST   | `/{qrToken}/upload-slip`                | ลูกค้าอัปโหลดสลิป QR (multipart, max 10MB)  | ❌ ไม่ต้อง  | Form: OrderBillId, slipFile, PaymentReference? | `BaseResponseModel<SlipUploadResultModel>`           |
 | GET    | `/{qrToken}/bill/{orderBillId}/status`  | ลูกค้าตรวจสอบสถานะการชำระเงิน               | ❌ ไม่ต้อง  | URL params: qrToken, orderBillId              | `BaseResponseModel<string>`                          |
 | GET    | `/receipt/{orderBillId}`                | ข้อมูลใบเสร็จรายบิล (สำหรับ PDF)           | CustomerAuthorize | URL param: orderBillId                 | `BaseResponseModel<ReceiptDataModel>`                |
@@ -1103,7 +1105,9 @@ Route prefix: `api/customer` — **AllowAnonymous** (ไม่ต้องมี
 > **Business Rules:**
 > - QR Token = JWT (HS256) จากการเปิดโต๊ะ — Claims: tableId, nonce, exp (12 ชั่วโมง)
 > - ทุก endpoint ตรวจ QR Token: หา table ตาม token, ตรวจ expiry
-> - Get Bill: ดึง active order ของโต๊ะ → แสดง items (order-level) + bills (summaries)
+> - Get Bill: ดึง active order ของโต๊ะ → แสดง items (order-level) + bills (summaries) + claim info (isClaimedByMe, claimedByNickname, claimPaymentMethod)
+> - Claim Bill: ตรวจ bill status=Pending + ไม่ถูก claim โดยคนอื่น → set ClaimedBySessionId, ClaimedAt, ClaimPaymentMethod → broadcast SignalR "BillClaimed" → ถ้า Cash: broadcast "REQUEST_CASH_PAYMENT" ไป Floor
+> - Release Bill: ตรวจ session เป็นผู้จอง → clear claim fields → broadcast SignalR "BillReleased"
 > - Upload Slip: ตรวจ bill status=Pending → อัปโหลดไฟล์ → OCR → broadcast SignalR "SlipUploaded"
 > - Payment Status: return สถานะ bill เป็น string (Pending/Paid/Cancelled)
 

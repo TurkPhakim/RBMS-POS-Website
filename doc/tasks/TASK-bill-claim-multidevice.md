@@ -1,6 +1,6 @@
 # TASK: แก้ไขระบบแยกบิล + ชำระเงินฝั่งลูกค้า (Multi-Device)
 
-> สร้าง: 2026-04-01 | สถานะ: กำลังดำเนินการ
+> สร้าง: 2026-04-01 | สถานะ: เสร็จสมบูรณ์
 
 ## ปัญหา
 ระบบแยกบิลฝั่งลูกค้า (Mobile Web) มีปัญหาเมื่อใช้งานกับมือถือหลายเครื่อง:
@@ -64,20 +64,20 @@ POST /api/customer/{qrToken}/bills/{orderBillId}/release
 - ✅ เพิ่ม claim info ใน `CustomerBillSummaryModel.cs` (ClaimedByNickname, ClaimPaymentMethod, IsClaimedByMe)
 - ✅ อัพเดต `GetBillByQrTokenAsync` mapping (Include ClaimedBySession + sessionId param)
 - ✅ เพิ่ม `NotifyBillClaimedAsync` + `NotifyBillReleasedAsync` ใน interface + implementation
-- ⬜ เพิ่ม SignalR listeners ใน `signalr.service.ts` (Mobile Web) — ทำใน Phase 4
+- ✅ เพิ่ม SignalR listeners ใน `signalr.service.ts` (BillClaimed + BillReleased)
 
 ## Phase 3: gen-api
-- ⬜ restart Backend + ตรวจ Swagger
-- ⬜ ⚠️ หยุดรอผู้ใช้รัน gen-api
+- ✅ restart Backend + ตรวจ Swagger
+- ✅ ผู้ใช้รัน gen-api เสร็จ (ทั้ง Mobile Web + Client)
 
 ## Phase 4: Frontend Mobile Web
-- ⬜ bill-summary: claim flow (เงินสด + โอนเงิน)
-- ⬜ bill-summary: แสดง claim UI (จองแล้ว/กำลังชำระ)
-- ⬜ bill-summary: fallback poll ทุก 15 วิ
-- ⬜ bill-summary: allBillsPaid → แสดงหน้าดาวน์โหลดใบเสร็จ
-- ⬜ payment-complete: auto-redirect เมื่อทุกบิลจ่ายเสร็จ
-- ⬜ slip-upload: release claim ถ้า navigate back โดยไม่ upload
+- ✅ bill-summary: claim flow (claimBill + releaseBill methods)
+- ✅ bill-summary: แสดง claim UI (จองแล้ว/กำลังชำระ/จองโดยคนอื่น) ทั้ง single + multiple bills
+- ✅ bill-summary: fallback poll ทุก 15 วิ (setInterval + cleanup OnDestroy)
+- ✅ bill-summary: allBillsPaid → แสดงปุ่มดาวน์โหลดใบเสร็จรวม
+- ✅ payment-complete: auto-redirect ไป bill-summary เมื่อทุกบิลจ่ายเสร็จ (checkAllBillsPaid)
+- ✅ slip-upload: release claim ใน ngOnDestroy ถ้ายังไม่ได้ upload (uploadResult === null)
 
 ## Phase 5: Staff Checkout Enhancement
-- ⬜ Auto-switch tab เมื่อมี slip ใหม่
-- ⬜ Badge count slip รอยืนยัน
+- ✅ Auto-switch tab เมื่อมี slip ใหม่ (pendingAutoSwitchToSlip flag + autoSwitchToSlipBill)
+- ✅ Badge count "สลิปรอยืนยัน N" แสดงใน bill tabs area

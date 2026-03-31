@@ -108,6 +108,24 @@ export class BillSummaryComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.billData.set(res.result ?? null);
+
+          // Auto-redirect ไป payment-complete เมื่อบิลที่ฉัน claim เป็น Paid
+          const bills = res.result?.bills ?? [];
+          const seenPaidBills: number[] = JSON.parse(
+            sessionStorage.getItem('seen_paid_bills') || '[]',
+          );
+          const myPaidBill = bills.find(b =>
+            b.isClaimedByMe &&
+            b.status === 'Paid' &&
+            !seenPaidBills.includes(b.orderBillId!),
+          );
+
+          if (myPaidBill) {
+            this.router.navigate(['/bill/complete'], {
+              queryParams: { billId: myPaidBill.orderBillId },
+              replaceUrl: true,
+            });
+          }
         },
       });
   }

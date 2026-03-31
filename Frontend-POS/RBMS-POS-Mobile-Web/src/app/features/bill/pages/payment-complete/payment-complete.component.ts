@@ -1,5 +1,5 @@
 import { Component, DestroyRef, effect, OnDestroy, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AnimationOptions } from 'ngx-lottie';
 import { CustomerService } from '@core/api/services/customer.service';
@@ -36,7 +36,6 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
     private customerService: CustomerService,
     private selfOrderService: SelfOrderService,
     private customerAuth: CustomerAuthService,
@@ -46,6 +45,17 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
   ) {
     this.orderBillId = Number(this.route.snapshot.queryParamMap.get('billId'));
     this.shopName = this.customerAuth.getSession()?.shopNameThai ?? '';
+
+    // Mark billId as seen เพื่อป้องกัน bill-summary redirect วนลูป
+    if (this.orderBillId) {
+      const seenBills: number[] = JSON.parse(
+        sessionStorage.getItem('seen_paid_bills') || '[]',
+      );
+      if (!seenBills.includes(this.orderBillId)) {
+        seenBills.push(this.orderBillId);
+        sessionStorage.setItem('seen_paid_bills', JSON.stringify(seenBills));
+      }
+    }
 
     // Immediate poll on SignalR events
     effect(() => {
@@ -115,23 +125,6 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
           if (res.result === 'Paid') {
             this.isCompleted.set(true);
             this.loadReceiptData();
-            this.checkAllBillsPaid();
-          }
-        },
-      });
-  }
-
-  private checkAllBillsPaid(): void {
-    const qrToken = this.customerAuth.getQrToken();
-    if (!qrToken) return;
-
-    this.customerService.customerGetBillGet({ qrToken })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (res) => {
-          const bills = res.result?.bills ?? [];
-          if (bills.length > 1 && bills.every(b => b.status === 'Paid')) {
-            this.router.navigate(['/bill/summary']);
           }
         },
       });
