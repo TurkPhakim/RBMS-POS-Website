@@ -1,0 +1,778 @@
+// =============================================
+// RBMS-POS — ER Diagram for dbdiagram.io
+// ระบบ Point of Sale สำหรับจัดการร้านอาหาร
+// =============================================
+// แบ่งตามระบบ:
+//   1. Authentication & User
+//   2. Human Resource (Employee)
+//   3. Authorization (Permission)
+//   4. Admin Settings (Shop / ServiceCharge)
+//   5. Menu Management
+//   6. Table Management
+//   7. Order & Billing
+//   8. Payment & Cashier
+//   9. Notification
+//  10. Customer Self-Order (Mobile Web)
+//  11. File Management
+// =============================================
+
+// =============================================
+// 1. AUTHENTICATION & USER
+// =============================================
+
+table TB_USERS [note: 'ผู้ใช้งานระบบ'] {
+  userId uniqueidentifier [pk, note: 'รหัสผู้ใช้ (GUID)']
+  username nvarchar(50) [unique, not null, note: 'ชื่อผู้ใช้']
+  email nvarchar(255) [unique, not null, note: 'อีเมล']
+  passwordHash nvarchar(255) [not null, note: 'รหัสผ่าน (Hash)']
+  isActive bit [not null, default: true, note: 'สถานะใช้งาน']
+  failedLoginAttempts int [default: 0, note: 'จำนวนครั้งที่ login ผิด']
+  lockoutCount int [default: 0, note: 'จำนวนครั้งที่ถูก lock']
+  lockedUntil datetime [note: 'ล็อคจนถึงวันเวลานี้']
+  lastLoginDate datetime [note: 'เข้าสู่ระบบล่าสุด']
+  lastPasswordChangedDate datetime [note: 'เปลี่ยนรหัสผ่านล่าสุด']
+  isLockedByAdmin bit [default: false, note: 'ถูก Admin ล็อค']
+  autoUnlockDate datetime [note: 'วันที่ปลดล็อคอัตโนมัติ']
+  pinCodeHash nvarchar(256) [note: 'PIN สำหรับ POS (Hash)']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_REFRESH_TOKENS [note: 'Refresh Token สำหรับ JWT'] {
+  refreshTokenId uniqueidentifier [pk, note: 'รหัส Token']
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null, note: 'รหัสผู้ใช้']
+  token nvarchar [not null, note: 'ค่า Refresh Token']
+  expiresAt datetime [not null, note: 'หมดอายุ']
+  isRevoked bit [default: false, note: 'ถูกยกเลิก']
+  revokedAt datetime [note: 'เวลายกเลิก']
+  revokedByIp nvarchar [note: 'IP ของผู้ที่ยกเลิก Token']
+  createdByIp nvarchar [note: 'IP ของผู้ที่สร้าง Token']
+  createdAt datetime [not null]
+}
+
+table TB_PASSWORD_HISTORIES [note: 'ประวัติรหัสผ่าน (ป้องกันใช้ซ้ำ)'] {
+  passwordHistoryId int [pk, increment]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null, note: 'รหัสผู้ใช้']
+  passwordHash nvarchar [not null, note: 'รหัสผ่านเก่า (Hash)']
+  createdAt datetime [not null]
+}
+
+table TB_PASSWORD_RESET_TOKENS [note: 'Token รีเซ็ตรหัสผ่าน (OTP)'] {
+  passwordResetTokenId uniqueidentifier [pk]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null, note: 'รหัสผู้ใช้']
+  otpCode nvarchar [not null, note: 'รหัส OTP']
+  otpExpiresAt datetime [not null, note: 'วันหมดอายุ OTP']
+  otpVerified bit [default: false, note: 'ยืนยัน OTP แล้ว']
+  otpAttempts int [default: 0, note: 'จำนวนครั้งที่ลอง OTP']
+  resetToken nvarchar [note: 'Token สำหรับเปลี่ยนรหัส (หลังยืนยัน OTP)']
+  resetTokenExpiresAt datetime [note: 'วันหมดอายุ Reset Token']
+  isUsed bit [default: false, note: 'ใช้งานแล้ว']
+  createdAt datetime [not null]
+}
+
+// =============================================
+// 2. HUMAN RESOURCE (EMPLOYEE)
+// =============================================
+
+table TB_EMPLOYEES [note: 'ข้อมูลพนักงาน'] {
+  employeeId int [pk, increment, note: 'รหัสพนักงาน']
+  userId uniqueidentifier [ref: - TB_USERS.userId, note: 'รหัสผู้ใช้ (1:1)']
+  title nvarchar(20) [note: 'คำนำหน้า (Mr/Mrs/Ms)']
+  firstNameThai nvarchar(100) [not null, note: 'ชื่อ (ไทย)']
+  lastNameThai nvarchar(100) [not null, note: 'นามสกุล (ไทย)']
+  firstNameEnglish nvarchar(100) [not null, note: 'ชื่อ (อังกฤษ)']
+  lastNameEnglish nvarchar(100) [not null, note: 'นามสกุล (อังกฤษ)']
+  nickname nvarchar(50) [note: 'ชื่อเล่น']
+  gender nvarchar(20) [not null, note: 'เพศ (Male/Female)']
+  dateOfBirth datetime [note: 'วันเกิด']
+  startDate datetime [not null, note: 'วันเริ่มงาน']
+  endDate datetime [note: 'วันสิ้นสุดงาน']
+  nationalId nvarchar(13) [note: 'เลขบัตรประชาชน']
+  bankAccountNumber nvarchar(20) [note: 'เลขบัญชีธนาคาร']
+  bankName nvarchar(100) [note: 'ชื่อธนาคาร']
+  nationality nvarchar(30) [note: 'สัญชาติ']
+  religion nvarchar(30) [note: 'ศาสนา']
+  lineId nvarchar(50) [note: 'LINE ID']
+  positionId int [ref: > TBM_POSITIONS.positionId, note: 'รหัสตำแหน่ง']
+  phone nvarchar(20) [note: 'เบอร์โทร']
+  email nvarchar(100) [note: 'อีเมล']
+  isFullTime bit [default: true, note: 'พนักงานประจำ']
+  salary decimal(12,2) [note: 'เงินเดือน']
+  hourlyRate decimal(12,2) [note: 'ค่าจ้างรายชั่วโมง']
+  imageFileId int [ref: > TB_FILES.fileId, note: 'รูปโปรไฟล์']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_EMPLOYEE_ADDRESSES [note: 'ที่อยู่พนักงาน'] {
+  addressId int [pk, increment, note: 'รหัสที่อยู่']
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null, note: 'รหัสพนักงาน']
+  addressType nvarchar [not null, note: 'ประเภทที่อยู่ (Home/Work)']
+  houseNumber nvarchar [note: 'บ้านเลขที่']
+  building nvarchar [note: 'อาคาร/หมู่บ้าน']
+  moo nvarchar [note: 'หมู่']
+  soi nvarchar [note: 'ซอย']
+  yaek nvarchar [note: 'แยก']
+  road nvarchar [note: 'ถนน']
+  subDistrict nvarchar [note: 'ตำบล/แขวง']
+  district nvarchar [note: 'อำเภอ/เขต']
+  province nvarchar [note: 'จังหวัด']
+  postalCode nvarchar [note: 'รหัสไปรษณีย์']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_EMPLOYEE_EDUCATIONS [note: 'ประวัติการศึกษาพนักงาน'] {
+  educationId int [pk, increment, note: 'รหัสการศึกษา']
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null, note: 'รหัสพนักงาน']
+  educationLevel nvarchar [not null, note: 'ระดับการศึกษา']
+  major nvarchar [note: 'สาขาวิชา']
+  institution nvarchar [not null, note: 'สถาบัน']
+  gpa decimal [note: 'เกรดเฉลี่ย']
+  graduationYear int [note: 'ปีที่จบ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_EMPLOYEE_WORK_HISTORIES [note: 'ประวัติการทำงานพนักงาน'] {
+  workHistoryId int [pk, increment, note: 'รหัสประวัติงาน']
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null, note: 'รหัสพนักงาน']
+  workplace nvarchar [not null, note: 'สถานที่ทำงาน']
+  workPhone nvarchar [note: 'เบอร์โทรที่ทำงาน']
+  position nvarchar [note: 'ตำแหน่ง']
+  startDate datetime [not null, note: 'วันเริ่มงาน']
+  endDate datetime [note: 'วันสิ้นสุดงาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// =============================================
+// 3. AUTHORIZATION (PERMISSION)
+// =============================================
+
+table TBM_POSITIONS [note: 'ตำแหน่งงาน (Master Data)'] {
+  positionId int [pk, increment, note: 'รหัสตำแหน่ง']
+  positionName nvarchar [not null, note: 'ชื่อตำแหน่ง']
+  description nvarchar [note: 'รายละเอียด']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TBM_MODULES [note: 'โมดูลในระบบ (Master Data)'] {
+  moduleId int [pk, increment, note: 'รหัสโมดูล']
+  moduleName nvarchar [not null, note: 'ชื่อโมดูล']
+  moduleCode nvarchar [not null, note: 'รหัสโมดูล (Code)']
+  parentModuleId int [ref: > TBM_MODULES.moduleId, note: 'โมดูลแม่ (Self-reference)']
+  sortOrder int [default: 0, note: 'ลำดับการแสดงผล']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TBM_PERMISSIONS [note: 'สิทธิ์การใช้งาน (Master Data)'] {
+  permissionId int [pk, increment, note: 'รหัสสิทธิ์']
+  permissionName nvarchar [not null, note: 'ชื่อสิทธิ์']
+  permissionCode nvarchar [not null, note: 'รหัสสิทธิ์ (Code)']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TBM_AUTHORIZE_MATRICES [note: 'เมทริกซ์สิทธิ์ — เชื่อมโมดูล + สิทธิ์ + API Path'] {
+  authorizeMatrixId int [pk, increment, note: 'รหัสเมทริกซ์']
+  moduleId int [ref: > TBM_MODULES.moduleId, not null, note: 'รหัสโมดูล']
+  permissionId int [ref: > TBM_PERMISSIONS.permissionId, not null, note: 'รหัสสิทธิ์']
+  permissionPath nvarchar [not null, note: 'เส้นทาง API endpoint ที่ควบคุมสิทธิ์']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_AUTHORIZE_MATRIX_POSITIONS [note: 'กำหนดสิทธิ์ให้ตำแหน่ง — เชื่อมเมทริกซ์สิทธิ์ + ตำแหน่ง'] {
+  authMatrixPositionId int [pk, increment, note: 'รหัส']
+  authorizeMatrixId int [ref: > TBM_AUTHORIZE_MATRICES.authorizeMatrixId, not null, note: 'รหัสเมทริกซ์สิทธิ์']
+  positionId int [ref: > TBM_POSITIONS.positionId, not null, note: 'รหัสตำแหน่ง']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// =============================================
+// 4. ADMIN SETTINGS (SHOP / SERVICE CHARGE)
+// =============================================
+
+table TB_SHOP_SETTINGS [note: 'ตั้งค่าร้านค้า'] {
+  shopSettingsId int [pk, increment, note: 'รหัสตั้งค่า']
+  shopNameThai nvarchar [not null, note: 'ชื่อร้าน (ไทย)']
+  shopNameEnglish nvarchar [not null, note: 'ชื่อร้าน (อังกฤษ)']
+  companyNameThai nvarchar [note: 'ชื่อบริษัท (ไทย)']
+  companyNameEnglish nvarchar [note: 'ชื่อบริษัท (อังกฤษ)']
+  taxId nvarchar [not null, note: 'เลขประจำตัวผู้เสียภาษี']
+  foodType nvarchar [not null, note: 'ประเภทอาหาร']
+  description nvarchar [note: 'รายละเอียดร้าน']
+  logoFileId int [ref: > TB_FILES.fileId, note: 'โลโก้ร้าน']
+  hasTwoPeriods bit [note: 'มีเวลาเปิด 2 ช่วง']
+  address nvarchar [not null, note: 'ที่อยู่ร้าน']
+  phoneNumber nvarchar [not null, note: 'เบอร์โทร']
+  facebook nvarchar [note: 'Facebook']
+  instagram nvarchar [note: 'Instagram']
+  shopEmail nvarchar [note: 'อีเมลร้าน']
+  website nvarchar [note: 'เว็บไซต์']
+  lineId nvarchar [note: 'LINE ID']
+  paymentQrCodeFileId int [ref: > TB_FILES.fileId, note: 'QR Code สำหรับรับเงิน']
+  bankName nvarchar [note: 'ชื่อธนาคาร']
+  accountNumber nvarchar [note: 'เลขบัญชี']
+  accountName nvarchar [note: 'ชื่อบัญชี']
+  promptPayNumber nvarchar [note: 'เลขพร้อมเพย์']
+  wifiSsid nvarchar [note: 'ชื่อ WiFi']
+  wifiPassword nvarchar [note: 'รหัส WiFi']
+  receiptHeaderText nvarchar [note: 'ข้อความหัวใบเสร็จ']
+  receiptFooterText nvarchar [note: 'ข้อความท้ายใบเสร็จ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_SHOP_OPERATING_HOURS [note: 'เวลาเปิด-ปิดร้าน รายวัน'] {
+  shopOperatingHourId int [pk, increment, note: 'รหัส']
+  shopSettingsId int [ref: > TB_SHOP_SETTINGS.shopSettingsId, not null, note: 'รหัสตั้งค่าร้าน']
+  dayOfWeek nvarchar [not null, note: 'วันในสัปดาห์ (Mon-Sun)']
+  isOpen bit [not null, note: 'เปิดให้บริการ']
+  openTime1 time [note: 'เปิดช่วงที่ 1']
+  closeTime1 time [note: 'ปิดช่วงที่ 1']
+  openTime2 time [note: 'เปิดช่วงที่ 2']
+  closeTime2 time [note: 'ปิดช่วงที่ 2']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_SERVICE_CHARGES [note: 'ค่าบริการ (Service Charge)'] {
+  serviceChargeId int [pk, increment, note: 'รหัสค่าบริการ']
+  percentageRate decimal [not null, note: 'อัตราค่าบริการ (%)']
+  name nvarchar [not null, note: 'ชื่อ (เช่น Service 10%)']
+  description nvarchar [note: 'รายละเอียด']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  startDate datetime [note: 'วันที่เริ่มใช้']
+  endDate datetime [note: 'วันที่สิ้นสุด']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// =============================================
+// 5. MENU MANAGEMENT
+// =============================================
+
+table TB_MENU_SUB_CATEGORIES [note: 'หมวดหมู่ย่อยเมนูอาหาร'] {
+  subCategoryId int [pk, increment, note: 'รหัสหมวดหมู่ย่อย']
+  categoryType int [not null, note: 'หมวดหมู่หลัก (Enum: Appetizer/MainCourse/Beverage/Dessert/...)']
+  name nvarchar [not null, note: 'ชื่อหมวดหมู่ย่อย']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_MENUS [note: 'รายการเมนูอาหาร'] {
+  menuId int [pk, increment, note: 'รหัสเมนู']
+  nameThai nvarchar [not null, note: 'ชื่อเมนู (ไทย)']
+  nameEnglish nvarchar [not null, note: 'ชื่อเมนู (อังกฤษ)']
+  description nvarchar [note: 'รายละเอียด']
+  imageFileId int [ref: > TB_FILES.fileId, note: 'รูปเมนู']
+  subCategoryId int [ref: > TB_MENU_SUB_CATEGORIES.subCategoryId, not null, note: 'รหัสหมวดหมู่ย่อย']
+  price decimal [not null, note: 'ราคาขาย']
+  costPrice decimal [note: 'ราคาทุน']
+  isAvailable bit [default: true, note: 'พร้อมขาย']
+  isAvailablePeriod1 bit [default: true, note: 'ขายช่วงที่ 1']
+  isAvailablePeriod2 bit [default: true, note: 'ขายช่วงที่ 2']
+  tags int [note: 'แท็กเมนู เก็บเป็น Bit flags เช่น มังสวิรัติ/วีแกน/ไม่มีกลูเตน/เผ็ด']
+  allergens nvarchar [note: 'สารก่อภูมิแพ้']
+  caloriesPerServing decimal [note: 'แคลอรี่ต่อจาน']
+  isPinned bit [default: false, note: 'ปักหมุดเมนูยอดนิยม']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_OPTION_GROUPS [note: 'กลุ่มตัวเลือกเมนู (เช่น ระดับความเผ็ด, เครื่องเคียง)'] {
+  optionGroupId int [pk, increment, note: 'รหัสกลุ่มตัวเลือก']
+  name nvarchar [not null, note: 'ชื่อกลุ่ม']
+  categoryType int [not null, note: 'หมวดหมู่เมนูที่ใช้']
+  isRequired bit [not null, note: 'บังคับเลือก']
+  minSelect int [default: 0, note: 'เลือกขั้นต่ำ']
+  maxSelect int [note: 'เลือกสูงสุด']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) --- (Hard-delete, ไม่มี DeleteFlag filter)
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_OPTION_ITEMS [note: 'รายการตัวเลือก (เช่น เผ็ดน้อย, ไข่ดาว)'] {
+  optionItemId int [pk, increment, note: 'รหัสตัวเลือก']
+  optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null, note: 'รหัสกลุ่มตัวเลือก']
+  name nvarchar [not null, note: 'ชื่อตัวเลือก']
+  additionalPrice decimal [default: 0, note: 'ราคาเพิ่ม']
+  costPrice decimal [note: 'ราคาทุน']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) --- (Hard-delete)
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_MENU_OPTION_GROUPS [note: 'เชื่อมเมนู ↔ กลุ่มตัวเลือก (Many-to-Many)'] {
+  menuOptionGroupId int [pk, increment, note: 'รหัส']
+  menuId int [ref: > TB_MENUS.menuId, not null, note: 'รหัสเมนู']
+  optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null, note: 'รหัสกลุ่มตัวเลือก']
+  sortOrder int [note: 'ลำดับ']
+  // --- Audit Fields (BaseEntity) --- (Hard-delete)
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// =============================================
+// 6. TABLE MANAGEMENT
+// =============================================
+
+table TB_ZONES [note: 'โซนพื้นที่ร้าน (เช่น ชั้น 1, ดาดฟ้า)'] {
+  zoneId int [pk, increment, note: 'รหัสโซน']
+  zoneName nvarchar [not null, note: 'ชื่อโซน']
+  color nvarchar [not null, note: 'สีแสดงผล (เช่น #FF5733)']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_TABLES [note: 'โต๊ะในร้าน'] {
+  tableId int [pk, increment, note: 'รหัสโต๊ะ']
+  tableName nvarchar(50) [unique, not null, note: 'ชื่อโต๊ะ (เช่น A1, 5)']
+  zoneId int [ref: > TB_ZONES.zoneId, not null, note: 'รหัสโซน']
+  capacity int [not null, note: 'จำนวนที่นั่ง']
+  positionX float [default: 0, note: 'ตำแหน่ง X บน Canvas']
+  positionY float [default: 0, note: 'ตำแหน่ง Y บน Canvas']
+  size nvarchar [not null, note: 'ขนาด (Small/Medium/Large)']
+  status nvarchar [not null, note: 'สถานะ (Available/Occupied/Billing/Reserved/Cleaning/Unavailable)']
+  currentGuests int [note: 'จำนวนลูกค้าปัจจุบัน']
+  guestType nvarchar [note: 'ประเภทลูกค้า (DineIn/Delivery/Takeaway)']
+  openedAt datetime [note: 'เวลาเปิดโต๊ะ']
+  note nvarchar(500) [note: 'หมายเหตุ']
+  qrToken nvarchar(2000) [note: 'JWT Token ที่ฝังใน QR Code ของโต๊ะ']
+  qrTokenExpiresAt datetime [note: 'วันหมดอายุ QR Token']
+  qrTokenNonce nvarchar(50) [note: 'รหัสยืนยัน QR ป้องกันการใช้ซ้ำ']
+  qrShortCode nvarchar(10) [unique, note: 'รหัสย่อสำหรับลูกค้าเข้าผ่าน Mobile Web']
+  activeOrderId int [note: 'ออเดอร์ที่กำลังใช้งานอยู่บนโต๊ะนี้']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_TABLE_LINKS [note: 'เชื่อมโต๊ะ (รวมโต๊ะ / Link Tables)'] {
+  tableLinkId int [pk, increment, note: 'รหัส']
+  groupCode nvarchar [not null, note: 'รหัสกลุ่มโต๊ะ']
+  isPrimary bit [not null, note: 'โต๊ะหลักของกลุ่ม']
+  tableId int [ref: > TB_TABLES.tableId, not null, note: 'รหัสโต๊ะ']
+  // --- Audit Fields (BaseEntity) --- (Hard-delete)
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_FLOOR_OBJECTS [note: 'วัตถุบนผัง (กำแพง, ประตู, เสา, เคาน์เตอร์)'] {
+  floorObjectId int [pk, increment, note: 'รหัส']
+  zoneId int [ref: > TB_ZONES.zoneId, note: 'รหัสโซน']
+  objectType nvarchar [not null, note: 'ประเภท (Wall/Door/Pillar/Counter/Decoration/...)']
+  label nvarchar [not null, note: 'ชื่อแสดงผล']
+  positionX float [not null, note: 'ตำแหน่ง X']
+  positionY float [not null, note: 'ตำแหน่ง Y']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_RESERVATIONS [note: 'การจองโต๊ะ'] {
+  reservationId int [pk, increment, note: 'รหัสการจอง']
+  customerName nvarchar [not null, note: 'ชื่อลูกค้า']
+  customerPhone nvarchar [not null, note: 'เบอร์โทรลูกค้า']
+  reservationDate date [not null, note: 'วันที่จอง']
+  reservationTime time [not null, note: 'เวลาจอง']
+  guestCount int [not null, note: 'จำนวนผู้เข้าร่วม']
+  tableId int [ref: > TB_TABLES.tableId, note: 'รหัสโต๊ะ']
+  note nvarchar(500) [note: 'หมายเหตุ']
+  status nvarchar [not null, note: 'สถานะ (Pending/Confirmed/Completed/Cancelled)']
+  reminderSent bit [default: false, note: 'ส่งแจ้งเตือนแล้ว']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// =============================================
+// 7. ORDER & BILLING
+// =============================================
+
+table TB_ORDERS [note: 'ออเดอร์ (คำสั่งซื้อ)'] {
+  orderId int [pk, increment, note: 'รหัสออเดอร์']
+  tableId int [ref: > TB_TABLES.tableId, not null, note: 'รหัสโต๊ะ']
+  orderNumber nvarchar(20) [unique, not null, note: 'เลขออเดอร์ (เช่น ORD-20240101-001)']
+  status nvarchar [not null, note: 'สถานะ (Open/Billing/Completed)']
+  guestCount int [not null, note: 'จำนวนลูกค้า']
+  subTotal decimal(12,2) [default: 0, note: 'ยอดรวมก่อนส่วนลด']
+  note nvarchar(500) [note: 'หมายเหตุ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// FK: TB_TABLES.activeOrderId → TB_ORDERS.orderId
+Ref: TB_TABLES.activeOrderId > TB_ORDERS.orderId
+
+table TB_ORDER_ITEMS [note: 'รายการในออเดอร์'] {
+  orderItemId int [pk, increment, note: 'รหัสรายการ']
+  orderId int [ref: > TB_ORDERS.orderId, not null, note: 'รหัสออเดอร์']
+  menuId int [ref: > TB_MENUS.menuId, not null, note: 'รหัสเมนู']
+  menuNameThai nvarchar(200) [not null, note: 'ชื่อเมนูไทย ณ ตอนสั่ง']
+  menuNameEnglish nvarchar(200) [not null, note: 'ชื่อเมนูอังกฤษ ณ ตอนสั่ง']
+  categoryType int [not null, note: 'หมวดหมู่เมนู']
+  quantity int [not null, note: 'จำนวน']
+  unitPrice decimal(10,2) [not null, note: 'ราคาต่อหน่วย']
+  optionsTotalPrice decimal(10,2) [default: 0, note: 'ราคาตัวเลือกรวม']
+  totalPrice decimal(12,2) [not null, note: 'ราคารวม']
+  status nvarchar [not null, note: 'สถานะ (Pending/Sent/Preparing/Ready/Served/Voided/Cancelled)']
+  note nvarchar(500) [note: 'หมายเหตุ']
+  orderedBy nvarchar(100) [not null, note: 'ชื่อพนักงานที่สั่ง']
+  sentToKitchenAt datetime [note: 'ส่งเข้าครัว']
+  cookingStartedAt datetime [note: 'เริ่มทำ']
+  readyAt datetime [note: 'ทำเสร็จ']
+  servedAt datetime [note: 'เสิร์ฟแล้ว']
+  cancelledBy int [ref: > TB_EMPLOYEES.employeeId, note: 'ยกเลิกโดย (พนักงาน)']
+  cancelReason nvarchar(500) [note: 'เหตุผลยกเลิก']
+  costPrice decimal(10,2) [note: 'ราคาทุน']
+  orderBillId int [ref: > TB_ORDER_BILLS.orderBillId, note: 'บิลที่รายการนี้ถูกจัดเข้า (null = ยังไม่ออกบิล)']
+  sourceTableId int [ref: > TB_TABLES.tableId, note: 'โต๊ะต้นทาง กรณีย้ายรายการข้ามโต๊ะ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_ORDER_ITEM_OPTIONS [note: 'ตัวเลือกที่เลือกในรายการออเดอร์ (Snapshot)'] {
+  orderItemOptionId int [pk, increment, note: 'รหัส']
+  orderItemId int [ref: > TB_ORDER_ITEMS.orderItemId, not null, note: 'รหัสรายการ']
+  optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null, note: 'รหัสกลุ่มตัวเลือก']
+  optionItemId int [ref: > TB_OPTION_ITEMS.optionItemId, not null, note: 'รหัสตัวเลือก']
+  optionGroupName nvarchar [not null, note: 'ชื่อกลุ่มตัวเลือก ณ ตอนสั่ง']
+  optionItemName nvarchar [not null, note: 'ชื่อตัวเลือก ณ ตอนสั่ง']
+  additionalPrice decimal [not null, note: 'ราคาเพิ่ม ณ ตอนสั่ง']
+  costPrice decimal [note: 'ราคาทุน']
+  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
+}
+
+table TB_ORDER_BILLS [note: 'บิล / ใบเสร็จ'] {
+  orderBillId int [pk, increment, note: 'รหัสบิล']
+  orderId int [ref: > TB_ORDERS.orderId, not null, note: 'รหัสออเดอร์']
+  billNumber nvarchar [not null, note: 'เลขบิล (เช่น BILL-20240101-001)']
+  billType nvarchar [not null, note: 'ประเภท (Full/Split)']
+  subTotal decimal(12,2) [not null, note: 'ยอดก่อนส่วนลด']
+  totalDiscountAmount decimal(12,2) [not null, note: 'ส่วนลดรวม']
+  netAmount decimal(12,2) [not null, note: 'ยอดหลังส่วนลด']
+  serviceChargeId int [ref: > TB_SERVICE_CHARGES.serviceChargeId, note: 'รหัสค่าบริการ']
+  serviceChargeRate decimal [not null, note: 'อัตราค่าบริการ (%)']
+  serviceChargeAmount decimal(12,2) [not null, note: 'ค่าบริการ']
+  vatRate decimal [not null, note: 'อัตรา VAT (%)']
+  vatAmount decimal(12,2) [not null, note: 'ภาษี VAT']
+  grandTotal decimal [not null, note: 'ยอดรวมสุทธิ']
+  splitCount int [not null, note: 'แยกเป็นกี่บิล (1 = ไม่แยก)']
+  splitIndex int [not null, note: 'บิลนี้เป็นลำดับที่เท่าไหร่ (0 = บิลเต็มหรือบิลแรก)']
+  status nvarchar [not null, note: 'สถานะ (Pending/Paid)']
+  paidAt datetime [note: 'ชำระเมื่อ']
+  // --- Claim (ลูกค้าจอง/ชำระผ่าน Mobile Web) ---
+  claimedBySessionId int [ref: > TB_CUSTOMER_SESSIONS.customerSessionId, note: 'Session ลูกค้าที่ขอชำระบิลนี้']
+  claimedAt datetime [note: 'เวลาที่ลูกค้าขอชำระบิล']
+  claimPaymentMethod nvarchar [note: 'วิธีชำระที่ลูกค้าเลือก (cash/qr)']
+  // --- Customer Slip (อัพโหลดจาก Mobile Web) ---
+  customerSlipFileId int [ref: > TB_FILES.fileId, note: 'รูปสลิปที่ลูกค้าอัพโหลด']
+  customerSlipOcrAmount decimal [note: 'ยอดเงินที่อ่านได้จากสลิป (OCR)']
+  customerSlipVerificationStatus nvarchar [note: 'สถานะการตรวจสอบสลิป']
+  customerSlipOcrTransferDate datetime [note: 'วันที่โอนเงินที่อ่านได้จากสลิป (OCR)']
+  customerSlipOcrAccountNumber nvarchar [note: 'เลขบัญชีปลายทางที่อ่านได้จากสลิป (OCR)']
+  customerSlipIsAccountMatched bit [note: 'เลขบัญชีในสลิปตรงกับบัญชีร้านหรือไม่']
+  customerSlipIsDateToday bit [note: 'วันที่โอนในสลิปตรงกับวันปัจจุบันหรือไม่']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// =============================================
+// 8. PAYMENT & CASHIER
+// =============================================
+
+table TB_CASHIER_SESSIONS [note: 'รอบการทำงานแคชเชียร์'] {
+  cashierSessionId int [pk, increment, note: 'รหัสรอบ']
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null, note: 'รหัสผู้ใช้ (แคชเชียร์)']
+  status nvarchar [not null, note: 'สถานะ (Open/Closed)']
+  openedAt datetime [not null, note: 'เวลาเปิดรอบ']
+  closedAt datetime [note: 'เวลาปิดรอบ']
+  openingCash decimal [not null, note: 'เงินสดตั้งต้น']
+  expectedCash decimal [not null, note: 'เงินสดที่ควรมี (ตั้งต้น + ขายเงินสด + เงินเข้า - เงินออก)']
+  actualCash decimal [note: 'เงินสดจริงที่นับได้ตอนปิดรอบ']
+  variance decimal [note: 'ส่วนต่าง (เงินจริง - เงินที่ควรมี)']
+  totalCashSales decimal [not null, note: 'ยอดขายเงินสด']
+  totalQrSales decimal [not null, note: 'ยอดขาย QR']
+  billCount int [not null, note: 'จำนวนบิล']
+  shiftPeriod int [note: 'รอบกะการทำงาน (เช่น 1=เช้า, 2=บ่าย)']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_CASH_DRAWER_TRANSACTIONS [note: 'ธุรกรรมลิ้นชักเงินสด (นำเงินเข้า/ออก)'] {
+  cashDrawerTransactionId int [pk, increment, note: 'รหัส']
+  cashierSessionId int [ref: > TB_CASHIER_SESSIONS.cashierSessionId, not null, note: 'รหัสรอบแคชเชียร์']
+  transactionType nvarchar [not null, note: 'ประเภท (In/Out)']
+  amount decimal [not null, note: 'จำนวนเงิน']
+  reason nvarchar [not null, note: 'เหตุผล']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_PAYMENTS [note: 'การชำระเงิน'] {
+  paymentId int [pk, increment, note: 'รหัสการชำระ']
+  orderBillId int [ref: > TB_ORDER_BILLS.orderBillId, not null, note: 'รหัสบิล']
+  cashierSessionId int [ref: > TB_CASHIER_SESSIONS.cashierSessionId, not null, note: 'รหัสรอบแคชเชียร์']
+  paymentMethod nvarchar [not null, note: 'วิธีชำระ (Cash/QrPayment)']
+  amountDue decimal [not null, note: 'ยอดที่ต้องชำระ']
+  amountReceived decimal [not null, note: 'ยอดที่ได้รับ']
+  changeAmount decimal [not null, note: 'เงินทอน']
+  slipImageFileId int [ref: > TB_FILES.fileId, note: 'รูปสลิปการโอนเงิน']
+  slipOcrAmount decimal [note: 'ยอดเงินที่อ่านได้จากสลิป (OCR)']
+  slipVerificationStatus nvarchar [not null, note: 'สถานะตรวจสลิป (None/Processing/Verified/Failed)']
+  paymentReference nvarchar [note: 'เลขอ้างอิงธุรกรรมจากธนาคาร']
+  paidAt datetime [not null, note: 'เวลาชำระ']
+  note nvarchar [note: 'หมายเหตุ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// =============================================
+// 9. NOTIFICATION
+// =============================================
+
+table TB_NOTIFICATIONS [note: 'การแจ้งเตือน'] {
+  notificationId int [pk, increment, note: 'รหัสแจ้งเตือน']
+  eventType nvarchar [not null, note: 'ประเภทเหตุการณ์ (OrderReady/TableAvailable/...)']
+  title nvarchar [not null, note: 'หัวข้อ']
+  message nvarchar [not null, note: 'ข้อความ']
+  tableId int [ref: > TB_TABLES.tableId, note: 'รหัสโต๊ะ']
+  orderId int [ref: > TB_ORDERS.orderId, note: 'รหัสออเดอร์']
+  reservationId int [ref: > TB_RESERVATIONS.reservationId, note: 'รหัสการจอง']
+  targetGroup nvarchar [not null, note: 'กลุ่มเป้าหมาย (Kitchen/Cashier/Customer)']
+  payload nvarchar [note: 'ข้อมูลเพิ่มเติมแบบ JSON']
+  createdAt datetime [not null, note: 'เวลาสร้าง']
+  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
+}
+
+table TB_NOTIFICATION_READS [note: 'สถานะการอ่านแจ้งเตือน'] {
+  notificationReadId int [pk, increment, note: 'รหัส']
+  notificationId int [ref: > TB_NOTIFICATIONS.notificationId, not null, note: 'รหัสแจ้งเตือน']
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null, note: 'รหัสผู้ใช้']
+  readAt datetime [note: 'เวลาอ่าน']
+  clearedAt datetime [note: 'เวลาเคลียร์']
+  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
+}
+
+// =============================================
+// 10. CUSTOMER SELF-ORDER (MOBILE WEB)
+// =============================================
+
+table TB_CUSTOMER_SESSIONS [note: 'Session ลูกค้าสั่งอาหารผ่าน Mobile Web (สแกน QR)'] {
+  customerSessionId int [pk, increment, note: 'รหัส Session']
+  tableId int [ref: > TB_TABLES.tableId, not null, note: 'รหัสโต๊ะ']
+  sessionToken nvarchar [unique, not null, note: 'Token ระบุตัวตน']
+  nickname nvarchar [note: 'ชื่อเล่นลูกค้า']
+  deviceFingerprint nvarchar [note: 'ข้อมูลระบุอุปกรณ์ (Device Fingerprint)']
+  qrTokenNonce nvarchar [not null, note: 'รหัสยืนยันที่ต้องตรงกับ QR Code ของโต๊ะ']
+  isActive bit [default: true, note: 'Session ยังใช้งานอยู่']
+  createdAt datetime [not null, note: 'เวลาสร้าง']
+  expiresAt datetime [not null, note: 'หมดอายุ']
+  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
+}
+
+// =============================================
+// 11. FILE MANAGEMENT
+// =============================================
+
+table TB_FILES [note: 'จัดเก็บไฟล์ (S3/MinIO)'] {
+  fileId int [pk, increment, note: 'รหัสไฟล์']
+  fileName nvarchar [not null, note: 'ชื่อไฟล์ต้นฉบับ']
+  mimeType nvarchar [not null, note: 'ชนิดไฟล์ (เช่น image/png)']
+  fileExtension nvarchar [not null, note: 'นามสกุลไฟล์ (เช่น .png)']
+  fileSize bigint [not null, note: 'ขนาดไฟล์ (bytes)']
+  s3Key nvarchar [not null, note: 'ตำแหน่งไฟล์บน S3/MinIO']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}

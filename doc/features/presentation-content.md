@@ -4,65 +4,87 @@
 
 ---
 
-## ที่มาของโปรเจค
+## Background & Objectives
 
-ร้านอาหารขนาดเล็ก-กลางจำนวนมากยังจดออเดอร์ด้วยกระดาษ ตะโกนสั่งครัว คิดเงินด้วยเครื่องคิดเลข ทำให้ออเดอร์ตกหล่น คิดเงินผิด และไม่มีข้อมูลสำหรับวางแผนธุรกิจ
+ธุรกิจร้านอาหารในปัจจุบันต้องเผชิญกับปัญหาด้านความรวดเร็ว ความแม่นยำ และการควบคุมยอดขาย ระบบแบบเดิมที่พึ่งพาแรงงานคนมักเกิดข้อผิดพลาดและไม่ทันต่อความต้องการของลูกค้า จึงได้พัฒนา **RBMS-POS** ขึ้นเพื่อจัดการทุกขั้นตอนตั้งแต่สั่งอาหาร ชำระเงิน ไปจนถึงสรุปยอดขาย รองรับ QR Code สั่งอาหาร, Real-time Notification และ Dashboard วิเคราะห์ข้อมูล
 
-**RBMS-POS** จึงพัฒนาขึ้นเป็นระบบจัดการร้านอาหารแบบครบวงจร ทำงานผ่านเว็บเบราว์เซอร์ แบบ Real-time — ร้านไม่ต้องลงทุนเครื่อง POS ราคาแพง แค่มีคอมพิวเตอร์หรือแท็บเล็ตก็ใช้งานได้
+**วัตถุประสงค์**
+
+1. **เพิ่มประสิทธิภาพในการบริหารจัดการร้านอาหาร** — ลดขั้นตอนซ้ำซ้อน จัดการออเดอร์ ชำระเงิน และโต๊ะอย่างเป็นระบบ
+2. **ยกระดับประสบการณ์ของลูกค้า** — สั่งอาหารผ่าน QR Code, แจ้งเตือน Real-time, ติดตามสถานะอัตโนมัติ
+3. **ติดตามและวิเคราะห์ข้อมูลยอดขาย** — Dashboard สรุปยอดขาย ออเดอร์ และข้อมูลสำคัญรายวัน
 
 ---
 
-## วัตถุประสงค์
+## Project Scope
 
-| # | วัตถุประสงค์ |
-|---|-------------|
-| 1 | **เปลี่ยนระบบกระดาษสู่ดิจิทัล** — รับออเดอร์ ส่งครัว คิดเงิน ในระบบเดียว ลดขั้นตอนและความผิดพลาด |
-| 2 | **ลดเวลารอคอยด้วย QR Self-Ordering** — ลูกค้าสแกน QR สั่งอาหารเอง ออเดอร์ถึงครัวทันที |
-| 3 | **จัดการครัว Real-time** — ครัวเห็นออเดอร์บนหน้าจอ อัพเดตสถานะทันที พนักงานรู้เวลาไปรับอาหาร |
-| 4 | **ควบคุมสิทธิ์การเข้าถึง** — กำหนดสิทธิ์ตามตำแหน่ง แคชเชียร์เห็นแค่หน้าขาย ผู้จัดการเห็นทุกอย่าง |
-| 5 | **มีข้อมูลสำหรับตัดสินใจ** — Dashboard แสดงยอดขาย จำนวนออเดอร์ ภาพรวมร้านแบบ Real-time |
+| #   | ขอบเขต                                                                                                                                                    |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **จัดการเมนูอาหารและเครื่องดื่ม** — เพิ่ม แก้ไข ลบ กำหนดหมวดหมู่ ราคา ภาพ สถานะเปิด-ปิดการขาย แสดงผลหน้าลูกค้าแบบ Real-time                               |
+| 2   | **จัดการโต๊ะและผังพื้นที่นั่ง** — กำหนดหมายเลขโต๊ะ โซน จำนวนที่นั่ง สถานะ (Available / Occupied / Reserved) เชื่อมโยงกับคำสั่งซื้ออัตโนมัติ               |
+| 3   | **แสดงและจัดการออเดอร์ Real-time** — รายการออเดอร์เข้าทันที จัดการสถานะ แก้ไข/ยกเลิกตามสิทธิ์พนักงาน                                                      |
+| 4   | **รับออเดอร์หลายช่องทาง** — ทั้งจากพนักงานในร้านและลูกค้าสแกน QR Code ส่งต่อไปครัว/บาร์แยกหมวดหมู่อัตโนมัติ                                               |
+| 5   | **Kitchen Display แยกครัว/บาร์** — แสดงออเดอร์แยกส่วน พนักงานจัดการเฉพาะงานตัวเอง ปรับสถานะ "กำลังทำ" → "เสร็จแล้ว"                                       |
+| 6   | **ชำระเงิน** — รองรับเงินสดและสแกนจ่าย เชื่อมต่อรายการออเดอร์ของโต๊ะ ตรวจสอบก่อนชำระได้                                                                   |
+| 7   | **Mobile Web สั่งอาหารผ่าน QR Code** — ลูกค้าสแกน → เลือกเมนู → ส่งออเดอร์ → ติดตามสถานะ Real-time ผูกโต๊ะอัตโนมัติ พร้อมปุ่มเรียกพนักงานและเรียกชำระเงิน |
+| 8   | **บริหารจัดการพนักงาน** — เพิ่ม แก้ไข ลบ จัดกลุ่มตามหน้าที่ ตั้งค่าบัญชีผู้ใช้และรหัสผ่านสำหรับเข้าสู่ระบบ                                                |
+| 9   | **ตั้งค่าระบบและสิทธิ์การเข้าถึง** — กำหนดค่าพื้นฐาน (VAT, Service Charge) และ Role-based Access Control แยกสิทธิ์ตามบทบาท                                |
+| 10  | **Dashboard รายงานสรุปยอดขาย** — ยอดขายรายวัน/เดือน/ปี จำนวนลูกค้า เมนูขายดี สนับสนุนการวิเคราะห์และวางแผนธุรกิจ                                          |
 
 ---
 
 ## สรุป 160 ฟีเจอร์ทั้งระบบ
 
 ### Auth (11 ฟีเจอร์)
+
 Login + ReCaptcha, Logout, Auto Refresh Token, ล็อคบัญชีอัตโนมัติ, Admin ล็อค/ปลดล็อค, ลืมรหัสผ่าน (Email → OTP), ยืนยัน OTP, ตั้งรหัสใหม่ (ห้ามซ้ำ 3 รหัสล่าสุด), เปลี่ยนรหัสผ่าน, ReCaptcha ป้องกัน Bot, ยืนยันรหัสสำหรับ action สำคัญ
 
 ### Profile (9 ฟีเจอร์)
+
 ดูข้อมูลส่วนตัว, แก้ไขข้อมูล (ชื่อเล่น/Line/เบอร์โทร/ธนาคาร), อัพโหลดรูปโปรไฟล์, จัดการที่อยู่, จัดการประวัติการศึกษา, จัดการประวัติงาน, ตั้ง PIN 6 หลัก, เปลี่ยน PIN, รีเซ็ต PIN
 
 ### Dashboard (10 ฟีเจอร์)
+
 KPI Cards 6 ใบ, กราฟแนวโน้มรายได้, เปรียบเทียบ 2 ช่วงเวลา, กราฟสัดส่วนครัว, กราฟชั่วโมงขายดี, Top 5 เมนูขายดี, รายงานยอดขายตามช่วงวันที่, เลือกวันที่กรอง, สลับช่วง 7/30 วัน, Mock Data Mode
 
 ### Order (18 ฟีเจอร์)
+
 ผังโต๊ะ Real-time, รายการออเดอร์ (Filter+Pagination), รายละเอียดออเดอร์, สร้างออเดอร์, เพิ่มรายการอาหาร+ตัวเลือก, ส่งครัว Real-time, อัพเดตสถานะ (กำลังทำ/พร้อมเสิร์ฟ), เสิร์ฟ/เสิร์ฟทั้งหมด, Void รายการ, Cancel+เหตุผล, ขอบิล, ส่ง/ยกเลิกบิล, แยกบิลตามรายการ, แยกบิลตามจำนวนเงิน, ยกเลิกแยกบิล, รวมโต๊ะ, ย้ายโต๊ะ
 
 ### Menu (13 ฟีเจอร์)
+
 ดูรายการเมนู (แยกประเภท), สร้าง/แก้ไข/ลบเมนู, อัพโหลดรูปเมนู, จัดการหมวดหมู่ย่อย, จัดเรียงหมวดหมู่ (Drag & Drop), จัดการกลุ่มตัวเลือก, จัดการรายการตัวเลือก, เชื่อมเมนูกับ Options, ค้นหาเมนู, กรองสถานะ, Permission แยกตามประเภท
 
 ### Table (13 ฟีเจอร์)
+
 จัดการโซน CRUD, จัดการโต๊ะ CRUD, ออกแบบผังร้าน (Drag & Drop), วัตถุตกแต่ง, สถานะโต๊ะ+สี, เปิด/ปิดโต๊ะ, รวม/แยกโต๊ะ, QR Token, จัดเรียงโซน, จองโต๊ะ CRUD, Reservation Status Flow, ยกเลิก/NoShow, ปฏิทินการจอง
 
 ### Payment (12 ฟีเจอร์)
+
 เปิด/ปิดรอบขาย, เงินเข้า/ออกลิ้นชัก, ชำระเงินสด (คำนวณทอน), ชำระ QR+อัพโหลดสลิป, Slip OCR ตรวจสอบอัตโนมัติ, ยืนยัน QR Payment, ประวัติชำระเงิน, ประวัติรอบขาย, รายละเอียดรอบขาย, ออกใบเสร็จ/ดาวน์โหลด
 
 ### Kitchen Display (9 ฟีเจอร์)
+
 แสดงรายการรอทำ (แยกประเภท), 2 มุมมอง (Order/Menu View), เริ่มทำ, ทำเสร็จ, Real-time ออเดอร์ใหม่, Real-time สถานะเปลี่ยน, ข้อมูลโต๊ะ+โซน, KPI สรุป, Permission แยกตาม category
 
 ### Human Resource (10 ฟีเจอร์)
+
 รายชื่อพนักงาน (Filter+Pagination), เพิ่ม/แก้ไข/ลบพนักงาน, สร้างบัญชีผู้ใช้ (Auto-generate), จัดการที่อยู่, ประวัติการศึกษา, ประวัติงาน, อัพโหลดรูปโปรไฟล์, ค้นหาพนักงาน
 
 ### Admin Setting (11 ฟีเจอร์)
+
 รายชื่อผู้ใช้งาน, แก้ไขผู้ใช้ (Active/ล็อค), รีเซ็ต Failed Login, จัดการตำแหน่ง CRUD, Permission Matrix (Tree+Checkbox), Module Tree, ตั้งค่าร้านค้า, อัพโหลดโลโก้, อัพโหลด QR ชำระเงิน, ตั้งเวลาเปิด-ปิดร้าน, จัดการค่าบริการ
 
 ### Mobile Web (21 ฟีเจอร์)
+
 สแกน QR → Session, ตั้งชื่อเล่น, ดูเมนูแยกหมวด, ค้นหาเมนู, รายละเอียดเมนู+ตัวเลือก, ตะกร้า (เพิ่ม/แก้ไข/ลบ), สั่งอาหาร, ติดตามสถานะ Real-time, เรียกพนักงาน (Cooldown 60s), ขอบิล, รอบิล (auto-navigate), สรุปบิล, ชำระเงินสด, ชำระ QR+อัพโหลดสลิป, หารบิลเท่า, หารบิลตามรายการ, รอตรวจสลิป, ดาวน์โหลดใบเสร็จ, หน้าร้านปิด, หน้า Token หมดอายุ
 
 ### Notification (10 ฟีเจอร์)
+
 รับแจ้งเตือน Real-time, Toast notification, Notification Drawer, Badge ยังไม่อ่าน, อ่านแจ้งเตือน, กรอง 9 ประเภท, กลุ่ม Kitchen/Floor/Cashier/Manager
 
 ### Base Web (13 ฟีเจอร์)
+
 Sidebar 8 เมนูหลัก+22 เมนูย่อย (แสดงตามสิทธิ์), Sidebar พับได้, Header (โลโก้+ชื่อร้านจาก API), Notification Badge, User Menu, Breadcrumb+Action Buttons, Global Loading, Auth Guard, Permission Guard, Guest Guard, Session Timeout Dialog, Access Denied Page, Lazy Loading
 
 ---
@@ -81,19 +103,19 @@ Sidebar 8 เมนูหลัก+22 เมนูย่อย (แสดงต�
 
 ## สไลด์ 2: Technology Stack
 
-| ส่วน | เทคโนโลยี |
-|------|-----------|
-| **Backend API** | ASP.NET Core 9.0 + Entity Framework Core |
-| **Real-time** | SignalR (WebSocket) |
-| **Frontend Client** | Angular 19.1 + Tailwind CSS 3.4 + PrimeNG |
-| **Frontend Mobile** | Angular 19.1 (Mobile-optimized PWA) |
-| **Database** | SQL Server 2022 |
-| **File Storage** | MinIO (S3-compatible Object Storage) |
-| **API Documentation** | Swagger/OpenAPI |
-| **Containerization** | Docker + Docker Compose + Nginx (Reverse Proxy) |
-| **SSL** | Certbot (Auto-renew ทุก 12 ชม.) |
-| **Font** | Sarabun (รองรับไทย+อังกฤษ) |
-| **API Client Gen** | ng-openapi-gen (Auto-generate TypeScript client จาก Swagger) |
+| ส่วน                  | เทคโนโลยี                                                    |
+| --------------------- | ------------------------------------------------------------ |
+| **Backend API**       | ASP.NET Core 9.0 + Entity Framework Core                     |
+| **Real-time**         | SignalR (WebSocket)                                          |
+| **Frontend Client**   | Angular 19.1 + Tailwind CSS 3.4 + PrimeNG                    |
+| **Frontend Mobile**   | Angular 19.1 (Mobile-optimized PWA)                          |
+| **Database**          | SQL Server 2022                                              |
+| **File Storage**      | MinIO (S3-compatible Object Storage)                         |
+| **API Documentation** | Swagger/OpenAPI                                              |
+| **Containerization**  | Docker + Docker Compose + Nginx (Reverse Proxy)              |
+| **SSL**               | Certbot (Auto-renew ทุก 12 ชม.)                              |
+| **Font**              | Sarabun (รองรับไทย+อังกฤษ)                                   |
+| **API Client Gen**    | ng-openapi-gen (Auto-generate TypeScript client จาก Swagger) |
 
 ---
 
@@ -101,77 +123,69 @@ Sidebar 8 เมนูหลัก+22 เมนูย่อย (แสดงต�
 
 ### Backend — Framework & Library
 
-| Library | Version | ใช้ทำอะไร |
-|---------|---------|---------|
-| .NET | 9.0 | Core runtime |
-| ASP.NET Core | 9.0 | Web API framework |
-| Entity Framework Core | 9.0.10 | ORM จัดการ Database (Code-First) |
-| EF Core SQL Server | 9.0.10 | SQL Server provider |
-| EF Core Design + Tools | 9.0.10 | Migration CLI (`dotnet ef`) |
-| JWT Bearer Authentication | 9.0.10 | JWT token validation |
-| BCrypt.Net-Next | 4.0.3 | Password hashing |
-| Swashbuckle.AspNetCore | 9.0.6 | Swagger/OpenAPI documentation |
-| Newtonsoft.Json (via MVC) | 9.0.10 | JSON serialization |
-| AWSSDK.S3 | 4.0.18.8 | S3 client (ใช้กับ MinIO) |
-| MailKit | 4.15.1 | SMTP ส่ง Email (OTP, forgot password) |
-| SignalR | 9.0 | Real-time WebSocket (Kitchen, Notification) |
-| HealthChecks.EF Core | 9.0.10 | Database health check endpoint |
-| ResponseCompression | 9.0 | Gzip + Brotli compression |
-| HttpOverrides | 9.0 | Nginx reverse proxy support |
-| MemoryCache | 9.0 | In-memory caching |
+| Library                   | Version  | ใช้ทำอะไร                                   |
+| ------------------------- | -------- | ------------------------------------------- |
+| .NET                      | 9.0      | Core runtime                                |
+| ASP.NET Core              | 9.0      | Web API framework                           |
+| Entity Framework Core     | 9.0.10   | ORM จัดการ Database (Code-First)            |
+| EF Core SQL Server        | 9.0.10   | SQL Server provider                         |
+| EF Core Design + Tools    | 9.0.10   | Migration CLI (`dotnet ef`)                 |
+| JWT Bearer Authentication | 9.0.10   | JWT token validation                        |
+| BCrypt.Net-Next           | 4.0.3    | Password hashing                            |
+| Swashbuckle.AspNetCore    | 9.0.6    | Swagger/OpenAPI documentation               |
+| Newtonsoft.Json (via MVC) | 9.0.10   | JSON serialization                          |
+| AWSSDK.S3                 | 4.0.18.8 | S3 client (ใช้กับ MinIO)                    |
+| MailKit                   | 4.15.1   | SMTP ส่ง Email (OTP, forgot password)       |
+| SignalR                   | 9.0      | Real-time WebSocket (Kitchen, Notification) |
+| HealthChecks.EF Core      | 9.0.10   | Database health check endpoint              |
+| ResponseCompression       | 9.0      | Gzip + Brotli compression                   |
+| HttpOverrides             | 9.0      | Nginx reverse proxy support                 |
+| MemoryCache               | 9.0      | In-memory caching                           |
 
 ### Frontend Client — Framework & Library
 
-| Library | Version | ใช้ทำอะไร |
-|---------|---------|---------|
-| Angular | 19.2 | Core framework (Component, Router, Forms, Animations) |
-| Angular CDK | 19.2 | Component Dev Kit (overlay, scrolling) |
-| PrimeNG | 19.1.4 | UI Components (Table, Dialog, Dropdown, Button) |
-| PrimeIcons | 7.0 | Icon library (pi pi-*) |
-| Tailwind CSS | 3.4 | Utility-first CSS framework |
-| NgRx (Store + Effects) | 19.0 | State Management |
-| @microsoft/signalr | 9.0.6 | SignalR client (real-time) |
-| Chart.js + ng2-charts | 4.5 / 10.0 | กราฟ Dashboard (Line, Bar, Donut) |
-| Lottie (ngx-lottie) | 21.2 | Animation สำหรับ Global Loading overlay |
-| pdfmake | 0.3.7 | สร้าง PDF ใบเสร็จ |
-| qr-code-styling | 1.9.2 | สร้าง QR Code (โต๊ะ, ชำระเงิน) |
-| ng-recaptcha | 13.2.1 | Google reCAPTCHA v3 (Login) |
-| ng-openapi-gen | 0.51.0 | Auto-generate API client จาก Swagger |
-| RxJS | 7.8 | Reactive programming (Observable) |
-| TypeScript | 5.7 | Programming language |
-| @fontsource/sarabun | 5.2.8 | Sarabun font (ไทย+อังกฤษ) |
+| Library                | Version    | ใช้ทำอะไร                                             |
+| ---------------------- | ---------- | ----------------------------------------------------- |
+| Angular                | 19.2       | Core framework (Component, Router, Forms, Animations) |
+| Angular CDK            | 19.2       | Component Dev Kit (overlay, scrolling)                |
+| PrimeNG                | 19.1.4     | UI Components (Table, Dialog, Dropdown, Button)       |
+| PrimeIcons             | 7.0        | Icon library (pi pi-\*)                               |
+| Tailwind CSS           | 3.4        | Utility-first CSS framework                           |
+| NgRx (Store + Effects) | 19.0       | State Management                                      |
+| @microsoft/signalr     | 9.0.6      | SignalR client (real-time)                            |
+| Chart.js + ng2-charts  | 4.5 / 10.0 | กราฟ Dashboard (Line, Bar, Donut)                     |
+| Lottie (ngx-lottie)    | 21.2       | Animation สำหรับ Global Loading overlay               |
+| pdfmake                | 0.3.7      | สร้าง PDF ใบเสร็จ                                     |
+| qr-code-styling        | 1.9.2      | สร้าง QR Code (โต๊ะ, ชำระเงิน)                        |
+| ng-recaptcha           | 13.2.1     | Google reCAPTCHA v3 (Login)                           |
+| ng-openapi-gen         | 0.51.0     | Auto-generate API client จาก Swagger                  |
+| RxJS                   | 7.8        | Reactive programming (Observable)                     |
+| TypeScript             | 5.7        | Programming language                                  |
+| @fontsource/sarabun    | 5.2.8      | Sarabun font (ไทย+อังกฤษ)                             |
 
 ### Frontend Mobile Web — Framework & Library
 
-| Library | Version | ใช้ทำอะไร |
-|---------|---------|---------|
-| Angular | 19.2 | Core framework |
-| PrimeNG | 19.1 | UI Components |
-| Tailwind CSS | 3.4 | Utility CSS |
-| @microsoft/signalr | 9.0.6 | Real-time (order status, notification) |
-| Lottie (ngx-lottie) | 21.2 | Loading animation |
-| pdfmake | 0.3.7 | PDF ใบเสร็จ |
-| ng-openapi-gen | 0.51.0 | API client generation |
-| RxJS | 7.8 | Reactive programming |
-| TypeScript | 5.7 | Programming language |
+| Library             | Version | ใช้ทำอะไร                              |
+| ------------------- | ------- | -------------------------------------- |
+| Angular             | 19.2    | Core framework                         |
+| PrimeNG             | 19.1    | UI Components                          |
+| Tailwind CSS        | 3.4     | Utility CSS                            |
+| @microsoft/signalr  | 9.0.6   | Real-time (order status, notification) |
+| Lottie (ngx-lottie) | 21.2    | Loading animation                      |
+| pdfmake             | 0.3.7   | PDF ใบเสร็จ                            |
+| ng-openapi-gen      | 0.51.0  | API client generation                  |
+| RxJS                | 7.8     | Reactive programming                   |
+| TypeScript          | 5.7     | Programming language                   |
 
 ### Database & Infrastructure
 
-| เครื่องมือ | Version | ใช้ทำอะไร |
-|-----------|---------|---------|
-| SQL Server | 2022 | Relational database หลัก |
-| MinIO | latest | S3-compatible file storage (รูปเมนู, รูปโปรไฟล์, สลิป) |
-| Docker + Docker Compose | - | Container orchestration |
-| Nginx | latest | Reverse proxy + SSL termination |
-| Certbot | latest | Auto SSL certificate (Let's Encrypt) |
-
-### Testing
-
-| เครื่องมือ | ใช้ทำอะไร |
-|-----------|---------|
-| Karma | Test runner |
-| Jasmine | Testing framework |
-| karma-coverage | Code coverage |
+| เครื่องมือ              | Version | ใช้ทำอะไร                                              |
+| ----------------------- | ------- | ------------------------------------------------------ |
+| SQL Server              | 2022    | Relational database หลัก                               |
+| MinIO                   | latest  | S3-compatible file storage (รูปเมนู, รูปโปรไฟล์, สลิป) |
+| Docker + Docker Compose | -       | Container orchestration                                |
+| Nginx                   | latest  | Reverse proxy + SSL termination                        |
+| Certbot                 | latest  | Auto SSL certificate (Let's Encrypt)                   |
 
 ---
 
@@ -221,20 +235,21 @@ Sidebar 8 เมนูหลัก+22 เมนูย่อย (แสดงต�
 
 ### หน้าที่ของแต่ละส่วน
 
-| ส่วน | หน้าที่ |
-|------|--------|
-| **Client Web** | เว็บสำหรับ Admin/Staff — จัดการเมนู, ออเดอร์, ครัว, ชำระเงิน, พนักงาน, ตั้งค่าร้าน |
-| **Mobile Web** | เว็บสำหรับลูกค้า — สแกน QR สั่งอาหาร, ดูสถานะ, ชำระเงิน, ดาวน์โหลดใบเสร็จ |
-| **Nginx** | ประตูหน้าบ้าน — รับ request จากทุกคน แล้วแยกส่งไปที่ถูกต้อง + จัดการ SSL |
-| **Certbot** | ต่อใบรับรอง SSL (HTTPS) จาก Let's Encrypt อัตโนมัติทุก 12 ชม. |
-| **Backend API** | สมองของระบบ — ประมวลผล business logic ทั้งหมด, จัดการสิทธิ์, ส่ง real-time |
-| **SQL Server** | เก็บข้อมูลทั้งหมด — ออเดอร์, เมนู, พนักงาน, การชำระเงิน, สิทธิ์ (37 ตาราง) |
-| **MinIO (S3)** | เก็บไฟล์ทั้งหมด — รูปเมนู, รูปโปรไฟล์, โลโก้ร้าน, QR ชำระเงิน, สลิปโอนเงิน |
-| **Docker** | บรรจุทุกส่วนเป็น Container — สั่ง `docker compose up` ครั้งเดียวรันทั้งระบบ |
+| ส่วน            | หน้าที่                                                                            |
+| --------------- | ---------------------------------------------------------------------------------- |
+| **Client Web**  | เว็บสำหรับ Admin/Staff — จัดการเมนู, ออเดอร์, ครัว, ชำระเงิน, พนักงาน, ตั้งค่าร้าน |
+| **Mobile Web**  | เว็บสำหรับลูกค้า — สแกน QR สั่งอาหาร, ดูสถานะ, ชำระเงิน, ดาวน์โหลดใบเสร็จ          |
+| **Nginx**       | ประตูหน้าบ้าน — รับ request จากทุกคน แล้วแยกส่งไปที่ถูกต้อง + จัดการ SSL           |
+| **Certbot**     | ต่อใบรับรอง SSL (HTTPS) จาก Let's Encrypt อัตโนมัติทุก 12 ชม.                      |
+| **Backend API** | สมองของระบบ — ประมวลผล business logic ทั้งหมด, จัดการสิทธิ์, ส่ง real-time         |
+| **SQL Server**  | เก็บข้อมูลทั้งหมด — ออเดอร์, เมนู, พนักงาน, การชำระเงิน, สิทธิ์ (37 ตาราง)         |
+| **MinIO (S3)**  | เก็บไฟล์ทั้งหมด — รูปเมนู, รูปโปรไฟล์, โลโก้ร้าน, QR ชำระเงิน, สลิปโอนเงิน         |
+| **Docker**      | บรรจุทุกส่วนเป็น Container — สั่ง `docker compose up` ครั้งเดียวรันทั้งระบบ        |
 
 ### การทำงานร่วมกัน — ตัวอย่าง Flow จริง
 
 **Flow 1: พนักงานสร้างเมนูใหม่**
+
 ```
 Staff เปิด Client Web → Login
   → ไปหน้าเมนู → กดสร้าง → กรอกข้อมูล + เลือกรูป
@@ -247,6 +262,7 @@ Staff เปิด Client Web → Login
 ```
 
 **Flow 2: ลูกค้าสั่งอาหารผ่าน QR**
+
 ```
 ลูกค้าสแกน QR ที่โต๊ะ → เปิด Mobile Web
   → ดูเมนู → เลือกอาหาร → ใส่ตะกร้า → กดสั่ง
@@ -261,6 +277,7 @@ Staff เปิด Client Web → Login
 ```
 
 **Flow 3: ชำระเงินด้วย QR + ตรวจสลิปอัตโนมัติ**
+
 ```
 ลูกค้ากดขอบิล → เลือกชำระ QR
   → Mobile Web แสดง QR Code ร้าน + เลขบัญชี
@@ -276,6 +293,7 @@ Staff เปิด Client Web → Login
 ```
 
 **Flow 4: ครัวทำอาหารเสร็จ → แจ้งเตือนทุกคน**
+
 ```
 พ่อครัวเปิด Client Web → หน้า Kitchen Display
   → เห็นออเดอร์รอทำ (Real-time จาก SignalR)
@@ -413,51 +431,6 @@ STYLE REQUIREMENTS
 - Professional quality suitable for a university project presentation or investor pitch
 ```
 
-### บทพูดอธิบาย System Architecture Diagram
-
-> ใช้ประกอบตอนพรีเซนต์รูป Diagram ด้านบน — พูดตามลำดับจากบนลงล่าง
-
----
-
-**เปิด:**
-"ภาพนี้แสดงภาพรวมของระบบ RBMS-POS ทั้งหมดว่ามีกี่ส่วน แต่ละส่วนเชื่อมต่อกันยังไง"
-
----
-
-**Layer 1 — ผู้ใช้งาน:**
-"ระบบเรามีผู้ใช้ 2 กลุ่ม — ฝั่งซ้ายคือ Admin กับ Staff ที่ใช้งานผ่าน Client Web บนคอมพิวเตอร์ สำหรับจัดการออเดอร์ ดูหน้าจอครัว จัดการเมนู พนักงาน ตั้งค่าร้าน ฝั่งขวาคือลูกค้า ที่สแกน QR Code ที่โต๊ะแล้วสั่งอาหารผ่าน Mobile Web บนมือถือ ทั้งสองฝั่งสร้างด้วย Angular 19 เหมือนกัน แต่แยก Codebase เพราะ UI และฟีเจอร์ต่างกัน"
-
----
-
-**Layer 2 — Nginx:**
-"ทุก request จากทั้งสองฝั่งจะผ่าน Nginx ก่อน ซึ่งทำหน้าที่เป็น Reverse Proxy คือรับ request แล้วแยกส่งไปที่ถูกต้อง — ถ้าเป็น /api จะส่งไป Backend ถ้าเป็น /hub จะส่งไป SignalR ตรงนี้ Certbot จะจัดการต่อใบรับรอง SSL ให้อัตโนมัติ ทำให้ทุกการเชื่อมต่อเป็น HTTPS ตลอด"
-
----
-
-**Layer 3 — Backend (เน้น):**
-"ส่วนนี้คือหัวใจของระบบ — Backend API สร้างด้วย ASP.NET Core 9 มีทั้งหมด 24 Controllers รวม 215 API endpoints ข้างในแบ่งเป็น 8 Business Modules เช่น Order, Menu, Payment, Kitchen
-
-จุดสำคัญคือ **SignalR Hub** ที่เป็นเส้นประในรูป — ปกติ REST API จะเป็นแบบ ถาม-ตอบ คือ Frontend ถาม Backend ตอบ แต่ SignalR ทำให้ Backend **ส่งข้อมูลไปหา Frontend ได้เอง** โดยไม่ต้องรอถาม เช่น ลูกค้าสั่งอาหารปุ๊บ หน้าจอครัวเห็นทันที แคชเชียร์เห็นทันที โดยไม่ต้อง refresh
-
-นอกจากนี้ยังมี Slip OCR ที่อ่าน QR ในสลิปและตรวจจำนวนเงินอัตโนมัติ Background Jobs ที่ทำความสะอาดข้อมูลชั่วคราวและเตือนการจอง และ Email Service สำหรับส่ง OTP ตอนลืมรหัสผ่าน"
-
----
-
-**Layer 4 — Data Storage:**
-"ข้อมูลเก็บ 2 ที่ — SQL Server เก็บข้อมูลทั้งหมด 37 ตาราง ตั้งแต่ออเดอร์ เมนู พนักงาน การชำระเงิน ส่วน MinIO เก็บไฟล์ทั้งหมด เช่น รูปเมนู รูปโปรไฟล์ สลิปโอนเงิน โลโก้ร้าน โดย MinIO เป็น S3-Compatible คือใช้มาตรฐานเดียวกับ AWS S3 แต่เราโฮสต์เองได้"
-
----
-
-**Docker + External:**
-"ทุกอย่างที่เห็นในกรอบเส้นประนี้ รันอยู่ใน Docker Container ทั้งหมด สั่ง docker compose up ครั้งเดียวก็ได้ทั้งระบบ ส่วนนอก Docker มี 2 บริการภายนอกคือ Gmail สำหรับส่งเมล และ Google reCAPTCHA สำหรับป้องกัน Bot ตอน Login"
-
----
-
-**ปิด:**
-"สรุปคือระบบนี้มีทั้ง Frontend 2 ตัว, Backend 1 ตัว, Database, File Storage, Reverse Proxy รวมอยู่ใน Docker ทำงานร่วมกันผ่าน REST API และ Real-time WebSocket"
-
----
-
 ### Prompt 2: Data Flow Diagram (ลูกค้าสั่งอาหาร → ครัว → ชำระเงิน) — ปรับปรุงแล้ว
 
 ```
@@ -548,52 +521,6 @@ STYLE REQUIREMENTS
 - Text must be readable at presentation size
 - Professional quality suitable for a university presentation
 ```
-
-### บทพูดอธิบาย Data Flow Diagram
-
-> พูดตาม Step 1-8 แต่รวบบางจุดที่ไม่ต้องอธิบายยาว
-
----
-
-**เปิด:**
-"ภาพนี้แสดง Flow การใช้งานจริงของลูกค้าตั้งแต่เข้าร้านจนกลับบ้าน ทั้งหมด 8 ขั้นตอน แถวบนเป็นขั้นตอนสั่งอาหาร แถวล่างเป็นขั้นตอนชำระเงิน"
-
----
-
-**Step 1-2 (รวบ):**
-"เริ่มจากลูกค้าสแกน QR Code ที่โต๊ะ ระบบจะให้ Session Token เชื่อมกับโต๊ะนั้นอัตโนมัติ จากนั้นลูกค้าเลือกเมนูตามหมวดหมู่ เลือกตัวเลือกเสริมเช่นระดับความเผ็ด ใส่ตะกร้า แล้วกดสั่ง ตรงนี้ข้อมูลจะวิ่งผ่าน Nginx ไป Backend แล้วบันทึกลง Database"
-
----
-
-**Step 3 (เน้น — Real-time):**
-"จุดสำคัญคือ Step 3 — พอลูกค้ากดสั่งปุ๊บ ออเดอร์จะปรากฏบนหน้าจอครัวทันทีผ่าน SignalR โดยไม่ต้อง refresh หน้า ครัวก็เริ่มทำ อัพเดตสถานะจาก Pending เป็น Cooking แล้วเป็น Ready"
-
----
-
-**Step 4 (เน้น — ฟีเจอร์เด่น):**
-"ระหว่างรออาหาร ลูกค้าจะเห็นสถานะของทุกเมนูที่สั่งบนมือถือแบบ Real-time เลย เช่นเมนูไหนกำลังทำ เมนูไหนพร้อมเสิร์ฟแล้ว และถ้าต้องการอะไรก็กดปุ่มเรียกพนักงานได้เลย พนักงานจะได้รับแจ้งเตือนทันที"
-
----
-
-**Step 5-6 (รวบ):**
-"พออาหารเสร็จ พนักงานจะได้รับ notification ว่าพร้อมเสิร์ฟ ก็ไปรับมาเสิร์ฟที่โต๊ะ เมื่อทานเสร็จลูกค้ากดขอบิล ระบบจะคำนวณยอดรวมพร้อมค่าบริการให้อัตโนมัติ ตรงนี้ยังมีฟีเจอร์หารบิลด้วย ทั้งแบบหารเท่าและแบบเลือกตามรายการ"
-
----
-
-**Step 7 (เน้น — Slip OCR):**
-"การชำระเงินมี 2 ช่องทาง — เงินสดก็จ่ายที่แคชเชียร์ปกติ แต่ถ้าโอน QR ลูกค้าอัพโหลดสลิปมา ระบบจะอ่าน QR ในสลิปและตรวจจำนวนเงินให้อัตโนมัติ แล้วแคชเชียร์กดยืนยันอีกที"
-
----
-
-**Step 8:**
-"สุดท้ายลูกค้าดาวน์โหลดใบเสร็จเป็น PDF ได้ทั้งแบบรายบิลและรวม"
-
----
-
-**ปิด:**
-"สังเกตแถบด้านล่าง — สีเขียวคือฝั่งลูกค้า สีส้มคือ Backend ที่ทำงานอยู่เบื้องหลังทุกขั้นตอน สีน้ำเงินคือฝั่งพนักงาน ทั้งหมดนี้ทำงานร่วมกันแบบ Real-time"
-
----
 
 ### Prompt 3: Real-time Communication Diagram (SignalR) — ปรับปรุงแล้ว
 
@@ -797,229 +724,71 @@ STYLE
 - Professional quality suitable for a university presentation
 ```
 
-### บทพูดอธิบาย Database ER Diagram
-
-> อธิบายภาพรวม → เน้น 2-3 กลุ่มสำคัญ → สรุปด้านล่าง
-
----
-
-**เปิด:**
-"ภาพนี้แสดงการออกแบบฐานข้อมูลทั้งหมด 37 ตาราง แบ่งเป็น 6 กลุ่มตามหน้าที่ ลูกศรระหว่างกลุ่มแสดงว่าข้อมูลเชื่อมกันยังไง"
-
----
-
-**กลุ่มสำคัญ (ไล่สั้นๆ):**
-"กลุ่มที่ใหญ่ที่สุดคือ User & Auth มี 11 ตาราง เพราะนอกจากข้อมูลพนักงานแล้ว ยังรวมระบบสิทธิ์ด้วย ตั้งแต่ตำแหน่ง โมดูล ไปจนถึง Permission Matrix ที่กำหนดว่าตำแหน่งไหนเข้าถึงอะไรได้บ้าง
-
-กลุ่ม Order ตรงกลางคือหัวใจของระบบ เก็บออเดอร์ รายการอาหาร บิล ตัวเลือกเสริม รวมถึง Self-Order Session ของลูกค้าที่สั่งผ่าน QR
-
-กลุ่ม Shop & File เป็นกลุ่มที่เชื่อมกับทุกกลุ่ม เพราะ TbFiles เก็บไฟล์ทั้งหมดไว้ที่เดียว ไม่ว่าจะเป็นรูปเมนู รูปโปรไฟล์ หรือสลิปโอนเงิน"
-
----
-
-**ลูกศร (เน้นสั้น):**
-"สังเกตลูกศร — ทุกกลุ่มชี้เข้าหา Order เพราะออเดอร์ต้องรู้ว่าใครสั่ง สั่งเมนูอะไร โต๊ะไหน แล้ว Order ก็ชี้ไป Payment เพราะต้องออกบิลและชำระเงิน"
-
----
-
-**ปิด:**
-"ด้านล่างคือสิ่งที่ทุกตารางมีร่วมกัน — ทุกตารางมี Soft Delete คือลบแล้วข้อมูลยังอยู่ เรียกคืนได้ และมี Audit Trail บันทึกว่าใครสร้าง ใครแก้ไข เมื่อไหร่ อัตโนมัติ"
-
----
-
-### Prompt 5: Use Case Diagram (ลูกค้า vs พนักงาน)
+### Prompt 5: Use Case Diagram (Staff vs Customer — Shared Center)
 
 ```
-Create a professional Use Case Diagram for a Restaurant POS system called "RBMS-POS". Show what each user type can do. Clean, modern style, white background, 16:9 presentation slide.
+Use Case Diagram for "RBMS-POS" Restaurant POS. 16:9, white background, modern flat style.
 
-Title at top: "Use Case Diagram — Who Can Do What"
-
-═══════════════════════════════════════════════════
-LAYOUT — Split into LEFT and RIGHT halves
-═══════════════════════════════════════════════════
-
-LEFT HALF — "Staff (Client Web)" with a desktop computer icon
-Background: light blue tint
-
-Show 4 actor stick figures on the far left, stacked vertically:
-1. "Admin" (red icon) — with a star badge
-2. "Cashier" (green icon) — with a cash register
-3. "Kitchen" (orange icon) — with a chef hat
-4. "Floor Staff" (blue icon) — with a serving tray
-
-In the center-left area, show use case ovals grouped by module:
-
-DASHBOARD group:
-- "View Dashboard & KPI" — connected to Admin only
-- "View Sales Report" — connected to Admin only
-
-ORDER group:
-- "View Restaurant Overview (Floor Plan)" — connected to Admin, Floor Staff
-- "Create / Edit Order" — connected to Admin, Floor Staff
-- "Send to Kitchen" — connected to Admin, Floor Staff
-- "Void / Cancel Order Item" — connected to Admin, Floor Staff
-- "Request Bill / Split Bill" — connected to Admin, Floor Staff
-- "Move Table / Link Tables" — connected to Admin, Floor Staff
-
-KITCHEN group:
-- "View Kitchen Display" — connected to Admin, Kitchen
-- "Update Order Status (Cooking → Ready)" — connected to Kitchen only
-
-MENU group:
-- "Manage Menus (CRUD)" — connected to Admin only
-- "Manage Categories & Options" — connected to Admin only
-
-TABLE group:
-- "Manage Zones & Tables (CRUD)" — connected to Admin only
-- "Design Floor Plan (Drag & Drop)" — connected to Admin only
-- "Manage Reservations" — connected to Admin only
-
-PAYMENT group:
-- "Open / Close Cashier Session" — connected to Admin, Cashier
-- "Process Payment (Cash / QR)" — connected to Cashier only
-- "Verify Slip (OCR)" — connected to Cashier only
-- "View Payment History" — connected to Admin, Cashier
-
-HR group:
-- "Manage Employees (CRUD)" — connected to Admin only
-- "Create User Account" — connected to Admin only
-
-ADMIN SETTINGS group:
-- "Manage Users (Lock/Unlock)" — connected to Admin only
-- "Manage Positions & Permissions" — connected to Admin only
-- "Shop Settings (Logo, QR, Hours)" — connected to Admin only
-
-COMMON (all staff):
-- "View Notifications (Real-time)" — connected to ALL 4 roles
-- "View Profile / Change Password / PIN" — connected to ALL 4 roles
+Title: "Use Case Diagram — Who Can Do What"
 
 ═══════════════════════════════════════════════════
+LAYOUT — Staff (left) → Shared (center) ← Customer (right)
+═══════════════════════════════════════════════════
 
-RIGHT HALF — "Customer (Mobile Web)" with a smartphone icon
-Background: light green tint
+LEFT — "Staff" as a friendly illustrated male waiter wearing apron, holding a tablet.
+Modern flat character illustration (NOT stick figure). Colorful, warm, professional.
+Small desktop monitor icon below. Label: "Client Web"
 
-Show 1 actor stick figure on the far right:
-- "Customer" (teal icon) — with a smartphone
-
-Use case ovals in the center-right area:
-
-ORDERING group:
-- "Scan QR Code at Table"
-- "Set Nickname"
-- "Browse Menu by Category"
-- "Search Menu"
-- "View Menu Details + Options"
-- "Add to Cart / Edit Cart"
-- "Place Order (Send to Kitchen)"
-
-TRACKING group:
-- "Track Order Status (Real-time)"
-- "Call Waiter (60s Cooldown)"
-
-PAYMENT group:
-- "Request Bill"
-- "Split Bill (Equal / By Item)"
-- "Pay by Cash (notify cashier)"
-- "Pay by QR (Upload Slip)"
-- "View Bill Summary"
-
-RECEIPT group:
-- "Download Receipt (PDF)"
-
-All ovals connected to the single Customer actor.
+RIGHT — "Customer" as a friendly illustrated female customer in casual clothes,
+holding a smartphone. Modern flat character illustration (NOT stick figure).
+Small smartphone icon below. Label: "Mobile Web"
 
 ═══════════════════════════════════════════════════
-DIVIDER
+CENTER — Use case ovals (SHORT labels, 2-4 words max)
 ═══════════════════════════════════════════════════
-A vertical dashed line separating Left and Right halves.
-Left side header: "Client Web — Desktop (Staff)"
-Right side header: "Mobile Web — Smartphone (Customer)"
+
+SHARED (both Staff and Customer draw lines to these — lines from BOTH sides):
+- "Order Food"
+- "Browse Menu"
+- "Track Status"
+- "Request / Split Bill"
+- "Payment"
+- "Notifications"
+
+STAFF ONLY (left side, only Staff draws lines):
+- "Dashboard & Reports"
+- "Manage Menu"
+- "Manage Tables"
+- "Kitchen Display"
+- "Cashier Session"
+- "HR & Permissions"
+- "Shop Settings"
+
+CUSTOMER ONLY (right side, only Customer draws lines):
+- "Scan QR Code"
+- "Cart & Customize"
+- "Call Waiter"
 
 ═══════════════════════════════════════════════════
-BOTTOM NOTE
+CONNECTION LINES (important!)
 ═══════════════════════════════════════════════════
-"Staff permissions are dynamic — Admin can create custom positions and assign specific permissions per module (Position-based RBAC)"
+- Staff draws BLUE lines to: all Staff-only ovals AND all Shared ovals
+- Customer draws TEAL lines to: all Customer-only ovals AND all Shared ovals
+- Shared ovals must have lines coming from BOTH sides (Staff + Customer)
 
 ═══════════════════════════════════════════════════
 STYLE
 ═══════════════════════════════════════════════════
-- UML Use Case style: stick figure actors + oval use cases
-- Use case ovals grouped by module with a labeled boundary box
-- Lines connecting actors to their use cases
-- Color coding:
-  - Admin lines: Red (#EF4444)
-  - Cashier lines: Green (#10B981)
-  - Kitchen lines: Orange (#F97316)
-  - Floor Staff lines: Blue (#3B82F6)
-  - Customer lines: Teal (#14B8A6)
-- Left background: very light blue (#EFF6FF)
-- Right background: very light green (#ECFDF5)
-- Flat design, clean lines
-- Font: clean sans-serif
-- White overall background, 16:9
-- All text in English
-- Professional quality suitable for a university presentation
+- Flat illustration characters — friendly, colorful, realistic proportions (not stick figures)
+- Ovals: rounded, soft pastel fills
+  - Shared: light purple (#E9D5FF)
+  - Staff-only: light blue (#DBEAFE)
+  - Customer-only: light green (#D1FAE5)
+- Thin color-coded lines (blue = Staff, teal = Customer)
+- Minimal text, no descriptions inside ovals
+- Bottom note: "Staff permissions are dynamic (Position-based RBAC)"
+- Clean sans-serif font, 16:9, English only
 ```
-
-### บทพูดอธิบาย SignalR Diagram
-
-> พูดตามลำดับ ตรงกลาง → 4 กลุ่ม → สรุป
-
----
-
-**เปิด:**
-"ภาพนี้แสดงว่าระบบ Real-time ของเราทำงานยังไง ตรงกลางคือ SignalR Hub ซึ่งเป็นตัวกลางที่คอยกระจายข้อมูลไปให้ทุกฝ่ายแบบทันที โดยมี 2 Hub คือ OrderHub จัดการเรื่องออเดอร์กับครัว และ NotificationHub จัดการแจ้งเตือนทั่วไป"
-
----
-
-**4 กลุ่ม (ไล่ทีละมุม):**
-"ระบบแบ่งผู้ใช้เป็น 4 กลุ่ม แต่ละกลุ่มจะได้รับแจ้งเตือนเฉพาะที่เกี่ยวข้องกับตัวเองเท่านั้น
-
-ฝั่งครัว — พอลูกค้าสั่งอาหาร ออเดอร์จะปรากฏบนหน้าจอครัวทันที ครัวกดเริ่มทำ กดเสร็จ สถานะก็ส่งกลับมา
-
-ฝั่งพนักงานเสิร์ฟ — จะได้รับแจ้งเตือนเมื่ออาหารพร้อมเสิร์ฟ หรือเมื่อลูกค้ากดปุ่มเรียก
-
-ฝั่งแคชเชียร์ — จะเห็นเมื่อลูกค้าขอบิล อัพโหลดสลิป หรือมีการชำระเงินเข้ามา แล้วก็กดยืนยันกลับไป
-
-ฝั่งลูกค้า — จะเห็นสถานะอาหารที่สั่งเปลี่ยนแบบ Real-time เลย ไม่ต้อง refresh หน้า รวมถึงเห็นผลชำระเงินทันที"
-
----
-
-**ปิด:**
-"ทั้งหมดนี้ทำงานผ่าน WebSocket ซึ่งต่างจาก HTTP ปกติตรงที่ server ส่งข้อมูลไปหา client ได้เองโดยไม่ต้องรอถาม ทำให้ทุกคนเห็นข้อมูลเดียวกันพร้อมกันทันที"
-
----
-
-### บทพูดอธิบาย Docker Deployment Diagram
-
-> พูดตามลำดับ นอก → ใน → ล่าง
-
----
-
-**เปิด:**
-"ภาพนี้แสดงว่าระบบ RBMS-POS deploy ยังไง — ทุกอย่างรันอยู่ใน Docker Container ทั้งหมด 7 ตัว"
-
----
-
-**จุดเข้า (Nginx):**
-"เริ่มจากด้านนอก เมื่อผู้ใช้เปิดเว็บ request จะเข้ามาที่ Nginx ก่อนเสมอ ซึ่งทำหน้าที่เป็น Reverse Proxy คือรับ request แล้วดูว่าจะส่งไปที่ไหน — ถ้าเป็นหน้าเว็บ Admin ก็ส่งไป Client Web ถ้าเป็นหน้าลูกค้าก็ส่งไป Mobile Web ถ้าเป็น API ก็ส่งไป Backend ตรงนี้ Certbot จะต่อใบรับรอง SSL ให้อัตโนมัติ ทำให้ทุกการเชื่อมต่อเป็น HTTPS"
-
----
-
-**7 Containers (เน้นสั้น):**
-"ข้างในมี 7 containers — Frontend 2 ตัวแยก Admin กับลูกค้า, Backend 1 ตัวเป็นหัวใจระบบ, Nginx กับ Certbot จัดการ SSL, SQL Server เก็บข้อมูล, MinIO เก็บไฟล์ ทั้งหมดคุยกันผ่าน Docker Network ภายใน"
-
----
-
-**Docker Volumes (เน้น):**
-"ด้านล่างคือ Docker Volumes — เป็นที่เก็บข้อมูลถาวร แม้ restart หรือ update container ข้อมูลใน Database และไฟล์ทั้งหมดจะไม่หายไป"
-
----
-
-**ปิด:**
-"ข้อดีของ Docker คือ deploy ทั้งระบบด้วยคำสั่งเดียว docker compose up แค่นั้น ไม่ต้องติดตั้งทีละตัว ย้ายเครื่องก็แค่ copy ไฟล์ config แล้วสั่ง up ใหม่"
-
----
 
 ---
 
@@ -1093,6 +862,7 @@ Layer 5: POS.Main.Core
 ```
 
 **กฎสำคัญ:**
+
 - Controller บาง → ไม่มี business logic, ไม่มี try-catch
 - Service throw exceptions → GlobalExceptionFilter แปลงเป็น HTTP status อัตโนมัติ
 - ทุก Entity มี Soft Delete + Audit Trail อัตโนมัติ (CreatedAt/By, UpdatedAt/By, DeleteFlag)
@@ -1103,92 +873,104 @@ Layer 5: POS.Main.Core
 ## สไลด์ 5: ฐานข้อมูล (38 Entities)
 
 ### Auth & Users (5 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbUser | บัญชีผู้ใช้ (Username, Email, PasswordHash, LockoutCount) |
-| TbRefreshToken | JWT Refresh Token |
-| TbPasswordResetToken | Token สำหรับรีเซ็ตรหัสผ่าน |
-| TbPasswordHistory | ประวัติรหัสผ่านที่เคยใช้ |
-| TbLoginHistory | ประวัติการเข้าสู่ระบบ |
+
+| Entity               | คำอธิบาย                                                  |
+| -------------------- | --------------------------------------------------------- |
+| TbUser               | บัญชีผู้ใช้ (Username, Email, PasswordHash, LockoutCount) |
+| TbRefreshToken       | JWT Refresh Token                                         |
+| TbPasswordResetToken | Token สำหรับรีเซ็ตรหัสผ่าน                                |
+| TbPasswordHistory    | ประวัติรหัสผ่านที่เคยใช้                                  |
+| TbLoginHistory       | ประวัติการเข้าสู่ระบบ                                     |
 
 ### Authorization / RBAC (5 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbmPosition | ตำแหน่งงาน (Master Data) |
-| TbmPermission | ประเภทสิทธิ์ (read, create, update, delete) |
-| TbmModule | โมดูลระบบ (parent/child hierarchy) |
-| TbmAuthorizeMatrix | จับคู่ Module + Permission |
-| TbAuthorizeMatrixPosition | กำหนดสิทธิ์ต่อตำแหน่ง |
+
+| Entity                    | คำอธิบาย                                    |
+| ------------------------- | ------------------------------------------- |
+| TbmPosition               | ตำแหน่งงาน (Master Data)                    |
+| TbmPermission             | ประเภทสิทธิ์ (read, create, update, delete) |
+| TbmModule                 | โมดูลระบบ (parent/child hierarchy)          |
+| TbmAuthorizeMatrix        | จับคู่ Module + Permission                  |
+| TbAuthorizeMatrixPosition | กำหนดสิทธิ์ต่อตำแหน่ง                       |
 
 ### Human Resource (4 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbEmployee | ข้อมูลพนักงาน (ชื่อ, เพศ, วันเกิด, ตำแหน่ง, เงินเดือน) |
-| TbEmployeeAddress | ที่อยู่พนักงาน (หลายที่อยู่ต่อคน) |
-| TbEmployeeEducation | ประวัติการศึกษา |
-| TbEmployeeWorkHistory | ประวัติการทำงาน |
+
+| Entity                | คำอธิบาย                                               |
+| --------------------- | ------------------------------------------------------ |
+| TbEmployee            | ข้อมูลพนักงาน (ชื่อ, เพศ, วันเกิด, ตำแหน่ง, เงินเดือน) |
+| TbEmployeeAddress     | ที่อยู่พนักงาน (หลายที่อยู่ต่อคน)                      |
+| TbEmployeeEducation   | ประวัติการศึกษา                                        |
+| TbEmployeeWorkHistory | ประวัติการทำงาน                                        |
 
 ### Menu (5 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbMenu | รายการเมนู (ชื่อ, ราคา, ต้นทุน, รูปภาพ) |
-| TbMenuSubCategory | หมวดหมู่ย่อย (อาหาร/เครื่องดื่ม/ของหวาน) |
-| TbOptionGroup | กลุ่มตัวเลือกเสริม (ระดับความเผ็ด, ท็อปปิ้ง) |
-| TbOptionItem | รายการตัวเลือก (เผ็ดน้อย, +ไข่ดาว) |
-| TbMenuOptionGroup | เชื่อม Menu กับ OptionGroup (M:M) |
+
+| Entity            | คำอธิบาย                                     |
+| ----------------- | -------------------------------------------- |
+| TbMenu            | รายการเมนู (ชื่อ, ราคา, ต้นทุน, รูปภาพ)      |
+| TbMenuSubCategory | หมวดหมู่ย่อย (อาหาร/เครื่องดื่ม/ของหวาน)     |
+| TbOptionGroup     | กลุ่มตัวเลือกเสริม (ระดับความเผ็ด, ท็อปปิ้ง) |
+| TbOptionItem      | รายการตัวเลือก (เผ็ดน้อย, +ไข่ดาว)           |
+| TbMenuOptionGroup | เชื่อม Menu กับ OptionGroup (M:M)            |
 
 ### Table & Zone (4 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbZone | โซนพื้นที่ (ชั้น 1, ดาดฟ้า) |
-| TbTable | โต๊ะ (ชื่อ, สถานะ, ตำแหน่ง, QR Token) |
-| TbTableLink | เชื่อมโต๊ะ (รวมโต๊ะ) |
-| TbFloorObject | วัตถุตกแต่งบนผังร้าน |
+
+| Entity        | คำอธิบาย                              |
+| ------------- | ------------------------------------- |
+| TbZone        | โซนพื้นที่ (ชั้น 1, ดาดฟ้า)           |
+| TbTable       | โต๊ะ (ชื่อ, สถานะ, ตำแหน่ง, QR Token) |
+| TbTableLink   | เชื่อมโต๊ะ (รวมโต๊ะ)                  |
+| TbFloorObject | วัตถุตกแต่งบนผังร้าน                  |
 
 ### Reservation (1 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
+
+| Entity        | คำอธิบาย                                          |
+| ------------- | ------------------------------------------------- |
 | TbReservation | การจองโต๊ะ (ชื่อลูกค้า, เบอร์โทร, วันเวลา, สถานะ) |
 
 ### Order (4 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbOrder | ออเดอร์ (เลขออเดอร์, สถานะ, จำนวนลูกค้า, โต๊ะ) |
-| TbOrderItem | รายการอาหาร (เมนู, จำนวน, ราคา, สถานะ) |
-| TbOrderItemOption | ตัวเลือกของรายการ (ท็อปปิ้ง, ระดับเผ็ด) |
-| TbOrderBill | บิล (ยอดรวม, ค่าบริการ, ภาษี, สถานะ) |
+
+| Entity            | คำอธิบาย                                       |
+| ----------------- | ---------------------------------------------- |
+| TbOrder           | ออเดอร์ (เลขออเดอร์, สถานะ, จำนวนลูกค้า, โต๊ะ) |
+| TbOrderItem       | รายการอาหาร (เมนู, จำนวน, ราคา, สถานะ)         |
+| TbOrderItemOption | ตัวเลือกของรายการ (ท็อปปิ้ง, ระดับเผ็ด)        |
+| TbOrderBill       | บิล (ยอดรวม, ค่าบริการ, ภาษี, สถานะ)           |
 
 ### Payment & Cashier (3 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbPayment | การชำระเงิน (วิธี, จำนวนเงิน, เลขใบเสร็จ) |
-| TbCashierSession | รอบขาย (เปิด/ปิดกะ, ยอดเปิด/ปิด) |
-| TbCashDrawerTransaction | เงินเข้า/ออกลิ้นชัก |
+
+| Entity                  | คำอธิบาย                                  |
+| ----------------------- | ----------------------------------------- |
+| TbPayment               | การชำระเงิน (วิธี, จำนวนเงิน, เลขใบเสร็จ) |
+| TbCashierSession        | รอบขาย (เปิด/ปิดกะ, ยอดเปิด/ปิด)          |
+| TbCashDrawerTransaction | เงินเข้า/ออกลิ้นชัก                       |
 
 ### Admin Settings (3 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbShopSettings | ข้อมูลร้าน (ชื่อ, โลโก้, QR Code, สถานะ) |
-| TbShopOperatingHour | เวลาเปิด-ปิดร้าน (จันทร์-อาทิตย์) |
-| TbServiceCharge | ค่าบริการ (เปอร์เซ็นต์, สถานะ) |
+
+| Entity              | คำอธิบาย                                 |
+| ------------------- | ---------------------------------------- |
+| TbShopSettings      | ข้อมูลร้าน (ชื่อ, โลโก้, QR Code, สถานะ) |
+| TbShopOperatingHour | เวลาเปิด-ปิดร้าน (จันทร์-อาทิตย์)        |
+| TbServiceCharge     | ค่าบริการ (เปอร์เซ็นต์, สถานะ)           |
 
 ### Notification (2 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbNotification | การแจ้งเตือน (ประเภท, กลุ่มเป้าหมาย, ข้อความ) |
-| TbNotificationRead | สถานะอ่าน (ต่อผู้ใช้) |
+
+| Entity             | คำอธิบาย                                      |
+| ------------------ | --------------------------------------------- |
+| TbNotification     | การแจ้งเตือน (ประเภท, กลุ่มเป้าหมาย, ข้อความ) |
+| TbNotificationRead | สถานะอ่าน (ต่อผู้ใช้)                         |
 
 ### Other (2 ตาราง)
-| Entity | คำอธิบาย |
-|--------|---------|
-| TbFile | Metadata ไฟล์ (ชื่อ, ขนาด, S3 Key) |
-| TbCustomerSession | Session ลูกค้า (สแกน QR) |
+
+| Entity            | คำอธิบาย                           |
+| ----------------- | ---------------------------------- |
+| TbFile            | Metadata ไฟล์ (ชื่อ, ขนาด, S3 Key) |
+| TbCustomerSession | Session ลูกค้า (สแกน QR)           |
 
 ---
 
 ## สไลด์ 6: ระบบ Authentication & Authorization
 
 ### Authentication Flow
+
 ```
 1. ผู้ใช้กรอก Username + Password + Captcha
 2. Backend ตรวจสอบ → ออก JWT Access Token (8 ชม.) + Refresh Token (7 วัน)
@@ -1198,6 +980,7 @@ Layer 5: POS.Main.Core
 ```
 
 **ฟีเจอร์ความปลอดภัย:**
+
 - ReCaptcha ป้องกัน Bot
 - Account Lockout หลังกรอกผิด 5 ครั้ง (ล็อค 15 นาที)
 - Admin สามารถล็อค/ปลดล็อคบัญชีได้
@@ -1206,6 +989,7 @@ Layer 5: POS.Main.Core
 - PIN Code สำหรับยืนยันตัวตนด่วน (6 หลัก)
 
 ### Authorization (RBAC — Role-Based Access Control)
+
 ```
 Position (ตำแหน่ง)
   └── Permission Matrix
@@ -1222,6 +1006,7 @@ Position (ตำแหน่ง)
 ```
 
 **การทำงาน:**
+
 - สร้างตำแหน่ง (เช่น ผู้จัดการ, พนักงานเสิร์ฟ, แคชเชียร์, พ่อครัว)
 - กำหนดสิทธิ์แต่ละ Module (อ่าน/สร้าง/แก้ไข/ลบ)
 - เมื่อพนักงานล็อกอิน → ดึงสิทธิ์ตามตำแหน่ง
@@ -1233,14 +1018,17 @@ Position (ตำแหน่ง)
 ## สไลด์ 7: โมดูล — เข้าสู่ระบบ (Auth Module)
 
 ### หน้าที่มี:
+
 1. **หน้า Login** — กรอก Username/Password + Captcha
 2. **หน้า Reset Password** — ตั้งรหัสผ่านใหม่ (จาก link ใน email)
 
 ### Dialog:
+
 1. **ลืมรหัสผ่าน** — กรอก email → ส่ง OTP ไป email
 2. **ยืนยัน OTP** — กรอก OTP 6 หลัก → redirect ไปตั้งรหัสใหม่
 
 ### User Flow:
+
 ```
 กรอก Username + Password + Captcha
   → ถูกต้อง → เข้าสู่ Dashboard
@@ -1257,9 +1045,11 @@ Position (ตำแหน่ง)
 ## สไลด์ 8: โมดูล — โปรไฟล์ (Profile Module)
 
 ### หน้าที่มี:
+
 1. **หน้าโปรไฟล์** — ดู/แก้ไขข้อมูลส่วนตัว
 
 ### ข้อมูลที่แสดง:
+
 - **ข้อมูลบัญชี** (อ่านอย่างเดียว): Username
 - **ข้อมูลส่วนตัว**: ชื่อ-นามสกุล(ไทย/อังกฤษ), เพศ, วันเกิด, อายุ(คำนวณอัตโนมัติ), สัญชาติ, ศาสนา, เลขบัตรประชาชน, ชื่อเล่น(แก้ได้), LineID(แก้ได้)
 - **ข้อมูลการจ้างงาน** (อ่านอย่างเดียว): ตำแหน่ง, วันเริ่มงาน, เต็มเวลา/พาร์ทไทม์, เงินเดือน
@@ -1268,9 +1058,11 @@ Position (ตำแหน่ง)
 - **รูปโปรไฟล์**: อัพโหลด/ลบได้
 
 ### Dialog:
+
 1. **ตั้งค่า/เปลี่ยน PIN** — ตั้ง PIN 6 หลักสำหรับยืนยันตัวตนด่วน
 
 ### User Flow:
+
 ```
 ดูข้อมูลส่วนตัว → แก้ไขข้อมูลที่แก้ได้ → บันทึก
 เพิ่ม/แก้ไข ที่อยู่ → dialog → บันทึก
@@ -1282,26 +1074,30 @@ Position (ตำแหน่ง)
 ## สไลด์ 9: โมดูล — แดชบอร์ด (Dashboard Module)
 
 ### หน้าที่มี:
+
 1. **ภาพรวม** — KPI cards + กราฟ + รายการขายดี
 2. **รายงานยอดขาย** — รายงานยอดขายตามวันที่
 
 ### KPI Cards (6 ใบ):
-| # | ชื่อ | หน่วย | ตัวอย่าง |
-|---|------|------|---------|
-| 1 | ยอดขาย | บาท | 45,230 |
-| 2 | จำนวนออเดอร์ | บิล | 127 |
-| 3 | จำนวนลูกค้า | คน | 284 |
-| 4 | เฉลี่ย/ออเดอร์ | บาท | 356 |
-| 5 | กำไรขั้นต้น | บาท | 18,092 |
-| 6 | เปอร์เซ็นต์กำไร | % | 40% |
+
+| #   | ชื่อ            | หน่วย | ตัวอย่าง |
+| --- | --------------- | ----- | -------- |
+| 1   | ยอดขาย          | บาท   | 45,230   |
+| 2   | จำนวนออเดอร์    | บิล   | 127      |
+| 3   | จำนวนลูกค้า     | คน    | 284      |
+| 4   | เฉลี่ย/ออเดอร์  | บาท   | 356      |
+| 5   | กำไรขั้นต้น     | บาท   | 18,092   |
+| 6   | เปอร์เซ็นต์กำไร | %     | 40%      |
 
 ### กราฟ:
+
 - **แนวโน้มรายได้** (Line Chart) — 7 วัน / 30 วัน
 - **เปรียบเทียบช่วงเวลา** (Line Chart) — เปรียบเทียบ 2 ช่วง
 - **สัดส่วนครัว** (Donut Chart) — อาหาร / เครื่องดื่ม / ของหวาน
 - **ชั่วโมงขายดี** (Bar Chart) — ออเดอร์ตามชั่วโมง
 
 ### รายการขายดี:
+
 - Top 5 อาหาร
 - Top 5 เครื่องดื่ม
 - Top 5 ของหวาน
@@ -1311,12 +1107,14 @@ Position (ตำแหน่ง)
 ## สไลด์ 10: โมดูล — ออเดอร์ (Order Module)
 
 ### หน้าที่มี:
+
 1. **ภาพรวมร้าน** — แสดงผังโต๊ะ + สถานะโต๊ะ (ว่าง/ใช้งาน/ไม่พร้อม)
 2. **รายการออเดอร์** — ตารางออเดอร์ทั้งหมด + filter
 3. **รายละเอียดออเดอร์** — ดูรายละเอียด items + สถานะ + บิล
 4. **สั่งอาหาร** — เพิ่มรายการเมนูเข้าออเดอร์
 
 ### Dialogs (8 ตัว):
+
 1. **Table Action** — เลือก action สำหรับโต๊ะ (เปิดโต๊ะ, ย้าย, รวม)
 2. **Add Item** — เพิ่มเมนูเข้าออเดอร์
 3. **Item Detail** — แก้ไขรายละเอียด item
@@ -1327,6 +1125,7 @@ Position (ตำแหน่ง)
 8. **Split Bill** — แยกบิล
 
 ### WorkFlow — สั่งอาหาร (Staff):
+
 ```
 1. เลือกโต๊ะจากผังร้าน (ภาพรวมร้าน)
 2. เปิดโต๊ะ → สร้าง Order อัตโนมัติ
@@ -1337,6 +1136,7 @@ Position (ตำแหน่ง)
 ```
 
 ### WorkFlow — จัดการออเดอร์:
+
 ```
 Order Status Flow:
   Pending (รอ) → Cooking (กำลังทำ) → ReadyServe (พร้อมเสิร์ฟ)
@@ -1348,6 +1148,7 @@ Item Status Flow:
 ```
 
 ### API Endpoints (21 ตัว):
+
 - สร้าง/ดู Order
 - เพิ่ม/แก้/ลบ รายการ
 - ส่งครัว (Send to Kitchen)
@@ -1362,6 +1163,7 @@ Item Status Flow:
 ## สไลด์ 11: โมดูล — เมนู (Menu Module)
 
 ### หน้าที่มี:
+
 1. **หมวดหมู่เมนู** — จัดการหมวดหมู่ย่อย (Sub-category) + ลากเรียงลำดับ (Drag & Drop)
 2. **เมนูอาหาร** — รายการเมนูอาหาร (categoryType = 1)
 3. **เมนูเครื่องดื่ม** — รายการเมนูเครื่องดื่ม (categoryType = 2)
@@ -1370,10 +1172,12 @@ Item Status Flow:
 6. **หน้าเพิ่ม/แก้ไข** — ฟอร์มจัดการเมนูแต่ละรายการ
 
 ### Dialogs (2 ตัว):
+
 1. **สร้างหมวดหมู่ย่อย** — เพิ่ม Sub-category ใหม่
 2. **เลือก Option Group** — เลือกกลุ่มตัวเลือกสำหรับเมนู
 
 ### WorkFlow — จัดการเมนู:
+
 ```
 1. สร้างหมวดหมู่ย่อย (เช่น "อาหารจานเดียว", "น้ำผลไม้")
 2. สร้างตัวเลือกเสริม (เช่น "ระดับความเผ็ด" → เผ็ดน้อย/กลาง/มาก)
@@ -1382,6 +1186,7 @@ Item Status Flow:
 ```
 
 ### ฟีเจอร์เด่น:
+
 - **แยกตามประเภท** — อาหาร / เครื่องดื่ม / ของหวาน (แต่ละประเภทมี Permission แยกกัน)
 - **รูปภาพเมนู** — อัพโหลดไปเก็บใน S3/MinIO
 - **ตัวเลือกเสริม** — Required (ต้องเลือก) / Optional + Single/Multiple choice + ราคาเพิ่ม
@@ -1392,11 +1197,13 @@ Item Status Flow:
 ## สไลด์ 12: โมดูล — โต๊ะ (Table Module)
 
 ### หน้าที่มี:
+
 1. **ผังร้าน** (Floor Plan) — Designer ลาก/วางโต๊ะ + วัตถุตกแต่ง
 2. **โซน / โต๊ะ** — จัดการโซนและโต๊ะ (Tab-based + Drag reorder)
 3. **จองโต๊ะ** (Reservation) — ปฏิทินการจอง
 
 ### Dialogs (5 ตัว):
+
 1. **Zone Dialog** — สร้าง/แก้ไขโซน
 2. **Table Dialog** — สร้าง/แก้ไขโต๊ะ
 3. **Floor Object Dialog** — แก้ไขวัตถุตกแต่ง (เสา, ต้นไม้)
@@ -1404,6 +1211,7 @@ Item Status Flow:
 5. **Available Table Dialog** — เลือกโต๊ะว่างสำหรับจอง
 
 ### WorkFlow — จัดการโต๊ะ:
+
 ```
 1. สร้างโซน (เช่น "ชั้น 1", "ดาดฟ้า", "ห้อง VIP")
 2. เพิ่มโต๊ะในโซน → ตั้งชื่อ, จำนวนที่นั่ง
@@ -1412,6 +1220,7 @@ Item Status Flow:
 ```
 
 ### WorkFlow — จองโต๊ะ:
+
 ```
 Reservation Status Flow:
   Pending (รอยืนยัน) → Confirmed (ยืนยันแล้ว)
@@ -1420,6 +1229,7 @@ Reservation Status Flow:
 ```
 
 ### ฟีเจอร์เด่น:
+
 - **Floor Plan Designer** — ลากวาง Designer ออกแบบผังร้าน
 - **สถานะโต๊ะ Real-time** — ว่าง (เขียว) / ใช้งาน (ส้ม) / ไม่พร้อม (เทา)
 - **รวมโต๊ะ** (Table Linking) — รวมหลายโต๊ะเป็นกลุ่มเดียว (GroupCode)
@@ -1431,6 +1241,7 @@ Reservation Status Flow:
 ## สไลด์ 13: โมดูล — ชำระเงิน (Payment Module)
 
 ### หน้าที่มี:
+
 1. **รอบการขาย** — แสดง Session ปัจจุบัน + สรุปยอด
 2. **ชำระบิลออเดอร์** — หน้าชำระเงินสำหรับแต่ละออเดอร์
 3. **ประวัติรอบขาย** — ดูรอบขายที่ผ่านมาทั้งหมด
@@ -1438,6 +1249,7 @@ Reservation Status Flow:
 5. **ประวัติชำระเงิน** — ดูรายการชำระเงินทั้งหมด
 
 ### Dialogs (5 ตัว):
+
 1. **Payment Method** — เลือกวิธีชำระเงิน
 2. **Discount** — ใส่ส่วนลด
 3. **Surcharge** — เพิ่มค่าธรรมเนียม
@@ -1445,6 +1257,7 @@ Reservation Status Flow:
 5. **Receipt** — แสดง/พิมพ์ใบเสร็จ
 
 ### WorkFlow — ชำระเงิน:
+
 ```
 1. เปิดรอบขาย (Open Session) → กรอกยอดเงินเปิดลิ้นชัก
 2. รับชำระเงิน → เลือกวิธี: เงินสด / โอน QR
@@ -1454,6 +1267,7 @@ Reservation Status Flow:
 ```
 
 ### WorkFlow — Cashier Session:
+
 ```
 Session Status Flow:
   เปิดรอบ (Open)
@@ -1463,6 +1277,7 @@ Session Status Flow:
 ```
 
 ### ฟีเจอร์เด่น:
+
 - **Slip OCR** — ตรวจสอบสลิปโอนเงินอัตโนมัติ (อ่าน QR + จำนวนเงิน)
 - **Split Bill** — แยกบิลตามรายการ / หารเท่า
 - **Cash Drawer** — บันทึกเงินเข้า-ออกลิ้นชัก
@@ -1473,17 +1288,20 @@ Session Status Flow:
 ## สไลด์ 14: โมดูล — ครัว (Kitchen Display Module)
 
 ### หน้าที่มี:
+
 1. **ครัวอาหาร** — แสดงออเดอร์อาหารที่รอทำ (categoryType = 1)
 2. **บาร์เครื่องดื่ม** — แสดงออเดอร์เครื่องดื่มที่รอทำ (categoryType = 2)
 3. **ครัวขนมหวาน** — แสดงออเดอร์ของหวานที่รอทำ (categoryType = 3)
 
 ### ฟีเจอร์:
+
 - **Real-time ผ่าน SignalR** — ออเดอร์ใหม่ปรากฏทันทีไม่ต้อง refresh
 - **แยกตามประเภทอาหาร** — พ่อครัวเห็นแค่ส่วนที่รับผิดชอบ
 - **อัพเดตสถานะ** — ลาก Drag & Drop เปลี่ยนสถานะ (กำลังทำ → เสร็จ)
 - **แสดงข้อมูลโต๊ะ** — รู้ว่าเป็นโต๊ะไหน ออเดอร์อะไร
 
 ### WorkFlow — ครัว:
+
 ```
 1. ออเดอร์ใหม่เข้ามา (Real-time จาก SignalR)
 2. พ่อครัวเห็นรายการ → เริ่มทำ (สถานะ: Cooking)
@@ -1496,21 +1314,25 @@ Session Status Flow:
 ## สไลด์ 15: โมดูล — ทรัพยากรบุคคล (Human Resource Module)
 
 ### หน้าที่มี:
+
 1. **รายชื่อพนักงาน** — ตารางพนักงานทั้งหมด + ค้นหา/กรอง
 2. **เพิ่มพนักงาน** — ฟอร์มเพิ่มพนักงานใหม่
 3. **แก้ไขพนักงาน** — ฟอร์มแก้ไขข้อมูลพนักงาน
 
 ### Dialogs (2 ตัว):
+
 1. **สร้างบัญชีผู้ใช้** — สร้าง Username/Password สำหรับพนักงาน
 2. **ข้อมูลบัญชี** — แสดง/รีเซ็ตรหัสผ่าน
 
 ### ข้อมูลพนักงาน:
+
 - **ข้อมูลส่วนตัว**: ชื่อ-นามสกุล(ไทย/อังกฤษ), เพศ, วันเกิด, สัญชาติ, ศาสนา, เลขบัตรฯ, รูปโปรไฟล์
 - **ข้อมูลการจ้างงาน**: ตำแหน่ง, วันเริ่มงาน, เต็มเวลา/พาร์ทไทม์, เงินเดือน, ค่าจ้างรายชั่วโมง
 - **ข้อมูลติดต่อ**: อีเมล, เบอร์โทร, Line ID, ธนาคาร, เลขบัญชี
 - **ข้อมูลเพิ่มเติม**: ที่อยู่(หลายรายการ), ประวัติการศึกษา, ประวัติการทำงาน
 
 ### WorkFlow — จัดการพนักงาน:
+
 ```
 1. เพิ่มพนักงาน → กรอกข้อมูลส่วนตัว + การจ้างงาน + ติดต่อ
 2. เพิ่มข้อมูลเพิ่มเติม → ที่อยู่, การศึกษา, ประวัติงาน
@@ -1523,6 +1345,7 @@ Session Status Flow:
 ## สไลด์ 16: โมดูล — ตั้งค่าระบบ (Admin Setting Module)
 
 ### หน้าที่มี:
+
 1. **รายชื่อผู้ใช้งาน** — ตารางผู้ใช้ทั้งหมด + จัดการสถานะ
 2. **แก้ไขผู้ใช้งาน** — แก้ไขข้อมูลผู้ใช้ + รีเซ็ต Failed Login
 3. **จัดการตำแหน่ง** — รายการตำแหน่ง + Permission Matrix
@@ -1531,9 +1354,11 @@ Session Status Flow:
 6. **ค่าบริการ** — จัดการ Service Charge (เปอร์เซ็นต์ + สถานะ)
 
 ### Dialog (1 ตัว):
+
 1. **Service Charge Dialog** — สร้าง/แก้ไขค่าบริการ
 
 ### ฟีเจอร์เด่น:
+
 - **Permission Matrix** — UI แบบ Tree + Checkbox กำหนดสิทธิ์ต่อ Module
 - **Module Tree** — แสดง Module แบบ Parent/Child (เช่น เมนู → เมนูอาหาร, เมนูเครื่องดื่ม)
 - **ตั้งค่าร้าน** — อัพโหลดโลโก้/QR Code + ตั้งเวลาเปิด-ปิด 7 วัน
@@ -1544,6 +1369,7 @@ Session Status Flow:
 ## สไลด์ 17: Base Web — โครงสร้าง Layout (Client Web)
 
 ### โครงสร้างหน้าจอ:
+
 ```
 ┌─────────┬──────────────────────────────────────────┐
 │         │              Header                       │
@@ -1562,18 +1388,20 @@ Session Status Flow:
 ```
 
 ### Sidebar (8 เมนูหลัก, 22 เมนูย่อย):
-| # | เมนูหลัก | เมนูย่อย |
-|---|---------|---------|
-| 1 | แดชบอร์ด | ภาพรวม, รายงานยอดขาย |
-| 2 | ออเดอร์ | ภาพรวมร้าน, รายการออเดอร์ |
-| 3 | เมนู | หมวดหมู่, อาหาร, เครื่องดื่ม, ของหวาน, ตัวเลือกเสริม |
-| 4 | โต๊ะ | ผังร้าน, โซน/โต๊ะ, จองโต๊ะ |
-| 5 | ชำระเงิน | รอบการขาย, ประวัติรอบขาย |
-| 6 | ครัว | ครัวอาหาร, บาร์เครื่องดื่ม, ครัวขนมหวาน |
-| 7 | ทรัพยากรบุคคล | รายชื่อพนักงาน |
-| 8 | ตั้งค่าระบบ | ผู้ใช้งาน, ตำแหน่ง, ตั้งค่าร้าน, ค่าบริการ |
+
+| #   | เมนูหลัก      | เมนูย่อย                                             |
+| --- | ------------- | ---------------------------------------------------- |
+| 1   | แดชบอร์ด      | ภาพรวม, รายงานยอดขาย                                 |
+| 2   | ออเดอร์       | ภาพรวมร้าน, รายการออเดอร์                            |
+| 3   | เมนู          | หมวดหมู่, อาหาร, เครื่องดื่ม, ของหวาน, ตัวเลือกเสริม |
+| 4   | โต๊ะ          | ผังร้าน, โซน/โต๊ะ, จองโต๊ะ                           |
+| 5   | ชำระเงิน      | รอบการขาย, ประวัติรอบขาย                             |
+| 6   | ครัว          | ครัวอาหาร, บาร์เครื่องดื่ม, ครัวขนมหวาน              |
+| 7   | ทรัพยากรบุคคล | รายชื่อพนักงาน                                       |
+| 8   | ตั้งค่าระบบ   | ผู้ใช้งาน, ตำแหน่ง, ตั้งค่าร้าน, ค่าบริการ           |
 
 ### ฟีเจอร์ Layout:
+
 - **Sidebar พับได้** — Full (256px) / Collapsed (80px) + Tooltip เมื่อพับ
 - **Permission-based Menu** — แสดงเฉพาะเมนูที่มีสิทธิ์
 - **Breadcrumb + Action Buttons** — ปุ่ม "ย้อนกลับ" + "บันทึก" อยู่ใน Breadcrumb
@@ -1587,6 +1415,7 @@ Session Status Flow:
 ## สไลด์ 18: โมดูล — Mobile Web (ลูกค้าสั่งอาหารเอง)
 
 ### หน้าที่มี:
+
 1. **หน้า Auth** — สแกน QR Code → ได้ Session
 2. **เรียกดูเมนู** — เลือกหมวดหมู่ → ดูเมนู → เลือกตัวเลือก
 3. **รายละเอียดเมนู** — ดูรูป + เลือก option + จำนวน + หมายเหตุ
@@ -1600,6 +1429,7 @@ Session Status Flow:
 11. **หมดเวลา** — Session หมดอายุ
 
 ### โครงสร้างหน้าจอ Mobile:
+
 ```
 ┌─────────────────────────────┐
 │     Header (Sticky)          │ ← สีส้ม gradient
@@ -1681,6 +1511,7 @@ Session Status Flow:
 ## สไลด์ 20: ระบบ Real-time (SignalR)
 
 ### สถาปัตยกรรม:
+
 ```
 Backend (SignalR Hub)
   ├── OrderHub (/hubs/order)
@@ -1694,32 +1525,35 @@ Frontend (SignalR Client)
 ```
 
 ### กลุ่มการรับแจ้งเตือน (Groups):
-| กลุ่ม | ใครได้รับ | ตัวอย่างแจ้งเตือน |
-|-------|---------|----------------|
-| Kitchen | พ่อครัว/บาร์เทนเดอร์ | ออเดอร์ใหม่เข้ามา |
-| Floor | พนักงานเสิร์ฟ | อาหารพร้อมเสิร์ฟ, ลูกค้าเรียก |
-| Cashier | แคชเชียร์ | ขอบิล, อัพโหลด Slip |
-| Manager | ผู้จัดการ | ทุกแจ้งเตือน |
-| table_{id} | ลูกค้าที่โต๊ะนั้น | สถานะอาหาร, บิลพร้อม |
+
+| กลุ่ม       | ใครได้รับ            | ตัวอย่างแจ้งเตือน             |
+| ----------- | -------------------- | ----------------------------- |
+| Kitchen     | พ่อครัว/บาร์เทนเดอร์ | ออเดอร์ใหม่เข้ามา             |
+| Floor       | พนักงานเสิร์ฟ        | อาหารพร้อมเสิร์ฟ, ลูกค้าเรียก |
+| Cashier     | แคชเชียร์            | ขอบิล, อัพโหลด Slip           |
+| Manager     | ผู้จัดการ            | ทุกแจ้งเตือน                  |
+| table\_{id} | ลูกค้าที่โต๊ะนั้น    | สถานะอาหาร, บิลพร้อม          |
 
 ### ประเภทแจ้งเตือน (9 ประเภท):
-| Event | คำอธิบาย |
-|-------|---------|
-| NEW_ORDER | มีออเดอร์ใหม่เข้ามา |
-| ORDER_READY | อาหารพร้อมเสิร์ฟ |
-| CALL_WAITER | ลูกค้าเรียกพนักงาน |
-| REQUEST_BILL | ลูกค้าขอบิล |
-| REQUEST_SPLIT_BILL | ลูกค้าขอแยกบิล |
-| ORDER_CANCELLED | ออเดอร์ถูกยกเลิก |
-| SLIP_UPLOADED | ลูกค้าอัพโหลด Slip |
-| PAYMENT_COMPLETED | ชำระเงินสำเร็จ |
-| RESERVATION_REMINDER | เตือนการจอง |
+
+| Event                | คำอธิบาย            |
+| -------------------- | ------------------- |
+| NEW_ORDER            | มีออเดอร์ใหม่เข้ามา |
+| ORDER_READY          | อาหารพร้อมเสิร์ฟ    |
+| CALL_WAITER          | ลูกค้าเรียกพนักงาน  |
+| REQUEST_BILL         | ลูกค้าขอบิล         |
+| REQUEST_SPLIT_BILL   | ลูกค้าขอแยกบิล      |
+| ORDER_CANCELLED      | ออเดอร์ถูกยกเลิก    |
+| SLIP_UPLOADED        | ลูกค้าอัพโหลด Slip  |
+| PAYMENT_COMPLETED    | ชำระเงินสำเร็จ      |
+| RESERVATION_REMINDER | เตือนการจอง         |
 
 ---
 
 ## สไลด์ 21: ระบบจัดการไฟล์ (File Management)
 
 ### สถาปัตยกรรม:
+
 ```
 ┌──────────────┐     Upload      ┌──────────────┐
 │   Frontend   │ ──────────────→ │   Backend    │
@@ -1743,6 +1577,7 @@ Frontend (SignalR Client)
 ```
 
 ### ที่ใช้:
+
 - รูปเมนูอาหาร (TbMenu.ImageFileId)
 - รูปโปรไฟล์พนักงาน (TbEmployee.ImageFileId)
 - โลโก้ร้าน (TbShopSettings.LogoFileId)
@@ -1754,17 +1589,19 @@ Frontend (SignalR Client)
 ## สไลด์ 22: ระบบ Error Handling
 
 ### Backend — GlobalExceptionFilter:
-| Exception | HTTP Status | ตัวอย่าง |
-|-----------|-----------|---------|
-| ValidationException | 400 Bad Request | "กรุณาระบุชื่อเมนู" |
-| EntityNotFoundException | 404 Not Found | "ไม่พบเมนู ID: 5" |
-| BusinessException | 422 Unprocessable | "เมนูนี้ถูกปิดขายแล้ว" |
-| ForbiddenException | 403 Forbidden | "ไม่มีสิทธิ์เข้าถึง" |
-| InvalidCredentialsException | 401 Unauthorized | "รหัสผ่านไม่ถูกต้อง" |
-| AccountLockedException | 423 Locked | "บัญชีถูกล็อค" (+ เวลาปลดล็อค) |
-| Unhandled Exception | 500 Internal | Log error + return message |
+
+| Exception                   | HTTP Status       | ตัวอย่าง                       |
+| --------------------------- | ----------------- | ------------------------------ |
+| ValidationException         | 400 Bad Request   | "กรุณาระบุชื่อเมนู"            |
+| EntityNotFoundException     | 404 Not Found     | "ไม่พบเมนู ID: 5"              |
+| BusinessException           | 422 Unprocessable | "เมนูนี้ถูกปิดขายแล้ว"         |
+| ForbiddenException          | 403 Forbidden     | "ไม่มีสิทธิ์เข้าถึง"           |
+| InvalidCredentialsException | 401 Unauthorized  | "รหัสผ่านไม่ถูกต้อง"           |
+| AccountLockedException      | 423 Locked        | "บัญชีถูกล็อค" (+ เวลาปลดล็อค) |
+| Unhandled Exception         | 500 Internal      | Log error + return message     |
 
 ### Frontend — Feedback System:
+
 - **Success Modal** — แสดงเมื่อบันทึกสำเร็จ (ปิดอัตโนมัติ 2 วิ)
 - **Error Modal** — แสดงเมื่อเกิดข้อผิดพลาด (ต้องกดปิด)
 - **Confirm Modal** — ถามยืนยันก่อนลบ/ยกเลิก
@@ -1776,33 +1613,34 @@ Frontend (SignalR Client)
 ## สไลด์ 23: ระบบ Auto-Cleanup
 
 ### Background Service ทำงานอัตโนมัติ:
-| งาน | ความถี่ | รายละเอียด |
-|-----|--------|-----------|
-| ลบ Expired Refresh Tokens | ทุก 6 ชม. | ลบ token ที่หมดอายุแล้ว |
-| ลบ Expired Customer Sessions | ทุก 6 ชม. | ลบ session ลูกค้าที่หมดอายุ |
-| ลบ Notifications เก่า | ทุกวัน 03:00 | ลบแจ้งเตือนเก่ากว่า 7 วัน |
+
+| งาน                          | ความถี่      | รายละเอียด                  |
+| ---------------------------- | ------------ | --------------------------- |
+| ลบ Expired Refresh Tokens    | ทุก 6 ชม.    | ลบ token ที่หมดอายุแล้ว     |
+| ลบ Expired Customer Sessions | ทุก 6 ชม.    | ลบ session ลูกค้าที่หมดอายุ |
+| ลบ Notifications เก่า        | ทุกวัน 03:00 | ลบแจ้งเตือนเก่ากว่า 7 วัน   |
 
 ---
 
 ## สไลด์ 24: ตัวเลขสำคัญ (Key Metrics)
 
-| เมตริก | ตัวเลข |
-|--------|--------|
-| **Database Tables** | 38 ตาราง |
-| **API Controllers** | 24 ตัว |
-| **API Endpoints** | 150+ endpoints |
-| **Business Modules (Backend)** | 8 modules |
-| **Feature Modules (Client Web)** | 11 modules |
-| **Pages (Client Web)** | 32+ หน้า |
-| **Dialogs (Client Web)** | 26+ dialogs |
-| **Pages (Mobile Web)** | 11 หน้า |
-| **Shared Dropdowns** | 22+ ตัว |
-| **Shared Components** | 20+ ตัว |
-| **Shared Modals/Dialogs** | 10+ ตัว |
-| **SignalR Hubs** | 2 (Order + Notification) |
-| **Notification Types** | 9 ประเภท |
-| **Permission Modules** | 16+ modules |
-| **Database Migrations** | 20+ migrations |
+| เมตริก                           | ตัวเลข                   |
+| -------------------------------- | ------------------------ |
+| **Database Tables**              | 38 ตาราง                 |
+| **API Controllers**              | 24 ตัว                   |
+| **API Endpoints**                | 150+ endpoints           |
+| **Business Modules (Backend)**   | 8 modules                |
+| **Feature Modules (Client Web)** | 11 modules               |
+| **Pages (Client Web)**           | 32+ หน้า                 |
+| **Dialogs (Client Web)**         | 26+ dialogs              |
+| **Pages (Mobile Web)**           | 11 หน้า                  |
+| **Shared Dropdowns**             | 22+ ตัว                  |
+| **Shared Components**            | 20+ ตัว                  |
+| **Shared Modals/Dialogs**        | 10+ ตัว                  |
+| **SignalR Hubs**                 | 2 (Order + Notification) |
+| **Notification Types**           | 9 ประเภท                 |
+| **Permission Modules**           | 16+ modules              |
+| **Database Migrations**          | 20+ migrations           |
 
 ---
 
@@ -1833,18 +1671,20 @@ Docker Compose
 ## สไลด์ 26: Design System
 
 ### สี (Color Tokens):
-| Token | สี | ใช้สำหรับ |
-|-------|---|---------|
-| primary | Orange (#f97316) | ปุ่มหลัก, Header, Accent |
-| success | Teal (#14b8a6) | สถานะสำเร็จ, Active |
-| danger | Rose (#f43f5e) | สถานะผิดพลาด, ลบ |
-| warning | Amber (#f59e0b) | สถานะเตือน |
-| info | Sky (#0ea5e9) | ข้อมูล |
-| surface | Slate (#f8fafc) | พื้นหลังหน้า |
-| surface-dark | Slate (#334155) | ตัวอักษรหลัก |
-| surface-sidebar | Slate (#1e293b) | พื้นหลัง Sidebar |
+
+| Token           | สี               | ใช้สำหรับ                |
+| --------------- | ---------------- | ------------------------ |
+| primary         | Orange (#f97316) | ปุ่มหลัก, Header, Accent |
+| success         | Teal (#14b8a6)   | สถานะสำเร็จ, Active      |
+| danger          | Rose (#f43f5e)   | สถานะผิดพลาด, ลบ         |
+| warning         | Amber (#f59e0b)  | สถานะเตือน               |
+| info            | Sky (#0ea5e9)    | ข้อมูล                   |
+| surface         | Slate (#f8fafc)  | พื้นหลังหน้า             |
+| surface-dark    | Slate (#334155)  | ตัวอักษรหลัก             |
+| surface-sidebar | Slate (#1e293b)  | พื้นหลัง Sidebar         |
 
 ### Typography:
+
 - Font: **Sarabun** (รองรับไทย + อังกฤษ)
 - Page Title: 1.75rem / Bold (700)
 - Section Title: 1.125rem / Semi-Bold (600)
@@ -1852,6 +1692,7 @@ Docker Compose
 - Body: 1rem / Regular (400)
 
 ### Icon System:
+
 - **Custom SVG Icons** — ใช้ `<app-generic-icon>` (70+ icons)
 - **PrimeIcons** — ใช้ `pi pi-*` สำหรับ icon ทั่วไป
 - ทุก icon ใช้ `currentColor` เปลี่ยนสีตาม Tailwind class
@@ -1897,3 +1738,190 @@ Docker Compose
 8. **Auto-Cleanup** — ลบข้อมูลชั่วคราวอัตโนมัติ ไม่ให้ DB บวม
 9. **File Storage** — S3-compatible (MinIO) รองรับ scale
 10. **Thai-first** — ออกแบบสำหรับร้านอาหารไทย (ภาษา, เงินบาท, ฟอนต์ Sarabun)
+
+---
+
+## บทพูดประกอบ Diagram ทั้งหมด (Presentation Scripts)
+
+> รวมบทพูดสำหรับอธิบายแต่ละ Diagram ตอนพรีเซนต์ เรียงตามลำดับ Prompt
+
+---
+
+### บทพูด Prompt 1: System Architecture Diagram
+
+> พูดตามลำดับจากบนลงล่าง (~1-2 นาที)
+
+---
+
+**เปิด:**
+"ภาพนี้แสดงภาพรวมของระบบ RBMS-POS ทั้งหมดว่ามีกี่ส่วน แต่ละส่วนเชื่อมต่อกันยังไง"
+
+---
+
+**Layer 1 — ผู้ใช้งาน:**
+"ระบบเรามีผู้ใช้ 2 กลุ่ม — ฝั่งซ้ายคือ Admin กับ Staff ที่ใช้งานผ่าน Client Web บนคอมพิวเตอร์ สำหรับจัดการออเดอร์ ดูหน้าจอครัว จัดการเมนู พนักงาน ตั้งค่าร้าน ฝั่งขวาคือลูกค้า ที่สแกน QR Code ที่โต๊ะแล้วสั่งอาหารผ่าน Mobile Web บนมือถือ ทั้งสองฝั่งสร้างด้วย Angular 19 เหมือนกัน แต่แยก Codebase เพราะ UI และฟีเจอร์ต่างกัน"
+
+---
+
+**Layer 2 — Nginx:**
+"ทุก request จากทั้งสองฝั่งจะผ่าน Nginx ก่อน ซึ่งทำหน้าที่เป็น Reverse Proxy คือรับ request แล้วแยกส่งไปที่ถูกต้อง — ถ้าเป็น /api จะส่งไป Backend ถ้าเป็น /hub จะส่งไป SignalR ตรงนี้ Certbot จะจัดการต่อใบรับรอง SSL ให้อัตโนมัติ ทำให้ทุกการเชื่อมต่อเป็น HTTPS ตลอด"
+
+---
+
+**Layer 3 — Backend (เน้น):**
+"ส่วนนี้คือหัวใจของระบบ — Backend API สร้างด้วย ASP.NET Core 9 มีทั้งหมด 24 Controllers รวม 215 API endpoints ข้างในแบ่งเป็น 8 Business Modules เช่น Order, Menu, Payment, Kitchen
+
+จุดสำคัญคือ **SignalR Hub** ที่เป็นเส้นประในรูป — ปกติ REST API จะเป็นแบบ ถาม-ตอบ คือ Frontend ถาม Backend ตอบ แต่ SignalR ทำให้ Backend **ส่งข้อมูลไปหา Frontend ได้เอง** โดยไม่ต้องรอถาม เช่น ลูกค้าสั่งอาหารปุ๊บ หน้าจอครัวเห็นทันที แคชเชียร์เห็นทันที โดยไม่ต้อง refresh
+
+นอกจากนี้ยังมี Slip OCR ที่อ่าน QR ในสลิปและตรวจจำนวนเงินอัตโนมัติ Background Jobs ที่ทำความสะอาดข้อมูลชั่วคราวและเตือนการจอง และ Email Service สำหรับส่ง OTP ตอนลืมรหัสผ่าน"
+
+---
+
+**Layer 4 — Data Storage:**
+"ข้อมูลเก็บ 2 ที่ — SQL Server เก็บข้อมูลทั้งหมด 37 ตาราง ตั้งแต่ออเดอร์ เมนู พนักงาน การชำระเงิน ส่วน MinIO เก็บไฟล์ทั้งหมด เช่น รูปเมนู รูปโปรไฟล์ สลิปโอนเงิน โลโก้ร้าน โดย MinIO เป็น S3-Compatible คือใช้มาตรฐานเดียวกับ AWS S3 แต่เราโฮสต์เองได้"
+
+---
+
+**Docker + External:**
+"ทุกอย่างที่เห็นในกรอบเส้นประนี้ รันอยู่ใน Docker Container ทั้งหมด สั่ง docker compose up ครั้งเดียวก็ได้ทั้งระบบ ส่วนนอก Docker มี 2 บริการภายนอกคือ Gmail สำหรับส่งเมล และ Google reCAPTCHA สำหรับป้องกัน Bot ตอน Login"
+
+---
+
+**ปิด:**
+"สรุปคือระบบนี้มีทั้ง Frontend 2 ตัว, Backend 1 ตัว, Database, File Storage, Reverse Proxy รวมอยู่ใน Docker ทำงานร่วมกันผ่าน REST API และ Real-time WebSocket"
+
+---
+
+### บทพูด Prompt 2: Data Flow Diagram
+
+> พูดตาม Step 1-8 แต่รวบบางจุดที่ไม่ต้องอธิบายยาว (~1-1.5 นาที)
+
+---
+
+**เปิด:**
+"ภาพนี้แสดง Flow การใช้งานจริงของลูกค้าตั้งแต่เข้าร้านจนกลับบ้าน ทั้งหมด 8 ขั้นตอน แถวบนเป็นขั้นตอนสั่งอาหาร แถวล่างเป็นขั้นตอนชำระเงิน"
+
+---
+
+**Step 1-2 (รวบ):**
+"เริ่มจากลูกค้าสแกน QR Code ที่โต๊ะ ระบบจะให้ Session Token เชื่อมกับโต๊ะนั้นอัตโนมัติ จากนั้นลูกค้าเลือกเมนูตามหมวดหมู่ เลือกตัวเลือกเสริมเช่นระดับความเผ็ด ใส่ตะกร้า แล้วกดสั่ง ตรงนี้ข้อมูลจะวิ่งผ่าน Nginx ไป Backend แล้วบันทึกลง Database"
+
+---
+
+**Step 3 (เน้น — Real-time):**
+"จุดสำคัญคือ Step 3 — พอลูกค้ากดสั่งปุ๊บ ออเดอร์จะปรากฏบนหน้าจอครัวทันทีผ่าน SignalR โดยไม่ต้อง refresh หน้า ครัวก็เริ่มทำ อัพเดตสถานะจาก Pending เป็น Cooking แล้วเป็น Ready"
+
+---
+
+**Step 4 (เน้น — ฟีเจอร์เด่น):**
+"ระหว่างรออาหาร ลูกค้าจะเห็นสถานะของทุกเมนูที่สั่งบนมือถือแบบ Real-time เลย เช่นเมนูไหนกำลังทำ เมนูไหนพร้อมเสิร์ฟแล้ว และถ้าต้องการอะไรก็กดปุ่มเรียกพนักงานได้เลย พนักงานจะได้รับแจ้งเตือนทันที"
+
+---
+
+**Step 5-6 (รวบ):**
+"พออาหารเสร็จ พนักงานจะได้รับ notification ว่าพร้อมเสิร์ฟ ก็ไปรับมาเสิร์ฟที่โต๊ะ เมื่อทานเสร็จลูกค้ากดขอบิล ระบบจะคำนวณยอดรวมพร้อมค่าบริการให้อัตโนมัติ ตรงนี้ยังมีฟีเจอร์หารบิลด้วย ทั้งแบบหารเท่าและแบบเลือกตามรายการ"
+
+---
+
+**Step 7 (เน้น — Slip OCR):**
+"การชำระเงินมี 2 ช่องทาง — เงินสดก็จ่ายที่แคชเชียร์ปกติ แต่ถ้าโอน QR ลูกค้าอัพโหลดสลิปมา ระบบจะอ่าน QR ในสลิปและตรวจจำนวนเงินให้อัตโนมัติ แล้วแคชเชียร์กดยืนยันอีกที"
+
+---
+
+**Step 8:**
+"สุดท้ายลูกค้าดาวน์โหลดใบเสร็จเป็น PDF ได้ทั้งแบบรายบิลและรวม"
+
+---
+
+**ปิด:**
+"สังเกตแถบด้านล่าง — สีเขียวคือฝั่งลูกค้า สีส้มคือ Backend ที่ทำงานอยู่เบื้องหลังทุกขั้นตอน สีน้ำเงินคือฝั่งพนักงาน ทั้งหมดนี้ทำงานร่วมกันแบบ Real-time"
+
+---
+
+### บทพูด Prompt 3: SignalR Real-time Diagram
+
+> พูดตามลำดับ ตรงกลาง → 4 กลุ่ม → สรุป (~50 วินาที)
+
+---
+
+**เปิด:**
+"ภาพนี้แสดงว่าระบบ Real-time ของเราทำงานยังไง ตรงกลางคือ SignalR Hub ซึ่งเป็นตัวกลางที่คอยกระจายข้อมูลไปให้ทุกฝ่ายแบบทันที โดยมี 2 Hub คือ OrderHub จัดการเรื่องออเดอร์กับครัว และ NotificationHub จัดการแจ้งเตือนทั่วไป"
+
+---
+
+**4 กลุ่ม (ไล่ทีละมุม):**
+"ระบบแบ่งผู้ใช้เป็น 4 กลุ่ม แต่ละกลุ่มจะได้รับแจ้งเตือนเฉพาะที่เกี่ยวข้องกับตัวเองเท่านั้น
+
+ฝั่งครัว — พอลูกค้าสั่งอาหาร ออเดอร์จะปรากฏบนหน้าจอครัวทันที ครัวกดเริ่มทำ กดเสร็จ สถานะก็ส่งกลับมา
+
+ฝั่งพนักงานเสิร์ฟ — จะได้รับแจ้งเตือนเมื่ออาหารพร้อมเสิร์ฟ หรือเมื่อลูกค้ากดปุ่มเรียก
+
+ฝั่งแคชเชียร์ — จะเห็นเมื่อลูกค้าขอบิล อัพโหลดสลิป หรือมีการชำระเงินเข้ามา แล้วก็กดยืนยันกลับไป
+
+ฝั่งลูกค้า — จะเห็นสถานะอาหารที่สั่งเปลี่ยนแบบ Real-time เลย ไม่ต้อง refresh หน้า รวมถึงเห็นผลชำระเงินทันที"
+
+---
+
+**ปิด:**
+"ทั้งหมดนี้ทำงานผ่าน WebSocket ซึ่งต่างจาก HTTP ปกติตรงที่ server ส่งข้อมูลไปหา client ได้เองโดยไม่ต้องรอถาม ทำให้ทุกคนเห็นข้อมูลเดียวกันพร้อมกันทันที"
+
+---
+
+### บทพูด Prompt 4: Database ER Diagram
+
+> อธิบายภาพรวม → เน้น 2-3 กลุ่มสำคัญ → สรุปด้านล่าง (~50 วินาที)
+
+---
+
+**เปิด:**
+"ภาพนี้แสดงการออกแบบฐานข้อมูลทั้งหมด 37 ตาราง แบ่งเป็น 6 กลุ่มตามหน้าที่ ลูกศรระหว่างกลุ่มแสดงว่าข้อมูลเชื่อมกันยังไง"
+
+---
+
+**กลุ่มสำคัญ (ไล่สั้นๆ):**
+"กลุ่มที่ใหญ่ที่สุดคือ User & Auth มี 11 ตาราง เพราะนอกจากข้อมูลพนักงานแล้ว ยังรวมระบบสิทธิ์ด้วย ตั้งแต่ตำแหน่ง โมดูล ไปจนถึง Permission Matrix ที่กำหนดว่าตำแหน่งไหนเข้าถึงอะไรได้บ้าง
+
+กลุ่ม Order ตรงกลางคือหัวใจของระบบ เก็บออเดอร์ รายการอาหาร บิล ตัวเลือกเสริม รวมถึง Self-Order Session ของลูกค้าที่สั่งผ่าน QR
+
+กลุ่ม Shop & File เป็นกลุ่มที่เชื่อมกับทุกกลุ่ม เพราะ TbFiles เก็บไฟล์ทั้งหมดไว้ที่เดียว ไม่ว่าจะเป็นรูปเมนู รูปโปรไฟล์ หรือสลิปโอนเงิน"
+
+---
+
+**ลูกศร (เน้นสั้น):**
+"สังเกตลูกศร — ทุกกลุ่มชี้เข้าหา Order เพราะออเดอร์ต้องรู้ว่าใครสั่ง สั่งเมนูอะไร โต๊ะไหน แล้ว Order ก็ชี้ไป Payment เพราะต้องออกบิลและชำระเงิน"
+
+---
+
+**ปิด:**
+"ด้านล่างคือสิ่งที่ทุกตารางมีร่วมกัน — ทุกตารางมี Soft Delete คือลบแล้วข้อมูลยังอยู่ เรียกคืนได้ และมี Audit Trail บันทึกว่าใครสร้าง ใครแก้ไข เมื่อไหร่ อัตโนมัติ"
+
+---
+
+### บทพูด Prompt 5: Use Case Diagram
+
+> อธิบายว่าใครทำอะไรได้ — Staff vs Customer (~50 วินาที)
+
+---
+
+**เปิด:**
+"ภาพนี้แสดงว่าในระบบ RBMS-POS ใครทำอะไรได้บ้าง แบ่งเป็น 2 ฝั่ง — ฝั่งซ้ายคือพนักงานที่ใช้งานผ่าน Client Web บนคอมพิวเตอร์ ฝั่งขวาคือลูกค้าที่ใช้งานผ่าน Mobile Web บนมือถือ"
+
+---
+
+**ฟีเจอร์ร่วม (ตรงกลาง):**
+"ตรงกลางเป็นสิ่งที่ทั้งสองฝั่งทำได้เหมือนกัน — ทั้งพนักงานและลูกค้าสามารถสั่งอาหาร ดูเมนู ติดตามสถานะ ขอบิลหรือแยกบิล ชำระเงิน และรับแจ้งเตือนได้ แต่วิธีใช้งานต่างกัน เช่น พนักงานสั่งผ่านหน้าจอคอม ลูกค้าสั่งผ่านมือถือ"
+
+---
+
+**ฝั่งพนักงาน (Staff Only):**
+"ฝั่งซ้ายเป็นสิ่งที่เฉพาะพนักงานทำได้ — ดู Dashboard รายงานยอดขาย จัดการเมนูอาหาร จัดการโต๊ะและผังร้าน ดูหน้าจอครัว เปิด-ปิดรอบขาย จัดการพนักงานและสิทธิ์ และตั้งค่าร้าน ทั้งหมด 7 กลุ่มฟีเจอร์ที่ลูกค้าเข้าถึงไม่ได้"
+
+---
+
+**ฝั่งลูกค้า (Customer Only):**
+"ฝั่งขวามี 3 อย่างที่เฉพาะลูกค้าเท่านั้น คือ สแกน QR Code เพื่อเข้าระบบ จัดการตะกร้าสินค้าและปรับแต่งตัวเลือก และกดปุ่มเรียกพนักงาน"
+
+---
+
+**ปิด:**
+"สิ่งสำคัญคือด้านล่างที่เขียนว่า สิทธิ์ของพนักงานเป็นแบบ Dynamic ผ่าน Position-based RBAC คือไม่ได้กำหนดตายตัวว่าตำแหน่งไหนทำอะไรได้ แต่ Admin สามารถกำหนดสิทธิ์แต่ละตำแหน่งได้เองทุกเมื่อ"
