@@ -149,19 +149,17 @@
             <!-- Actions -->
             <td class="text-center">
               <div class="flex justify-center gap-2">
-                @if (canUpdate) {
-                  <button
-                    class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
-                    pTooltip="ดู/แก้ไข"
-                    tooltipPosition="top"
-                    (click)="onEdit(item.subCategoryId)"
-                  >
-                    <app-generic-icon
-                      name="eye"
-                      svgClass="w-6 h-6"
-                    ></app-generic-icon>
-                  </button>
-                }
+                <button
+                  class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                  pTooltip="ดู/แก้ไข"
+                  tooltipPosition="top"
+                  (click)="onEdit(item.subCategoryId)"
+                >
+                  <app-generic-icon
+                    name="eye"
+                    svgClass="w-6 h-6"
+                  ></app-generic-icon>
+                </button>
                 @if (canDelete && (item.menuCount ?? 0) === 0) {
                   <button
                     class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"

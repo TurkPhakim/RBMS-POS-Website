@@ -461,6 +461,9 @@
               <th class="w-[140px]">ประเภท</th>
               <th class="w-[140px]">จำนวนเงิน</th>
               <th class="w-[280px]">เหตุผล</th>
+              @if (canUpdateSession) {
+                <th class="w-[120px]">ตัวเลือก</th>
+              }
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-tx>
@@ -479,11 +482,33 @@
                 {{ tx.amount | number: "1.2-2" }} บาท
               </td>
               <td class="text-surface-sub">{{ tx.reason }}</td>
+              @if (canUpdateSession) {
+                <td class="text-center">
+                  <div class="flex justify-center gap-2">
+                    <button
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
+                      pTooltip="แก้ไข"
+                      tooltipPosition="top"
+                      (click)="onEditTransaction(tx)"
+                    >
+                      <i class="pi pi-pencil text-lg"></i>
+                    </button>
+                    <button
+                      class="w-10 h-10 flex items-center justify-center rounded-full bg-danger text-white"
+                      pTooltip="ลบ"
+                      tooltipPosition="top"
+                      (click)="onDeleteTransaction(tx)"
+                    >
+                      <i class="pi pi-trash text-lg"></i>
+                    </button>
+                  </div>
+                </td>
+              }
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="4">
+              <td [attr.colspan]="canUpdateSession ? 5 : 4">
                 <div class="flex justify-center items-center w-full p-[100px]">
                   <app-empty-view message="ไม่มีรายการทางการเงิน" />
                 </div>

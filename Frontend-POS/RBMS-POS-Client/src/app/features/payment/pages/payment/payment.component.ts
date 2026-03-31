@@ -15,6 +15,7 @@ import { ApiConfiguration } from '@app/core/api/api-configuration';
 import { CashierSessionsService } from '@app/core/api/services/cashier-sessions.service';
 import { OrdersService } from '@app/core/api/services/orders.service';
 import { CashierSessionResponseModel } from '@app/core/api/models/cashier-session-response-model';
+import { CashDrawerTransactionResponseModel } from '@app/core/api/models/cash-drawer-transaction-response-model';
 import { OrderResponseModel } from '@app/core/api/models/order-response-model';
 import { PaymentResponseModel } from '@app/core/api/models/payment-response-model';
 import { AuthService } from '@app/core/services/auth.service';
@@ -98,6 +99,7 @@ export class PaymentComponent implements OnInit, OnDestroy {
   billMenuItems: MenuItem[] = [];
   canCreateSession: boolean;
   canPayment: boolean;
+  canUpdateSession: boolean;
 
   constructor(
     private cashierSessionsService: CashierSessionsService,
@@ -115,6 +117,7 @@ export class PaymentComponent implements OnInit, OnDestroy {
       'cashier-session.create',
     );
     this.canPayment = this.authService.hasPermission('payment-manage.create');
+    this.canUpdateSession = this.authService.hasPermission('cashier-session.update');
   }
 
   ngOnInit(): void {
@@ -280,6 +283,51 @@ export class PaymentComponent implements OnInit, OnDestroy {
 
   getImageUrl(fileId: number): string {
     return `${this.apiConfig.rootUrl}/api/admin/file/${fileId}`;
+  }
+
+  onEditTransaction(tx: CashDrawerTransactionResponseModel): void {
+    const session = this.currentSession();
+    if (!session) return;
+
+    const type = tx.transactionType === 'CashIn' ? 'cash-in' : 'cash-out';
+    const ref = this.dialogService.open(CashDrawerDialogComponent, {
+      header: type === 'cash-in' ? 'แก้ไขเงินเข้าลิ้นชัก' : 'แก้ไขเงินออกลิ้นชัก',
+      showHeader: false,
+      styleClass: 'card-dialog',
+      width: '35vw',
+      data: { sessionId: session.cashierSessionId, type, transaction: tx },
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) this.loadCurrentSession();
+      });
+  }
+
+  onDeleteTransaction(tx: CashDrawerTransactionResponseModel): void {
+    const session = this.currentSession();
+    if (!session) return;
+
+    const ref = this.modalService.info({
+      title: 'ยืนยันการลบ',
+      message: `ต้องการลบรายการ ${tx.transactionType === 'CashIn' ? 'เงินเข้า' : 'เงินออก'} จำนวน ${tx.amount?.toFixed(2)} บาท ใช่หรือไม่?`,
+      icon: Icon.Warning,
+      confirmButtonLabel: 'ลบ',
+      cancelButtonLabel: 'ยกเลิก',
+      onConfirm: () =>
+        this.cashierSessionsService
+          .cashierSessionsDeleteCashDrawerTransactionDelete({
+            cashierSessionId: session.cashierSessionId!,
+            cashDrawerTransactionId: tx.cashDrawerTransactionId!,
+          }),
+    });
+
+    ref.onClose
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((result) => {
+        if (result) this.loadCurrentSession();
+      });
   }
 
   ngOnDestroy(): void {

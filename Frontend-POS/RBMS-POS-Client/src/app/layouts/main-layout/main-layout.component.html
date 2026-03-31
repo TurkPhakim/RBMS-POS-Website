@@ -24,7 +24,8 @@
 <p-toast position="top-right" key="noti" styleClass="noti-toast">
   <ng-template let-message pTemplate="message" let-closeFn="closeFn">
     <div
-      class="flex items-start gap-3 w-full rounded-2xl bg-info-bg pl-4 pr-3 py-3"
+      class="flex items-start gap-3 w-full rounded-2xl bg-info-bg pl-4 pr-3 py-3 cursor-pointer"
+      (click)="onToastClick(message)"
     >
       <span
         class="flex-shrink-0 inline-flex items-center w-6 h-6 mt-0.5"

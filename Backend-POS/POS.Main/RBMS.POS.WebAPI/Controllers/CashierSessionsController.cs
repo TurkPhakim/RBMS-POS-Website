@@ -60,6 +60,18 @@ public class CashierSessionsController : BaseController
     public async Task<IActionResult> CashOut(int cashierSessionId, [FromBody] CashDrawerTransactionRequestModel request, CancellationToken ct = default)
         => Success(await _cashierSessionService.CashOutAsync(cashierSessionId, request, ct));
 
+    [HttpPut("{cashierSessionId}/cash-drawer/{cashDrawerTransactionId}")]
+    [PermissionAuthorize(Permissions.CashierSession.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<CashierSessionResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateCashDrawerTransaction(int cashierSessionId, int cashDrawerTransactionId, [FromBody] CashDrawerTransactionRequestModel request, CancellationToken ct = default)
+        => Success(await _cashierSessionService.UpdateCashDrawerTransactionAsync(cashierSessionId, cashDrawerTransactionId, request, ct));
+
+    [HttpDelete("{cashierSessionId}/cash-drawer/{cashDrawerTransactionId}")]
+    [PermissionAuthorize(Permissions.CashierSession.Update)]
+    [ProducesResponseType(typeof(BaseResponseModel<CashierSessionResponseModel>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteCashDrawerTransaction(int cashierSessionId, int cashDrawerTransactionId, CancellationToken ct = default)
+        => Success(await _cashierSessionService.DeleteCashDrawerTransactionAsync(cashierSessionId, cashDrawerTransactionId, ct));
+
     [HttpPost("{cashierSessionId}/close")]
     [PermissionAuthorize(Permissions.CashierSession.Update)]
     [ProducesResponseType(typeof(BaseResponseModel<CashierSessionResponseModel>), StatusCodes.Status200OK)]

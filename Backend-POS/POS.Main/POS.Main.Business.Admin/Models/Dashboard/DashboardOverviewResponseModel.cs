@@ -6,6 +6,12 @@ public class DashboardOverviewResponseModel
     public DashboardKpiModel Previous { get; set; } = new();
     public List<KitchenBreakdownModel> KitchenBreakdown { get; set; } = new();
     public List<RevenueTrendModel> RevenueTrend { get; set; } = new();
+
+    // Period comparison (แสดงเฉพาะเมื่อ HasTwoPeriods = true)
+    public bool HasTwoPeriods { get; set; }
+    public string? Period1Label { get; set; }
+    public string? Period2Label { get; set; }
+    public List<PeriodRevenueTrendModel> PeriodRevenueTrend { get; set; } = new();
 }
 
 public class DashboardKpiModel

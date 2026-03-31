@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using POS.Main.Business.Admin.Interfaces;
+using POS.Main.Business.Notification.Interfaces;
+using POS.Main.Business.Notification.Models;
 using POS.Main.Business.Order.Interfaces;
 using POS.Main.Business.Payment.Interfaces;
 using POS.Main.Business.Payment.Models.Customer;
@@ -19,6 +21,7 @@ public class CustomerService : ICustomerService
     private readonly IFileService _fileService;
     private readonly ISlipOcrService _slipOcrService;
     private readonly IOrderNotificationService _notificationService;
+    private readonly INotificationBroadcaster _notificationBroadcaster;
     private readonly ILogger<CustomerService> _logger;
 
     public CustomerService(
@@ -26,12 +29,14 @@ public class CustomerService : ICustomerService
         IFileService fileService,
         ISlipOcrService slipOcrService,
         IOrderNotificationService notificationService,
+        INotificationBroadcaster notificationBroadcaster,
         ILogger<CustomerService> logger)
     {
         _unitOfWork = unitOfWork;
         _fileService = fileService;
         _slipOcrService = slipOcrService;
         _notificationService = notificationService;
+        _notificationBroadcaster = notificationBroadcaster;
         _logger = logger;
     }
 
@@ -131,6 +136,16 @@ public class CustomerService : ICustomerService
             request.OrderBillId, fileResult.FileId, ocrAmount, bill.GrandTotal, verificationStatus);
 
         await _notificationService.NotifySlipUploadedAsync(table.TableId, request.OrderBillId, ct);
+
+        await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+        {
+            EventType = "SLIP_UPLOADED",
+            Title = "ลูกค้าส่งสลิปมาแล้ว",
+            Message = $"ออเดอร์ #{bill.Order.OrderNumber.Split('-').Last()} ส่งสลิปชำระเงิน\nยอดบิล {bill.GrandTotal:N2} บาท",
+            TableId = table.TableId,
+            OrderId = bill.Order.OrderId,
+            TargetGroup = "Cashier"
+        }, ct);
 
         return new SlipUploadResultModel
         {

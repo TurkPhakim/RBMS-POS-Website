@@ -168,6 +168,9 @@ export class QrPaymentDialogComponent implements OnInit {
     const result = this.slipResult();
     if (!result) return;
 
+    const isOcrFailed = result.verificationStatus !== 'Matched';
+    if (!this.validateManualAmount(result.billGrandTotal ?? 0, isOcrFailed)) return;
+
     this.isSaving.set(true);
     this.confirmPayment(result.slipImageFileId, result.ocrAmount);
   }
@@ -177,6 +180,9 @@ export class QrPaymentDialogComponent implements OnInit {
   onConfirmCustomerSlip(): void {
     const bill = this.selectedBill();
     if (!bill) return;
+
+    const isOcrFailed = bill.customerSlipVerificationStatus !== 'Matched';
+    if (!this.validateManualAmount(bill.grandTotal ?? 0, isOcrFailed)) return;
 
     this.isSaving.set(true);
     // Backend will use bill.CustomerSlipFileId when request has no slip
@@ -241,5 +247,27 @@ export class QrPaymentDialogComponent implements OnInit {
 
   onCancel(): void {
     this.ref.close(false);
+  }
+
+  private validateManualAmount(grandTotal: number, isOcrFailed: boolean): boolean {
+    const manualAmount = this.form.get('manualAmount')?.value;
+
+    if (isOcrFailed && manualAmount == null) {
+      this.modalService.cancel({
+        title: 'กรุณากรอกยอดเงิน',
+        message: 'ระบบอ่านยอดจากสลิปไม่ได้ กรุณากรอกยอดจริงจากสลิปก่อนยืนยัน',
+      });
+      return false;
+    }
+
+    if (manualAmount != null && manualAmount < grandTotal) {
+      this.modalService.cancel({
+        title: 'ยอดเงินไม่ถูกต้อง',
+        message: 'จำนวนเงินที่กรอกน้อยกว่ายอดบิล กรุณากรอกยอดเงินที่ถูกต้อง',
+      });
+      return false;
+    }
+
+    return true;
   }
 }

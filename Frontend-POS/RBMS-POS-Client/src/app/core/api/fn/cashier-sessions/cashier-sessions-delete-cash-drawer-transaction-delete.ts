@@ -1,0 +1,33 @@
+/* tslint:disable */
+/* eslint-disable */
+import { HttpClient, HttpContext, HttpResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+import { StrictHttpResponse } from '../../strict-http-response';
+import { RequestBuilder } from '../../request-builder';
+
+import { CashierSessionResponseModelBaseResponseModel } from '../../models/cashier-session-response-model-base-response-model';
+
+export interface CashierSessionsDeleteCashDrawerTransactionDelete$Params {
+  cashierSessionId: number;
+  cashDrawerTransactionId: number;
+}
+
+export function cashierSessionsDeleteCashDrawerTransactionDelete(http: HttpClient, rootUrl: string, params: CashierSessionsDeleteCashDrawerTransactionDelete$Params, context?: HttpContext): Observable<StrictHttpResponse<CashierSessionResponseModelBaseResponseModel>> {
+  const rb = new RequestBuilder(rootUrl, cashierSessionsDeleteCashDrawerTransactionDelete.PATH, 'delete');
+  if (params) {
+    rb.path('cashierSessionId', params.cashierSessionId, {});
+    rb.path('cashDrawerTransactionId', params.cashDrawerTransactionId, {});
+  }
+
+  return http.request(
+    rb.build({ responseType: 'json', accept: 'application/json', context })
+  ).pipe(
+    filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
+    map((r: HttpResponse<any>) => {
+      return r as StrictHttpResponse<CashierSessionResponseModelBaseResponseModel>;
+    })
+  );
+}
+
+cashierSessionsDeleteCashDrawerTransactionDelete.PATH = '/api/cashier/sessions/{cashierSessionId}/cash-drawer/{cashDrawerTransactionId}';

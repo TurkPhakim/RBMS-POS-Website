@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { MessageService, ToastMessageOptions } from 'primeng/api';
 import { NotificationSignalRService } from '@app/core/services/notification-signalr.service';
 import { SessionTimeoutService } from '@app/core/services/session-timeout.service';
@@ -16,6 +17,17 @@ const TOAST_ICONS: Record<string, { icon: string; color: string }> = {
 
 const DEFAULT_ICON = { icon: 'bell', color: 'text-primary' };
 
+const TOAST_NAV_MAP: Record<string, (data: Record<string, unknown>) => { route: string[]; extras?: Record<string, unknown> }> = {
+  NEW_ORDER: (d) => ({ route: ['/order/list', String(d['orderId'])] }),
+  ORDER_READY: (d) => ({ route: ['/order/list', String(d['orderId'])] }),
+  CALL_WAITER: () => ({ route: ['/order/overview'] }),
+  REQUEST_BILL: (d) => ({ route: ['/payment/checkout', String(d['orderId'])] }),
+  ORDER_CANCELLED: (d) => ({ route: ['/order/list', String(d['orderId'])] }),
+  SLIP_UPLOADED: (d) => ({ route: ['/payment/checkout', String(d['orderId'])], extras: { queryParams: { openSlip: true } } }),
+  PAYMENT_COMPLETED: () => ({ route: ['/order/overview'] }),
+  RESERVATION_REMINDER: () => ({ route: ['/table/reservations'] }),
+};
+
 @Component({
   selector: 'app-main-layout',
   standalone: false,
@@ -23,10 +35,20 @@ const DEFAULT_ICON = { icon: 'bell', color: 'text-primary' };
 })
 export class MainLayoutComponent implements OnInit, OnDestroy {
   constructor(
+    private readonly router: Router,
     private readonly notificationSignalR: NotificationSignalRService,
     private readonly sessionTimeout: SessionTimeoutService,
     private readonly messageService: MessageService,
   ) {}
+
+  onToastClick(msg: ToastMessageOptions): void {
+    this.messageService.clear('noti');
+    const navFn = TOAST_NAV_MAP[msg.data?.eventType ?? ''];
+    if (navFn) {
+      const nav = navFn(msg.data ?? {});
+      this.router.navigate(nav.route, nav.extras);
+    }
+  }
 
   closeToast(): void {
     this.messageService.clear('noti');

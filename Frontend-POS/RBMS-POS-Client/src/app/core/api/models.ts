@@ -59,6 +59,7 @@ export type { CustomerOrderTrackingResponseModel } from './models/customer-order
 export type { CustomerOrderTrackingResponseModelBaseResponseModel } from './models/customer-order-tracking-response-model-base-response-model';
 export type { CustomerSubCategoryModel } from './models/customer-sub-category-model';
 export type { CustomerSubmitOrderRequestModel } from './models/customer-submit-order-request-model';
+export type { CustomerTrackingBillModel } from './models/customer-tracking-bill-model';
 export type { CustomerTrackingItemModel } from './models/customer-tracking-item-model';
 export type { CustomerTrackingOptionModel } from './models/customer-tracking-option-model';
 export type { DailyBreakdownModel } from './models/daily-breakdown-model';
@@ -141,6 +142,7 @@ export type { PaymentResponseModelListBaseResponseModel } from './models/payment
 export type { PaymentResponseModelPaginationResult } from './models/payment-response-model-pagination-result';
 export type { PeakHoursResponseModel } from './models/peak-hours-response-model';
 export type { PeakHoursResponseModelBaseResponseModel } from './models/peak-hours-response-model-base-response-model';
+export type { PeriodRevenueTrendModel } from './models/period-revenue-trend-model';
 export type { PermissionItem } from './models/permission-item';
 export type { PermissionMatrixResponseModel } from './models/permission-matrix-response-model';
 export type { PermissionMatrixResponseModelBaseResponseModel } from './models/permission-matrix-response-model-base-response-model';

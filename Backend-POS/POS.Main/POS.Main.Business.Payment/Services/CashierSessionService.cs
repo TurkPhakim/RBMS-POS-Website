@@ -180,6 +180,44 @@ public class CashierSessionService : ICashierSessionService
         return await GetSessionByIdAsync(cashierSessionId, ct);
     }
 
+    public async Task<CashierSessionResponseModel> UpdateCashDrawerTransactionAsync(int cashierSessionId, int cashDrawerTransactionId, CashDrawerTransactionRequestModel request, CancellationToken ct = default)
+    {
+        await GetOpenSessionAsync(cashierSessionId, ct);
+
+        var transaction = await _unitOfWork.CashDrawerTransactions.GetAll()
+            .Where(t => t.CashDrawerTransactionId == cashDrawerTransactionId && t.CashierSessionId == cashierSessionId)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new EntityNotFoundException("CashDrawerTransaction", cashDrawerTransactionId);
+
+        transaction.Amount = request.Amount;
+        transaction.Reason = request.Reason;
+
+        _unitOfWork.CashDrawerTransactions.Update(transaction);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Updated cash drawer transaction {TransactionId} in session {SessionId}", cashDrawerTransactionId, cashierSessionId);
+
+        return await GetSessionByIdAsync(cashierSessionId, ct);
+    }
+
+    public async Task<CashierSessionResponseModel> DeleteCashDrawerTransactionAsync(int cashierSessionId, int cashDrawerTransactionId, CancellationToken ct = default)
+    {
+        await GetOpenSessionAsync(cashierSessionId, ct);
+
+        var transaction = await _unitOfWork.CashDrawerTransactions.GetAll()
+            .Where(t => t.CashDrawerTransactionId == cashDrawerTransactionId && t.CashierSessionId == cashierSessionId)
+            .FirstOrDefaultAsync(ct)
+            ?? throw new EntityNotFoundException("CashDrawerTransaction", cashDrawerTransactionId);
+
+        transaction.DeleteFlag = true;
+        _unitOfWork.CashDrawerTransactions.Update(transaction);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Deleted cash drawer transaction {TransactionId} from session {SessionId}", cashDrawerTransactionId, cashierSessionId);
+
+        return await GetSessionByIdAsync(cashierSessionId, ct);
+    }
+
     public async Task<CashierSessionResponseModel> CloseSessionAsync(int cashierSessionId, CloseCashierSessionRequestModel request, CancellationToken ct = default)
     {
         var session = await GetOpenSessionAsync(cashierSessionId, ct);

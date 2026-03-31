@@ -48,7 +48,7 @@
     ></button>
     <button
       pButton
-      [label]="isCashIn ? 'เงินเข้า' : 'เงินออก'"
+      [label]="isEditMode ? 'บันทึก' : isCashIn ? 'เงินเข้า' : 'เงินออก'"
       severity="warn"
       [loading]="isSaving()"
       (click)="onSave()"

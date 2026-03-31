@@ -28,6 +28,7 @@ const KEY_BTN_BACK = 'back';
   selector: 'app-employee-manage',
   standalone: false,
   templateUrl: './employee-manage.component.html',
+  providers: [DialogService],
 })
 export class EmployeeManageComponent implements OnDestroy {
   form!: FormGroup;

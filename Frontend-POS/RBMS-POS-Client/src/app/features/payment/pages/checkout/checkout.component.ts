@@ -125,6 +125,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   });
 
   private orderId = 0;
+  private pendingAutoOpenSlip = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -142,6 +143,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.orderId = Number(this.route.snapshot.params['orderId']);
+    this.pendingAutoOpenSlip = this.route.snapshot.queryParams['openSlip'] === 'true';
     this.setupBreadcrumbButtons();
     this.loadData();
     this.connectSignalR();
@@ -205,6 +207,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.allBills.set(bills);
           this.autoSelectPendingBill(bills);
           this.syncScDropdown();
+
+          if (this.pendingAutoOpenSlip) {
+            this.pendingAutoOpenSlip = false;
+            setTimeout(() => this.onPayQr());
+          }
         },
       });
 

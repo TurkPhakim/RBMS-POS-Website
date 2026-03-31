@@ -1,44 +1,79 @@
 <div class="rounded-xl overflow-hidden border border-surface-border flex">
+  <!-- Accent stripe -->
   <div
     class="w-2 shrink-0"
     [ngClass]="{
       'bg-primary': accentColor === 'primary',
       'bg-success': accentColor === 'success',
       'bg-warning': accentColor === 'warning',
-      'bg-info': accentColor === 'info'
+      'bg-info': accentColor === 'info',
+      'bg-danger': accentColor === 'danger'
     }"
   ></div>
-  <div class="flex-1 bg-surface-card p-4 flex items-center gap-4">
-    <div class="flex items-center justify-center shrink-0">
-      <app-generic-icon
-        [name]="icon"
-        svgClass="w-12 h-12"
-        [ngClass]="{
-          'text-primary': accentColor === 'primary',
-          'text-success': accentColor === 'success',
-          'text-warning-dark': accentColor === 'warning',
-          'text-info': accentColor === 'info'
-        }"
-      ></app-generic-icon>
-    </div>
-    <div class="flex flex-col flex-1">
-      <span class="text-xl font-semibold text-surface-sub">{{ label }}</span>
-      <span
-        class="text-2xl font-bold"
-        [ngClass]="{
-          'text-primary': accentColor === 'primary',
-          'text-success': accentColor === 'success',
-          'text-warning-dark': accentColor === 'warning',
-          'text-info': accentColor === 'info'
-        }"
-        >{{ value }}</span
+
+  <!-- Card body -->
+  <div class="flex-1 bg-surface-card relative overflow-hidden">
+    <!-- Pattern 3: Background sparkline -->
+    @if (sparklineType === 'background' && hasSparkline) {
+      <div
+        class="absolute bottom-0 left-0 right-0 h-[60%] pointer-events-none"
       >
-    </div>
-    @if (showComparison) {
-      <div class="shrink-0 text-right">
-        @if (changePercent !== null) {
+        <svg
+          viewBox="0 0 200 40"
+          preserveAspectRatio="none"
+          class="w-full h-full"
+        >
+          <path
+            [attr.d]="sparklineAreaPath"
+            [attr.fill]="sparklineColor"
+            opacity="0.12"
+          />
+          <polyline
+            [attr.points]="sparklinePoints"
+            fill="none"
+            [attr.stroke]="sparklineColor"
+            stroke-width="2"
+            opacity="0.35"
+          />
+        </svg>
+      </div>
+    }
+
+    <!-- Main content row -->
+    <div class="px-5 py-5 flex items-center gap-5 relative z-10">
+      <!-- Icon -->
+      <div class="flex items-center justify-center shrink-0">
+        <app-generic-icon
+          [name]="icon"
+          [svgClass]="iconSize"
+          [ngClass]="{
+            'text-primary': accentColor === 'primary',
+            'text-success': accentColor === 'success',
+            'text-warning-dark': accentColor === 'warning',
+            'text-info': accentColor === 'info',
+            'text-danger': accentColor === 'danger'
+          }"
+        ></app-generic-icon>
+      </div>
+
+      <!-- Label + Value + (below style) -->
+      <div class="flex flex-col gap-1 flex-1">
+        <span class="text-xl font-semibold text-surface-sub">{{ label }}</span>
+        <span
+          class="text-3xl font-bold"
+          [ngClass]="{
+            'text-primary': accentColor === 'primary',
+            'text-success': accentColor === 'success',
+            'text-warning-dark': accentColor === 'warning',
+            'text-info': accentColor === 'info',
+            'text-danger': accentColor === 'danger'
+          }"
+          >{{ value }}</span
+        >
+        <!-- Style: below -->
+        @if (comparisonStyle === 'below' && showComparison && changePercent !== null) {
           <div
-            class="flex items-center gap-1 text-sm font-semibold"
+            class="flex items-center gap-1 text-sm font-semibold mt-0.5"
             [ngClass]="changePercent >= 0 ? 'text-success' : 'text-danger'"
           >
             <i
@@ -50,10 +85,86 @@
               >{{ changePercent >= 0 ? '+' : ''
               }}{{ changePercent | number: '1.1-1' }}%</span
             >
+            <span class="text-surface-sub font-normal">จากเมื่อวาน</span>
           </div>
-        } @else {
-          <div class="text-sm text-surface-sub">ไม่มีข้อมูลเปรียบเทียบ</div>
         }
+      </div>
+
+      <!-- Style: circle -->
+      @if (comparisonStyle === 'circle' && showComparison && changePercent !== null) {
+        <div class="shrink-0 flex items-center gap-2">
+          <div
+            class="w-9 h-9 rounded-full flex items-center justify-center"
+            [ngClass]="
+              changePercent >= 0 ? 'bg-success-bg' : 'bg-danger-bg'
+            "
+          >
+            <i
+              class="text-sm"
+              [ngClass]="
+                changePercent >= 0
+                  ? 'pi pi-arrow-up text-success'
+                  : 'pi pi-arrow-down text-danger'
+              "
+            ></i>
+          </div>
+          <span
+            class="text-lg font-bold"
+            [ngClass]="changePercent >= 0 ? 'text-success' : 'text-danger'"
+            >{{ changePercent >= 0 ? '+' : ''
+            }}{{ changePercent | number: '1.1-1' }}%</span
+          >
+        </div>
+      }
+
+      <!-- Style: bold -->
+      @if (comparisonStyle === 'bold' && showComparison && changePercent !== null) {
+        <span
+          class="shrink-0 text-xl font-bold"
+          [ngClass]="changePercent >= 0 ? 'text-success' : 'text-danger'"
+          >{{ changePercent >= 0 ? '+' : ''
+          }}{{ changePercent | number: '1.1-1' }}%</span
+        >
+      }
+
+      <!-- Style: default -->
+      @if (comparisonStyle === 'default' && showComparison && changePercent !== null) {
+        <div
+          class="shrink-0 flex items-center gap-1 text-lg font-semibold"
+          [ngClass]="changePercent >= 0 ? 'text-success' : 'text-danger'"
+        >
+          <i
+            [class]="
+              changePercent >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'
+            "
+          ></i>
+          <span
+            >{{ changePercent >= 0 ? '+' : ''
+            }}{{ changePercent | number: '1.1-1' }}%</span
+          >
+        </div>
+      }
+    </div>
+
+    <!-- Pattern 1: Bottom sparkline -->
+    @if (sparklineType === 'bottom' && hasSparkline) {
+      <div class="px-5 pb-3 -mt-1">
+        <svg
+          viewBox="0 0 200 40"
+          preserveAspectRatio="none"
+          class="w-full h-[40px]"
+        >
+          <path
+            [attr.d]="sparklineAreaPath"
+            [attr.fill]="sparklineFillColor"
+          />
+          <polyline
+            [attr.points]="sparklinePoints"
+            fill="none"
+            [attr.stroke]="sparklineColor"
+            stroke-width="2"
+          />
+        </svg>
       </div>
     }
   </div>

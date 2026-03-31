@@ -85,6 +85,7 @@ export class NotiStoreService {
           eventType: noti.eventType,
           tableName: noti.tableName,
           zoneName: noti.zoneName,
+          orderId: noti.orderId,
         },
       });
     }

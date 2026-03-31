@@ -104,7 +104,11 @@ export class NotificationDrawerComponent {
 
     const navFn = NAV_MAP[noti.eventType ?? ''];
     if (navFn) {
-      this.router.navigate(navFn(noti));
+      const extras =
+        noti.eventType === 'SLIP_UPLOADED'
+          ? { queryParams: { openSlip: true } }
+          : {};
+      this.router.navigate(navFn(noti), extras);
     }
   }
 

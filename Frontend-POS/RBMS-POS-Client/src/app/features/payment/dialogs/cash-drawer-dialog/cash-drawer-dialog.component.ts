@@ -16,6 +16,8 @@ export class CashDrawerDialogComponent {
   isSaving = signal(false);
   type: 'cash-in' | 'cash-out';
   sessionId: number;
+  isEditMode: boolean;
+  transactionId: number | null;
 
   constructor(
     private fb: FormBuilder,
@@ -27,9 +29,12 @@ export class CashDrawerDialogComponent {
   ) {
     this.type = this.config.data.type;
     this.sessionId = this.config.data.sessionId;
+    this.isEditMode = !!this.config.data.transaction;
+    this.transactionId = this.config.data.transaction?.cashDrawerTransactionId ?? null;
+
     this.form = this.fb.group({
-      amount: [null, [Validators.required]],
-      reason: [null, [Validators.required]],
+      amount: [this.config.data.transaction?.amount ?? null, [Validators.required]],
+      reason: [this.config.data.transaction?.reason ?? null, [Validators.required]],
     });
   }
 
@@ -43,6 +48,24 @@ export class CashDrawerDialogComponent {
 
     this.isSaving.set(true);
     const body = this.form.value;
+
+    if (this.isEditMode) {
+      this.cashierSessionsService
+        .cashierSessionsUpdateCashDrawerTransactionPut({
+          cashierSessionId: this.sessionId,
+          cashDrawerTransactionId: this.transactionId!,
+          body,
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: () => {
+            this.modalService.commonSuccess();
+            this.ref.close(true);
+          },
+          error: () => this.isSaving.set(false),
+        });
+      return;
+    }
 
     const request$ = this.isCashIn
       ? this.cashierSessionsService.cashierSessionsCashInPost({

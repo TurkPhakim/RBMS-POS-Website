@@ -49,11 +49,13 @@
       <!-- Quick Actions (right) -->
       @if (table.status === "Occupied" || table.status === "Billing") {
         <div class="flex gap-1 shrink-0">
-          <button class="w-16 h-16 rounded-xl bg-warning-bg flex items-center justify-center text-warning hover:bg-warning hover:text-white transition-colors"
-                  title="แก้ไขจำนวนลูกค้า"
-                  (click)="onEditGuestCount()">
-            <app-generic-icon name="human" svgClass="w-10 h-10"></app-generic-icon>
-          </button>
+          @if (canUpdate) {
+            <button class="w-16 h-16 rounded-xl bg-warning-bg flex items-center justify-center text-warning hover:bg-warning hover:text-white transition-colors"
+                    title="แก้ไขจำนวนลูกค้า"
+                    (click)="onEditGuestCount()">
+              <app-generic-icon name="human" svgClass="w-10 h-10"></app-generic-icon>
+            </button>
+          }
           <button class="w-16 h-16 rounded-xl bg-surface-border flex items-center justify-center text-surface-sidebar hover:bg-surface-sidebar hover:text-white transition-colors"
                   title="QR Code"
                   (click)="onShowQrCode()">

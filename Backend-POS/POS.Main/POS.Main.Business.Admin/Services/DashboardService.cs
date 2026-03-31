@@ -32,13 +32,18 @@ public class DashboardService : IDashboardService
         var previous = await GetKpiForDateAsync(previousDate, ct);
         var kitchenBreakdown = await GetKitchenBreakdownForDateAsync(selectedDate, ct);
         var revenueTrend = await GetRevenueTrendAsync(selectedDate, days, ct);
+        var periodData = await GetPeriodRevenueTrendAsync(selectedDate, days, ct);
 
         return new DashboardOverviewResponseModel
         {
             Selected = selected,
             Previous = previous,
             KitchenBreakdown = kitchenBreakdown,
-            RevenueTrend = revenueTrend
+            RevenueTrend = revenueTrend,
+            HasTwoPeriods = periodData.HasTwoPeriods,
+            Period1Label = periodData.Period1Label,
+            Period2Label = periodData.Period2Label,
+            PeriodRevenueTrend = periodData.Trend
         };
     }
 
@@ -365,6 +370,84 @@ public class DashboardService : IDashboardService
             .SumAsync(x => (decimal?)((x.CostPrice ?? 0) * x.Quantity), ct) ?? 0;
 
         return menuCost + optionCost;
+    }
+
+    private async Task<(List<PeriodRevenueTrendModel> Trend, bool HasTwoPeriods, string? Period1Label, string? Period2Label)>
+        GetPeriodRevenueTrendAsync(DateTime selectedDate, int days, CancellationToken ct)
+    {
+        var shopSettings = await _unitOfWork.ShopSettings.QueryNoTracking()
+            .Include(s => s.OperatingHours)
+            .FirstOrDefaultAsync(ct);
+
+        if (shopSettings == null || !shopSettings.HasTwoPeriods)
+            return (new(), shopSettings?.HasTwoPeriods ?? false, null, null);
+
+        var operatingHours = shopSettings.OperatingHours
+            .ToDictionary(h => h.DayOfWeek);
+
+        // สร้าง label จากวันแรกที่มีเวลาตั้งค่า
+        var sampleHour = operatingHours.Values
+            .FirstOrDefault(h => h.IsOpen && h.OpenTime1.HasValue && h.OpenTime2.HasValue);
+
+        string? period1Label = null;
+        string? period2Label = null;
+        if (sampleHour != null)
+        {
+            period1Label = $"ช่วงที่ 1 ({sampleHour.OpenTime1!.Value:hh\\:mm}-{sampleHour.CloseTime1!.Value:hh\\:mm})";
+            period2Label = $"ช่วงที่ 2 ({sampleHour.OpenTime2!.Value:hh\\:mm}-{sampleHour.CloseTime2!.Value:hh\\:mm})";
+        }
+
+        var startDate = selectedDate.AddDays(-(days - 1));
+
+        var bills = await _unitOfWork.OrderBills.QueryNoTracking()
+            .Where(b => b.Status == EBillStatus.Paid && b.PaidAt != null
+                && b.PaidAt.Value.Date >= startDate && b.PaidAt.Value.Date <= selectedDate)
+            .Select(b => new { b.PaidAt, b.GrandTotal })
+            .ToListAsync(ct);
+
+        var trend = new List<PeriodRevenueTrendModel>();
+
+        for (var date = startDate; date <= selectedDate; date = date.AddDays(1))
+        {
+            var eDow = date.DayOfWeek == System.DayOfWeek.Sunday
+                ? EDayOfWeek.Sunday
+                : (EDayOfWeek)(int)date.DayOfWeek;
+
+            operatingHours.TryGetValue(eDow, out var dayHours);
+
+            decimal period1Sales = 0;
+            decimal period2Sales = 0;
+
+            var dayBills = bills.Where(b => b.PaidAt!.Value.Date == date);
+
+            foreach (var bill in dayBills)
+            {
+                var time = bill.PaidAt!.Value.TimeOfDay;
+
+                if (dayHours is { IsOpen: true })
+                {
+                    if (dayHours.OpenTime1.HasValue && dayHours.CloseTime1.HasValue
+                        && time >= dayHours.OpenTime1.Value && time < dayHours.CloseTime1.Value)
+                    {
+                        period1Sales += bill.GrandTotal;
+                    }
+                    else if (dayHours.OpenTime2.HasValue && dayHours.CloseTime2.HasValue
+                        && time >= dayHours.OpenTime2.Value && time < dayHours.CloseTime2.Value)
+                    {
+                        period2Sales += bill.GrandTotal;
+                    }
+                }
+            }
+
+            trend.Add(new PeriodRevenueTrendModel
+            {
+                Date = date,
+                Period1Sales = period1Sales,
+                Period2Sales = period2Sales
+            });
+        }
+
+        return (trend, true, period1Label, period2Label);
     }
 
     private static string GetCategoryName(int categoryType) => categoryType switch

@@ -18,5 +18,9 @@ public interface ICashierSessionService
 
     Task<CashierSessionResponseModel> CashOutAsync(int cashierSessionId, CashDrawerTransactionRequestModel request, CancellationToken ct = default);
 
+    Task<CashierSessionResponseModel> UpdateCashDrawerTransactionAsync(int cashierSessionId, int cashDrawerTransactionId, CashDrawerTransactionRequestModel request, CancellationToken ct = default);
+
+    Task<CashierSessionResponseModel> DeleteCashDrawerTransactionAsync(int cashierSessionId, int cashDrawerTransactionId, CancellationToken ct = default);
+
     Task<CashierSessionResponseModel> CloseSessionAsync(int cashierSessionId, CloseCashierSessionRequestModel request, CancellationToken ct = default);
 }
