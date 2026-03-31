@@ -12,7 +12,7 @@
           class="text-white"
         ></app-generic-icon>
       </div>
-      <h1 class="text-page-title">ภาพรวม</h1>
+      <h1 class="text-page-title">ภาพรวมแดชบอร์ด</h1>
     </div>
     <!-- Right: Date -->
     <div class="flex items-center gap-4">
@@ -37,6 +37,7 @@
           [value]="card.value"
           [icon]="card.icon"
           [accentColor]="card.accentColor"
+          [unit]="card.unit ?? ''"
           [changePercent]="card.changePercent"
           [sparklineData]="card.sparklineData ?? []"
           [sparklineType]="card.sparklineType ?? 'none'"
@@ -47,14 +48,14 @@
   }
 
   <!-- Row 2: Kitchen Breakdown — Donut + Details -->
-  @if (kitchenItems.length > 0) {
-    <app-section-mini-card
-      headerLabel="สัดส่วนยอดขายตามหมวดหมู่"
-      headerIcon="category"
-      headerIconSize="w-7 h-7"
-      headerClass="bg-gradient-to-r from-primary to-primary-dark"
-      contentClass="p-6"
-    >
+  <app-section-mini-card
+    headerLabel="สัดส่วนยอดขายตามหมวดหมู่"
+    headerIcon="category"
+    headerIconSize="w-7 h-7"
+    headerClass="bg-gradient-to-r from-primary to-primary-dark"
+    contentClass="p-6"
+  >
+    @if (kitchenItems.length > 0) {
       <div class="flex items-center gap-10">
         <!-- Left: Donut -->
         <div class="relative shrink-0 w-[200px] h-[200px]">
@@ -95,11 +96,13 @@
                   ></app-generic-icon>
                   <span class="font-semibold text-lg">{{ item.label }}</span>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1.5">
                   <span class="font-bold text-xl" [class]="item.textClass">{{
                     item.count | number
                   }}</span>
-                  <span class="text-surface-sub text-lg"
+                  <span class="text-surface-sub text-lg">รายการ</span>
+                  <span class="text-surface-sub text-lg">คิดเป็น</span>
+                  <span class="font-bold text-xl" [class]="item.textClass"
                     >{{ item.percentage | number: "1.1-1" }}%</span
                   >
                 </div>
@@ -115,8 +118,12 @@
           }
         </div>
       </div>
-    </app-section-mini-card>
-  }
+    } @else {
+      <div class="py-8">
+        <app-empty-view message="ยังไม่มีข้อมูล" />
+      </div>
+    }
+  </app-section-mini-card>
 
   <!-- Row 3: Revenue Trend -->
   <app-section-mini-card

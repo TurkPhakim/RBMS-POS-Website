@@ -143,7 +143,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.orderId = Number(this.route.snapshot.params['orderId']);
-    this.pendingAutoOpenSlip = this.route.snapshot.queryParams['openSlip'] === 'true';
+    this.pendingAutoOpenSlip =
+      this.route.snapshot.queryParams['openSlip'] === 'true';
     this.setupBreadcrumbButtons();
     this.loadData();
     this.connectSignalR();
@@ -236,7 +237,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.modalService
         .info({
           title: 'รายการยังเสิร์ฟไม่ครบ',
-          message: `มี ${unservedItems.length} รายการที่ยังไม่เสิร์ฟ\nต้องการสร้างบิลจากเฉพาะรายการที่เสิร์ฟแล้วหรือไม่?`,
+          message: `มี ${unservedItems.length} รายการที่ยังไม่เสิร์ฟ\nต้องการสร้างบิลจากเฉพาะรายการ\nที่เสิร์ฟแล้วหรือไม่?`,
           icon: Icon.Warning,
           confirmButtonLabel: 'สร้างบิล',
         })
@@ -399,7 +400,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     if (!bill || bill.status === 'Paid') return;
 
     const ref = this.dialogService.open(QrPaymentDialogComponent, {
-      header: 'ชำระเงิน QR / สลิป',
+      header: 'ชำระเงิน QR Payment',
       showHeader: false,
       styleClass: 'card-dialog',
       width: '50vw',
@@ -511,13 +512,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const payment = this.payments().find(
       (p) => p.orderBillId === bill.orderBillId,
     );
-    if (!payment?.slipImageFileId) return;
+    const fileId = payment?.slipImageFileId ?? bill.customerSlipFileId;
+    if (!fileId) return;
     this.dialogService.open(SlipPreviewDialogComponent, {
       header: 'สลิปโอนเงิน',
       showHeader: false,
       styleClass: 'card-dialog',
       width: '40vw',
-      data: { fileId: payment.slipImageFileId },
+      data: { fileId },
     });
   }
 

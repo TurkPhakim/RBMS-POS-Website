@@ -17,6 +17,8 @@ import { cashierSessionsCashOutPost } from '../fn/cashier-sessions/cashier-sessi
 import { CashierSessionsCashOutPost$Params } from '../fn/cashier-sessions/cashier-sessions-cash-out-post';
 import { cashierSessionsCloseSessionPost } from '../fn/cashier-sessions/cashier-sessions-close-session-post';
 import { CashierSessionsCloseSessionPost$Params } from '../fn/cashier-sessions/cashier-sessions-close-session-post';
+import { cashierSessionsDeleteCashDrawerTransactionDelete } from '../fn/cashier-sessions/cashier-sessions-delete-cash-drawer-transaction-delete';
+import { CashierSessionsDeleteCashDrawerTransactionDelete$Params } from '../fn/cashier-sessions/cashier-sessions-delete-cash-drawer-transaction-delete';
 import { cashierSessionsGetCurrentSessionGet } from '../fn/cashier-sessions/cashier-sessions-get-current-session-get';
 import { CashierSessionsGetCurrentSessionGet$Params } from '../fn/cashier-sessions/cashier-sessions-get-current-session-get';
 import { cashierSessionsGetSessionByIdGet } from '../fn/cashier-sessions/cashier-sessions-get-session-by-id-get';
@@ -25,6 +27,8 @@ import { cashierSessionsGetSessionHistoryGet } from '../fn/cashier-sessions/cash
 import { CashierSessionsGetSessionHistoryGet$Params } from '../fn/cashier-sessions/cashier-sessions-get-session-history-get';
 import { cashierSessionsOpenSessionPost } from '../fn/cashier-sessions/cashier-sessions-open-session-post';
 import { CashierSessionsOpenSessionPost$Params } from '../fn/cashier-sessions/cashier-sessions-open-session-post';
+import { cashierSessionsUpdateCashDrawerTransactionPut } from '../fn/cashier-sessions/cashier-sessions-update-cash-drawer-transaction-put';
+import { CashierSessionsUpdateCashDrawerTransactionPut$Params } from '../fn/cashier-sessions/cashier-sessions-update-cash-drawer-transaction-put';
 
 @Injectable({ providedIn: 'root' })
 export class CashierSessionsService extends BaseService {
@@ -178,6 +182,56 @@ export class CashierSessionsService extends BaseService {
    */
   cashierSessionsCashOutPost(params: CashierSessionsCashOutPost$Params, context?: HttpContext): Observable<CashierSessionResponseModelBaseResponseModel> {
     return this.cashierSessionsCashOutPost$Response(params, context).pipe(
+      map((r: StrictHttpResponse<CashierSessionResponseModelBaseResponseModel>): CashierSessionResponseModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `cashierSessionsUpdateCashDrawerTransactionPut()` */
+  static readonly CashierSessionsUpdateCashDrawerTransactionPutPath = '/api/cashier/sessions/{cashierSessionId}/cash-drawer/{cashDrawerTransactionId}';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `cashierSessionsUpdateCashDrawerTransactionPut()` instead.
+   *
+   * This method sends `application/*+json` and handles request body of type `application/*+json`.
+   */
+  cashierSessionsUpdateCashDrawerTransactionPut$Response(params: CashierSessionsUpdateCashDrawerTransactionPut$Params, context?: HttpContext): Observable<StrictHttpResponse<CashierSessionResponseModelBaseResponseModel>> {
+    return cashierSessionsUpdateCashDrawerTransactionPut(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `cashierSessionsUpdateCashDrawerTransactionPut$Response()` instead.
+   *
+   * This method sends `application/*+json` and handles request body of type `application/*+json`.
+   */
+  cashierSessionsUpdateCashDrawerTransactionPut(params: CashierSessionsUpdateCashDrawerTransactionPut$Params, context?: HttpContext): Observable<CashierSessionResponseModelBaseResponseModel> {
+    return this.cashierSessionsUpdateCashDrawerTransactionPut$Response(params, context).pipe(
+      map((r: StrictHttpResponse<CashierSessionResponseModelBaseResponseModel>): CashierSessionResponseModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `cashierSessionsDeleteCashDrawerTransactionDelete()` */
+  static readonly CashierSessionsDeleteCashDrawerTransactionDeletePath = '/api/cashier/sessions/{cashierSessionId}/cash-drawer/{cashDrawerTransactionId}';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `cashierSessionsDeleteCashDrawerTransactionDelete()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  cashierSessionsDeleteCashDrawerTransactionDelete$Response(params: CashierSessionsDeleteCashDrawerTransactionDelete$Params, context?: HttpContext): Observable<StrictHttpResponse<CashierSessionResponseModelBaseResponseModel>> {
+    return cashierSessionsDeleteCashDrawerTransactionDelete(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `cashierSessionsDeleteCashDrawerTransactionDelete$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  cashierSessionsDeleteCashDrawerTransactionDelete(params: CashierSessionsDeleteCashDrawerTransactionDelete$Params, context?: HttpContext): Observable<CashierSessionResponseModelBaseResponseModel> {
+    return this.cashierSessionsDeleteCashDrawerTransactionDelete$Response(params, context).pipe(
       map((r: StrictHttpResponse<CashierSessionResponseModelBaseResponseModel>): CashierSessionResponseModelBaseResponseModel => r.body)
     );
   }

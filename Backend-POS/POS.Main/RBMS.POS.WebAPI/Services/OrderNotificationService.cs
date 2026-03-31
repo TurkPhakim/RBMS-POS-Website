@@ -27,7 +27,7 @@ public class OrderNotificationService : IOrderNotificationService
 
     public async Task NotifyItemCancelledAsync(int orderId, int orderItemId, CancellationToken ct = default)
     {
-        await _hubContext.Clients.Group("kitchen")
+        await _hubContext.Clients.Groups("kitchen", "floor")
             .SendAsync("ItemCancelled", new { orderId, orderItemId }, ct);
     }
 

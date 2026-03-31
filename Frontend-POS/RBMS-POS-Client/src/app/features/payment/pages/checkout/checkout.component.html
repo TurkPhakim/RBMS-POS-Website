@@ -175,6 +175,8 @@
               >
                 @if (b.status === "Paid") {
                   <i class="pi pi-check-circle text-xs"></i>
+                } @else if (b.customerSlipFileId) {
+                  <i class="pi pi-image text-xs"></i>
                 }
                 <span>บิลที่ {{ i + 1 }}: </span>
                 <span class="font-bold"
@@ -423,7 +425,11 @@
                 <span
                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-bg text-success text-sm font-semibold"
                 >
-                  <app-generic-icon name="check-in" svgClass="w-4 h-4" class="text-success"></app-generic-icon>
+                  <app-generic-icon
+                    name="check-in"
+                    svgClass="w-4 h-4"
+                    class="text-success"
+                  ></app-generic-icon>
                   ชำระแล้ว
                 </span>
               </div>
@@ -476,6 +482,17 @@
       } @else if (bill) {
         <!-- Top: Amount Display -->
         <div class="space-y-4">
+          <!-- Customer slip alert -->
+          @if (bill.customerSlipFileId) {
+            <div class="bg-info-bg border border-info rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <i class="pi pi-image text-info text-lg shrink-0"></i>
+                <span class="text-sm font-semibold text-info truncate">ลูกค้าส่งสลิปมาแล้ว</span>
+              </div>
+              <button pButton label="ดูสลิป" severity="info" size="small" [outlined]="true"
+                      class="shrink-0" (click)="onViewSlip(bill)"></button>
+            </div>
+          }
           <!-- ยอดที่ต้องชำระ -->
           <div
             class="bg-primary-subtle rounded-xl p-4 flex justify-between items-center cursor-pointer"
@@ -581,7 +598,7 @@
                 svgClass="w-6 h-6"
                 class="text-white"
               ></app-generic-icon>
-              QR/สลิป
+              QR Payment
             </button>
             <button
               type="button"

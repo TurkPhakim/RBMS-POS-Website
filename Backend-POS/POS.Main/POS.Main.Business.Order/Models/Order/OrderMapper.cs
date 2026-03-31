@@ -43,7 +43,7 @@ public static class OrderMapper
             Note = entity.Note,
             CreatedAt = entity.CreatedAt,
             Items = entity.OrderItems?
-                .OrderBy(i => i.CreatedAt)
+                .OrderByDescending(i => i.CreatedAt)
                 .Select(OrderItemMapper.ToResponse)
                 .ToList() ?? new()
         };

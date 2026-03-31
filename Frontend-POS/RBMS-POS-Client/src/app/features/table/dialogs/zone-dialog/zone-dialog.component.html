@@ -155,7 +155,7 @@
 
   <p-footer>
     <p-button
-      label="ยกเลิก"
+      [label]="isEditMode() && !canUpdate ? 'ปิด' : 'ยกเลิก'"
       severity="secondary"
       variant="outlined"
       (onClick)="onCancel()"

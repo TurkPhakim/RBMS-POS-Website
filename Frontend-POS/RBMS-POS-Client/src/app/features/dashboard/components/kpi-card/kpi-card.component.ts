@@ -9,8 +9,14 @@ export class KpiCardComponent {
   @Input() label = '';
   @Input() value = '0';
   @Input() icon = '';
-  @Input() accentColor: 'primary' | 'success' | 'warning' | 'info' | 'danger' =
-    'primary';
+  @Input() accentColor:
+    | 'primary'
+    | 'success'
+    | 'warning'
+    | 'info'
+    | 'danger'
+    | 'teal' = 'primary';
+  @Input() unit = '';
   @Input() iconSize = 'w-14 h-14';
   @Input() changePercent: number | null = null;
   @Input() showComparison = true;
@@ -24,6 +30,7 @@ export class KpiCardComponent {
     warning: '#f59e0b',
     info: '#0ea5e9',
     danger: '#ef4444',
+    teal: '#0d9488',
   };
 
   get sparklineColor(): string {

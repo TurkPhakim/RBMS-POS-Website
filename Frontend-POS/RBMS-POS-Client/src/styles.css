@@ -130,6 +130,7 @@ p-inputnumber.ng-invalid.ng-dirty .p-inputnumber-input {
 
 /* Override: ไม่เปลี่ยนสี placeholder ตอน error (PrimeNG default เปลี่ยนเป็นแดง) */
 .p-inputtext.ng-invalid.ng-dirty::placeholder,
+.p-textarea.ng-invalid.ng-dirty::placeholder,
 p-inputnumber.ng-invalid.ng-dirty .p-inputnumber-input::placeholder {
   color: var(--p-inputtext-placeholder-color) !important;
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using POS.Main.Business.Notification.Interfaces;
 using POS.Main.Business.Notification.Models;
 using POS.Main.Core.Enums;
+using POS.Main.Core.Helpers;
 using POS.Main.Dal;
 
 namespace RBMS.POS.WebAPI.Services;
@@ -45,7 +46,7 @@ public class ReservationReminderService : BackgroundService
         var db = scope.ServiceProvider.GetRequiredService<POSMainContext>();
         var broadcaster = scope.ServiceProvider.GetRequiredService<INotificationBroadcaster>();
 
-        var now = DateTime.Now;
+        var now = DateTimeHelper.BangkokNow();
         var today = DateOnly.FromDateTime(now);
         var currentTime = TimeOnly.FromDateTime(now);
         var pendingCutoff = TimeOnly.FromDateTime(now.Add(PendingReminderWindow));

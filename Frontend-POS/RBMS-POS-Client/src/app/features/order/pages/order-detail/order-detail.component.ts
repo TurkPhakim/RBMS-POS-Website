@@ -150,6 +150,9 @@ export class OrderDetailComponent implements OnInit, OnDestroy {
       .subscribe((data) => {
         if (data.orderId === this.orderId) this.loadOrder();
       });
+    this.orderHubService.paymentCompleted$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadOrder());
   }
 
   private setupBreadcrumbButtons(): void {

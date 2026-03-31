@@ -58,6 +58,12 @@ export class AuthComponent implements OnInit {
           facebook: r.facebook,
           instagram: r.instagram,
           website: r.website,
+          paymentQrCodeFileId: r.paymentQrCodeFileId,
+          bankName: r.bankName,
+          accountNumber: r.accountNumber,
+          accountName: r.accountName,
+          wifiSsid: r.wifiSsid,
+          wifiPassword: r.wifiPassword,
           qrToken: token!,
         });
         this.router.navigate(['/menu'], { replaceUrl: true });

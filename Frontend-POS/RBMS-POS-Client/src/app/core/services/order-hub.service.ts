@@ -76,10 +76,6 @@ export class OrderHubService implements OnDestroy {
     } catch {
       // ignore errors on leave
     }
-
-    if (this.joinedGroups.size === 0) {
-      await this.stopConnection();
-    }
   }
 
   private registerListeners(): void {

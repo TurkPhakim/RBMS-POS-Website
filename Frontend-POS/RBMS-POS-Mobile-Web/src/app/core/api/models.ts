@@ -142,6 +142,7 @@ export type { PaymentResponseModelListBaseResponseModel } from './models/payment
 export type { PaymentResponseModelPaginationResult } from './models/payment-response-model-pagination-result';
 export type { PeakHoursResponseModel } from './models/peak-hours-response-model';
 export type { PeakHoursResponseModelBaseResponseModel } from './models/peak-hours-response-model-base-response-model';
+export type { PeriodRevenueTrendModel } from './models/period-revenue-trend-model';
 export type { PermissionItem } from './models/permission-item';
 export type { PermissionMatrixResponseModel } from './models/permission-matrix-response-model';
 export type { PermissionMatrixResponseModelBaseResponseModel } from './models/permission-matrix-response-model-base-response-model';

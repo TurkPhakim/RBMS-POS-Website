@@ -2,9 +2,12 @@
 /* eslint-disable */
 export interface CustomerBillSummaryModel {
   billNumber?: string | null;
+  billType?: string | null;
   grandTotal?: number;
   orderBillId?: number;
   serviceChargeAmount?: number;
+  splitCount?: number;
+  splitIndex?: number;
   status?: string | null;
   subTotal?: number;
   totalDiscountAmount?: number;

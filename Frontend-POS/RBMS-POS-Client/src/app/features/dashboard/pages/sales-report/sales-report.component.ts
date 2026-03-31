@@ -153,12 +153,14 @@ export class SalesReportComponent implements OnInit, OnDestroy {
         value: (s?.orderCount ?? 0).toLocaleString(),
         icon: 'bill-rastaurant',
         accentColor: 'info' as const,
+        unit: 'บิล',
       },
       {
         label: 'จำนวนลูกค้า',
         value: (s?.guestCount ?? 0).toLocaleString(),
         icon: 'people-rate',
-        accentColor: 'success' as const,
+        accentColor: 'teal' as const,
+        unit: 'คน',
       },
       {
         label: 'เฉลี่ย/ออเดอร์',
@@ -170,17 +172,37 @@ export class SalesReportComponent implements OnInit, OnDestroy {
   }
 
   get kitchenItems() {
+    const cfg: Record<number, { icon: string; color: string; bgClass: string; textClass: string }> = {
+      1: { icon: 'food', color: '#f97316', bgClass: 'bg-cat-food-bg', textClass: 'text-cat-food' },
+      2: { icon: 'drinks-glass', color: '#0EA5E9', bgClass: 'bg-cat-drink-bg', textClass: 'text-cat-drink' },
+      3: { icon: 'dessert', color: '#EC4899', bgClass: 'bg-cat-dessert-bg', textClass: 'text-cat-dessert' },
+    };
     return (this.report()?.kitchenBreakdown ?? []).map((k) => {
-      const c = CATEGORY_CONFIG[k.categoryType ?? 0] ?? CATEGORY_CONFIG[1];
+      const c = cfg[k.categoryType ?? 0] ?? cfg[1];
       return {
-        categoryName: k.categoryName ?? '',
-        itemCount: k.itemCount ?? 0,
+        label: k.categoryName ?? '',
+        count: k.itemCount ?? 0,
         percentage: k.percentage ?? 0,
-        iconName: c.iconName,
+        icon: c.icon,
         color: c.color,
-        bgStyle: c.bgStyle,
-        borderColor: c.borderColor,
+        bgClass: c.bgClass,
+        textClass: c.textClass,
       };
+    });
+  }
+
+  get kitchenTotal(): number {
+    return this.kitchenItems.reduce((sum, item) => sum + item.count, 0);
+  }
+
+  get donutSegments(): { offset: number; length: number; color: string }[] {
+    const circumference = 2 * Math.PI * 70;
+    let offset = 0;
+    return this.kitchenItems.map((item) => {
+      const length = (item.percentage / 100) * circumference;
+      const segment = { offset, length, color: item.color };
+      offset += length;
+      return segment;
     });
   }
 
@@ -198,7 +220,7 @@ export class SalesReportComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return '฿' + value.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return value.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
   }
 
   // ─── Private ──────────────────────────────────────────

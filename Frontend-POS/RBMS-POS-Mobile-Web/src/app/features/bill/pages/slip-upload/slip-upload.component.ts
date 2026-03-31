@@ -1,11 +1,11 @@
 import { Component, computed, DestroyRef, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ApiConfiguration } from '@core/api/api-configuration';
 import { ModalService } from '@core/services/modal.service';
 import { CustomerService } from '@core/api/services/customer.service';
 import { CustomerAuthService } from '@core/services/customer-auth.service';
 import { SlipUploadResultModel } from '@core/api/models/slip-upload-result-model';
+import { environment } from '@env/environment';
 
 @Component({
   selector: 'app-slip-upload',
@@ -17,11 +17,12 @@ export class SlipUploadComponent {
   previewUrl = signal<string | null>(null);
   isUploading = signal(false);
   uploadResult = signal<SlipUploadResultModel | null>(null);
+  copied = signal(false);
 
   session = signal<ReturnType<CustomerAuthService['getSession']>>(null);
   qrCodeUrl = computed(() => {
     const fileId = this.session()?.paymentQrCodeFileId;
-    return fileId ? `${this.apiConfig.rootUrl}/api/admin/file/${fileId}` : null;
+    return fileId ? `${environment.apiUrl}/api/admin/file/${fileId}` : null;
   });
 
   private orderBillId: number;
@@ -29,7 +30,6 @@ export class SlipUploadComponent {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private apiConfig: ApiConfiguration,
     private customerService: CustomerService,
     private customerAuth: CustomerAuthService,
     private modalService: ModalService,
@@ -50,9 +50,34 @@ export class SlipUploadComponent {
     reader.readAsDataURL(file);
   }
 
-  clearFile(): void {
+  clearFile(fileInput?: HTMLInputElement): void {
     this.selectedFile.set(null);
     this.previewUrl.set(null);
+    if (fileInput) fileInput.value = '';
+  }
+
+  async saveQrImage(): Promise<void> {
+    const url = this.qrCodeUrl();
+    if (!url) return;
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'qr-payment.png';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch { /* ignore */ }
+  }
+
+  async copyAccountNumber(): Promise<void> {
+    const num = this.session()?.accountNumber;
+    if (!num) return;
+    try {
+      await navigator.clipboard.writeText(num);
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
+    } catch { /* ignore */ }
   }
 
   goToCounter(): void {

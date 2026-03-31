@@ -1,109 +1,136 @@
 # TASK: Split Bill — ต่อ Flow จริง (Frontend)
 
-> สร้าง: 2026-03-22 | สถานะ: เสร็จ
+> สร้าง: 2026-03-22 | สถานะ: เสร็จ (Phase 1-3 Staff)
 
-## สรุปงาน
+## สรุปงานเดิม (เสร็จแล้ว)
 
-Backend รองรับ Split Bill **ครบ 100%** แล้ว (split by item, split by amount, pay per bill, auto-complete เมื่อจ่ายครบ) แต่ Frontend **ยังไม่ได้ต่อ** — Checkout มีปุ่ม "Split Bill" แต่ `[disabled]="true"`, แสดงแค่ 1 bill, ไม่มี bill selector
-
-**เป้าหมาย**: ให้ผู้ใช้แยกบิลได้จากทั้ง Order Detail + Checkout แล้วจ่ายทีละบิลจนครบ
+Backend รองรับ Split Bill ครบ 100% — Frontend Staff ต่อ Flow ครบ (SplitBillDialog, Bill Tabs, Multi-Bill Checkout, Pay per bill)
 
 ---
 
-## Flow สรุป
+# TASK: ปรับปรุง Flow แยกบิล — Customer Bill Summary + Staff Slip Indicator
 
+> เพิ่ม: 2026-03-31 | สถานะ: กำลังทำ
+
+## Context
+
+**ปัญหา**: เมื่อพนักงานแยกบิลแล้ว ลูกค้าฝั่ง Mobile Web เห็นแค่บิลใบแรก (`bills[0]`) ไม่เห็นบิลใบอื่น ไม่มีปุ่มให้เลือกจ่ายแต่ละบิล และเมื่อลูกค้าอัพโหลดสลิป พนักงานต้องกดปุ่ม QR เองถึงจะเห็น
+
+**เป้าหมาย**:
+1. ลูกค้าเห็นบิลทุกใบเมื่อแยกบิล + เลือกจ่ายแต่ละใบได้
+2. เมื่อบิลหนึ่งถูกจ่ายแล้ว → SignalR refresh → ปุ่มหายไปทันที
+3. พนักงานเห็นชัดเจนว่าลูกค้าส่งสลิปมาแล้ว (ไม่ต้องกดปุ่ม QR)
+
+---
+
+## Phase 1: Backend — เพิ่ม fields ใน CustomerBillSummaryModel
+
+### Sub-task 1.1: เพิ่ม fields ใน Model ✅
+**ไฟล์**: `Backend-POS/POS.Main/POS.Main.Business.Payment/Models/Customer/CustomerBillResponseModel.cs`
+
+**ปัจจุบัน**: `CustomerBillSummaryModel` มีแค่ `OrderBillId`, `BillNumber`, `Status`, `SubTotal`, `ServiceChargeAmount`, `VatAmount`, `TotalDiscountAmount`, `GrandTotal`
+
+**เพิ่ม**:
+- `SplitCount` (int) — จำนวนบิลทั้งหมด
+- `SplitIndex` (int) — ลำดับบิลนี้ (1-based)
+- `BillType` (string) — ประเภทการแยก (Full/ByItem/ByAmount)
+
+### Sub-task 1.2: อัพเดต Mapper ✅
+**ไฟล์**: `Backend-POS/POS.Main/POS.Main.Business.Payment/Services/CustomerService.cs` (บรรทัด ~75-89)
+
+**ปัจจุบัน**: mapping inline ไม่มี `SplitCount`, `SplitIndex`, `BillType`
+
+**แก้**: เพิ่ม 3 fields ใน Select()
+
+### Sub-task 1.3: gen-api ✅
+- Restart Backend → ตรวจ Swagger → แจ้งผู้ใช้รัน `npm run gen-api` ใน Mobile Web
+
+---
+
+## Phase 2: Frontend Mobile Web — bill-summary แสดงบิลทุกใบ
+
+### Sub-task 2.1: เพิ่ม SignalR refresh ✅
+**ไฟล์**: `RBMS-POS-Mobile-Web/src/app/features/bill/pages/bill-summary/bill-summary.component.ts`
+
+**ปัจจุบัน**: โหลดข้อมูลครั้งเดียวใน `ngOnInit()` ไม่มี SignalR
+
+**แก้**:
+- inject `SignalRService`
+- เพิ่ม `effect()` ที่ listen `signalR.refreshOrders()` → เรียก `loadBill()` ใหม่
+- แยก API call จาก `ngOnInit()` ออกเป็น `loadBill()` method
+
+### Sub-task 2.2: แสดงบิลทุกใบ (Multiple Bills Layout) ✅
+**ไฟล์**: `bill-summary.component.ts` + `bill-summary.component.html`
+
+**ปัจจุบัน**: `currentBill = computed(() => bills[0])` → แสดงแค่ใบแรก
+
+**แก้ TS**:
+- เพิ่ม `bills = computed(() => bill()?.bills ?? [])`
+- เพิ่ม `hasMultipleBills = computed(() => bills().length > 1)`
+
+**แก้ HTML — Layout สำหรับ Multiple Bills** (bills.length > 1):
 ```
-Order Detail (Billing) → "แยกบิล" → SplitBillDialog → API split → refresh
-                       → "ชำระเงิน" → navigate to /payment/checkout/{orderId}
-
-Checkout → โหลด bills → ถ้า split แล้ว แสดง Bill Tabs (บิล 1 | บิล 2 | ...)
-        → เลือกบิล → แสดง summary (SC, VAT, total) → numpad → กดจ่าย
-        → จ่ายเสร็จ → auto-select บิลถัดไป (Pending)
-        → จ่ายครบ → success → navigate กลับ Payment page
-        → (Optional) กดปุ่ม "แยกบิล" → Dialog → API split → reload tabs
+┌─────────────────────────────────────┐
+│ สรุปออเดอร์ ORD-20260331-001       │
+│ [รายการอาหาร grouped by category]  │
+│ ─────────────────────────────────── │
+│ บิลที่ 1/3 — หารเท่า               │
+│ ยอดรวม: ฿500.00                    │
+│ [เงินสด] [โอนเงิน]                 │
+│ ─────────────────────────────────── │
+│ บิลที่ 2/3 — หารเท่า               │
+│ ยอดรวม: ฿500.00                    │
+│ [เงินสด] [โอนเงิน]                 │
+│ ─────────────────────────────────── │
+│ บิลที่ 3/3 — หารเท่า     ✅ ชำระแล้ว│
+│ ยอดรวม: ฿500.00                    │
+└─────────────────────────────────────┘
 ```
 
----
+- Pending → ปุ่ม "เงินสด" + "โอนเงิน"
+- Paid → badge "ชำระแล้ว" (ไม่มีปุ่ม)
+- เงินสด → `requestCashPayment(billId)` (notification ไป staff)
+- โอนเงิน → navigate `/bill/upload?billId={orderBillId}`
 
-## ข้อจำกัดที่ต้องรู้
+**Single Bill** (bills.length === 1): คงเดิม — charges breakdown + ปุ่ม 3 ตัว
 
-- **`OrderBillResponseModel` ไม่มี items** — มีแค่ subtotal, SC, VAT, grandTotal → Checkout แสดง items ทั้งหมดของ order (ไม่แยกต่อบิล) ซึ่งถูกต้องสำหรับ ByAmount / ยอมรับได้สำหรับ ByItem
-- **Payment Dialogs (Cash/QR) รองรับหลายบิลแล้ว** — ไม่ต้องแก้
-- **Backend auto-complete** — เมื่อจ่ายครบ `CompleteOrderIfAllBillsPaidAsync` จะเปลี่ยน Order→Completed + Table→Cleaning ให้อัตโนมัติ
+### Sub-task 2.3: ซ่อนปุ่ม "แยกบิล" เมื่อ bills > 1 ✅
+- ปุ่ม "แยกบิล" แสดงเฉพาะเมื่อ `bills.length === 1`
 
----
-
-## Phase 1: ย้าย SplitBillDialog → SharedModule ✅
-
-**เหตุผล**: SplitBillDialog ต้องใช้ทั้ง Order module + Payment module (Checkout) — ปัจจุบันอยู่ใน Order module เท่านั้น
-
-| # | สถานะ | ไฟล์ | แก้อะไร |
-|---|--------|------|--------|
-| 1 | ✅ | `features/order/dialogs/split-bill-dialog/` | **ย้าย** → `shared/dialogs/split-bill-dialog/` |
-| 2 | ✅ | `shared/shared.module.ts` | เพิ่ม declaration |
-| 3 | ✅ | `features/order/order.module.ts` | ลบ declaration |
-| 4 | ✅ | `features/order/pages/order-detail/order-detail.component.ts` | แก้ import path |
+### Sub-task 2.4: แก้ CSS opacity modifier ✅
+- `bg-primary/10` → `bg-primary-subtle`
+- `bg-info/10` → `bg-info-bg`
+- `bg-billing/10` → inline style
+- `bg-primary/5`, `border-primary/30` → `bg-primary-subtle`, `border-primary-light`
+- `bg-success/5`, `border-success/30` → `bg-success-bg`, `border-success`
+- `bg-info/5`, `border-info/30`, `hover:bg-info/5` → `bg-info-bg`, `border-info`, `hover:bg-info-bg`
+- `bg-success/10`, `bg-info/10` → `bg-success-bg`, `bg-info-bg`
 
 ---
 
-## Phase 2: Order Detail — เพิ่ม Navigate ไป Checkout ✅
+## Phase 3: Frontend Staff — Slip Indicator
 
-| # | สถานะ | ไฟล์ | แก้อะไร |
-|---|--------|------|--------|
-| 1 | ✅ | `order-detail.component.ts` | เพิ่ม `onGoToCheckout()` → `router.navigate(['/payment', 'checkout', orderId])` |
-| 2 | ✅ | `order-detail.component.html` | ปุ่ม "ชำระเงิน" เพิ่ม `(click)="onGoToCheckout()"` |
+### Sub-task 3.1: เพิ่ม Slip Badge บน Bill Tab ✅
+**ไฟล์**: `RBMS-POS-Client/src/app/features/payment/pages/checkout/checkout.component.html`
 
-> Note: `onSplitBill()` + `onRequestBill()` **ทำงานครบแล้ว** ไม่ต้องแก้
+เมื่อ bill มี `customerSlipFileId` + `status === 'Pending'`:
+- แสดง icon `pi pi-image` สีฟ้าข้างชื่อ bill บน tab
 
----
+### Sub-task 3.2: เพิ่ม Alert Bar เมื่อ bill มี customer slip ✅
+**ไฟล์**: `checkout.component.html`
 
-## Phase 3: Checkout — Multi-Bill + Split Bill (ส่วนหลัก) ✅
-
-### 3.1 TS (`checkout.component.ts`)
-
-| สถานะ | แก้อะไร | รายละเอียด |
-|--------|---------|-----------|
-| ✅ | เพิ่ม `allBills` signal | `signal<OrderBillResponseModel[]>([])` |
-| ✅ | เพิ่ม `selectedBillIndex` signal | `signal(0)` — index ของบิลที่เลือก |
-| ✅ | เปลี่ยน `currentBill` → computed | ดึงจาก `allBills()[selectedBillIndex()]` |
-| ✅ | เพิ่ม `allBillsPaid` computed | `allBills().every(b => b.status === 'Paid')` |
-| ✅ | แก้ `loadData()` | แยก `loadBills()` + `autoSelectPendingBill()` + `syncScDropdown()` |
-| ✅ | เพิ่ม `onSelectBill(index)` | เปลี่ยน `selectedBillIndex` + reset numpad + sync SC dropdown |
-| ✅ | เพิ่ม `loadBills()` | reload bills + auto-advance ไป pending ถัดไป |
-| ✅ | เพิ่ม `onSplitBill()` | เปิด SplitBillDialog → เรียก API split → `loadBills()` |
-| ✅ | แก้ `onPayCash()` callback | หลังจ่าย → `afterPayment()` → reload bills → auto-advance |
-| ✅ | แก้ `onPayQr()` callback | หลัง dialog close → `afterPayment()` |
-
-### 3.2 HTML (`checkout.component.html`)
-
-| สถานะ | แก้อะไร | รายละเอียด |
-|--------|---------|-----------|
-| ✅ | เพิ่ม Bill Tabs | ใต้ Order Info header — `@if (allBills().length > 1)` pill buttons (primary=selected, success=Paid, hover=Pending) |
-| ✅ | แก้ปุ่ม Split Bill | ลบ `[disabled]="true"` → เพิ่ม `(click)="onSplitBill()"` + label "แยกบิล" |
-| ✅ | Disable Pay buttons | เมื่อ `bill.status === 'Paid'` → Right column แสดง "ชำระแล้ว" |
-| ✅ | เพิ่ม All Paid state | เมื่อ `allBillsPaid()` → แสดง success icon + ปุ่มกลับทั้ง left+right column |
+- เมื่อเลือก bill ที่มี `customerSlipFileId` → แสดงแถบข้อความ
+- "ลูกค้าส่งสลิปมาแล้ว" + ปุ่ม "ดูสลิป"
+- แสดงใน right column เหนือ numpad
 
 ---
 
-## ไฟล์ทั้งหมดที่แก้ (7 ไฟล์)
+## ไฟล์ที่ต้องแก้ (สรุป)
 
-| # | ไฟล์ | ระดับแก้ |
-|---|------|---------|
-| 1 | `shared/dialogs/split-bill-dialog/*.ts + *.html` | ย้ายจาก order/dialogs |
-| 2 | `shared/shared.module.ts` | เพิ่ม declaration + import |
-| 3 | `features/order/order.module.ts` | ลบ declaration + import |
-| 4 | `features/order/pages/order-detail/order-detail.component.ts` | แก้ import path + เพิ่ม `onGoToCheckout()` |
-| 5 | `features/order/pages/order-detail/order-detail.component.html` | เพิ่ม `(click)="onGoToCheckout()"` |
-| 6 | `features/payment/pages/checkout/checkout.component.ts` | **แก้เยอะ** — multi-bill logic (allBills, selectedBillIndex, loadBills, onSplitBill, afterPayment) |
-| 7 | `features/payment/pages/checkout/checkout.component.html` | **แก้เยอะ** — bill tabs, all-paid state, paid-bill state, split bill button |
-
----
-
-## การทดสอบ
-
-1. **Order Detail**: กด "ขอบิล" → status Billing → กด "แยกบิล" → เลือก mode → ยืนยัน → bills แยกสำเร็จ
-2. **Order Detail → Checkout**: กด "ชำระเงิน" → navigate ไป checkout → เห็น bill tabs (ถ้า split แล้ว)
-3. **Checkout Single Bill**: ไม่มี tabs → numpad → จ่ายเงินสด/QR → success → กลับ
-4. **Checkout Multi Bills**: เห็น tabs → เลือก bill → จ่าย → tab เปลี่ยนสีเขียว → auto-select bill ถัดไป → จ่ายครบ → success
-5. **Checkout Split**: กดปุ่ม "แยกบิล" → dialog → split → tabs แสดงใหม่
-6. **SC per bill**: เปลี่ยน Service Charge → ยอด bill ที่เลือกอัพเดต
+| ไฟล์ | การแก้ |
+|------|--------|
+| `POS.Main.Business.Payment/Models/Customer/CustomerBillResponseModel.cs` | เพิ่ม `SplitCount`, `SplitIndex`, `BillType` |
+| `POS.Main.Business.Payment/Services/CustomerService.cs` | อัพเดต mapping |
+| `RBMS-POS-Mobile-Web/.../bill-summary.component.ts` | SignalR effect, multiple bills logic |
+| `RBMS-POS-Mobile-Web/.../bill-summary.component.html` | Layout multiple bills + per-bill payment |
+| `RBMS-POS-Client/.../checkout.component.html` | Slip badge + alert bar |

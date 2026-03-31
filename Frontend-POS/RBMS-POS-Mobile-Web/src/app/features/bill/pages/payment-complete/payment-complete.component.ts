@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, signal } from '@angular/core';
+import { Component, DestroyRef, effect, OnDestroy, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AnimationOptions } from 'ngx-lottie';
@@ -9,12 +9,14 @@ import { CustomerAuthService } from '@core/services/customer-auth.service';
 import { ReceiptService } from '@core/services/receipt.service';
 import { SignalRService } from '@core/services/signalr.service';
 
+const POLL_INTERVAL_MS = 5000;
+
 @Component({
   selector: 'app-payment-complete',
   standalone: false,
   templateUrl: './payment-complete.component.html',
 })
-export class PaymentCompleteComponent {
+export class PaymentCompleteComponent implements OnInit, OnDestroy {
   isCompleted = signal(false);
   receipt = signal<ReceiptDataModel | null>(null);
   downloaded = signal(false);
@@ -30,6 +32,7 @@ export class PaymentCompleteComponent {
   };
 
   private orderBillId: number;
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -43,11 +46,34 @@ export class PaymentCompleteComponent {
     this.orderBillId = Number(this.route.snapshot.queryParamMap.get('billId'));
     this.shopName = this.customerAuth.getSession()?.shopNameThai ?? '';
 
-    // Poll on SignalR events
+    // Immediate poll on SignalR events
     effect(() => {
       this.signalR.refreshOrders();
       if (!this.isCompleted()) this.checkStatus();
     });
+  }
+
+  ngOnInit(): void {
+    this.checkStatus();
+    this.startPolling();
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
+  }
+
+  private startPolling(): void {
+    this.pollTimer = setInterval(() => {
+      if (!this.isCompleted()) this.checkStatus();
+      else this.stopPolling();
+    }, POLL_INTERVAL_MS);
+  }
+
+  private stopPolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
   }
 
   paymentMethodLabel(): string {
@@ -85,7 +111,7 @@ export class PaymentCompleteComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          if (res.result === 'Completed') {
+          if (res.result === 'Paid') {
             this.isCompleted.set(true);
             this.loadReceiptData();
           }

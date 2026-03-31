@@ -46,7 +46,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
         beginAtZero: true,
         ticks: {
           font: { size: 16 },
-          callback: (v) => '฿' + Number(v).toLocaleString(),
+          callback: (v) => Number(v).toLocaleString() + ' บาท',
         },
       },
     },
@@ -82,7 +82,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
         beginAtZero: true,
         ticks: {
           font: { size: 16 },
-          callback: (v) => '฿' + Number(v).toLocaleString(),
+          callback: (v) => Number(v).toLocaleString() + ' บาท',
         },
       },
     },
@@ -276,6 +276,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
       {
         label: 'จำนวนออเดอร์',
         value: (selected.orderCount ?? 0).toLocaleString(),
+        unit: 'บิล',
         icon: 'bill-rastaurant',
         accentColor: 'info',
         changePercent: this.calcChange(
@@ -289,8 +290,9 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
       {
         label: 'จำนวนลูกค้า',
         value: (selected.guestCount ?? 0).toLocaleString(),
+        unit: 'คน',
         icon: 'people-rate',
-        accentColor: 'success',
+        accentColor: 'teal',
         changePercent: this.calcChange(
           selected.guestCount,
           previous?.guestCount,
@@ -648,7 +650,7 @@ const MOCK_KPI_CARDS: KpiCardItem[] = [
     label: 'จำนวนลูกค้า',
     value: '128',
     icon: 'people-rate',
-    accentColor: 'success',
+    accentColor: 'teal',
     changePercent: -3.2,
     sparklineType: 'background',
     sparklineData: [135, 142, 120, 138, 125, 130, 128],
@@ -721,8 +723,9 @@ const MOCK_TOP_DESSERT: TopSellingItem[] = [
 interface KpiCardItem {
   label: string;
   value: string;
+  unit?: string;
   icon: string;
-  accentColor: 'primary' | 'success' | 'warning' | 'info' | 'danger';
+  accentColor: 'primary' | 'success' | 'warning' | 'info' | 'danger' | 'teal';
   changePercent: number | null;
   sparklineData?: number[];
   sparklineType?: 'bottom' | 'right' | 'background' | 'none';

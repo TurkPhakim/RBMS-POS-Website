@@ -27,13 +27,18 @@
             }}</span>
           }
           <span class="text-sm xs:text-lg text-white/70 leading-tight block mt-0.5 truncate"
-            >โซน{{ session?.zoneName }} - โต๊ะ{{ session?.tableName }}@if (nickname()) { <span class="text-white font-medium"> | สั่งโดยคุณ{{ nickname() }}</span>}</span
+            >โซน{{ session?.zoneName }} - โต๊ะ{{ session?.tableName }}</span
           >
+          @if (nickname()) {
+            <span class="text-sm xs:text-lg text-white font-medium leading-tight block truncate"
+              >สั่งโดยคุณ{{ nickname() }}</span
+            >
+          }
         </div>
       </div>
       <!-- Action Buttons -->
       <div class="flex items-center gap-1.5 xs:gap-2 shrink-0">
-        @if (!isBillPage()) {
+        @if (!isBillPage() && hasServedItems()) {
           <button
             class="w-12 h-12 xs:w-14 xs:h-14 rounded-full bg-billing flex items-center justify-center transition-colors"
             [class.opacity-50]="billRequested()"
@@ -199,49 +204,51 @@
     class="fixed bottom-0 left-0 right-0 bg-white border-t border-surface-border z-20"
   >
     <div class="flex items-center justify-around h-[74px] max-w-lg mx-auto">
-      <a
-        routerLink="/menu"
-        routerLinkActive
-        #menuLink="routerLinkActive"
-        class="flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors"
-        [class]="
-          menuLink.isActive
-            ? 'text-primary bg-primary-subtle'
-            : 'text-surface-sub'
-        "
-      >
-        <app-generic-icon
-          name="menu-list"
-          svgClass="w-8 h-8"
-        ></app-generic-icon>
-        <span class="text-sm font-semibold">เมนู</span>
-      </a>
-      <a
-        routerLink="/cart"
-        routerLinkActive
-        #cartLink="routerLinkActive"
-        class="flex-1 flex flex-col items-center justify-center h-full transition-colors relative"
-        [class]="
-          cartLink.isActive
-            ? 'text-primary bg-primary-subtle'
-            : 'text-surface-sub'
-        "
-      >
-        <span class="relative">
+      @if (!isPaymentCompletePage()) {
+        <a
+          routerLink="/menu"
+          routerLinkActive
+          #menuLink="routerLinkActive"
+          class="flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors"
+          [class]="
+            menuLink.isActive
+              ? 'text-primary bg-primary-subtle'
+              : 'text-surface-sub'
+          "
+        >
           <app-generic-icon
-            name="basket-shopping"
+            name="menu-list"
             svgClass="w-8 h-8"
           ></app-generic-icon>
-          @if (cartService.itemCount() > 0) {
-            <span
-              class="absolute -top-1.5 -right-2.5 bg-danger text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1"
-            >
-              {{ cartService.itemCount() }}
-            </span>
-          }
-        </span>
-        <span class="text-sm font-semibold">ตะกร้า</span>
-      </a>
+          <span class="text-sm font-semibold">เมนู</span>
+        </a>
+        <a
+          routerLink="/cart"
+          routerLinkActive
+          #cartLink="routerLinkActive"
+          class="flex-1 flex flex-col items-center justify-center h-full transition-colors relative"
+          [class]="
+            cartLink.isActive
+              ? 'text-primary bg-primary-subtle'
+              : 'text-surface-sub'
+          "
+        >
+          <span class="relative">
+            <app-generic-icon
+              name="basket-shopping"
+              svgClass="w-8 h-8"
+            ></app-generic-icon>
+            @if (cartService.itemCount() > 0) {
+              <span
+                class="absolute -top-1.5 -right-2.5 bg-danger text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1"
+              >
+                {{ cartService.itemCount() }}
+              </span>
+            }
+          </span>
+          <span class="text-sm font-semibold">ตะกร้า</span>
+        </a>
+      }
       <a
         routerLink="/orders"
         routerLinkActive

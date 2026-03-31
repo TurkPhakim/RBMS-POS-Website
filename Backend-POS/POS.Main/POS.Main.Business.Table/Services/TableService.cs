@@ -11,6 +11,7 @@ using POS.Main.Business.Table.Interfaces;
 using POS.Main.Business.Table.Models.Table;
 using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
+using POS.Main.Core.Helpers;
 using POS.Main.Core.Models;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.UnitOfWork;

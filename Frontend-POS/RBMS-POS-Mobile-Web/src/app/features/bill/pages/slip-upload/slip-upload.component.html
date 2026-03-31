@@ -1,30 +1,48 @@
-<div class="p-4 space-y-4">
+<div class="px-4 pb-6 space-y-4">
   <!-- ช่องทางชำระเงิน -->
   @if (qrCodeUrl() || session()?.bankName) {
     <div class="bg-white rounded-2xl border border-surface-border overflow-hidden">
       <app-card-header icon="payment-bath" title="ช่องทางชำระเงิน" gradient="primary"></app-card-header>
-      <div class="p-5 space-y-4">
+
+      <div class="px-5 py-4 space-y-4">
+        <!-- QR Code -->
         @if (qrCodeUrl()) {
-          <div class="flex justify-center">
-            <img [src]="qrCodeUrl()" alt="QR Code" class="w-48 h-48 object-contain rounded-lg border border-surface-border">
+          <div class="flex flex-col items-center">
+            <img [src]="qrCodeUrl()" alt="QR Code ชำระเงิน"
+                 class="w-52 h-52 object-contain rounded-xl border-2 border-surface-border">
+            <button pButton severity="secondary" [outlined]="true"
+                    class="mt-3 !text-sm" (click)="saveQrImage()">
+              <app-generic-icon name="download" svgClass="w-5 h-5" class="mr-1.5"></app-generic-icon>
+              บันทึกภาพ QR
+            </button>
           </div>
         }
+
+        <!-- Bank Info -->
         @if (session()?.bankName) {
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between">
+          <div class="bg-surface-ground rounded-xl p-4 space-y-2.5">
+            <div class="flex justify-between items-center text-sm">
               <span class="text-surface-sub">ธนาคาร</span>
-              <span class="font-semibold">{{ session()!.bankName }}</span>
+              <span class="font-semibold text-base">{{ session()!.bankName }}</span>
             </div>
-            @if (session()!.accountNumber) {
-              <div class="flex justify-between">
-                <span class="text-surface-sub">เลขที่บัญชี</span>
-                <span class="font-semibold">{{ session()!.accountNumber }}</span>
+            @if (session()!.accountName) {
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-surface-sub">ชื่อบัญชี</span>
+                <span class="font-semibold text-base">{{ session()!.accountName }}</span>
               </div>
             }
-            @if (session()!.accountName) {
-              <div class="flex justify-between">
-                <span class="text-surface-sub">ชื่อบัญชี</span>
-                <span class="font-semibold">{{ session()!.accountName }}</span>
+            @if (session()!.accountNumber) {
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-surface-sub">เลขที่บัญชี</span>
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-base tracking-wide">{{ session()!.accountNumber }}</span>
+                  <button pButton [rounded]="true" [text]="true" size="small"
+                          class="!w-8 !h-8 shrink-0"
+                          [severity]="copied() ? 'success' : 'secondary'"
+                          (click)="copyAccountNumber()">
+                    <i [class]="copied() ? 'pi pi-check' : 'pi pi-copy'"></i>
+                  </button>
+                </div>
               </div>
             }
           </div>
@@ -34,50 +52,46 @@
   }
 
   <!-- อัปโหลดสลิป -->
-  <p class="text-lg font-semibold">อัปโหลดสลิป</p>
-  <p class="text-sm text-surface-sub -mt-2">ถ่ายรูปหรือเลือกสลิปจากแกลเลอรี</p>
+  <div class="bg-white rounded-2xl border border-surface-border overflow-hidden">
+    <app-card-header icon="scan-barcode" title="อัปโหลดสลิป" gradient="info"></app-card-header>
 
-  <!-- Image Preview / Upload Area -->
-  <div>
-    @if (previewUrl()) {
-      <div class="relative">
-        <img [src]="previewUrl()" alt="Slip preview" class="w-full max-h-[400px] object-contain rounded-lg border border-surface-border">
-        <button pButton icon="pi pi-times" severity="danger" [rounded]="true" [text]="true"
-                class="absolute top-2 right-2" (click)="clearFile()"></button>
-      </div>
-    } @else {
-      <label class="flex flex-col items-center justify-center h-48 border-2 border-dashed border-surface-border rounded-lg cursor-pointer hover:border-primary-light transition-colors">
-        <i class="pi pi-camera text-3xl text-surface-sub"></i>
-        <p class="text-sm text-surface-sub mt-2">แตะเพื่อเลือกรูปสลิป</p>
-        <input type="file" accept="image/*" class="hidden" (change)="onFileSelect($event)">
-      </label>
-    }
-  </div>
+    <input #fileInput type="file" accept="image/*" class="hidden" (change)="onFileSelect($event)">
 
-  <!-- Upload Button -->
-  <button pButton label="ส่งสลิป" class="w-full mt-4"
-          [disabled]="!selectedFile() || isUploading()"
-          [loading]="isUploading()"
-          (click)="uploadSlip()"></button>
-
-  <!-- Result -->
-  @if (uploadResult()) {
-    <div class="mt-4 bg-success-bg rounded-lg p-4">
-      <p class="text-sm font-medium text-success">อัปโหลดสำเร็จ</p>
-      @if (uploadResult()!.ocrAmount) {
-        <p class="text-sm mt-1">ยอดที่อ่านได้: {{ uploadResult()!.ocrAmount }} บาท</p>
+    <div class="px-5 py-4 space-y-4">
+      @if (previewUrl()) {
+        <!-- Slip Preview -->
+        <div class="relative flex justify-center">
+          <img [src]="previewUrl()" alt="สลิป"
+               class="max-h-[350px] object-contain rounded-xl border-2 border-surface-border">
+          <button type="button"
+                  class="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-danger text-white flex items-center justify-center"
+                  (click)="clearFile(fileInput)">
+            <i class="pi pi-times text-sm"></i>
+          </button>
+        </div>
+      } @else {
+        <!-- Upload Area -->
+        <label (click)="fileInput.click()"
+               class="flex flex-col items-center justify-center h-44 border-2 border-dashed border-surface-border rounded-xl cursor-pointer hover:border-primary-light transition-colors bg-surface-ground">
+          <i class="pi pi-camera text-4xl text-surface-sub"></i>
+          <p class="text-sm text-surface-sub mt-2 font-medium">แตะเพื่อถ่ายรูปหรือเลือกสลิป</p>
+        </label>
       }
-      <p class="text-sm mt-1">ยอดบิล: {{ uploadResult()!.billGrandTotal }} บาท</p>
-      <p class="text-xs text-surface-sub mt-2">รอพนักงานตรวจสอบสลิป...</p>
+
+      <!-- Upload Button -->
+      <button pButton label="ส่งสลิป" class="w-full"
+              [disabled]="!selectedFile() || isUploading()"
+              [loading]="isUploading()"
+              (click)="uploadSlip()"></button>
     </div>
-  }
+  </div>
 
   <!-- จ่ายที่หน้าเคาเตอร์ -->
   @if (!uploadResult()) {
-    <div class="border-t border-surface-border pt-4 mt-4">
+    <div class="text-center">
       <button pButton label="จ่ายที่หน้าเคาเตอร์" severity="secondary" [outlined]="true" class="w-full"
               (click)="goToCounter()"></button>
-      <p class="text-xs text-surface-sub text-center mt-2">ข้ามการอัปโหลดสลิป เดินไปชำระที่เคาเตอร์</p>
+      <p class="text-xs text-surface-sub mt-2">ข้ามการอัปโหลดสลิป เดินไปชำระที่เคาเตอร์</p>
     </div>
   }
 </div>

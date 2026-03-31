@@ -13,7 +13,25 @@ export class CartService {
   );
 
   addItem(item: CartItem): void {
-    this.items.update((items) => [...items, item]);
+    this.items.update((items) => {
+      const existingIndex = items.findIndex(
+        (existing) =>
+          existing.menuId === item.menuId &&
+          existing.note === item.note &&
+          this.sameOptions(existing.selectedOptions, item.selectedOptions),
+      );
+
+      if (existingIndex >= 0) {
+        const updated = [...items];
+        const merged = { ...updated[existingIndex] };
+        merged.quantity += item.quantity;
+        merged.itemTotal = this.calcTotal(merged);
+        updated[existingIndex] = merged;
+        return updated;
+      }
+
+      return [...items, item];
+    });
     this.saveToStorage();
   }
 
@@ -46,6 +64,13 @@ export class CartService {
   clear(): void {
     this.items.set([]);
     localStorage.removeItem(CART_KEY);
+  }
+
+  private sameOptions(a: SelectedOption[], b: SelectedOption[]): boolean {
+    if (a.length !== b.length) return false;
+    const aIds = a.map((o) => o.optionItemId).sort();
+    const bIds = b.map((o) => o.optionItemId).sort();
+    return aIds.every((id, i) => id === bIds[i]);
   }
 
   private calcTotal(item: CartItem): number {

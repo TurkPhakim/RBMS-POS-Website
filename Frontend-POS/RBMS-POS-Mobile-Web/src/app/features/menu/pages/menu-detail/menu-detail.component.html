@@ -19,172 +19,186 @@
       </div>
     }
 
-    <!-- Menu Info -->
-    <div class="px-4 pt-4 pb-3">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex-1">
-          <h1 class="text-xl font-bold">{{ d.name }}</h1>
-          @if (d.nameEn) {
-            <p class="text-sm text-surface-sub mt-0.5">{{ d.nameEn }}</p>
-          }
-        </div>
-        <span class="text-xl font-bold text-primary whitespace-nowrap">
-          {{ d.price | number:'1.0-0' }} บาท
-        </span>
-      </div>
-
-      @if (d.description) {
-        <p class="text-sm text-surface-sub mt-2">{{ d.description }}</p>
-      }
-
-      <!-- Tags -->
-      @if (d.isRecommended || d.isNew) {
-        <div class="flex gap-2 mt-3">
-          @if (d.isRecommended) {
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-danger-bg text-danger text-xs font-semibold">
-              <app-generic-icon name="thumb-tag" svgClass="w-3.5 h-3.5"></app-generic-icon>
-              แนะนำ
-            </span>
-          }
-          @if (d.isNew) {
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-semibold">
-              <app-generic-icon name="clover-tag" svgClass="w-3.5 h-3.5"></app-generic-icon>
-              ใหม่
-            </span>
-          }
-        </div>
-      }
-
-      <!-- Allergens -->
-      @if (d.allergens) {
-        <div class="flex items-start gap-1.5 mt-3 bg-warning-bg rounded-lg px-3 py-2">
-          <app-generic-icon name="shield-warning" svgClass="w-5 h-5" class="text-warning shrink-0 mt-0.5"></app-generic-icon>
-          <div class="text-sm">
-            <span class="font-semibold text-warning-dark">สารก่อภูมิแพ้:</span>
-            <span class="text-warning-dark ml-1">{{ d.allergens }}</span>
-          </div>
-        </div>
-      }
-    </div>
-
-    <!-- Option Groups -->
-    @for (group of d.optionGroups; track group.optionGroupId) {
-      <div class="border-t border-surface-border px-4 py-4">
-        <!-- Group Header -->
-        <div class="flex items-center gap-2 mb-3">
-          <span class="font-bold">{{ group.name }}</span>
-          @if (group.isRequired) {
-            <span class="text-xs font-semibold text-danger bg-danger-bg px-2 py-0.5 rounded-full">จำเป็น</span>
-          }
-          @if (group.maxSelections! > 1) {
-            <span class="text-xs text-surface-sub">(เลือกสูงสุด {{ group.maxSelections }})</span>
-          }
-        </div>
-
-        <!-- Validation Error -->
-        @if (isGroupError(group)) {
-          <small class="text-danger flex items-center gap-1 text-sm font-semibold mb-2">
-            <app-generic-icon name="error" svgClass="w-4 h-4" class="shrink-0"></app-generic-icon>
-            กรุณาเลือกอย่างน้อย 1 รายการ
-          </small>
-        }
-
-        <!-- Radio (maxSelections === 1) -->
-        @if (group.maxSelections === 1) {
-          <div class="flex flex-col gap-1">
-            @for (item of group.items; track item.optionItemId) {
-              <button
-                class="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors"
-                [class.bg-primary-subtle]="radioSelections[group.optionGroupId!] === item.optionItemId"
-                (click)="selectRadio(group.optionGroupId!, item.optionItemId!)"
-              >
-                <!-- Radio Circle -->
-                <span
-                  class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                  [class.border-primary]="radioSelections[group.optionGroupId!] === item.optionItemId"
-                  [class.border-surface-muted]="radioSelections[group.optionGroupId!] !== item.optionItemId"
-                >
-                  @if (radioSelections[group.optionGroupId!] === item.optionItemId) {
-                    <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
-                  }
-                </span>
-                <span class="flex-1 text-left">{{ item.name }}</span>
-                @if (item.additionalPrice) {
-                  <span class="text-sm text-primary font-semibold whitespace-nowrap">+{{ item.additionalPrice | number:'1.0-0' }} บาท</span>
-                }
-              </button>
+    <div class="px-4 pt-4 pb-8 space-y-3">
+      <!-- ═══════ Menu Info Card ═══════ -->
+      <div class="bg-white rounded-2xl border border-surface-border p-4">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex-1">
+            <h1 class="text-xl font-bold">{{ d.name }}</h1>
+            @if (d.nameEn) {
+              <p class="text-sm text-surface-sub mt-0.5">{{ d.nameEn }}</p>
             }
           </div>
-        } @else {
-          <!-- Checkbox (maxSelections > 1) -->
-          <div class="flex flex-col gap-1">
-            @for (item of group.items; track item.optionItemId) {
-              <button
-                class="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors"
-                [class.bg-primary-subtle]="isCheckboxSelected(group.optionGroupId!, item.optionItemId!)"
-                (click)="toggleCheckbox(group.optionGroupId!, item.optionItemId!, group.maxSelections!)"
-              >
-                <!-- Checkbox Square -->
-                <span
-                  class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2"
-                  [class.bg-primary]="isCheckboxSelected(group.optionGroupId!, item.optionItemId!)"
-                  [class.border-primary]="isCheckboxSelected(group.optionGroupId!, item.optionItemId!)"
-                  [class.border-surface-muted]="!isCheckboxSelected(group.optionGroupId!, item.optionItemId!)"
-                >
-                  @if (isCheckboxSelected(group.optionGroupId!, item.optionItemId!)) {
-                    <i class="pi pi-check text-white text-xs"></i>
-                  }
-                </span>
-                <span class="flex-1 text-left">{{ item.name }}</span>
-                @if (item.additionalPrice) {
-                  <span class="text-sm text-primary font-semibold whitespace-nowrap">+{{ item.additionalPrice | number:'1.0-0' }} บาท</span>
-                }
-              </button>
+          <span class="text-xl font-bold text-primary whitespace-nowrap">
+            {{ d.price | number:'1.0-0' }} บาท
+          </span>
+        </div>
+
+        @if (d.description) {
+          <p class="text-sm text-surface-sub mt-2">{{ d.description }}</p>
+        }
+
+        <!-- Tags -->
+        @if (d.isRecommended || d.isNew) {
+          <div class="flex gap-2 mt-3">
+            @if (d.isRecommended) {
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-danger-bg text-danger text-xs font-semibold">
+                <app-generic-icon name="thumb-tag" svgClass="w-3.5 h-3.5"></app-generic-icon>
+                แนะนำ
+              </span>
+            }
+            @if (d.isNew) {
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-bg text-success text-xs font-semibold">
+                <app-generic-icon name="clover-tag" svgClass="w-3.5 h-3.5"></app-generic-icon>
+                ใหม่
+              </span>
             }
           </div>
         }
-      </div>
-    }
 
-    <!-- Note Section -->
-    <div class="border-t border-surface-border px-4 py-4">
-      <div class="flex items-center gap-2 mb-2">
-        <app-generic-icon name="chat-message" svgClass="w-5 h-5" class="text-surface-sub"></app-generic-icon>
-        <span class="font-bold">หมายเหตุ</span>
+        <!-- Allergens -->
+        @if (d.allergens) {
+          <div class="flex items-start gap-1.5 mt-3 bg-warning-bg rounded-lg px-3 py-2">
+            <app-generic-icon name="shield-warning" svgClass="w-5 h-5" class="text-warning shrink-0 mt-0.5"></app-generic-icon>
+            <div class="text-sm">
+              <span class="font-semibold text-warning-dark">สารก่อภูมิแพ้:</span>
+              <span class="text-warning-dark ml-1">{{ d.allergens }}</span>
+            </div>
+          </div>
+        }
       </div>
-      <textarea
-        class="w-full border border-surface-border rounded-xl px-3 py-2.5 text-sm resize-none"
-        rows="2"
-        placeholder="เช่น ไม่ใส่ผัก, เผ็ดน้อย"
-        [(ngModel)]="note"
-      ></textarea>
-    </div>
 
-    <!-- Quantity + Add to Cart -->
-    <div class="border-t border-surface-border px-4 py-4 flex items-center gap-3">
-      <div class="flex items-center shrink-0">
-        <button
-          class="w-9 h-9 rounded-full border-2 border-surface-border flex items-center justify-center"
-          [class.opacity-40]="quantity <= 1"
-          [disabled]="quantity <= 1"
-          (click)="decreaseQty()"
-        >
-          <i class="pi pi-minus text-xs"></i>
-        </button>
-        <span class="text-xl font-bold w-9 text-center">{{ quantity }}</span>
-        <button
-          class="w-9 h-9 rounded-full border-2 border-primary text-primary flex items-center justify-center"
-          (click)="increaseQty()"
-        >
-          <i class="pi pi-plus text-xs"></i>
-        </button>
+      <!-- ═══════ Option Groups Card ═══════ -->
+      @if (d.optionGroups?.length) {
+        <div class="bg-white rounded-2xl border border-surface-border px-4 py-4 space-y-5">
+          @for (group of d.optionGroups; track group.optionGroupId; let isFirst = $first) {
+            <div>
+              <!-- Group Header -->
+              <div class="flex items-center gap-2 mb-2.5">
+                <span class="font-bold">{{ group.name }}</span>
+                @if (group.isRequired) {
+                  <span class="text-xs font-semibold text-danger bg-danger-bg px-2 py-0.5 rounded-full">จำเป็น</span>
+                }
+                @if (group.maxSelections! > 1) {
+                  <span class="text-xs text-surface-sub">(สูงสุด {{ group.maxSelections }})</span>
+                }
+              </div>
+
+              <!-- Validation Error -->
+              @if (isGroupError(group)) {
+                <div class="text-danger flex items-center gap-1 text-sm font-semibold mb-2">
+                  <app-generic-icon name="error" svgClass="w-4 h-4" class="shrink-0"></app-generic-icon>
+                  กรุณาเลือกอย่างน้อย 1 รายการ
+                </div>
+              }
+
+              <!-- Radio (maxSelections === 1) -->
+              @if (group.maxSelections === 1) {
+                <div class="space-y-2">
+                  @for (item of group.items; track item.optionItemId) {
+                    <button
+                      class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all"
+                      [class]="radioSelections[group.optionGroupId!] === item.optionItemId
+                        ? 'border-primary bg-primary-subtle'
+                        : 'border-surface-border'"
+                      (click)="selectRadio(group.optionGroupId!, item.optionItemId!)"
+                    >
+                      <!-- Radio Circle -->
+                      <span
+                        class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0"
+                        [class.border-primary]="radioSelections[group.optionGroupId!] === item.optionItemId"
+                        [class.border-surface-muted]="radioSelections[group.optionGroupId!] !== item.optionItemId"
+                      >
+                        @if (radioSelections[group.optionGroupId!] === item.optionItemId) {
+                          <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+                        }
+                      </span>
+                      <span class="flex-1 text-left font-medium">{{ item.name }}</span>
+                      @if (item.additionalPrice) {
+                        <span class="text-sm text-primary font-semibold whitespace-nowrap">+{{ item.additionalPrice | number:'1.0-0' }} บาท</span>
+                      }
+                    </button>
+                  }
+                </div>
+              } @else {
+                <!-- Checkbox (maxSelections > 1) -->
+                <div class="space-y-2">
+                  @for (item of group.items; track item.optionItemId) {
+                    <button
+                      class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all"
+                      [class]="isCheckboxSelected(group.optionGroupId!, item.optionItemId!)
+                        ? 'border-primary bg-primary-subtle'
+                        : 'border-surface-border'"
+                      (click)="toggleCheckbox(group.optionGroupId!, item.optionItemId!, group.maxSelections!)"
+                    >
+                      <!-- Checkbox Square -->
+                      <span
+                        class="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2"
+                        [class.bg-primary]="isCheckboxSelected(group.optionGroupId!, item.optionItemId!)"
+                        [class.border-primary]="isCheckboxSelected(group.optionGroupId!, item.optionItemId!)"
+                        [class.border-surface-muted]="!isCheckboxSelected(group.optionGroupId!, item.optionItemId!)"
+                      >
+                        @if (isCheckboxSelected(group.optionGroupId!, item.optionItemId!)) {
+                          <i class="pi pi-check text-white text-xs"></i>
+                        }
+                      </span>
+                      <span class="flex-1 text-left font-medium">{{ item.name }}</span>
+                      @if (item.additionalPrice) {
+                        <span class="text-sm text-primary font-semibold whitespace-nowrap">+{{ item.additionalPrice | number:'1.0-0' }} บาท</span>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ═══════ Note Card ═══════ -->
+      <div class="bg-white rounded-2xl border border-surface-border p-4">
+        <div class="flex items-center gap-2 mb-2">
+          <app-generic-icon name="chat-message" svgClass="w-5 h-5" class="text-surface-sub"></app-generic-icon>
+          <span class="font-bold">หมายเหตุ</span>
+        </div>
+        <textarea
+          class="w-full border border-surface-border rounded-xl px-3 py-2.5 text-sm resize-none"
+          rows="2"
+          placeholder="เช่น ไม่ใส่ผัก, เผ็ดน้อย"
+          [(ngModel)]="note"
+        ></textarea>
       </div>
-      <button
-        class="flex-1 bg-primary text-white font-bold py-3 rounded-xl text-lg active:bg-primary-dark transition-colors"
-        (click)="addToCart()"
-      >
-        เพิ่มลงตะกร้า {{ calcTotalPrice() | number:'1.0-0' }} บาท
-      </button>
+
+      <!-- ═══════ Quantity + Add to Cart ═══════ -->
+      <div class="bg-white rounded-2xl border border-surface-border p-4">
+        <div class="flex items-center gap-3">
+          <!-- Quantity Selector (pill style) -->
+          <div class="flex items-center border border-surface-border rounded-full overflow-hidden shrink-0">
+            <button
+              class="w-10 h-10 bg-surface hover:bg-surface-border flex items-center justify-center transition-colors"
+              [disabled]="quantity <= 1"
+              (click)="decreaseQty()"
+            >
+              <i class="pi pi-minus text-[10px] font-bold text-surface-sub"></i>
+            </button>
+            <span class="text-lg font-bold w-10 text-center">{{ quantity }}</span>
+            <button
+              class="w-10 h-10 bg-surface hover:bg-surface-border flex items-center justify-center transition-colors"
+              (click)="increaseQty()"
+            >
+              <i class="pi pi-plus text-[10px] font-bold text-primary"></i>
+            </button>
+          </div>
+          <!-- Add to Cart Button -->
+          <button
+            pButton
+            class="flex-1 !py-3 !text-lg !font-bold"
+            (click)="addToCart()"
+          >
+            เพิ่มลงตะกร้า {{ calcTotalPrice() | number:'1.0-0' }} บาท
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 }

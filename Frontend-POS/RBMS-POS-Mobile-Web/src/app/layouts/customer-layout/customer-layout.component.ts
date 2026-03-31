@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, effect, OnDestroy, OnInit, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CustomerAuthService } from '@core/services/customer-auth.service';
@@ -25,8 +25,10 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
   nickname = signal('');
   waiterCooldown = signal(0);
   billRequested = signal(false);
+  hasServedItems = signal(false);
   isBillPage = signal(false);
   isCartPage = signal(false);
+  isPaymentCompletePage = signal(false);
 
   private cooldownTimer: ReturnType<typeof setInterval> | null = null;
   private expiryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -51,7 +53,12 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
       if (event instanceof NavigationEnd) {
         this.isBillPage.set(event.urlAfterRedirects.startsWith('/bill'));
         this.isCartPage.set(event.urlAfterRedirects.startsWith('/cart'));
+        this.isPaymentCompletePage.set(event.urlAfterRedirects.startsWith('/bill/complete'));
       }
+    });
+    effect(() => {
+      this.signalR.refreshOrders();
+      this.checkServedItems();
     });
   }
 
@@ -60,9 +67,22 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
     this.scheduleAutoExpiry();
     this.restoreCooldown();
     this.checkShopStatus();
+    this.checkServedItems();
     if (!this.nickname()) {
       this.openNicknameDialog();
     }
+  }
+
+  private checkServedItems(): void {
+    this.selfOrderService
+      .selfOrderGetOrdersGet()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const items = res.result?.items ?? [];
+          this.hasServedItems.set(items.some(i => i.status === 'Served'));
+        },
+      });
   }
 
   private checkShopStatus(): void {

@@ -23,10 +23,10 @@
       <div class="flex flex-1 bg-surface rounded-lg p-1 gap-1">
         @for (
           p of [
-            { key: 'today', label: 'วันนี้' },
-            { key: 'week', label: 'สัปดาห์นี้' },
-            { key: 'month', label: 'เดือนนี้' },
-            { key: 'quarter', label: 'ไตรมาสนี้' },
+            { key: "today", label: "วันนี้" },
+            { key: "week", label: "สัปดาห์นี้" },
+            { key: "month", label: "เดือนนี้" },
+            { key: "quarter", label: "ไตรมาสนี้" },
           ];
           track p.key
         ) {
@@ -89,132 +89,142 @@
         [value]="card.value"
         [icon]="card.icon"
         [accentColor]="card.accentColor"
+        [unit]="card.unit ?? ''"
         [showComparison]="false"
       ></app-kpi-card>
     }
   </div>
 
-  <!-- Pie Chart + Kitchen Breakdown -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <!-- Category Pie -->
-    <div class="bg-surface-card rounded-xl p-5">
-      <h3 class="text-section-title mb-4">สัดส่วนยอดขายตามหมวดหมู่</h3>
-      @if (hasPieData) {
-        <div class="h-[280px] flex items-center justify-center">
-          <canvas
-            baseChart
-            type="pie"
-            [data]="categoryPieData()"
-            [options]="categoryPieOptions"
-          ></canvas>
+  <!-- Category Breakdown — Donut + Details -->
+  <app-section-mini-card
+    headerLabel="สัดส่วนยอดขายตามหมวดหมู่"
+    headerIcon="category"
+    headerIconSize="w-7 h-7"
+    headerClass="bg-gradient-to-r from-primary to-primary-dark"
+    contentClass="p-6"
+  >
+    @if (kitchenItems.length > 0) {
+      <div class="flex items-center gap-10">
+        <!-- Left: Donut -->
+        <div class="relative shrink-0 w-[200px] h-[200px]">
+          <svg width="200" height="200" viewBox="0 0 160 160">
+            @for (seg of donutSegments; track seg.color) {
+              <circle
+                cx="80"
+                cy="80"
+                r="70"
+                fill="none"
+                [attr.stroke]="seg.color"
+                stroke-width="20"
+                [attr.stroke-dasharray]="
+                  seg.length + ' ' + (2 * 3.14159 * 70 - seg.length)
+                "
+                [attr.stroke-dashoffset]="-seg.offset"
+                transform="rotate(-90 80 80)"
+              />
+            }
+          </svg>
+          <div
+            class="absolute inset-0 flex flex-col items-center justify-center"
+          >
+            <span class="text-3xl font-bold">{{ kitchenTotal | number }}</span>
+            <span class="text-lg text-surface-sub">รายการ</span>
+          </div>
         </div>
-      } @else {
-        <div
-          class="h-[280px] flex items-center justify-center text-surface-sub"
-        >
-          ยังไม่มีข้อมูล
-        </div>
-      }
-    </div>
-
-    <!-- Kitchen Breakdown -->
-    <div class="bg-surface-card rounded-xl p-5">
-      <h3 class="text-section-title mb-4">รายการแยกครัว</h3>
-      @if (kitchenItems.length > 0) {
-        <div class="space-y-3 pt-2">
-          @for (item of kitchenItems; track item.categoryName) {
-            <div
-              class="flex items-center gap-4 p-4 rounded-xl border-l-4"
-              [ngClass]="item.borderColor"
-            >
-              <div
-                class="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center"
-                [style.backgroundColor]="item.bgStyle"
-              >
-                <app-generic-icon
-                  [name]="item.iconName"
-                  svgClass="w-7 h-7"
-                  [class]="item.color"
-                ></app-generic-icon>
-              </div>
-              <div class="flex flex-col">
-                <span class="text-surface-sub">{{ item.categoryName }}</span>
-                <div class="flex items-baseline gap-1">
-                  <span class="text-2xl font-bold">{{
-                    item.itemCount | number
-                  }}</span>
-                  <span class="text-surface-sub">ชิ้น</span>
+        <!-- Right: Category Details with Progress Bars -->
+        <div class="flex-1 space-y-5">
+          @for (item of kitchenItems; track item.label) {
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <app-generic-icon
+                    [name]="item.icon"
+                    svgClass="w-6 h-6"
+                    [class]="item.textClass"
+                  ></app-generic-icon>
+                  <span class="font-semibold text-lg">{{ item.label }}</span>
                 </div>
-                <span [class]="item.color"
-                  >{{ item.percentage | number: '1.1-1' }}% ของทั้งหมด</span
-                >
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold text-xl" [class]="item.textClass">{{ item.count | number }}</span>
+                  <span class="text-surface-sub text-lg">รายการ</span>
+                  <span class="text-surface-sub text-lg">คิดเป็น</span>
+                  <span class="font-bold text-xl" [class]="item.textClass">{{ item.percentage | number: "1.1-1" }}%</span>
+                </div>
+              </div>
+              <div class="w-full h-3 rounded-full bg-surface">
+                <div
+                  class="h-3 rounded-full transition-all duration-500"
+                  [style.width.%]="item.percentage"
+                  [style.backgroundColor]="item.color"
+                ></div>
               </div>
             </div>
           }
         </div>
-      } @else {
-        <div
-          class="h-[280px] flex items-center justify-center text-surface-sub"
-        >
-          ยังไม่มีข้อมูล
-        </div>
-      }
-    </div>
-  </div>
+      </div>
+    } @else {
+      <div class="py-8">
+        <app-empty-view message="ยังไม่มีข้อมูล" />
+      </div>
+    }
+  </app-section-mini-card>
 
   <!-- Daily Breakdown Table -->
-  <div class="bg-surface-card rounded-lg">
-    <div class="p-4">
-      <h3 class="text-section-title">ยอดขายรายวัน</h3>
-    </div>
-    <div class="px-4 pb-4">
-      <p-table
-        [value]="dailyBreakdown"
-        [paginator]="true"
-        [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50]"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="{first} - {last} of {totalRecords}"
-        [stripedRows]="true"
-        [scrollable]="true"
-        styleClass="p-datatable-clean"
-      >
-        <ng-template pTemplate="header">
-          <tr class="whitespace-nowrap">
-            <th class="w-[160px]">วันที่</th>
-            <th class="w-[160px] !text-right">ยอดขาย</th>
-            <th class="w-[120px] !text-center">จำนวนออเดอร์</th>
-            <th class="w-[120px] !text-center">จำนวนลูกค้า</th>
-            <th class="w-[160px] !text-right">เฉลี่ย/ออเดอร์</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-row>
-          <tr>
-            <td class="whitespace-nowrap">{{ formatDate(row.date) }}</td>
-            <td class="!text-right font-semibold whitespace-nowrap">
-              {{ formatCurrency(row.totalSales) }}
-            </td>
-            <td class="!text-center whitespace-nowrap">
-              {{ row.orderCount | number }}
-            </td>
-            <td class="!text-center whitespace-nowrap">
-              {{ row.guestCount | number }}
-            </td>
-            <td class="!text-right font-semibold whitespace-nowrap">
-              {{ formatCurrency(row.averagePerOrder) }}
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="5">
-              <div class="flex justify-center items-center w-full p-[100px]">
-                <app-empty-view message="ไม่มีข้อมูลยอดขาย" />
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
-  </div>
+  <app-section-mini-card
+    headerLabel="ยอดขายรายวัน"
+    headerIcon="bar-chart"
+    headerIconSize="w-7 h-7"
+    headerClass="bg-gradient-to-r from-billing to-billing-dark"
+    contentClass="p-4"
+  >
+    <p-table
+      [value]="dailyBreakdown"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first} - {last} of {totalRecords}"
+      [stripedRows]="true"
+      [scrollable]="true"
+      styleClass="p-datatable-clean"
+    >
+      <ng-template pTemplate="header">
+        <tr class="whitespace-nowrap">
+          <th class="w-[160px]">วันที่</th>
+          <th class="w-[160px]">ยอดขาย</th>
+          <th class="w-[120px]">จำนวนออเดอร์</th>
+          <th class="w-[120px]">จำนวนลูกค้า</th>
+          <th class="w-[160px]">เฉลี่ยต่อออเดอร์</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td class="!text-center whitespace-nowrap">
+            {{ formatDate(row.date) }}
+          </td>
+          <td class="!text-right font-semibold whitespace-nowrap">
+            {{ formatCurrency(row.totalSales) }}
+          </td>
+          <td class="!text-center">
+            {{ row.orderCount | number }}
+          </td>
+          <td class="!text-center">
+            {{ row.guestCount | number }}
+          </td>
+          <td class="!text-center font-semibold whitespace-nowrap">
+            {{ formatCurrency(row.averagePerOrder) }}
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="flex justify-center items-center w-full p-[100px]">
+              <app-empty-view message="ไม่มีข้อมูลยอดขาย" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </app-section-mini-card>
 </div>

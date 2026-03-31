@@ -7,7 +7,8 @@
       'bg-success': accentColor === 'success',
       'bg-warning': accentColor === 'warning',
       'bg-info': accentColor === 'info',
-      'bg-danger': accentColor === 'danger'
+      'bg-danger': accentColor === 'danger',
+      'bg-compare': accentColor === 'teal'
     }"
   ></div>
 
@@ -51,7 +52,8 @@
             'text-success': accentColor === 'success',
             'text-warning-dark': accentColor === 'warning',
             'text-info': accentColor === 'info',
-            'text-danger': accentColor === 'danger'
+            'text-danger': accentColor === 'danger',
+            'text-compare': accentColor === 'teal'
           }"
         ></app-generic-icon>
       </div>
@@ -59,17 +61,23 @@
       <!-- Label + Value + (below style) -->
       <div class="flex flex-col gap-1 flex-1">
         <span class="text-xl font-semibold text-surface-sub">{{ label }}</span>
-        <span
-          class="text-3xl font-bold"
-          [ngClass]="{
-            'text-primary': accentColor === 'primary',
-            'text-success': accentColor === 'success',
-            'text-warning-dark': accentColor === 'warning',
-            'text-info': accentColor === 'info',
-            'text-danger': accentColor === 'danger'
-          }"
-          >{{ value }}</span
-        >
+        <div class="flex items-baseline gap-1.5">
+          <span
+            class="text-3xl font-bold"
+            [ngClass]="{
+              'text-primary': accentColor === 'primary',
+              'text-success': accentColor === 'success',
+              'text-warning-dark': accentColor === 'warning',
+              'text-info': accentColor === 'info',
+              'text-danger': accentColor === 'danger',
+              'text-compare': accentColor === 'teal'
+            }"
+            >{{ value }}</span
+          >
+          @if (unit) {
+            <span class="text-lg font-semibold text-surface-sub">{{ unit }}</span>
+          }
+        </div>
         <!-- Style: below -->
         @if (comparisonStyle === 'below' && showComparison && changePercent !== null) {
           <div

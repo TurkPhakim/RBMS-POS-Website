@@ -1,11 +1,14 @@
-import { Component, computed, DestroyRef, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CustomerService } from '@core/api/services/customer.service';
 import { SelfOrderService } from '@core/api/services/self-order.service';
 import { CustomerAuthService } from '@core/services/customer-auth.service';
+import { SignalRService } from '@core/services/signalr.service';
+import { ReceiptService } from '@core/services/receipt.service';
 import { CustomerBillResponseModel } from '@core/api/models/customer-bill-response-model';
 import { CustomerOrderItemModel } from '@core/api/models/customer-order-item-model';
+import { CustomerBillSummaryModel } from '@core/api/models/customer-bill-summary-model';
 
 @Component({
   selector: 'app-bill-summary',
@@ -13,7 +16,7 @@ import { CustomerOrderItemModel } from '@core/api/models/customer-order-item-mod
   templateUrl: './bill-summary.component.html',
 })
 export class BillSummaryComponent implements OnInit {
-  bill = signal<CustomerBillResponseModel | null>(null);
+  billData = signal<CustomerBillResponseModel | null>(null);
   cashRequested = signal(false);
   splitRequested = signal(false);
   showSplitPanel = signal(false);
@@ -21,8 +24,13 @@ export class BillSummaryComponent implements OnInit {
   numberOfPeople = signal(2);
   isSubmitting = signal(false);
 
+  bills = computed(() => this.billData()?.bills ?? []);
+  hasMultipleBills = computed(() => this.bills().length > 1);
+  pendingBills = computed(() => this.bills().filter(b => b.status !== 'Paid'));
+  allBillsPaid = computed(() => this.bills().length > 0 && this.bills().every(b => b.status === 'Paid'));
+
   groupedItems = computed(() => {
-    const items = this.bill()?.items ?? [];
+    const items = this.billData()?.items ?? [];
     const categoryOrder = [1, 2, 3];
     const grouped: CategoryGroup[] = [];
 
@@ -35,10 +43,10 @@ export class BillSummaryComponent implements OnInit {
     return grouped;
   });
 
-  totalItemCount = computed(() => (this.bill()?.items ?? []).length);
+  totalItemCount = computed(() => (this.billData()?.items ?? []).length);
 
   categoryBreakdown = computed(() => {
-    const items = this.bill()?.items ?? [];
+    const items = this.billData()?.items ?? [];
     const categories = [
       { type: 1, label: 'ค่าอาหาร' },
       { type: 2, label: 'ค่าเครื่องดื่ม' },
@@ -54,18 +62,27 @@ export class BillSummaryComponent implements OnInit {
       .filter(cat => cat.total > 0);
   });
 
+  // Single bill (backward compat)
   currentBill = computed(() => {
-    const bills = this.bill()?.bills ?? [];
-    return bills.length > 0 ? bills[0] : null;
+    const b = this.bills();
+    return b.length > 0 ? b[0] : null;
   });
 
   constructor(
     private customerService: CustomerService,
     private selfOrderService: SelfOrderService,
     private customerAuth: CustomerAuthService,
+    private signalR: SignalRService,
+    private receiptService: ReceiptService,
     private router: Router,
     private destroyRef: DestroyRef,
-  ) {}
+  ) {
+    // Auto-refresh when SignalR sends events
+    effect(() => {
+      this.signalR.refreshOrders();
+      this.loadBill();
+    });
+  }
 
   ngOnInit(): void {
     const qrToken = this.customerAuth.getQrToken();
@@ -76,11 +93,18 @@ export class BillSummaryComponent implements OnInit {
     if (savedState === 'cash') this.cashRequested.set(true);
     if (savedState === 'split') this.splitRequested.set(true);
 
+    this.loadBill();
+  }
+
+  private loadBill(): void {
+    const qrToken = this.customerAuth.getQrToken();
+    if (!qrToken) return;
+
     this.customerService.customerGetBillGet({ qrToken })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (res) => {
-          this.bill.set(res.result ?? null);
+          this.billData.set(res.result ?? null);
         },
       });
   }
@@ -125,6 +149,28 @@ export class BillSummaryComponent implements OnInit {
       });
   }
 
+  onDownloadReceipt(bill: CustomerBillSummaryModel): void {
+    this.receiptService
+      .downloadReceipt(bill.orderBillId!)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
+
+  onDownloadConsolidatedReceipt(): void {
+    this.receiptService
+      .downloadConsolidatedReceipt()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
+
+  getBillTypeLabel(billType?: string | null): string {
+    switch (billType) {
+      case 'ByAmount': return 'หารเท่า';
+      case 'ByItem': return 'แยกตามรายการ';
+      default: return '';
+    }
+  }
+
   getCategoryIcon(type: number): string {
     switch (type) {
       case 1: return 'chicken-drumstick';
@@ -163,10 +209,10 @@ export class BillSummaryComponent implements OnInit {
 
   getCategoryBgClass(type: number): string {
     switch (type) {
-      case 1: return 'bg-primary/10';
-      case 2: return 'bg-info/10';
-      case 3: return 'bg-billing/10';
-      default: return 'bg-primary/10';
+      case 1: return 'bg-primary-subtle';
+      case 2: return 'bg-info-bg';
+      case 3: return 'bg-billing-bg';
+      default: return 'bg-primary-subtle';
     }
   }
 }

@@ -13,6 +13,9 @@ public class CustomerBillSummaryModel
     public int OrderBillId { get; set; }
     public string BillNumber { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string BillType { get; set; } = string.Empty;
+    public int SplitCount { get; set; }
+    public int SplitIndex { get; set; }
     public decimal SubTotal { get; set; }
     public decimal ServiceChargeAmount { get; set; }
     public decimal VatAmount { get; set; }
