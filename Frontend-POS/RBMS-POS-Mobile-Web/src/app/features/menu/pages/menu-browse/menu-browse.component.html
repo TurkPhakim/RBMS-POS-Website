@@ -2,7 +2,7 @@
 <div class="flex bg-surface-border rounded-xl gap-1 mx-4 mt-4 p-1">
   @for (cat of categories(); track cat.categoryType) {
     <button
-      class="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-semibold text-sm transition-all"
+      class="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-lg font-semibold transition-all"
       [class]="
         selectedCategoryType === cat.categoryType
           ? getCategoryStyle(cat.categoryType!).activeClass

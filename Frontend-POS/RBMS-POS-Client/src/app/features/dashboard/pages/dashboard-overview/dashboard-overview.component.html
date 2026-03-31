@@ -50,10 +50,10 @@
   <!-- Row 2: Kitchen Breakdown — Donut + Details -->
   <app-section-mini-card
     headerLabel="สัดส่วนยอดขายตามหมวดหมู่"
-    headerIcon="category"
-    headerIconSize="w-7 h-7"
+    headerIcon="order-dinner"
+    headerIconSize="w-8 h-8"
     headerClass="bg-gradient-to-r from-primary to-primary-dark"
-    contentClass="p-6"
+    contentClass="py-6 px-8"
   >
     @if (kitchenItems.length > 0) {
       <div class="flex items-center gap-10">
@@ -91,7 +91,7 @@
                 <div class="flex items-center gap-2">
                   <app-generic-icon
                     [name]="item.icon"
-                    svgClass="w-6 h-6"
+                    [svgClass]="item.iconSize"
                     [class]="item.textClass"
                   ></app-generic-icon>
                   <span class="font-semibold text-lg">{{ item.label }}</span>
@@ -120,7 +120,7 @@
       </div>
     } @else {
       <div class="py-8">
-        <app-empty-view message="ยังไม่มีข้อมูล" />
+        <app-empty-view message="ยังไม่มีข้อมูลสัดส่วนยอดขาย" />
       </div>
     }
   </app-section-mini-card>

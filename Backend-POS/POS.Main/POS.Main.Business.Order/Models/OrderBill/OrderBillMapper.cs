@@ -28,7 +28,11 @@ public static class OrderBillMapper
             CreatedAt = entity.CreatedAt,
             CustomerSlipFileId = entity.CustomerSlipFileId,
             CustomerSlipOcrAmount = entity.CustomerSlipOcrAmount,
-            CustomerSlipVerificationStatus = entity.CustomerSlipVerificationStatus
+            CustomerSlipVerificationStatus = entity.CustomerSlipVerificationStatus,
+            CustomerSlipOcrTransferDate = entity.CustomerSlipOcrTransferDate,
+            CustomerSlipOcrAccountNumber = entity.CustomerSlipOcrAccountNumber,
+            CustomerSlipIsAccountMatched = entity.CustomerSlipIsAccountMatched,
+            CustomerSlipIsDateToday = entity.CustomerSlipIsDateToday
         };
     }
 }

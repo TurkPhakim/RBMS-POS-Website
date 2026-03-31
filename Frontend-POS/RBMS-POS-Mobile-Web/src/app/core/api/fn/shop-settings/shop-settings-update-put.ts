@@ -31,6 +31,7 @@ export interface ShopSettingsUpdatePut$Params {
 'BankName': string;
 'AccountNumber': string;
 'AccountName': string;
+'PromptPayNumber'?: string;
 'WifiSsid'?: string;
 'WifiPassword'?: string;
 'OperatingHours'?: Array<OperatingHourModel>;

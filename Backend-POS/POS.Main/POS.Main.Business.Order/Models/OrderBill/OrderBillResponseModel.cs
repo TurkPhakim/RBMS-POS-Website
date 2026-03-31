@@ -25,4 +25,8 @@ public class OrderBillResponseModel
     public int? CustomerSlipFileId { get; set; }
     public decimal? CustomerSlipOcrAmount { get; set; }
     public string? CustomerSlipVerificationStatus { get; set; }
+    public DateTime? CustomerSlipOcrTransferDate { get; set; }
+    public string? CustomerSlipOcrAccountNumber { get; set; }
+    public bool? CustomerSlipIsAccountMatched { get; set; }
+    public bool? CustomerSlipIsDateToday { get; set; }
 }

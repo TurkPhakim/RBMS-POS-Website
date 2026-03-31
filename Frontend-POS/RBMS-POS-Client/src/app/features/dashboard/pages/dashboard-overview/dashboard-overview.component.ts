@@ -349,13 +349,40 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
   private transformKitchen(breakdown: KitchenBreakdownModel[]): void {
     const cfg: Record<
       number,
-      { icon: string; color: string; bgClass: string; textClass: string }
+      {
+        icon: string;
+        iconSize: string;
+        color: string;
+        bgClass: string;
+        textClass: string;
+      }
     > = {
-      1: { icon: 'food', color: '#f97316', bgClass: 'bg-cat-food-bg', textClass: 'text-cat-food' },
-      2: { icon: 'drinks-glass', color: '#0EA5E9', bgClass: 'bg-cat-drink-bg', textClass: 'text-cat-drink' },
-      3: { icon: 'dessert', color: '#EC4899', bgClass: 'bg-cat-dessert-bg', textClass: 'text-cat-dessert' },
+      1: {
+        icon: 'chicken-drumstick',
+        iconSize: 'w-10 h-10',
+        color: '#f97316',
+        bgClass: 'bg-cat-food-bg',
+        textClass: 'text-cat-food',
+      },
+      2: {
+        icon: 'drinks-glass',
+        iconSize: 'w-6 h-6',
+        color: '#0EA5E9',
+        bgClass: 'bg-cat-drink-bg',
+        textClass: 'text-cat-drink',
+      },
+      3: {
+        icon: 'dessert',
+        iconSize: 'w-10 h-10',
+        color: '#EC4899',
+        bgClass: 'bg-cat-dessert-bg',
+        textClass: 'text-cat-dessert',
+      },
     };
-    const totalItems = breakdown.reduce((sum, b) => sum + (b.itemCount ?? 0), 0);
+    const totalItems = breakdown.reduce(
+      (sum, b) => sum + (b.itemCount ?? 0),
+      0,
+    );
     this.kitchenItems = breakdown.map((b) => {
       const c = cfg[b.categoryType ?? 0] ?? cfg[1];
       const count = b.itemCount ?? 0;
@@ -364,6 +391,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
         count,
         percentage: totalItems > 0 ? (count / totalItems) * 100 : 0,
         icon: c.icon,
+        iconSize: c.iconSize,
         color: c.color,
         bgClass: c.bgClass,
         textClass: c.textClass,
@@ -695,9 +723,36 @@ const MOCK_KPI_CARDS: KpiCardItem[] = [
 ];
 
 const MOCK_KITCHEN_ITEMS: KitchenItem[] = [
-  { label: 'อาหาร', count: 527, percentage: 33.8, icon: 'food', color: '#f97316', bgClass: 'bg-cat-food-bg', textClass: 'text-cat-food' },
-  { label: 'เครื่องดื่ม', count: 711, percentage: 45.6, icon: 'drinks-glass', color: '#0EA5E9', bgClass: 'bg-cat-drink-bg', textClass: 'text-cat-drink' },
-  { label: 'ของหวาน', count: 320, percentage: 20.6, icon: 'dessert', color: '#EC4899', bgClass: 'bg-cat-dessert-bg', textClass: 'text-cat-dessert' },
+  {
+    label: 'อาหาร',
+    count: 527,
+    percentage: 33.8,
+    icon: 'chicken-drumstick',
+    iconSize: 'w-8 h-8',
+    color: '#f97316',
+    bgClass: 'bg-cat-food-bg',
+    textClass: 'text-cat-food',
+  },
+  {
+    label: 'เครื่องดื่ม',
+    count: 711,
+    percentage: 45.6,
+    icon: 'drinks-glass',
+    iconSize: 'w-6 h-6',
+    color: '#0EA5E9',
+    bgClass: 'bg-cat-drink-bg',
+    textClass: 'text-cat-drink',
+  },
+  {
+    label: 'ของหวาน',
+    count: 320,
+    percentage: 20.6,
+    icon: 'dessert',
+    iconSize: 'w-8 h-8',
+    color: '#EC4899',
+    bgClass: 'bg-cat-dessert-bg',
+    textClass: 'text-cat-dessert',
+  },
 ];
 
 const MOCK_TOP_FOOD: TopSellingItem[] = [
@@ -758,6 +813,7 @@ interface KitchenItem {
   count: number;
   percentage: number;
   icon: string;
+  iconSize: string;
   color: string;
   bgClass: string;
   textClass: string;

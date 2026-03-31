@@ -21,6 +21,7 @@ public class CustomerTrackingItemModel
     public int? MenuImageFileId { get; set; }
     public string? SourceTableName { get; set; }
     public string? Note { get; set; }
+    public string? Allergens { get; set; }
     public List<CustomerTrackingOptionModel> Options { get; set; } = new();
 }
 

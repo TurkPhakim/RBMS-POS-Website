@@ -86,6 +86,12 @@
                     }
                   </div>
                 }
+                @if (item.allergens) {
+                  <div class="text-xs text-danger-soft mt-0.5 flex items-center gap-1">
+                    <app-generic-icon name="shield-warning" svgClass="w-3.5 h-3.5" class="text-danger-soft shrink-0"></app-generic-icon>
+                    {{ item.allergens }}
+                  </div>
+                }
                 @if (item.note) {
                   <p class="text-xs text-warning-dark italic mt-0.5">{{ item.note }}</p>
                 }

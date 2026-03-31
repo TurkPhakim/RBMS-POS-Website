@@ -4,6 +4,7 @@ using POS.Main.Business.Admin.Interfaces;
 using POS.Main.Business.Admin.Models.ShopSettings;
 using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
+using POS.Main.Core.Helpers;
 using POS.Main.Repositories.UnitOfWork;
 
 namespace POS.Main.Business.Admin.Services;
@@ -107,8 +108,9 @@ public class ShopSettingsService : IShopSettingsService
         if (settings == null)
             return new CurrentPeriodResultModel { IsOpen = true, HasTwoPeriods = false };
 
-        // หา operating hours ของวันนี้
-        var todayDow = MapDayOfWeek(DateTime.Now.DayOfWeek);
+        // ใช้ BangkokNow เพื่อให้ timezone ถูกต้องเสมอ (UTC+7)
+        var bangkokNow = DateTimeHelper.BangkokNow();
+        var todayDow = MapDayOfWeek(bangkokNow.DayOfWeek);
         var todayHours = settings.OperatingHours.FirstOrDefault(h => h.DayOfWeek == todayDow);
 
         // ไม่มีข้อมูลวันนี้ → default เปิด
@@ -119,13 +121,16 @@ public class ShopSettingsService : IShopSettingsService
         if (!todayHours.IsOpen)
             return new CurrentPeriodResultModel { IsOpen = false, HasTwoPeriods = settings.HasTwoPeriods };
 
-        // 1 ช่วง → เปิดตลอดวัน ไม่ filter
+        var now = bangkokNow.TimeOfDay;
+
+        // 1 ช่วง → เช็คเวลาใน period 1
         if (!settings.HasTwoPeriods)
-            return new CurrentPeriodResultModel { IsOpen = true, CurrentPeriod = null, HasTwoPeriods = false };
+        {
+            var isOpen = IsWithinTimeRange(now, todayHours.OpenTime1, todayHours.CloseTime1);
+            return new CurrentPeriodResultModel { IsOpen = isOpen, CurrentPeriod = isOpen ? "period1" : null, HasTwoPeriods = false };
+        }
 
         // 2 ช่วง → เช็คเวลาปัจจุบัน
-        var now = DateTime.Now.TimeOfDay;
-
         if (IsWithinTimeRange(now, todayHours.OpenTime1, todayHours.CloseTime1))
             return new CurrentPeriodResultModel { IsOpen = true, CurrentPeriod = "period1", HasTwoPeriods = true };
 

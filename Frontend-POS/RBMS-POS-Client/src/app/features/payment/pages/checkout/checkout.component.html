@@ -588,18 +588,25 @@
             </div>
           }
           <div class="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              class="w-full h-[56px] rounded-xl text-lg font-semibold text-white bg-primary transition-colors flex items-center justify-center gap-2 hover:brightness-110"
-              (click)="onPayQr()"
-            >
-              <app-generic-icon
-                name="cash-qrcode"
-                svgClass="w-6 h-6"
-                class="text-white"
-              ></app-generic-icon>
-              QR Payment
-            </button>
+            <div class="relative">
+              <button
+                type="button"
+                class="w-full h-[56px] rounded-xl text-lg font-semibold text-white bg-primary transition-colors flex items-center justify-center gap-2 hover:brightness-110"
+                (click)="onPayQr()"
+              >
+                <app-generic-icon
+                  name="cash-qrcode"
+                  svgClass="w-6 h-6"
+                  class="text-white"
+                ></app-generic-icon>
+                QR Payment
+              </button>
+              @if (currentBill()?.customerSlipFileId && currentBill()?.status !== 'Paid') {
+                <span
+                  class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-danger rounded-full border-2 border-white"
+                ></span>
+              }
+            </div>
             <button
               type="button"
               class="w-full h-[56px] rounded-xl text-lg font-semibold text-white bg-success transition-colors flex items-center justify-center gap-2 hover:brightness-110"

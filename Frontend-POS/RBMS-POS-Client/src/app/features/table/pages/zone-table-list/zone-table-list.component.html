@@ -102,11 +102,24 @@
           <ng-template pTemplate="body" let-item let-index="rowIndex">
             <tr [pReorderableRow]="index">
               @if (canUpdate) {
-                <td class="!text-center cursor-move">
-                  <i
-                    class="pi pi-bars text-surface-placeholder"
-                    pReorderableRowHandle
-                  ></i>
+                <td>
+                  <div class="flex justify-center items-center">
+                    @if (item.isActive) {
+                      <span pReorderableRowHandle class="cursor-move">
+                        <app-generic-icon
+                          name="menu-bar"
+                          svgClass="w-8 h-8"
+                          class="text-surface-placeholder"
+                        ></app-generic-icon>
+                      </span>
+                    } @else {
+                      <app-generic-icon
+                        name="lock-correct"
+                        svgClass="w-8 h-8"
+                        class="text-danger"
+                      ></app-generic-icon>
+                    }
+                  </div>
                 </td>
               }
 

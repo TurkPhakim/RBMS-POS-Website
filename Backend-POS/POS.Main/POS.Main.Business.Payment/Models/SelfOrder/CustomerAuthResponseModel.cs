@@ -26,4 +26,8 @@ public class CustomerAuthResponseModel
     // WiFi
     public string? WifiSsid { get; set; }
     public string? WifiPassword { get; set; }
+
+    // สถานะออเดอร์ปัจจุบัน (สำหรับ redirect หลัง auth)
+    public string? OrderStatus { get; set; }
+    public bool HasBills { get; set; }
 }

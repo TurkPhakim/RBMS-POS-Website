@@ -125,6 +125,14 @@
       </div>
     </div>
 
+    <!-- Billing Warning -->
+    @if (isBillingStatus()) {
+      <div class="mt-4 bg-danger-bg border border-danger rounded-xl px-4 py-3 flex items-center gap-2">
+        <app-generic-icon name="information" svgClass="w-5 h-5" class="text-danger shrink-0"></app-generic-icon>
+        <span class="text-danger font-semibold text-sm">กำลังอยู่ในกระบวนการรอชำระเงิน</span>
+      </div>
+    }
+
     <!-- Submit Button -->
     <div class="mt-4">
       <button
@@ -133,6 +141,7 @@
         class="w-full !py-3"
         (click)="submitOrder()"
         [loading]="isSubmitting()"
+        [disabled]="isBillingStatus()"
       ></button>
     </div>
   </div>

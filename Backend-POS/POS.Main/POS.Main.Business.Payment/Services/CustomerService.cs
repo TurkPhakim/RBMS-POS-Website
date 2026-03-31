@@ -10,6 +10,7 @@ using POS.Main.Business.Payment.Models.Customer;
 using POS.Main.Business.Payment.Models.Payment;
 using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
+using System.Text.RegularExpressions;
 using POS.Main.Core.Helpers;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.UnitOfWork;
@@ -128,10 +129,47 @@ public class CustomerService : ICustomerService
                 ? ESlipVerificationStatus.Mismatched
                 : ESlipVerificationStatus.None;
 
+        // Date verification
+        bool? isDateToday = ocrResult.TransferDate.HasValue
+            ? ocrResult.TransferDate.Value.Date == DateTimeHelper.BangkokToday()
+            : null;
+
+        // Account verification (เช็คทั้งเลขบัญชีธนาคาร + PromptPay)
+        bool? isAccountMatched = null;
+        if (!string.IsNullOrEmpty(ocrResult.AccountNumber))
+        {
+            var shopSettings = await _unitOfWork.ShopSettings.GetAll()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(ct);
+
+            var ocrDigits = Regex.Replace(ocrResult.AccountNumber, @"[^0-9]", "");
+
+            if (!string.IsNullOrEmpty(shopSettings?.AccountNumber))
+            {
+                var shopDigits = Regex.Replace(shopSettings.AccountNumber, @"[^0-9]", "");
+                if (shopDigits.Contains(ocrDigits) || ocrDigits.Contains(shopDigits))
+                    isAccountMatched = true;
+            }
+
+            if (isAccountMatched != true && !string.IsNullOrEmpty(shopSettings?.PromptPayNumber))
+            {
+                var promptPayDigits = Regex.Replace(shopSettings.PromptPayNumber, @"[^0-9]", "");
+                if (promptPayDigits.Contains(ocrDigits) || ocrDigits.Contains(promptPayDigits))
+                    isAccountMatched = true;
+            }
+
+            if (isAccountMatched == null && (!string.IsNullOrEmpty(shopSettings?.AccountNumber) || !string.IsNullOrEmpty(shopSettings?.PromptPayNumber)))
+                isAccountMatched = false;
+        }
+
         // Store slip info on bill so staff can see it
         bill.CustomerSlipFileId = fileResult.FileId;
         bill.CustomerSlipOcrAmount = ocrAmount;
         bill.CustomerSlipVerificationStatus = verificationStatus.ToString();
+        bill.CustomerSlipOcrTransferDate = ocrResult.TransferDate;
+        bill.CustomerSlipOcrAccountNumber = ocrResult.AccountNumber;
+        bill.CustomerSlipIsAccountMatched = isAccountMatched;
+        bill.CustomerSlipIsDateToday = isDateToday;
         _unitOfWork.OrderBills.Update(bill);
         await _unitOfWork.CommitAsync(ct);
 
@@ -157,7 +195,11 @@ public class CustomerService : ICustomerService
             SlipImageFileId = fileResult.FileId,
             OcrAmount = ocrAmount,
             VerificationStatus = verificationStatus.ToString(),
-            BillGrandTotal = bill.GrandTotal
+            BillGrandTotal = bill.GrandTotal,
+            OcrTransferDate = ocrResult.TransferDate,
+            OcrAccountNumber = ocrResult.AccountNumber,
+            IsAccountMatched = isAccountMatched,
+            IsDateToday = isDateToday
         };
     }
 

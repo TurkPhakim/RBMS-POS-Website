@@ -1,12 +1,12 @@
 <div class="flex flex-col min-h-screen bg-surface">
   <!-- Header -->
   <header
-    class="bg-gradient-to-r from-primary to-primary-dark sticky top-0 z-10"
+    class="bg-gradient-to-r from-primary to-primary-dark sticky top-0 z-30"
   >
     <div class="px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
         <div
-          class="w-12 h-12 xs:w-14 xs:h-14 flex items-center justify-center overflow-hidden shrink-0"
+          class="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center overflow-hidden shrink-0"
           [ngClass]="logoUrl ? 'rounded-xl' : 'bg-white rounded-full p-0.5'"
         >
           <img
@@ -18,19 +18,23 @@
           />
         </div>
         <div class="flex-1 min-w-0">
-          <span class="font-bold text-lg xs:text-2xl text-white leading-tight block truncate">{{
-            session?.shopNameThai || "ร้านอาหาร"
-          }}</span>
+          <span
+            class="font-bold text-lg xs:text-2xl text-white leading-tight block truncate"
+            >{{ session?.shopNameThai || "RBMS POS" }}</span
+          >
           @if (session?.shopNameEnglish) {
-            <span class="text-sm xs:text-xl text-white/70 leading-tight block truncate">{{
-              session?.shopNameEnglish
-            }}</span>
+            <span
+              class="text-sm xs:text-xl text-white/70 leading-tight block truncate"
+              >{{ session?.shopNameEnglish }}</span
+            >
           }
-          <span class="text-sm xs:text-lg text-white/70 leading-tight block mt-0.5 truncate"
+          <span
+            class="text-sm xs:text-lg text-white/70 leading-tight block mt-0.5 truncate"
             >โซน{{ session?.zoneName }} - โต๊ะ{{ session?.tableName }}</span
           >
           @if (nickname()) {
-            <span class="text-sm xs:text-lg text-white font-medium leading-tight block truncate"
+            <span
+              class="text-sm xs:text-lg text-white font-medium leading-tight block mt-0.5 truncate"
               >สั่งโดยคุณ{{ nickname() }}</span
             >
           }
@@ -88,7 +92,9 @@
         class="bg-gradient-to-br from-primary to-primary-badge"
         style="padding-bottom: 78px"
       >
-        <div class="bg-black/15 px-3 xs:px-5 py-2 xs:py-3 mb-1 flex items-center gap-2 xs:gap-3">
+        <div
+          class="bg-black/15 px-3 xs:px-5 py-2 xs:py-3 mb-1 flex items-center gap-2 xs:gap-3"
+        >
           <span
             class="w-8 h-8 xs:w-10 xs:h-10 rounded-full bg-white/25 flex items-center justify-center"
           >
@@ -133,7 +139,9 @@
                   class="text-white"
                 ></app-generic-icon>
               </span>
-              <span class="text-sm xs:text-base text-white">{{ session!.website }}</span>
+              <span class="text-sm xs:text-base text-white">{{
+                session!.website
+              }}</span>
             </div>
           }
           @if (session?.phoneNumber) {
@@ -147,7 +155,9 @@
                   class="text-white"
                 ></app-generic-icon>
               </span>
-              <span class="text-sm xs:text-base text-white">{{ session!.phoneNumber }}</span>
+              <span class="text-sm xs:text-base text-white">{{
+                session!.phoneNumber
+              }}</span>
             </div>
           }
           @if (session?.facebook) {
@@ -161,7 +171,9 @@
                   class="text-white"
                 ></app-generic-icon>
               </span>
-              <span class="text-sm xs:text-base text-white">{{ session!.facebook }}</span>
+              <span class="text-sm xs:text-base text-white">{{
+                session!.facebook
+              }}</span>
             </div>
           }
           @if (session?.shopEmail) {
@@ -175,7 +187,9 @@
                   class="text-white"
                 ></app-generic-icon>
               </span>
-              <span class="text-sm xs:text-base text-white">{{ session!.shopEmail }}</span>
+              <span class="text-sm xs:text-base text-white">{{
+                session!.shopEmail
+              }}</span>
             </div>
           }
           @if (session?.instagram) {
@@ -189,7 +203,9 @@
                   class="text-white"
                 ></app-generic-icon>
               </span>
-              <span class="text-sm xs:text-base text-white">{{ session!.instagram }}</span>
+              <span class="text-sm xs:text-base text-white">{{
+                session!.instagram
+              }}</span>
             </div>
           }
         </div>
@@ -268,5 +284,4 @@
       </a>
     </div>
   </nav>
-
 </div>

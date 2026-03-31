@@ -72,8 +72,8 @@ public class SelfOrderService : ISelfOrderService
         if (table.QrTokenNonce != nonce)
             throw new BusinessException("QR Code หมดอายุหรือถูกเปลี่ยนแล้ว กรุณาแจ้งพนักงาน");
 
-        // Validate table status
-        if (table.Status != ETableStatus.Occupied)
+        // Validate table status — อนุญาตทั้ง Occupied และ Billing (ลูกค้าเข้าถึงได้จนกว่าพนักงานจะปิดโต๊ะ)
+        if (table.Status != ETableStatus.Occupied && table.Status != ETableStatus.Billing)
             throw new BusinessException("โต๊ะยังไม่ได้เปิดใช้งาน กรุณาแจ้งพนักงาน");
 
         // Check for existing active session from same device
@@ -119,6 +119,14 @@ public class SelfOrderService : ISelfOrderService
         var shopSettings = await _unitOfWork.ShopSettings.QueryNoTracking()
             .FirstOrDefaultAsync(ct);
 
+        // Get active order status for redirect
+        var activeOrder = await _unitOfWork.Orders.QueryNoTracking()
+            .Include(o => o.OrderBills)
+            .Where(o => o.TableId == tableId && !o.DeleteFlag
+                && o.Status != EOrderStatus.Completed)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync(ct);
+
         return new CustomerAuthResponseModel
         {
             SessionToken = guestToken,
@@ -140,7 +148,9 @@ public class SelfOrderService : ISelfOrderService
             AccountNumber = shopSettings?.AccountNumber,
             AccountName = shopSettings?.AccountName,
             WifiSsid = shopSettings?.WifiSsid,
-            WifiPassword = shopSettings?.WifiPassword
+            WifiPassword = shopSettings?.WifiPassword,
+            OrderStatus = activeOrder?.Status.ToString(),
+            HasBills = activeOrder?.OrderBills.Any(b => !b.DeleteFlag) ?? false
         };
     }
 
@@ -431,11 +441,11 @@ public class SelfOrderService : ISelfOrderService
             return new CustomerOrderTrackingResponseModel();
 
         var order = await _unitOfWork.Orders.QueryNoTracking()
-            .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided))
+            .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided && i.Status != EOrderItemStatus.Pending))
                 .ThenInclude(i => i.Menu)
-            .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided))
+            .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided && i.Status != EOrderItemStatus.Pending))
                 .ThenInclude(i => i.SourceTable)
-            .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided))
+            .Include(o => o.OrderItems.Where(i => i.Status != EOrderItemStatus.Voided && i.Status != EOrderItemStatus.Pending))
                 .ThenInclude(i => i.OrderItemOptions)
             .Include(o => o.OrderBills)
             .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId.Value, ct);
@@ -478,6 +488,7 @@ public class SelfOrderService : ISelfOrderService
                     MenuImageFileId = i.Menu?.ImageFileId,
                     SourceTableName = i.SourceTable?.TableName,
                     Note = i.Note,
+                    Allergens = i.Menu?.Allergens,
                     Options = i.OrderItemOptions.Select(o => new CustomerTrackingOptionModel
                     {
                         OptionItemName = o.OptionItemName,

@@ -11,7 +11,7 @@ import { ChartData, ChartOptions } from 'chart.js';
 const KEY_BTN_MOCK = 'toggle-mock-sales';
 
 const CATEGORY_CONFIG: Record<number, { iconName: string; color: string; bgStyle: string; borderColor: string }> = {
-  1: { iconName: 'food', color: 'text-cat-food', bgStyle: 'rgba(249, 115, 22, 0.1)', borderColor: 'border-cat-food' },
+  1: { iconName: 'chicken-drumstick', color: 'text-cat-food', bgStyle: 'rgba(249, 115, 22, 0.1)', borderColor: 'border-cat-food' },
   2: { iconName: 'drinks-glass', color: 'text-cat-drink', bgStyle: 'rgba(14, 165, 233, 0.1)', borderColor: 'border-cat-drink' },
   3: { iconName: 'dessert', color: 'text-cat-dessert', bgStyle: 'rgba(236, 72, 153, 0.1)', borderColor: 'border-cat-dessert' },
 };
@@ -174,10 +174,10 @@ export class SalesReportComponent implements OnInit, OnDestroy {
   }
 
   get kitchenItems() {
-    const cfg: Record<number, { icon: string; color: string; bgClass: string; textClass: string }> = {
-      1: { icon: 'food', color: '#f97316', bgClass: 'bg-cat-food-bg', textClass: 'text-cat-food' },
-      2: { icon: 'drinks-glass', color: '#0EA5E9', bgClass: 'bg-cat-drink-bg', textClass: 'text-cat-drink' },
-      3: { icon: 'dessert', color: '#EC4899', bgClass: 'bg-cat-dessert-bg', textClass: 'text-cat-dessert' },
+    const cfg: Record<number, { icon: string; iconSize: string; color: string; bgClass: string; textClass: string }> = {
+      1: { icon: 'chicken-drumstick', iconSize: 'w-8 h-8', color: '#f97316', bgClass: 'bg-cat-food-bg', textClass: 'text-cat-food' },
+      2: { icon: 'drinks-glass', iconSize: 'w-6 h-6', color: '#0EA5E9', bgClass: 'bg-cat-drink-bg', textClass: 'text-cat-drink' },
+      3: { icon: 'dessert', iconSize: 'w-8 h-8', color: '#EC4899', bgClass: 'bg-cat-dessert-bg', textClass: 'text-cat-dessert' },
     };
     return (this.report()?.kitchenBreakdown ?? []).map((k) => {
       const c = cfg[k.categoryType ?? 0] ?? cfg[1];
@@ -186,6 +186,7 @@ export class SalesReportComponent implements OnInit, OnDestroy {
         count: k.itemCount ?? 0,
         percentage: k.percentage ?? 0,
         icon: c.icon,
+        iconSize: c.iconSize,
         color: c.color,
         bgClass: c.bgClass,
         textClass: c.textClass,

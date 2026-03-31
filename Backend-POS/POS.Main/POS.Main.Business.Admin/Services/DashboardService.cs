@@ -5,6 +5,7 @@ using POS.Main.Business.Admin.Models.Dashboard;
 using System.Linq.Expressions;
 using POS.Main.Core.Enums;
 using POS.Main.Core.Exceptions;
+using POS.Main.Core.Helpers;
 using POS.Main.Dal.Entities;
 using POS.Main.Repositories.UnitOfWork;
 
@@ -23,7 +24,7 @@ public class DashboardService : IDashboardService
 
     public async Task<DashboardOverviewResponseModel> GetOverviewAsync(DateTime? date, int days = 7, CancellationToken ct = default)
     {
-        var selectedDate = date?.Date ?? DateTime.Today;
+        var selectedDate = date?.Date ?? DateTimeHelper.BangkokToday();
         var previousDate = selectedDate.AddDays(-1);
 
         _logger.LogInformation("Get dashboard overview for {Date}, trend {Days} days", selectedDate, days);
@@ -49,7 +50,7 @@ public class DashboardService : IDashboardService
 
     public async Task<TopSellingResponseModel> GetTopSellingAsync(DateTime? date, int days = 30, CancellationToken ct = default)
     {
-        var selectedDate = date?.Date ?? DateTime.Today;
+        var selectedDate = date?.Date ?? DateTimeHelper.BangkokToday();
         var startDate = selectedDate.AddDays(-days);
 
         _logger.LogInformation("Get top selling for {Date}, past {Days} days", selectedDate, days);
@@ -68,7 +69,7 @@ public class DashboardService : IDashboardService
 
     public async Task<PeakHoursResponseModel> GetPeakHoursAsync(DateTime? date, CancellationToken ct = default)
     {
-        var selectedDate = date?.Date ?? DateTime.Today;
+        var selectedDate = date?.Date ?? DateTimeHelper.BangkokToday();
 
         _logger.LogInformation("Get peak hours for {Date}", selectedDate);
 

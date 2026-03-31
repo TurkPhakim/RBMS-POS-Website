@@ -150,7 +150,7 @@ public class PaymentService : IPaymentService
 
         // 5. Determine date verification
         bool? isDateToday = ocrResult.TransferDate.HasValue
-            ? ocrResult.TransferDate.Value.Date == DateTime.Today
+            ? ocrResult.TransferDate.Value.Date == DateTimeHelper.BangkokToday()
             : null;
 
         // 6. Determine account verification (เช็คทั้งเลขบัญชีธนาคาร + PromptPay)

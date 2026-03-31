@@ -5,46 +5,177 @@
 
       <!-- ===================== Scenario A: ลูกค้า upload สลิปมาแล้ว ===================== -->
       @if (customerSlipUrl()) {
-        <div class="bg-success-bg rounded-xl p-5">
-          <div class="flex items-center gap-2 mb-3">
-            <i class="pi pi-check-circle text-success text-xl"></i>
-            <span class="font-semibold text-lg">ลูกค้าส่งสลิปมาแล้ว</span>
-          </div>
+        <div class="flex items-center gap-2 mb-4">
+          <app-generic-icon
+            name="check-in"
+            svgClass="w-7 h-7"
+            class="text-success"
+          ></app-generic-icon>
+          <span class="font-semibold text-xl"
+            >ลูกค้าแนบสลิปชำระเงินมาแล้ว</span
+          >
+        </div>
 
-          <div class="flex gap-4">
-            <!-- Customer slip image -->
-            <div class="flex-shrink-0">
-              <img
-                [src]="customerSlipUrl()"
+        <div
+          class="relative bg-primary-subtle rounded-xl border border-surface-border py-6 overflow-hidden"
+        >
+          <!-- Decorative Circles -->
+          <div
+            class="absolute -top-6 -left-6 w-40 h-40 rounded-full bg-primary opacity-15"
+          ></div>
+          <div
+            class="absolute -bottom-6 -right-6 w-40 h-40 rounded-full bg-primary opacity-15"
+          ></div>
+          <div
+            class="absolute -top-4 left-[15%] w-32 h-32 rounded-full bg-primary opacity-15"
+          ></div>
+          <div
+            class="absolute -bottom-10 left-[20%] w-32 h-32 rounded-full bg-primary opacity-15"
+          ></div>
+          <div
+            class="absolute -bottom-2 right-[20%] w-28 h-28 rounded-full bg-primary opacity-15"
+          ></div>
+
+          <div class="relative z-10 flex gap-6 px-6">
+            <!-- Left: Customer slip image -->
+            <div class="flex-shrink-0 flex flex-col items-center">
+              <p-image
+                [src]="customerSlipUrl()!"
                 alt="สลิปจากลูกค้า"
-                class="max-h-[220px] rounded-lg border border-surface-border"
-              />
+                [preview]="true"
+                [appendTo]="'body'"
+                imageClass="max-h-[280px] rounded-xl border-4 border-white"
+              ></p-image>
             </div>
 
-            <!-- OCR Result -->
-            <div class="flex-1 flex flex-col justify-center gap-3">
-              <div class="bg-white rounded-lg p-4">
-                <div class="grid grid-cols-2 gap-3">
+            <!-- Right: OCR Result -->
+            <div class="flex-1 flex flex-col justify-center">
+              <div class="bg-white rounded-xl p-4 space-y-3">
+                <h4
+                  class="font-semibold text-primary-dark text-lg pb-2 border-b border-surface-border -mx-5 px-4"
+                >
+                  ผลการตรวจสอบ OCR
+                </h4>
+
+                <!-- ยอดเงิน -->
+                <div class="grid grid-cols-2 gap-2">
                   <div>
-                    <p class="text-surface-sub text-sm">ยอดบิล</p>
+                    <p class="text-surface-sub">ยอดบิล</p>
                     <p class="font-semibold text-lg">
                       {{ bill.grandTotal | number: "1.2-2" }} บาท
                     </p>
                   </div>
                   <div>
-                    <p class="text-surface-sub text-sm">ยอดจาก OCR</p>
+                    <p class="text-surface-sub">ยอดจาก OCR</p>
                     @if (bill.customerSlipOcrAmount != null) {
                       <p class="font-semibold text-lg">
-                        {{ bill.customerSlipOcrAmount | number: "1.2-2" }} บาท
+                        {{
+                          bill.customerSlipOcrAmount | number: "1.2-2"
+                        }}
+                        บาท
                       </p>
                     } @else {
-                      <p class="text-surface-sub">ไม่สามารถอ่านได้</p>
+                      <p class="font-semibold text-surface-sub">
+                        ไม่สามารถอ่านค่าได้
+                      </p>
                     }
                   </div>
                 </div>
 
-                <div class="mt-3">
-                  @if (bill.customerSlipVerificationStatus === "Matched") {
+                <!-- วันที่โอน -->
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <p class="text-surface-sub">วันที่โอน</p>
+                    @if (bill.customerSlipOcrTransferDate) {
+                      <p class="font-semibold">
+                        {{
+                          bill.customerSlipOcrTransferDate
+                            | dateFormat: "DATE"
+                        }}
+                      </p>
+                    } @else {
+                      <p class="font-semibold text-surface-sub">
+                        อ่านไม่ได้
+                      </p>
+                    }
+                  </div>
+                  <div>
+                    <p class="text-surface-sub">ตรวจวันที่</p>
+                    @if (bill.customerSlipIsDateToday === true) {
+                      <span
+                        class="inline-flex items-center gap-1 font-semibold text-success"
+                      >
+                        <app-generic-icon
+                          name="check-in"
+                          svgClass="w-5 h-5"
+                        ></app-generic-icon>
+                        โอนวันนี้
+                      </span>
+                    } @else if (bill.customerSlipIsDateToday === false) {
+                      <span
+                        class="inline-flex items-center gap-1 font-semibold text-warning"
+                      >
+                        <app-generic-icon
+                          name="information"
+                          svgClass="w-4 h-4"
+                        ></app-generic-icon>
+                        ไม่ได้โอนวันนี้
+                      </span>
+                    } @else {
+                      <span class="text-surface-sub">-</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- เลขบัญชี -->
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <p class="text-surface-sub">บัญชีปลายทาง</p>
+                    @if (bill.customerSlipOcrAccountNumber) {
+                      <p class="font-semibold">
+                        {{ bill.customerSlipOcrAccountNumber }}
+                      </p>
+                    } @else {
+                      <p class="font-semibold text-surface-sub">
+                        อ่านไม่ได้
+                      </p>
+                    }
+                  </div>
+                  <div>
+                    <p class="text-surface-sub">ตรวจบัญชี</p>
+                    @if (bill.customerSlipIsAccountMatched === true) {
+                      <span
+                        class="inline-flex items-center gap-1 font-semibold text-success"
+                      >
+                        <app-generic-icon
+                          name="check-in"
+                          svgClass="w-5 h-5"
+                        ></app-generic-icon>
+                        ตรงกับบัญชีร้าน
+                      </span>
+                    } @else if (
+                      bill.customerSlipIsAccountMatched === false
+                    ) {
+                      <span
+                        class="inline-flex items-center gap-1 font-semibold text-warning"
+                      >
+                        <app-generic-icon
+                          name="information"
+                          svgClass="w-4 h-4"
+                        ></app-generic-icon>
+                        ไม่ตรงกับบัญชีร้าน
+                      </span>
+                    } @else {
+                      <span class="text-surface-sub">-</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- สรุปสถานะยอดเงิน -->
+                <div>
+                  @if (
+                    bill.customerSlipVerificationStatus === "Matched"
+                  ) {
                     <span
                       class="inline-flex items-center gap-1 font-semibold text-success"
                     >
@@ -62,49 +193,51 @@
                     >
                       <app-generic-icon
                         name="information"
-                        svgClass="w-5 h-5"
+                        svgClass="w-4 h-4"
                       ></app-generic-icon>
                       ยอดโอนไม่ตรงกับยอดบิล
                     </span>
                   } @else {
                     <span
-                      class="inline-flex items-center gap-1.5 text-surface-sub"
+                      class="inline-flex items-center gap-2 text-surface-sub"
                     >
                       <app-generic-icon
                         name="information"
-                        svgClass="w-5 h-5"
+                        svgClass="w-4 h-4"
                       ></app-generic-icon>
                       อ่านยอดจากสลิปไม่ได้
                     </span>
                   }
                 </div>
+
+                <!-- Manual Amount Override (when mismatched or unreadable) -->
+                @if (
+                  bill.customerSlipVerificationStatus !== "Matched"
+                ) {
+                  <div>
+                    <label class="block font-semibold text-sm mb-2"
+                      >กรอกยอดจริงจากสลิป</label
+                    >
+                    <form [formGroup]="form">
+                      <p-inputgroup>
+                        <p-inputNumber
+                          formControlName="manualAmount"
+                          [minFractionDigits]="2"
+                          [maxFractionDigits]="2"
+                          [min]="bill.grandTotal ?? 0"
+                          mode="decimal"
+                          styleClass="w-full"
+                          placeholder="กรอกยอดจริงจากสลิป"
+                        ></p-inputNumber>
+                        <p-inputgroup-addon>บาท</p-inputgroup-addon>
+                      </p-inputgroup>
+                    </form>
+                  </div>
+                }
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Manual Amount Override (when mismatched or unreadable) -->
-        @if (bill.customerSlipVerificationStatus !== "Matched") {
-          <div>
-            <label class="block font-semibold text-sm mb-2"
-              >กรอกยอดจริงจากสลิป</label
-            >
-            <form [formGroup]="form">
-              <p-inputgroup>
-                <p-inputNumber
-                  formControlName="manualAmount"
-                  [minFractionDigits]="2"
-                  [maxFractionDigits]="2"
-                  [min]="bill.grandTotal ?? 0"
-                  mode="decimal"
-                  styleClass="w-full"
-                  placeholder="กรอกยอดจริงจากสลิป"
-                ></p-inputNumber>
-                <p-inputgroup-addon>บาท</p-inputgroup-addon>
-              </p-inputgroup>
-            </form>
-          </div>
-        }
       } @else {
         <!-- ===================== Scenario B & C: ไม่มีสลิปจากลูกค้า ===================== -->
 

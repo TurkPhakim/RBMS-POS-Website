@@ -94,6 +94,9 @@ public class TbOrderBillConfiguration : IEntityTypeConfiguration<TbOrderBill>
         builder.Property(ob => ob.CustomerSlipVerificationStatus)
             .HasMaxLength(20);
 
+        builder.Property(ob => ob.CustomerSlipOcrAccountNumber)
+            .HasMaxLength(50);
+
         // Indexes
         builder.HasIndex(ob => ob.BillNumber)
             .IsUnique()

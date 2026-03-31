@@ -429,23 +429,24 @@
             <app-gradient-card color="primary">
               <!-- Header -->
               <div cardHeader>
-                <div class="flex items-center gap-3">
-                  <span class="text-xl font-bold text-white">{{
+                <div class="flex items-start justify-between gap-3">
+                  <span class="text-xl font-bold text-white flex-1 min-w-0 break-words">{{
                     group.menuNameThai
                   }}</span>
-                  <div class="flex-1"></div>
-                  <span
-                    class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-white text-primary"
-                  >
-                    Queue {{ getSentCount(group) }}
-                  </span>
-                  @if (getPreparingCount(group) > 0) {
+                  <div class="flex items-center gap-2 shrink-0">
                     <span
-                      class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-white text-info"
+                      class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-white text-primary"
                     >
-                      Cooking {{ getPreparingCount(group) }}
+                      Queue {{ getSentCount(group) }}
                     </span>
-                  }
+                    @if (getPreparingCount(group) > 0) {
+                      <span
+                        class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-bold bg-white text-info"
+                      >
+                        Cooking {{ getPreparingCount(group) }}
+                      </span>
+                    }
+                  </div>
                 </div>
                 @if (group.options.length > 0) {
                   <div class="text-sm text-white/60 mt-1">
@@ -729,7 +730,7 @@
           @for (group of readyMenuGroups(); track group.groupKey) {
             <app-gradient-card color="success">
               <div cardHeader>
-                <span class="text-xl font-bold text-white">{{
+                <span class="text-xl font-bold text-white break-words">{{
                   group.menuNameThai
                 }}</span>
                 @if (group.options.length > 0) {

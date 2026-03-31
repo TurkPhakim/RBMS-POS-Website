@@ -66,7 +66,12 @@ export class AuthComponent implements OnInit {
           wifiPassword: r.wifiPassword,
           qrToken: token!,
         });
-        this.router.navigate(['/menu'], { replaceUrl: true });
+        // Redirect ตามสถานะ order
+        if (r.orderStatus === 'Billing') {
+          this.router.navigate([r.hasBills ? '/bill/summary' : '/bill/waiting'], { replaceUrl: true });
+        } else {
+          this.router.navigate(['/menu'], { replaceUrl: true });
+        }
       },
       error: (err) => {
         this.isLoading.set(false);

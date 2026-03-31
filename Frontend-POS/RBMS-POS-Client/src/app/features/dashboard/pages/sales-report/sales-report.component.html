@@ -98,10 +98,10 @@
   <!-- Category Breakdown — Donut + Details -->
   <app-section-mini-card
     headerLabel="สัดส่วนยอดขายตามหมวดหมู่"
-    headerIcon="category"
+    headerIcon="order-dinner"
     headerIconSize="w-7 h-7"
     headerClass="bg-gradient-to-r from-primary to-primary-dark"
-    contentClass="p-6"
+    contentClass="py-6 px-8"
   >
     @if (kitchenItems.length > 0) {
       <div class="flex items-center gap-10">
@@ -139,16 +139,20 @@
                 <div class="flex items-center gap-2">
                   <app-generic-icon
                     [name]="item.icon"
-                    svgClass="w-6 h-6"
+                    [svgClass]="item.iconSize"
                     [class]="item.textClass"
                   ></app-generic-icon>
                   <span class="font-semibold text-lg">{{ item.label }}</span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <span class="font-bold text-xl" [class]="item.textClass">{{ item.count | number }}</span>
+                  <span class="font-bold text-xl" [class]="item.textClass">{{
+                    item.count | number
+                  }}</span>
                   <span class="text-surface-sub text-lg">รายการ</span>
                   <span class="text-surface-sub text-lg">คิดเป็น</span>
-                  <span class="font-bold text-xl" [class]="item.textClass">{{ item.percentage | number: "1.1-1" }}%</span>
+                  <span class="font-bold text-xl" [class]="item.textClass"
+                    >{{ item.percentage | number: "1.1-1" }}%</span
+                  >
                 </div>
               </div>
               <div class="w-full h-3 rounded-full bg-surface">
@@ -203,7 +207,7 @@
             {{ formatDate(row.date) }}
           </td>
           <td class="!text-right font-semibold whitespace-nowrap">
-            {{ formatCurrency(row.totalSales) }}
+            {{ row.totalSales | number: "1.2-2" }}
           </td>
           <td class="!text-center">
             {{ row.orderCount | number }}
@@ -212,7 +216,7 @@
             {{ row.guestCount | number }}
           </td>
           <td class="!text-right font-semibold whitespace-nowrap">
-            {{ formatCurrency(row.averagePerOrder) }}
+            {{ row.averagePerOrder | number: "1.2-2" }}
           </td>
         </tr>
       </ng-template>

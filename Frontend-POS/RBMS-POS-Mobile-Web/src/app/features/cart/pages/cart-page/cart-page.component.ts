@@ -14,6 +14,7 @@ import { environment } from '@env/environment';
 })
 export class CartPageComponent implements OnInit {
   isSubmitting = signal(false);
+  isBillingStatus = signal(false);
   orderNumber = signal('');
   noteEditIndex: number | null = null;
   lottieOptions: AnimationOptions = { path: 'animations/basket-shopping.json' };
@@ -30,7 +31,10 @@ export class CartPageComponent implements OnInit {
     this.selfOrderService.selfOrderGetOrdersGet()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => this.orderNumber.set(res.result?.orderNumber ?? ''),
+        next: (res) => {
+          this.orderNumber.set(res.result?.orderNumber ?? '');
+          this.isBillingStatus.set(res.result?.orderStatus === 'Billing');
+        },
       });
   }
 
