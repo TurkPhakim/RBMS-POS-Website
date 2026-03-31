@@ -255,6 +255,25 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.form.patchValue({ imageUrl: '' });
   }
 
+  checkUsernameDuplicate(): void {
+    const control = this.form.get('username');
+    if (!control || !control.value || control.hasError('maxlength')) return;
+
+    this.humanResourceService
+      .humanResourceCheckUsernameDuplicateGet({ username: control.value })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          if (res.result) {
+            control.setErrors({ ...control.errors, duplicate: 'Username นี้ถูกใช้งานแล้ว' });
+          } else if (control.hasError('duplicate')) {
+            const { duplicate, ...rest } = control.errors!;
+            control.setErrors(Object.keys(rest).length ? rest : null);
+          }
+        },
+      });
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       markFormDirty(this.form);

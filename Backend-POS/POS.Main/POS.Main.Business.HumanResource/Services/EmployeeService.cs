@@ -204,6 +204,12 @@ public class EmployeeService : IEmployeeService
         };
     }
 
+    public async Task<bool> CheckUsernameExistsAsync(string username, Guid excludeUserId, CancellationToken ct = default)
+    {
+        var existing = await _unitOfWork.Users.GetByUsernameAsync(username, ct);
+        return existing != null && existing.UserId != excludeUserId;
+    }
+
     public async Task<EmployeeResponseModel> CreateEmployeeAsync(CreateEmployeeRequestModel request, int? imageFileId = null, CancellationToken ct = default)
     {
         if (!string.IsNullOrWhiteSpace(request.NationalId))

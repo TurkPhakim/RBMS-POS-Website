@@ -22,6 +22,7 @@ public interface IEmployeeService
     Task<CreateUserAccountResponseModel> CreateUserAccountAsync(int employeeId, CancellationToken ct = default);
 
     Task<bool> CheckDuplicateAsync(string field, string value, int? excludeEmployeeId = null, CancellationToken ct = default);
+    Task<bool> CheckUsernameExistsAsync(string username, Guid excludeUserId, CancellationToken ct = default);
 
     // Address
     Task<EmployeeAddressResponseModel> CreateAddressAsync(int employeeId, CreateEmployeeAddressRequestModel request, CancellationToken ct = default);

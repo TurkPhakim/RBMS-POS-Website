@@ -274,10 +274,20 @@ export class RequestBuilder {
         for (const key of Object.keys(value)) {
           const val = value[key];
           if (val instanceof Array) {
-            for (const v of val) {
-              const toAppend = this.formDataValue(v);
-              if (toAppend !== null) {
-                formData.append(key, toAppend);
+            for (let i = 0; i < val.length; i++) {
+              const v = val[i];
+              if (v === null || v === undefined) continue;
+              if (v instanceof Blob) {
+                formData.append(key, v);
+              } else if (typeof v === 'object') {
+                for (const prop of Object.keys(v)) {
+                  const propValue = (v as Record<string, unknown>)[prop];
+                  if (propValue !== null && propValue !== undefined) {
+                    formData.append(`${key}[${i}].${prop}`, String(propValue));
+                  }
+                }
+              } else {
+                formData.append(key, String(v));
               }
             }
           } else {

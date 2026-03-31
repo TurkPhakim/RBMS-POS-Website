@@ -18,6 +18,8 @@ import { EmployeeResponseModelPaginationResult } from '../models/employee-respon
 import { EmployeeWorkHistoryResponseModelBaseResponseModel } from '../models/employee-work-history-response-model-base-response-model';
 import { humanResourceCheckDuplicateGet } from '../fn/human-resource/human-resource-check-duplicate-get';
 import { HumanResourceCheckDuplicateGet$Params } from '../fn/human-resource/human-resource-check-duplicate-get';
+import { humanResourceCheckUsernameDuplicateGet } from '../fn/human-resource/human-resource-check-username-duplicate-get';
+import { HumanResourceCheckUsernameDuplicateGet$Params } from '../fn/human-resource/human-resource-check-username-duplicate-get';
 import { humanResourceCreateAddressPost } from '../fn/human-resource/human-resource-create-address-post';
 import { HumanResourceCreateAddressPost$Params } from '../fn/human-resource/human-resource-create-address-post';
 import { humanResourceCreateEducationPost } from '../fn/human-resource/human-resource-create-education-post';
@@ -137,6 +139,31 @@ export class HumanResourceService extends BaseService {
   humanResourceUpdateMyProfilePut(params?: HumanResourceUpdateMyProfilePut$Params, context?: HttpContext): Observable<EmployeeResponseModelBaseResponseModel> {
     return this.humanResourceUpdateMyProfilePut$Response(params, context).pipe(
       map((r: StrictHttpResponse<EmployeeResponseModelBaseResponseModel>): EmployeeResponseModelBaseResponseModel => r.body)
+    );
+  }
+
+  /** Path part for operation `humanResourceCheckUsernameDuplicateGet()` */
+  static readonly HumanResourceCheckUsernameDuplicateGetPath = '/api/humanresource/me/check-username';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `humanResourceCheckUsernameDuplicateGet()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  humanResourceCheckUsernameDuplicateGet$Response(params?: HumanResourceCheckUsernameDuplicateGet$Params, context?: HttpContext): Observable<StrictHttpResponse<BooleanBaseResponseModel>> {
+    return humanResourceCheckUsernameDuplicateGet(this.http, this.rootUrl, params, context);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `humanResourceCheckUsernameDuplicateGet$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  humanResourceCheckUsernameDuplicateGet(params?: HumanResourceCheckUsernameDuplicateGet$Params, context?: HttpContext): Observable<BooleanBaseResponseModel> {
+    return this.humanResourceCheckUsernameDuplicateGet$Response(params, context).pipe(
+      map((r: StrictHttpResponse<BooleanBaseResponseModel>): BooleanBaseResponseModel => r.body)
     );
   }
 

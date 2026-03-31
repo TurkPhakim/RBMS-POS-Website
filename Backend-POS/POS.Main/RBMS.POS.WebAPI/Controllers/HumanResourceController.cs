@@ -81,6 +81,18 @@ public class HumanResourceController : BaseController
         return Success(await _employeeService.UpdateMyProfileAsync(employeeId, userId, request, newImageFileId, ct));
     }
 
+    /// <summary>
+    /// ตรวจสอบ username ซ้ำ — ทุกคนที่ login ใช้ได้ (ไม่ต้อง permission)
+    /// </summary>
+    [HttpGet("me/check-username")]
+    [ProducesResponseType(typeof(BaseResponseModel<bool>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> CheckUsernameDuplicate(
+        [FromQuery] string username, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        return Success(await _employeeService.CheckUsernameExistsAsync(username, userId, ct));
+    }
+
     [HttpGet]
     [PermissionAuthorize(Permissions.Employee.Read)]
     [ProducesResponseType(typeof(PaginationResult<EmployeeResponseModel>), StatusCodes.Status200OK)]

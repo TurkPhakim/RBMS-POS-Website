@@ -43,6 +43,7 @@
           formControlName="username"
           placeholder="ชื่อผู้ใช้งาน"
           class="w-full"
+          (blur)="checkUsernameDuplicate()"
         />
         <app-field-error [control]="form.get('username')" type="text" />
       </div>
@@ -239,7 +240,9 @@
           ></p-inputSwitch>
           <span
             class="font-semibold mb-2"
-            [ngClass]="form.get('isActive')?.value ? 'text-success' : 'text-danger'"
+            [ngClass]="
+              form.get('isActive')?.value ? 'text-success' : 'text-danger'
+            "
             >{{
               form.get("isActive")?.value ? "เปิดใช้งาน" : "ปิดใช้งาน"
             }}</span
@@ -482,7 +485,7 @@
                 <button
                   type="button"
                   class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
-                  pTooltip="แก้ไข"
+                  pTooltip="ดู/แก้ไข"
                   tooltipPosition="top"
                   (click)="onEditAddress(addr, $index)"
                 >
@@ -568,7 +571,7 @@
                 <button
                   type="button"
                   class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
-                  pTooltip="แก้ไข"
+                  pTooltip="ดู/แก้ไข"
                   tooltipPosition="top"
                   (click)="onEditEducation(edu, $index)"
                 >
@@ -656,7 +659,7 @@
                 <button
                   type="button"
                   class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white"
-                  pTooltip="แก้ไข"
+                  pTooltip="ดู/แก้ไข"
                   tooltipPosition="top"
                   (click)="onEditWorkHistory(wh, $index)"
                 >
