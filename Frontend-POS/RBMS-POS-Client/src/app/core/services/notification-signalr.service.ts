@@ -9,6 +9,7 @@ import { NotiStoreService } from './noti-store.service';
 export class NotificationSignalRService {
   private hubConnection: signalR.HubConnection | null = null;
   private started = false;
+  private connectingPromise: Promise<void> | null = null;
 
   constructor(
     private readonly authService: AuthService,
@@ -17,6 +18,10 @@ export class NotificationSignalRService {
 
   async connect(): Promise<void> {
     if (this.started) return;
+    if (this.connectingPromise) {
+      await this.connectingPromise;
+      return;
+    }
 
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl(`${environment.apiUrl}/hubs/notification`, {
@@ -36,12 +41,21 @@ export class NotificationSignalRService {
       this.notiStore.loadNotifications();
     });
 
+    this.hubConnection.onclose(() => {
+      this.started = false;
+      this.hubConnection = null;
+      this.connectingPromise = null;
+    });
+
+    this.connectingPromise = this.hubConnection.start();
     try {
-      await this.hubConnection.start();
+      await this.connectingPromise;
       this.started = true;
       this.notiStore.loadNotifications();
     } catch (err) {
       console.error('Notification SignalR connection failed:', err);
+      this.hubConnection = null;
+      this.connectingPromise = null;
     }
   }
 

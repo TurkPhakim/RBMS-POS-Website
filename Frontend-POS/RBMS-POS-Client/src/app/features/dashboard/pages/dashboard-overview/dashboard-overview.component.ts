@@ -331,7 +331,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
         comparisonStyle: 'bold',
       },
       {
-        label: '%กำไร',
+        label: 'เปอร์เซ็นต์กำไร',
         value: (selected.grossMarginPercent ?? 0).toFixed(1) + '%',
         icon: 'cash-pie',
         accentColor: 'danger',
@@ -366,7 +366,7 @@ export class DashboardOverviewComponent implements OnInit, OnDestroy {
       },
       2: {
         icon: 'drinks-glass',
-        iconSize: 'w-6 h-6',
+        iconSize: 'w-7 h-7',
         color: '#0EA5E9',
         bgClass: 'bg-cat-drink-bg',
         textClass: 'text-cat-drink',
@@ -711,7 +711,7 @@ const MOCK_KPI_CARDS: KpiCardItem[] = [
     comparisonStyle: 'bold',
   },
   {
-    label: '%กำไร',
+    label: 'เปอร์เซ็นต์กำไร',
     value: '35.0%',
     icon: 'cash-pie',
     accentColor: 'danger',

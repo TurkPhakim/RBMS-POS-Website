@@ -9,6 +9,7 @@ import { environment } from '@env/environment';
 export class OrderHubService implements OnDestroy {
   private hubConnection: signalR.HubConnection | null = null;
   private started = false;
+  private connectingPromise: Promise<void> | null = null;
   private joinedGroups = new Set<string>();
 
   readonly tableStatusChanged$ = new Subject<{
@@ -47,18 +48,45 @@ export class OrderHubService implements OnDestroy {
 
       this.registerListeners();
 
+      // Rejoin groups หลัง reconnect (SignalR ไม่ auto-rejoin groups)
+      this.hubConnection.onreconnected(async () => {
+        for (const group of this.joinedGroups) {
+          try {
+            await this.hubConnection!.invoke('JoinGroup', group);
+          } catch {
+            // ignore
+          }
+        }
+      });
+
+      // Reset state เมื่อ connection ตายถาวร (reconnect ล้มเหลวทั้งหมด)
+      this.hubConnection.onclose(() => {
+        this.started = false;
+        this.hubConnection = null;
+        this.connectingPromise = null;
+        this.joinedGroups.clear();
+      });
+
+      this.connectingPromise = this.hubConnection.start();
       try {
-        await this.hubConnection.start();
+        await this.connectingPromise;
         this.started = true;
       } catch (err) {
         console.error('SignalR connection failed:', err);
+        this.hubConnection = null;
+        this.connectingPromise = null;
         return;
       }
+    } else if (this.connectingPromise) {
+      // รอ connection ที่กำลังสร้างอยู่ให้เสร็จก่อน
+      await this.connectingPromise;
     }
+
+    if (!this.started) return;
 
     if (!this.joinedGroups.has(group)) {
       try {
-        await this.hubConnection.invoke('JoinGroup', group);
+        await this.hubConnection!.invoke('JoinGroup', group);
         this.joinedGroups.add(group);
       } catch (err) {
         console.error(`Failed to join group ${group}:`, err);
@@ -67,12 +95,14 @@ export class OrderHubService implements OnDestroy {
   }
 
   async leaveGroup(group: string): Promise<void> {
-    if (!this.hubConnection || !this.started || !this.joinedGroups.has(group))
-      return;
+    // ลบจาก joinedGroups ทันทีก่อน async invoke
+    // ป้องกัน race condition: start() อาจถูกเรียกก่อน invoke เสร็จ
+    // แล้วเห็นว่า group ยังอยู่ → ข้าม JoinGroup
+    this.joinedGroups.delete(group);
+    if (!this.hubConnection || !this.started) return;
 
     try {
       await this.hubConnection.invoke('LeaveGroup', group);
-      this.joinedGroups.delete(group);
     } catch {
       // ignore errors on leave
     }

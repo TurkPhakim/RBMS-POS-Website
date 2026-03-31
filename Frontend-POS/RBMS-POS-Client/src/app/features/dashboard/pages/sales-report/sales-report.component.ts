@@ -1,4 +1,10 @@
-import { Component, DestroyRef, OnDestroy, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DashboardService } from '@app/core/api/services/dashboard.service';
 import { SalesReportResponseModel } from '@app/core/api/models/sales-report-response-model';
@@ -10,13 +16,35 @@ import { ChartData, ChartOptions } from 'chart.js';
 
 const KEY_BTN_MOCK = 'toggle-mock-sales';
 
-const CATEGORY_CONFIG: Record<number, { iconName: string; color: string; bgStyle: string; borderColor: string }> = {
-  1: { iconName: 'chicken-drumstick', color: 'text-cat-food', bgStyle: 'rgba(249, 115, 22, 0.1)', borderColor: 'border-cat-food' },
-  2: { iconName: 'drinks-glass', color: 'text-cat-drink', bgStyle: 'rgba(14, 165, 233, 0.1)', borderColor: 'border-cat-drink' },
-  3: { iconName: 'dessert', color: 'text-cat-dessert', bgStyle: 'rgba(236, 72, 153, 0.1)', borderColor: 'border-cat-dessert' },
+const CATEGORY_CONFIG: Record<
+  number,
+  { iconName: string; color: string; bgStyle: string; borderColor: string }
+> = {
+  1: {
+    iconName: 'chicken-drumstick',
+    color: 'text-cat-food',
+    bgStyle: 'rgba(249, 115, 22, 0.1)',
+    borderColor: 'border-cat-food',
+  },
+  2: {
+    iconName: 'drinks-glass',
+    color: 'text-cat-drink',
+    bgStyle: 'rgba(14, 165, 233, 0.1)',
+    borderColor: 'border-cat-drink',
+  },
+  3: {
+    iconName: 'dessert',
+    color: 'text-cat-dessert',
+    bgStyle: 'rgba(236, 72, 153, 0.1)',
+    borderColor: 'border-cat-dessert',
+  },
 };
 
-const PIE_COLORS: Record<number, string> = { 1: '#f97316', 2: '#0EA5E9', 3: '#EC4899' };
+const PIE_COLORS: Record<number, string> = {
+  1: '#f97316',
+  2: '#0EA5E9',
+  3: '#EC4899',
+};
 
 @Component({
   selector: 'app-sales-report',
@@ -174,10 +202,37 @@ export class SalesReportComponent implements OnInit, OnDestroy {
   }
 
   get kitchenItems() {
-    const cfg: Record<number, { icon: string; iconSize: string; color: string; bgClass: string; textClass: string }> = {
-      1: { icon: 'chicken-drumstick', iconSize: 'w-8 h-8', color: '#f97316', bgClass: 'bg-cat-food-bg', textClass: 'text-cat-food' },
-      2: { icon: 'drinks-glass', iconSize: 'w-6 h-6', color: '#0EA5E9', bgClass: 'bg-cat-drink-bg', textClass: 'text-cat-drink' },
-      3: { icon: 'dessert', iconSize: 'w-8 h-8', color: '#EC4899', bgClass: 'bg-cat-dessert-bg', textClass: 'text-cat-dessert' },
+    const cfg: Record<
+      number,
+      {
+        icon: string;
+        iconSize: string;
+        color: string;
+        bgClass: string;
+        textClass: string;
+      }
+    > = {
+      1: {
+        icon: 'chicken-drumstick',
+        iconSize: 'w-10 h-10',
+        color: '#f97316',
+        bgClass: 'bg-cat-food-bg',
+        textClass: 'text-cat-food',
+      },
+      2: {
+        icon: 'drinks-glass',
+        iconSize: 'w-6 h-6',
+        color: '#0EA5E9',
+        bgClass: 'bg-cat-drink-bg',
+        textClass: 'text-cat-drink',
+      },
+      3: {
+        icon: 'dessert',
+        iconSize: 'w-10 h-10',
+        color: '#EC4899',
+        bgClass: 'bg-cat-dessert-bg',
+        textClass: 'text-cat-dessert',
+      },
     };
     return (this.report()?.kitchenBreakdown ?? []).map((k) => {
       const c = cfg[k.categoryType ?? 0] ?? cfg[1];
@@ -223,7 +278,10 @@ export class SalesReportComponent implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number): string {
-    return value.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return value.toLocaleString('th-TH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   // ─── Private ──────────────────────────────────────────
@@ -253,7 +311,9 @@ export class SalesReportComponent implements OnInit, OnDestroy {
       datasets: [
         {
           data: cats.map((c) => c.totalSales ?? 0),
-          backgroundColor: cats.map((c) => PIE_COLORS[c.categoryType ?? 0] ?? '#94a3b8'),
+          backgroundColor: cats.map(
+            (c) => PIE_COLORS[c.categoryType ?? 0] ?? '#94a3b8',
+          ),
         },
       ],
     });
@@ -289,7 +349,7 @@ export class SalesReportComponent implements OnInit, OnDestroy {
       0: 1.15, // อาทิตย์ — ค่อนข้างดี
       1: 0.75, // จันทร์ — ซึมสุด
       2: 0.85, // อังคาร
-      3: 0.90, // พุธ
+      3: 0.9, // พุธ
       4: 0.95, // พฤหัส
       5: 1.25, // ศุกร์ — คึกคัก
       6: 1.35, // เสาร์ — คึกคักสุด
@@ -306,8 +366,12 @@ export class SalesReportComponent implements OnInit, OnDestroy {
       const baseSales = 28000;
       const baseOrders = 45;
 
-      const sales = Math.round(baseSales * mult * specialBoost * (0.85 + seededRandom() * 0.30));
-      const orders = Math.round(baseOrders * mult * specialBoost * (0.85 + seededRandom() * 0.30));
+      const sales = Math.round(
+        baseSales * mult * specialBoost * (0.85 + seededRandom() * 0.3),
+      );
+      const orders = Math.round(
+        baseOrders * mult * specialBoost * (0.85 + seededRandom() * 0.3),
+      );
       const guestsPerOrder = 1.6 + seededRandom() * 1.0; // 1.6–2.6 คนต่อออเดอร์
       const guests = Math.round(orders * guestsPerOrder);
 
@@ -326,9 +390,9 @@ export class SalesReportComponent implements OnInit, OnDestroy {
     }
 
     // สัดส่วนหมวดหมู่ — ยอดขาย (บาท)
-    const foodPct = 0.42 + seededRandom() * 0.06;  // 42-48%
-    const drinkPct = 0.28 + seededRandom() * 0.06;  // 28-34%
-    const dessertPct = 1 - foodPct - drinkPct;       // ส่วนที่เหลือ
+    const foodPct = 0.42 + seededRandom() * 0.06; // 42-48%
+    const drinkPct = 0.28 + seededRandom() * 0.06; // 28-34%
+    const dessertPct = 1 - foodPct - drinkPct; // ส่วนที่เหลือ
 
     const foodSales = Math.round(totalSales * foodPct);
     const drinkSales = Math.round(totalSales * drinkPct);
@@ -336,7 +400,7 @@ export class SalesReportComponent implements OnInit, OnDestroy {
 
     // สัดส่วนหมวดหมู่ — จำนวนชิ้น
     const totalItems = Math.round(totalOrders * (3.2 + seededRandom() * 1.2)); // 3.2–4.4 ชิ้นต่อออเดอร์
-    const foodItems = Math.round(totalItems * (0.30 + seededRandom() * 0.06));
+    const foodItems = Math.round(totalItems * (0.3 + seededRandom() * 0.06));
     const drinkItems = Math.round(totalItems * (0.42 + seededRandom() * 0.06));
     const dessertItems = totalItems - foodItems - drinkItems;
 
@@ -345,17 +409,48 @@ export class SalesReportComponent implements OnInit, OnDestroy {
         totalSales,
         orderCount: totalOrders,
         guestCount: totalGuests,
-        averagePerOrder: Math.round((totalSales / (totalOrders || 1)) * 100) / 100,
+        averagePerOrder:
+          Math.round((totalSales / (totalOrders || 1)) * 100) / 100,
       },
       kitchenBreakdown: [
-        { categoryName: 'อาหาร', categoryType: 1, itemCount: foodItems, percentage: Math.round((foodItems / totalItems) * 1000) / 10 },
-        { categoryName: 'เครื่องดื่ม', categoryType: 2, itemCount: drinkItems, percentage: Math.round((drinkItems / totalItems) * 1000) / 10 },
-        { categoryName: 'ของหวาน', categoryType: 3, itemCount: dessertItems, percentage: Math.round((dessertItems / totalItems) * 1000) / 10 },
+        {
+          categoryName: 'อาหาร',
+          categoryType: 1,
+          itemCount: foodItems,
+          percentage: Math.round((foodItems / totalItems) * 1000) / 10,
+        },
+        {
+          categoryName: 'เครื่องดื่ม',
+          categoryType: 2,
+          itemCount: drinkItems,
+          percentage: Math.round((drinkItems / totalItems) * 1000) / 10,
+        },
+        {
+          categoryName: 'ของหวาน',
+          categoryType: 3,
+          itemCount: dessertItems,
+          percentage: Math.round((dessertItems / totalItems) * 1000) / 10,
+        },
       ],
       categoryBreakdown: [
-        { categoryName: 'อาหาร', categoryType: 1, totalSales: foodSales, percentage: Math.round((foodSales / totalSales) * 1000) / 10 },
-        { categoryName: 'เครื่องดื่ม', categoryType: 2, totalSales: drinkSales, percentage: Math.round((drinkSales / totalSales) * 1000) / 10 },
-        { categoryName: 'ของหวาน', categoryType: 3, totalSales: dessertSales, percentage: Math.round((dessertSales / totalSales) * 1000) / 10 },
+        {
+          categoryName: 'อาหาร',
+          categoryType: 1,
+          totalSales: foodSales,
+          percentage: Math.round((foodSales / totalSales) * 1000) / 10,
+        },
+        {
+          categoryName: 'เครื่องดื่ม',
+          categoryType: 2,
+          totalSales: drinkSales,
+          percentage: Math.round((drinkSales / totalSales) * 1000) / 10,
+        },
+        {
+          categoryName: 'ของหวาน',
+          categoryType: 3,
+          totalSales: dessertSales,
+          percentage: Math.round((dessertSales / totalSales) * 1000) / 10,
+        },
       ],
       dailyBreakdown: daily,
     });

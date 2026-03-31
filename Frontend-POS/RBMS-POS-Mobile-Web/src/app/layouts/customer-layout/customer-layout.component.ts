@@ -131,6 +131,30 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
   }
 
   requestBill(): void {
+    // ตรวจสอบสถานะก่อน — ถ้าขอบิลไปแล้วให้ redirect ไปหน้าบิลตามสถานะ
+    this.selfOrderService.selfOrderGetOrdersGet()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const orderStatus = res.result?.orderStatus;
+          const bills = res.result?.bills ?? [];
+
+          if (orderStatus === 'Billing') {
+            if (bills.length > 0) {
+              this.router.navigate(['/bill/summary'], { replaceUrl: true });
+            } else {
+              this.router.navigate(['/bill/waiting'], { replaceUrl: true });
+            }
+            return;
+          }
+
+          // ยังไม่ขอบิล — แสดง confirmation dialog
+          this.showBillConfirmDialog();
+        },
+      });
+  }
+
+  private showBillConfirmDialog(): void {
     this.modalService.info({
       title: 'ยืนยันขอบิล',
       message: 'ต้องการเช็คบิลเพื่อชำระเงินใช่ไหม?',

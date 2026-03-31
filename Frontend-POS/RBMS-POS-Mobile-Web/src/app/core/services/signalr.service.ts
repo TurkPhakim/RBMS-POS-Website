@@ -47,6 +47,34 @@ export class SignalRService {
       this.refreshOrders.update((v) => v + 1);
     });
 
+    this.connection.on('ItemCancelled', () => {
+      this.refreshOrders.update((v) => v + 1);
+    });
+
+    this.connection.on('SlipUploaded', () => {
+      this.refreshOrders.update((v) => v + 1);
+    });
+
+    // Rejoin group หลัง reconnect (SignalR ไม่ auto-rejoin groups)
+    this.connection.onreconnected(async () => {
+      console.log('[SignalR] Reconnected, rejoining group...');
+      if (this.currentGroup) {
+        try {
+          await this.connection!.invoke('JoinGroup', this.currentGroup);
+          console.log('[SignalR] Rejoined group:', this.currentGroup);
+        } catch (err) {
+          console.error('[SignalR] Failed to rejoin group:', err);
+        }
+      }
+    });
+
+    // Reset state เมื่อ connection ตายถาวร (reconnect ล้มเหลวทั้งหมด)
+    this.connection.onclose(() => {
+      console.warn('[SignalR] Connection closed');
+      this.connection = null;
+      this.currentGroup = null;
+    });
+
     try {
       await this.connection.start();
       console.log('[SignalR] Connected to hub');
