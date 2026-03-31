@@ -3,7 +3,10 @@
 export interface CustomerBillSummaryModel {
   billNumber?: string | null;
   billType?: string | null;
+  claimPaymentMethod?: string | null;
+  claimedByNickname?: string | null;
   grandTotal?: number;
+  isClaimedByMe?: boolean;
   orderBillId?: number;
   serviceChargeAmount?: number;
   splitCount?: number;

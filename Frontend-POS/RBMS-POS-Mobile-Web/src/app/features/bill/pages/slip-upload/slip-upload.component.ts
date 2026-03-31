@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, signal } from '@angular/core';
+import { Component, computed, DestroyRef, OnDestroy, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ModalService } from '@core/services/modal.service';
@@ -12,7 +12,7 @@ import { environment } from '@env/environment';
   standalone: false,
   templateUrl: './slip-upload.component.html',
 })
-export class SlipUploadComponent {
+export class SlipUploadComponent implements OnDestroy {
   selectedFile = signal<File | null>(null);
   previewUrl = signal<string | null>(null);
   isUploading = signal(false);
@@ -37,6 +37,19 @@ export class SlipUploadComponent {
   ) {
     this.orderBillId = Number(this.route.snapshot.queryParamMap.get('billId'));
     this.session.set(this.customerAuth.getSession());
+  }
+
+  ngOnDestroy(): void {
+    // Release claim ถ้ายังไม่ได้ upload สลิป (navigate back)
+    if (!this.uploadResult()) {
+      const qrToken = this.customerAuth.getQrToken();
+      if (qrToken && this.orderBillId) {
+        this.customerService.customerReleaseBillPost({
+          qrToken,
+          orderBillId: this.orderBillId,
+        }).subscribe();
+      }
+    }
   }
 
   onFileSelect(event: Event): void {

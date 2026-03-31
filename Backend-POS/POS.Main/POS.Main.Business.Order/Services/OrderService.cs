@@ -532,10 +532,8 @@ public class OrderService : IOrderService
             .ToList();
 
         var subTotal = servedItems.Sum(i => i.TotalPrice);
-        var (scId, serviceChargeRate) = await GetActiveServiceChargeAsync(ct);
         const decimal vatRate = 7m;
-        var serviceChargeAmount = Math.Round(subTotal * serviceChargeRate / 100, 2);
-        var vatAmount = Math.Round((subTotal + serviceChargeAmount) * vatRate / 100, 2);
+        var vatAmount = Math.Round(subTotal * vatRate / 100, 2);
 
         var fullBill = new TbOrderBill
         {
@@ -545,12 +543,12 @@ public class OrderService : IOrderService
             SubTotal = subTotal,
             TotalDiscountAmount = 0,
             NetAmount = subTotal,
-            ServiceChargeId = scId,
-            ServiceChargeRate = serviceChargeRate,
-            ServiceChargeAmount = serviceChargeAmount,
+            ServiceChargeId = null,
+            ServiceChargeRate = 0,
+            ServiceChargeAmount = 0,
             VatRate = vatRate,
             VatAmount = vatAmount,
-            GrandTotal = subTotal + serviceChargeAmount + vatAmount,
+            GrandTotal = subTotal + vatAmount,
             Status = EBillStatus.Pending
         };
 
@@ -660,8 +658,6 @@ public class OrderService : IOrderService
         if (order.Status != EOrderStatus.Billing)
             throw new BusinessException("ต้องขอบิลก่อนถึงจะแยกบิลได้");
 
-        // Get active service charge
-        var (scId, serviceChargeRate) = await GetActiveServiceChargeAsync(ct);
         const decimal vatRate = 7m;
 
         var allServedItemIds = order.OrderItems
@@ -697,8 +693,7 @@ public class OrderService : IOrderService
             var groupItems = order.OrderItems.Where(item => groupItemIds.Contains(item.OrderItemId)).ToList();
 
             var subTotal = groupItems.Sum(item => item.TotalPrice);
-            var serviceChargeAmount = Math.Round(subTotal * serviceChargeRate / 100, 2);
-            var vatAmount = Math.Round((subTotal + serviceChargeAmount) * vatRate / 100, 2);
+            var vatAmount = Math.Round(subTotal * vatRate / 100, 2);
 
             var bill = new TbOrderBill
             {
@@ -708,12 +703,12 @@ public class OrderService : IOrderService
                 SubTotal = subTotal,
                 TotalDiscountAmount = 0,
                 NetAmount = subTotal,
-                ServiceChargeId = scId,
-                ServiceChargeRate = serviceChargeRate,
-                ServiceChargeAmount = serviceChargeAmount,
+                ServiceChargeId = null,
+                ServiceChargeRate = 0,
+                ServiceChargeAmount = 0,
                 VatRate = vatRate,
                 VatAmount = vatAmount,
-                GrandTotal = subTotal + serviceChargeAmount + vatAmount,
+                GrandTotal = subTotal + vatAmount,
                 SplitCount = request.Groups.Count,
                 SplitIndex = i + 1,
                 Status = EBillStatus.Pending
@@ -752,7 +747,6 @@ public class OrderService : IOrderService
         if (order.Status != EOrderStatus.Billing)
             throw new BusinessException("ต้องขอบิลก่อนถึงจะแยกบิลได้");
 
-        var (scId, serviceChargeRate) = await GetActiveServiceChargeAsync(ct);
         const decimal vatRate = 7m;
 
         var totalSubTotal = order.OrderItems
@@ -774,8 +768,7 @@ public class OrderService : IOrderService
         for (int i = 0; i < request.NumberOfSplits; i++)
         {
             var subTotal = i == 0 ? splitAmount + remainder : splitAmount;
-            var serviceChargeAmount = Math.Round(subTotal * serviceChargeRate / 100, 2);
-            var vatAmount = Math.Round((subTotal + serviceChargeAmount) * vatRate / 100, 2);
+            var vatAmount = Math.Round(subTotal * vatRate / 100, 2);
 
             var bill = new TbOrderBill
             {
@@ -785,12 +778,12 @@ public class OrderService : IOrderService
                 SubTotal = subTotal,
                 TotalDiscountAmount = 0,
                 NetAmount = subTotal,
-                ServiceChargeId = scId,
-                ServiceChargeRate = serviceChargeRate,
-                ServiceChargeAmount = serviceChargeAmount,
+                ServiceChargeId = null,
+                ServiceChargeRate = 0,
+                ServiceChargeAmount = 0,
                 VatRate = vatRate,
                 VatAmount = vatAmount,
-                GrandTotal = subTotal + serviceChargeAmount + vatAmount,
+                GrandTotal = subTotal + vatAmount,
                 SplitCount = request.NumberOfSplits,
                 SplitIndex = i + 1,
                 Status = EBillStatus.Pending
@@ -847,10 +840,8 @@ public class OrderService : IOrderService
             .ToList();
 
         var subTotal = servedItems.Sum(i => i.TotalPrice);
-        var (scId, serviceChargeRate) = await GetActiveServiceChargeAsync(ct);
         const decimal vatRate = 7m;
-        var serviceChargeAmount = Math.Round(subTotal * serviceChargeRate / 100, 2);
-        var vatAmount = Math.Round((subTotal + serviceChargeAmount) * vatRate / 100, 2);
+        var vatAmount = Math.Round(subTotal * vatRate / 100, 2);
 
         var fullBill = new TbOrderBill
         {
@@ -860,12 +851,12 @@ public class OrderService : IOrderService
             SubTotal = subTotal,
             TotalDiscountAmount = 0,
             NetAmount = subTotal,
-            ServiceChargeId = scId,
-            ServiceChargeRate = serviceChargeRate,
-            ServiceChargeAmount = serviceChargeAmount,
+            ServiceChargeId = null,
+            ServiceChargeRate = 0,
+            ServiceChargeAmount = 0,
             VatRate = vatRate,
             VatAmount = vatAmount,
-            GrandTotal = subTotal + serviceChargeAmount + vatAmount,
+            GrandTotal = subTotal + vatAmount,
             Status = EBillStatus.Pending
         };
 
@@ -1105,19 +1096,6 @@ public class OrderService : IOrderService
     private static string FormatBillNumber(int sequence)
     {
         return $"BILL-{DateTimeHelper.BangkokNow():yyyyMMdd}-{sequence:D3}";
-    }
-
-    private async Task<(int? Id, decimal Rate)> GetActiveServiceChargeAsync(CancellationToken ct)
-    {
-        var now = DateTimeHelper.BangkokNow();
-        var sc = await _unitOfWork.ServiceCharges.QueryNoTracking()
-            .Where(s => s.IsActive
-                && (!s.StartDate.HasValue || s.StartDate.Value <= now)
-                && (!s.EndDate.HasValue || s.EndDate.Value >= now))
-            .OrderByDescending(s => s.CreatedAt)
-            .FirstOrDefaultAsync(ct);
-
-        return (sc?.ServiceChargeId, sc?.PercentageRate ?? 0);
     }
 
     private string GetCurrentStaffIdentifier()

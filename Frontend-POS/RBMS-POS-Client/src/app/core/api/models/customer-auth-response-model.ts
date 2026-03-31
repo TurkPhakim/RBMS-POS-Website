@@ -6,9 +6,11 @@ export interface CustomerAuthResponseModel {
   address?: string | null;
   bankName?: string | null;
   facebook?: string | null;
+  hasBills?: boolean;
   instagram?: string | null;
   logoFileId?: number | null;
   nickname?: string | null;
+  orderStatus?: string | null;
   paymentQrCodeFileId?: number | null;
   phoneNumber?: string | null;
   sessionToken?: string | null;

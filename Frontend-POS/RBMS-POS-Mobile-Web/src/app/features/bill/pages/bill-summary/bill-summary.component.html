@@ -75,6 +75,11 @@
                     <i class="pi pi-check-circle text-xs"></i>
                     ชำระแล้ว
                   </span>
+                } @else if (b.claimedByNickname && !b.isClaimedByMe) {
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-warning-bg text-warning text-sm font-semibold border border-warning">
+                    <i class="pi pi-lock text-xs"></i>
+                    กำลังชำระ
+                  </span>
                 }
               </div>
 
@@ -88,20 +93,44 @@
                   </span>
                 </div>
 
-                <!-- Payment buttons for Pending bills -->
-                @if (b.status !== 'Paid') {
-                  <div class="flex gap-2 mt-3">
-                    <button pButton label="เงินสด" severity="success" class="flex-1 !text-sm !py-2"
-                            (click)="requestCashPayment()"></button>
-                    <button pButton label="โอนเงิน" class="flex-1 !text-sm !py-2"
-                            (click)="goToSlipUpload(b.orderBillId!)"></button>
-                  </div>
-                } @else {
+                <!-- Payment actions based on claim state -->
+                @if (b.status === 'Paid') {
                   <!-- Download receipt for Paid bills -->
                   <div class="mt-3">
                     <button pButton label="ดาวน์โหลดใบเสร็จ" severity="success" [outlined]="true"
                             class="w-full !text-sm !py-2" icon="pi pi-download"
                             (click)="onDownloadReceipt(b)"></button>
+                  </div>
+                } @else if (b.isClaimedByMe && b.claimPaymentMethod === 'Cash') {
+                  <!-- Claimed by me (Cash) -->
+                  <div class="mt-3 bg-success-bg border border-success rounded-lg p-2.5 flex items-center gap-2">
+                    <app-generic-icon name="bill-invoice" svgClass="w-8 h-8" class="text-success shrink-0"></app-generic-icon>
+                    <div class="min-w-0">
+                      <p class="text-sm font-bold text-success">แจ้งพนักงานแล้ว</p>
+                      <p class="text-xs text-surface-sub">รอชำระเงินสดที่เคาน์เตอร์</p>
+                    </div>
+                  </div>
+                } @else if (b.isClaimedByMe && b.claimPaymentMethod === 'Transfer') {
+                  <!-- Claimed by me (Transfer) — show upload button -->
+                  <div class="flex gap-2 mt-3">
+                    <button pButton label="อัพโหลดสลิป" class="flex-1 !text-sm !py-2" icon="pi pi-upload"
+                            (click)="goToSlipUpload(b.orderBillId!)"></button>
+                    <button pButton label="ยกเลิก" severity="secondary" [outlined]="true" class="!text-sm !py-2"
+                            (click)="releaseBill(b.orderBillId!)"></button>
+                  </div>
+                } @else if (b.claimedByNickname && !b.isClaimedByMe) {
+                  <!-- Claimed by someone else -->
+                  <div class="mt-3 bg-warning-bg border border-warning rounded-lg p-2.5 flex items-center gap-2">
+                    <i class="pi pi-lock text-warning text-lg shrink-0"></i>
+                    <p class="text-sm text-warning font-medium">{{ b.claimedByNickname }} กำลังชำระบิลนี้</p>
+                  </div>
+                } @else {
+                  <!-- No claim — show payment buttons -->
+                  <div class="flex gap-2 mt-3">
+                    <button pButton label="เงินสด" severity="success" class="flex-1 !text-sm !py-2"
+                            (click)="claimBill(b.orderBillId!, 'Cash')"></button>
+                    <button pButton label="โอนเงิน" class="flex-1 !text-sm !py-2"
+                            (click)="claimBill(b.orderBillId!, 'Transfer')"></button>
                   </div>
                 }
               </div>
@@ -177,12 +206,51 @@
                         class="w-full !py-2" icon="pi pi-download"
                         (click)="onDownloadReceipt(b)"></button>
               </div>
-            } @else if (!cashRequested() && !splitRequested()) {
+            } @else if (b.isClaimedByMe && b.claimPaymentMethod === 'Cash') {
+              <!-- Claimed by me (Cash) -->
+              <div class="bg-success-bg border border-success rounded-xl p-3 flex items-center gap-2">
+                <span class="w-18 h-18 rounded-full bg-success-bg flex items-center justify-center shrink-0">
+                  <app-generic-icon name="bill-invoice" svgClass="w-12 h-12" class="text-success"></app-generic-icon>
+                </span>
+                <div>
+                  <p class="text-xl font-bold text-success">แจ้งพนักงานแล้ว</p>
+                  <p class="text-surface-sub mt-1">กรุณาชำระเงินที่เคาน์เตอร์ หรือรอพนักงานมารับเงินที่โต๊ะ</p>
+                </div>
+              </div>
+            } @else if (b.isClaimedByMe && b.claimPaymentMethod === 'Transfer') {
+              <!-- Claimed by me (Transfer) — show upload button -->
+              <div class="flex gap-2">
+                <button pButton label="อัพโหลดสลิป" class="flex-1 !py-2" icon="pi pi-upload"
+                        (click)="goToSlipUpload(b.orderBillId!)"></button>
+                <button pButton label="ยกเลิก" severity="secondary" [outlined]="true" class="!py-2"
+                        (click)="releaseBill(b.orderBillId!)"></button>
+              </div>
+            } @else if (b.claimedByNickname && !b.isClaimedByMe) {
+              <!-- Claimed by someone else -->
+              <div class="bg-warning-bg border border-warning rounded-xl p-3 flex items-center gap-2">
+                <i class="pi pi-lock text-warning text-2xl shrink-0"></i>
+                <div>
+                  <p class="text-lg font-bold text-warning">กำลังชำระ</p>
+                  <p class="text-surface-sub mt-1">{{ b.claimedByNickname }} กำลังชำระบิลนี้</p>
+                </div>
+              </div>
+            } @else if (splitRequested()) {
+              <div class="bg-info-bg border border-info rounded-xl p-3 flex items-center gap-2">
+                <span class="w-18 h-18 rounded-full bg-info-bg flex items-center justify-center shrink-0">
+                  <app-generic-icon name="bill-invoice" svgClass="w-12 h-12" class="text-info"></app-generic-icon>
+                </span>
+                <div>
+                  <p class="text-xl font-bold text-info">แจ้งพนักงานแล้ว</p>
+                  <p class="text-surface-sub mt-1">กรุณารอพนักงานมาแยกบิลชำระเงินให้ที่โต๊ะ</p>
+                </div>
+              </div>
+            } @else {
+              <!-- No claim — show payment buttons -->
               <div class="relative flex gap-1.5">
                 <button pButton label="เงินสด" severity="success" class="flex-1 !text-sm !px-1 !py-1.5 sm:!py-2.5"
-                        (click)="requestCashPayment()"></button>
+                        (click)="claimBill(b.orderBillId!, 'Cash')"></button>
                 <button pButton label="โอนเงิน" class="flex-1 !text-sm !px-1 !py-1.5 sm:!py-2.5"
-                        (click)="goToSlipUpload(b.orderBillId!)"></button>
+                        (click)="claimBill(b.orderBillId!, 'Transfer')"></button>
                 <div class="flex-1">
                   <button pButton severity="info" class="w-full !p-0 !overflow-hidden h-full"
                           (click)="showSplitPanel.set(!showSplitPanel())">
@@ -232,26 +300,6 @@
                       }
                   </div>
                 }
-              </div>
-            } @else if (cashRequested()) {
-              <div class="bg-success-bg border border-success rounded-xl p-3 flex items-center gap-2">
-                <span class="w-18 h-18 rounded-full bg-success-bg flex items-center justify-center shrink-0">
-                  <app-generic-icon name="bill-invoice" svgClass="w-12 h-12" class="text-success"></app-generic-icon>
-                </span>
-                <div>
-                  <p class="text-xl font-bold text-success">แจ้งพนักงานแล้ว</p>
-                  <p class="text-surface-sub mt-1">กรุณาชำระเงินที่เคาน์เตอร์ หรือรอพนักงานมารับเงินที่โต๊ะ</p>
-                </div>
-              </div>
-            } @else if (splitRequested()) {
-              <div class="bg-info-bg border border-info rounded-xl p-3 flex items-center gap-2">
-                <span class="w-18 h-18 rounded-full bg-info-bg flex items-center justify-center shrink-0">
-                  <app-generic-icon name="bill-invoice" svgClass="w-12 h-12" class="text-info"></app-generic-icon>
-                </span>
-                <div>
-                  <p class="text-xl font-bold text-info">แจ้งพนักงานแล้ว</p>
-                  <p class="text-surface-sub mt-1">กรุณารอพนักงานมาแยกบิลชำระเงินให้ที่โต๊ะ</p>
-                </div>
               </div>
             }
           </div>

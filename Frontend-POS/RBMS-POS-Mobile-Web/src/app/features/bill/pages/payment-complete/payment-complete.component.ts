@@ -1,5 +1,5 @@
 import { Component, DestroyRef, effect, OnDestroy, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AnimationOptions } from 'ngx-lottie';
 import { CustomerService } from '@core/api/services/customer.service';
@@ -36,6 +36,7 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private customerService: CustomerService,
     private selfOrderService: SelfOrderService,
     private customerAuth: CustomerAuthService,
@@ -114,6 +115,23 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
           if (res.result === 'Paid') {
             this.isCompleted.set(true);
             this.loadReceiptData();
+            this.checkAllBillsPaid();
+          }
+        },
+      });
+  }
+
+  private checkAllBillsPaid(): void {
+    const qrToken = this.customerAuth.getQrToken();
+    if (!qrToken) return;
+
+    this.customerService.customerGetBillGet({ qrToken })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const bills = res.result?.bills ?? [];
+          if (bills.length > 1 && bills.every(b => b.status === 'Paid')) {
+            this.router.navigate(['/bill/summary']);
           }
         },
       });

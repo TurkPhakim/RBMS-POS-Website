@@ -21,6 +21,16 @@ public class CustomerBillSummaryModel
     public decimal VatAmount { get; set; }
     public decimal TotalDiscountAmount { get; set; }
     public decimal GrandTotal { get; set; }
+
+    // Bill claim info
+    public string? ClaimedByNickname { get; set; }
+    public string? ClaimPaymentMethod { get; set; }
+    public bool IsClaimedByMe { get; set; }
+}
+
+public class ClaimBillRequestModel
+{
+    public string PaymentMethod { get; set; } = string.Empty;
 }
 
 public class CustomerOrderItemModel

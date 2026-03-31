@@ -60,4 +60,16 @@ public class OrderNotificationService : IOrderNotificationService
         await _hubContext.Clients.Groups("floor", $"table_{tableId}")
             .SendAsync("PaymentCompleted", new { tableId, orderBillId }, ct);
     }
+
+    public async Task NotifyBillClaimedAsync(int tableId, int orderBillId, CancellationToken ct = default)
+    {
+        await _hubContext.Clients.Group($"table_{tableId}")
+            .SendAsync("BillClaimed", new { tableId, orderBillId }, ct);
+    }
+
+    public async Task NotifyBillReleasedAsync(int tableId, int orderBillId, CancellationToken ct = default)
+    {
+        await _hubContext.Clients.Group($"table_{tableId}")
+            .SendAsync("BillReleased", new { tableId, orderBillId }, ct);
+    }
 }

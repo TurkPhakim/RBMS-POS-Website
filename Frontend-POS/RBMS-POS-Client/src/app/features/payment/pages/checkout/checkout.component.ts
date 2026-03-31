@@ -60,6 +60,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return bills.length > 0 && bills.every((b) => b.status === 'Paid');
   });
 
+  slipPendingCount = computed(() => {
+    return this.allBills().filter(b => b.status !== 'Paid' && b.customerSlipFileId).length;
+  });
+
   canUnsplit = computed(() => {
     const bills = this.allBills();
     return bills.length > 1 && bills.every((b) => b.status === 'Pending');
@@ -126,6 +130,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   private orderId = 0;
   private pendingAutoOpenSlip = false;
+  private pendingAutoSwitchToSlip = false;
   private isCreatingBill = false;
 
   constructor(
@@ -160,7 +165,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.orderHubService.start('floor');
     this.orderHubService.slipUploaded$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadData());
+      .subscribe(() => {
+        this.pendingAutoSwitchToSlip = true;
+        this.loadData();
+      });
     this.orderHubService.paymentCompleted$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.loadData());
@@ -207,7 +215,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
             return;
           }
           this.allBills.set(bills);
-          this.autoSelectPendingBill(bills);
+
+          if (this.pendingAutoSwitchToSlip) {
+            this.pendingAutoSwitchToSlip = false;
+            this.autoSwitchToSlipBill(bills);
+          } else {
+            this.autoSelectPendingBill(bills);
+          }
           this.syncScDropdown();
 
           if (this.pendingAutoOpenSlip) {
@@ -292,6 +306,20 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     const pendingIdx = bills.findIndex((b) => b.status === 'Pending');
     this.selectedBillIndex.set(pendingIdx >= 0 ? pendingIdx : 0);
     this.numpadDisplay.set('0');
+  }
+
+  private autoSwitchToSlipBill(bills: OrderBillResponseModel[]): void {
+    const current = bills[this.selectedBillIndex()];
+    // Only auto-switch if current bill doesn't have a slip
+    if (current?.customerSlipFileId) return;
+
+    const slipBillIdx = bills.findIndex(
+      (b) => b.status !== 'Paid' && b.customerSlipFileId,
+    );
+    if (slipBillIdx >= 0) {
+      this.selectedBillIndex.set(slipBillIdx);
+      this.numpadDisplay.set('0');
+    }
   }
 
   private syncScDropdown(): void {

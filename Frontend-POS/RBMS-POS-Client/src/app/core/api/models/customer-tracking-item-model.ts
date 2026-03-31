@@ -2,6 +2,7 @@
 /* eslint-disable */
 import { CustomerTrackingOptionModel } from '../models/customer-tracking-option-model';
 export interface CustomerTrackingItemModel {
+  allergens?: string | null;
   menuImageFileId?: number | null;
   menuName?: string | null;
   note?: string | null;

@@ -55,6 +55,14 @@ export class SignalRService {
       this.refreshOrders.update((v) => v + 1);
     });
 
+    this.connection.on('BillClaimed', () => {
+      this.refreshOrders.update((v) => v + 1);
+    });
+
+    this.connection.on('BillReleased', () => {
+      this.refreshOrders.update((v) => v + 1);
+    });
+
     // Rejoin group หลัง reconnect (SignalR ไม่ auto-rejoin groups)
     this.connection.onreconnected(async () => {
       console.log('[SignalR] Reconnected, rejoining group...');

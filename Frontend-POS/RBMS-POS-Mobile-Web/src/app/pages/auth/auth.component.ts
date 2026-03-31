@@ -82,7 +82,12 @@ export class AuthComponent implements OnInit {
   }
 
   private getDeviceFingerprint(): string {
-    const nav = navigator;
-    return btoa(`${nav.userAgent}|${nav.language}|${screen.width}x${screen.height}`).slice(0, 40);
+    const STORAGE_KEY = 'device_fingerprint';
+    let fp = localStorage.getItem(STORAGE_KEY);
+    if (!fp) {
+      fp = crypto.randomUUID();
+      localStorage.setItem(STORAGE_KEY, fp);
+    }
+    return fp;
   }
 }

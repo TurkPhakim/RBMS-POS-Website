@@ -1,4 +1,4 @@
-import { Component, computed, DestroyRef, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CustomerService } from '@core/api/services/customer.service';
@@ -15,9 +15,8 @@ import { CustomerBillSummaryModel } from '@core/api/models/customer-bill-summary
   standalone: false,
   templateUrl: './bill-summary.component.html',
 })
-export class BillSummaryComponent implements OnInit {
+export class BillSummaryComponent implements OnInit, OnDestroy {
   billData = signal<CustomerBillResponseModel | null>(null);
-  cashRequested = signal(false);
   splitRequested = signal(false);
   showSplitPanel = signal(false);
   splitType = signal<'Equal' | 'ByItem' | null>(null);
@@ -68,6 +67,8 @@ export class BillSummaryComponent implements OnInit {
     return b.length > 0 ? b[0] : null;
   });
 
+  private pollInterval: ReturnType<typeof setInterval> | null = null;
+
   constructor(
     private customerService: CustomerService,
     private selfOrderService: SelfOrderService,
@@ -85,15 +86,17 @@ export class BillSummaryComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const qrToken = this.customerAuth.getQrToken();
-    if (!qrToken) return;
-
-    // Restore payment request state from sessionStorage
-    const savedState = sessionStorage.getItem(`bill_state_${qrToken}`);
-    if (savedState === 'cash') this.cashRequested.set(true);
-    if (savedState === 'split') this.splitRequested.set(true);
-
     this.loadBill();
+
+    // Fallback poll ทุก 15 วินาที เผื่อ SignalR หลุด
+    this.pollInterval = setInterval(() => this.loadBill(), 15000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
   }
 
   private loadBill(): void {
@@ -109,20 +112,36 @@ export class BillSummaryComponent implements OnInit {
       });
   }
 
-  goToSlipUpload(orderBillId: number): void {
-    this.router.navigate(['/bill/upload'], { queryParams: { billId: orderBillId } });
-  }
+  claimBill(orderBillId: number, paymentMethod: 'Cash' | 'Transfer'): void {
+    const qrToken = this.customerAuth.getQrToken();
+    if (!qrToken) return;
 
-  requestCashPayment(): void {
-    this.selfOrderService.selfOrderRequestCashPaymentPost()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.customerService.customerClaimBillPost({
+      qrToken,
+      orderBillId,
+      body: { paymentMethod },
+    }).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.cashRequested.set(true);
-          const qrToken = this.customerAuth.getQrToken();
-          if (qrToken) sessionStorage.setItem(`bill_state_${qrToken}`, 'cash');
+          this.loadBill();
+          if (paymentMethod === 'Transfer') {
+            this.router.navigate(['/bill/upload'], { queryParams: { billId: orderBillId } });
+          }
         },
       });
+  }
+
+  releaseBill(orderBillId: number): void {
+    const qrToken = this.customerAuth.getQrToken();
+    if (!qrToken) return;
+
+    this.customerService.customerReleaseBillPost({ qrToken, orderBillId })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: () => this.loadBill() });
+  }
+
+  goToSlipUpload(orderBillId: number): void {
+    this.router.navigate(['/bill/upload'], { queryParams: { billId: orderBillId } });
   }
 
   submitSplitBill(type: 'Equal' | 'ByItem'): void {
@@ -140,8 +159,6 @@ export class BillSummaryComponent implements OnInit {
           this.splitRequested.set(true);
           this.showSplitPanel.set(false);
           this.splitType.set(null);
-          const qrToken = this.customerAuth.getQrToken();
-          if (qrToken) sessionStorage.setItem(`bill_state_${qrToken}`, 'split');
         },
         error: () => {
           this.isSubmitting.set(false);

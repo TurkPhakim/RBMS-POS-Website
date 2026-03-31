@@ -42,7 +42,7 @@ public class CustomerService : ICustomerService
         _logger = logger;
     }
 
-    public async Task<CustomerBillResponseModel> GetBillByQrTokenAsync(string qrToken, CancellationToken ct = default)
+    public async Task<CustomerBillResponseModel> GetBillByQrTokenAsync(string qrToken, int? sessionId, CancellationToken ct = default)
     {
         var table = await ValidateQrTokenAsync(qrToken, ct);
 
@@ -53,6 +53,7 @@ public class CustomerService : ICustomerService
             .Include(o => o.OrderItems.Where(oi => oi.Status != EOrderItemStatus.Cancelled && oi.Status != EOrderItemStatus.Voided))
                 .ThenInclude(oi => oi.OrderItemOptions)
             .Include(o => o.OrderBills)
+                .ThenInclude(b => b.ClaimedBySession)
             .FirstOrDefaultAsync(o => o.OrderId == table.ActiveOrderId, ct)
             ?? throw new EntityNotFoundException("Order", table.ActiveOrderId.Value);
 
@@ -89,6 +90,9 @@ public class CustomerService : ICustomerService
                 VatAmount = b.VatAmount,
                 TotalDiscountAmount = b.TotalDiscountAmount,
                 GrandTotal = b.GrandTotal,
+                ClaimedByNickname = b.ClaimedBySession?.Nickname,
+                ClaimPaymentMethod = b.ClaimPaymentMethod,
+                IsClaimedByMe = sessionId.HasValue && b.ClaimedBySessionId == sessionId.Value,
             })
             .ToList();
 
@@ -99,6 +103,71 @@ public class CustomerService : ICustomerService
             Items = items,
             Bills = bills
         };
+    }
+
+    public async Task ClaimBillAsync(string qrToken, int orderBillId, int sessionId, ClaimBillRequestModel request, CancellationToken ct = default)
+    {
+        var table = await ValidateQrTokenAsync(qrToken, ct);
+
+        var bill = await _unitOfWork.OrderBills.GetAll()
+            .Include(b => b.Order)
+                .ThenInclude(o => o.Table)
+                    .ThenInclude(t => t.Zone)
+            .FirstOrDefaultAsync(b => b.OrderBillId == orderBillId && b.Order.TableId == table.TableId, ct)
+            ?? throw new EntityNotFoundException("OrderBill", orderBillId);
+
+        if (bill.Status != EBillStatus.Pending)
+            throw new BusinessException("บิลนี้ชำระเงินแล้ว");
+
+        if (bill.ClaimedBySessionId.HasValue && bill.ClaimedBySessionId.Value != sessionId)
+            throw new BusinessException("บิลนี้มีคนเลือกแล้ว");
+
+        bill.ClaimedBySessionId = sessionId;
+        bill.ClaimedAt = DateTimeHelper.BangkokNow();
+        bill.ClaimPaymentMethod = request.PaymentMethod;
+        _unitOfWork.OrderBills.Update(bill);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Session {SessionId} claimed Bill {BillId} with {Method}", sessionId, orderBillId, request.PaymentMethod);
+
+        await _notificationService.NotifyBillClaimedAsync(table.TableId, orderBillId, ct);
+
+        // ถ้าเลือกเงินสด → แจ้งพนักงาน
+        if (request.PaymentMethod == "Cash")
+        {
+            var splitInfo = bill.SplitCount > 1 ? $" (บิลที่ {bill.SplitIndex}/{bill.SplitCount})" : "";
+            await _notificationBroadcaster.SendAndBroadcastAsync(new SendNotificationModel
+            {
+                EventType = "REQUEST_CASH_PAYMENT",
+                Title = "ลูกค้าขอชำระเงินสด",
+                Message = $"โซน{bill.Order.Table.Zone.ZoneName} - โต๊ะ{bill.Order.Table.TableName}{splitInfo}\nยอด {bill.GrandTotal:N2} บาท",
+                TableId = table.TableId,
+                OrderId = bill.Order.OrderId,
+                TargetGroup = "Floor"
+            }, ct);
+        }
+    }
+
+    public async Task ReleaseBillAsync(string qrToken, int orderBillId, int sessionId, CancellationToken ct = default)
+    {
+        var table = await ValidateQrTokenAsync(qrToken, ct);
+
+        var bill = await _unitOfWork.OrderBills.GetAll()
+            .FirstOrDefaultAsync(b => b.OrderBillId == orderBillId && b.Order.TableId == table.TableId, ct)
+            ?? throw new EntityNotFoundException("OrderBill", orderBillId);
+
+        if (bill.ClaimedBySessionId != sessionId)
+            throw new BusinessException("คุณไม่ได้เป็นผู้เลือกบิลนี้");
+
+        bill.ClaimedBySessionId = null;
+        bill.ClaimedAt = null;
+        bill.ClaimPaymentMethod = null;
+        _unitOfWork.OrderBills.Update(bill);
+        await _unitOfWork.CommitAsync(ct);
+
+        _logger.LogInformation("Session {SessionId} released Bill {BillId}", sessionId, orderBillId);
+
+        await _notificationService.NotifyBillReleasedAsync(table.TableId, orderBillId, ct);
     }
 
     public async Task<SlipUploadResultModel> UploadSlipAsync(

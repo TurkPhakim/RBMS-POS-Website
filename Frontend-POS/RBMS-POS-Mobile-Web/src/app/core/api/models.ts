@@ -16,6 +16,7 @@ export type { CategoryBreakdownModel } from './models/category-breakdown-model';
 export type { ChangePasswordRequestModel } from './models/change-password-request-model';
 export type { ChangePinRequestModel } from './models/change-pin-request-model';
 export type { ChildModuleNode } from './models/child-module-node';
+export type { ClaimBillRequestModel } from './models/claim-bill-request-model';
 export type { CloseCashierSessionRequestModel } from './models/close-cashier-session-request-model';
 export type { ConfirmQrPaymentRequestModel } from './models/confirm-qr-payment-request-model';
 export type { ConfirmReservationRequestModel } from './models/confirm-reservation-request-model';

@@ -40,6 +40,12 @@ public class TbOrderBill : BaseEntity
 
     public DateTime? PaidAt { get; set; }
 
+    // Bill claim (customer selects payment method on Mobile Web)
+    public int? ClaimedBySessionId { get; set; }
+    public virtual TbCustomerSession? ClaimedBySession { get; set; }
+    public DateTime? ClaimedAt { get; set; }
+    public string? ClaimPaymentMethod { get; set; }
+
     // Customer-uploaded slip (from Mobile Web)
     public int? CustomerSlipFileId { get; set; }
     public virtual TbFile? CustomerSlipFile { get; set; }

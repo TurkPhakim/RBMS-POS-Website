@@ -82,6 +82,15 @@ public class TbOrderBillConfiguration : IEntityTypeConfiguration<TbOrderBill>
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
 
+        builder.HasOne(ob => ob.ClaimedBySession)
+            .WithMany()
+            .HasForeignKey(ob => ob.ClaimedBySessionId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
+
+        builder.Property(ob => ob.ClaimPaymentMethod)
+            .HasMaxLength(20);
+
         builder.HasOne(ob => ob.CustomerSlipFile)
             .WithMany()
             .HasForeignKey(ob => ob.CustomerSlipFileId)
