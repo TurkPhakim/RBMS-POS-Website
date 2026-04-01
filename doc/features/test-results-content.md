@@ -201,3 +201,45 @@
 | Notification | 10 | ✅ ผ่านครบ |
 | Base Web | 13 | ✅ ผ่านครบ |
 | **รวมทั้งหมด** | **162** | **⚠️ 161 ผ่าน / 1 มีข้อจำกัด** |
+
+---
+
+## ปัญหาที่พบระหว่างพัฒนาและแนวทางแก้ไข
+
+### 1. SignalR Connection หลุดแล้วไม่ได้รับข้อมูล Real-time
+
+**ปัญหา:**
+ระบบใช้ SignalR Group สำหรับส่งข้อมูล Real-time เช่น Mobile Web join group `table_5`, Client join group `floor` เมื่อ server ส่ง event จะส่งไปหา group ที่เกี่ยวข้อง เมื่อ internet สะดุดแม้แค่ชั่วขณะ SignalR จะ disconnect แล้ว reconnect อัตโนมัติผ่าน `withAutomaticReconnect()` แต่ **group membership หายไป** เพราะ server ไม่จำ group ให้หลัง reconnect ทำให้ client ต่อกลับได้แต่ไม่ได้อยู่ใน group → ไม่ได้รับ event อะไรอีกเลย จนกว่าจะ refresh หน้า
+
+**แก้ไข:**
+- เพิ่ม `onreconnected` callback — เมื่อต่อกลับสำเร็จ → **rejoin group อัตโนมัติ** → กลับมารับ event ได้ทันทีโดยไม่ต้อง refresh
+- เพิ่ม `onclose` callback — ถ้า reconnect ล้มเหลวทุกรอบ (เน็ตหลุดนาน) → connection ตายถาวร → **reset state ทั้งหมด** (`started`, `hubConnection`, `joinedGroups`) → ครั้งถัดไปที่เข้าหน้าใหม่จะสร้าง connection ใหม่ได้เลย ไม่ค้างอยู่กับ connection ที่ตายแล้ว
+- เพิ่ม listeners ที่ขาดไป (`ItemCancelled`, `SlipUploaded`) ให้ครบทุก event
+
+---
+
+### 2. Race Condition ใน SignalR Service
+
+**ปัญหา:**
+ระบบมีหลาย Component ที่ต้องใช้ SignalR พร้อมกัน (เช่น OrderHub ใช้ทั้งหน้า Order List, Kitchen Display, Notification) เมื่อหลาย Component เรียก `start()` พร้อมกัน เช่น Component A กำลัง `await hubConnection.start()` อยู่ → Component B เรียก `start('floor')` ซ้ำ → B ข้าม await ไป `invoke('JoinGroup')` ก่อนที่ connection จะ ready → **fail เงียบ** ทำให้บาง Component ไม่ได้ join group และไม่ได้รับข้อมูล
+
+**แก้ไข:**
+- เพิ่ม `connectingPromise` เป็น lock กลางใน `OrderHubService.start()` — เมื่อ Component B เจอว่ามี `connectingPromise` อยู่แล้ว → รอให้ connection ของ A เสร็จก่อน → แล้วค่อย JoinGroup สำเร็จ
+- เพิ่ม guard `if (!this.started) return;` ก่อน JoinGroup ป้องกันกรณี connection fail
+- แก้ `NotificationSignalRService.connect()` เช่นกัน เพราะมีปัญหาเดียวกัน — Call B เข้ามาขณะ Call A กำลัง await → สร้าง connection ทับ → connection เก่า orphaned
+
+---
+
+### 3. OCR ไม่ทำงานบน Production Server (Linux)
+
+**ปัญหา:**
+ระบบตรวจสลิปอัตโนมัติ (Slip OCR) ใช้ NuGet package `Tesseract 5.2.0` (.NET wrapper) ซึ่งทำงานได้ปกติบน Windows (Development) แต่เมื่อ deploy ขึ้น Production Server ที่เป็น Debian 12 (Linux) เกิด error `LeptonicaApi.Initialize()` เพราะ **native library version ไม่ตรงกัน** — NuGet wrapper ถูก build สำหรับ Leptonica 1.82.x แต่ Debian 12 มี Leptonica 1.84.x
+
+นอกจากนี้ยังพบว่า Tesseract OCR อ่านได้เฉพาะสลิปที่เป็น **Screenshot จากแอปธนาคารโดยตรง** แต่สลิปที่ **ถ่ายจากกล้องมือถือ** อ่านไม่ได้ เพราะภาพถ่ายมี noise สูง ตัวอักษรไทยเบลอ Tesseract แปลงเป็นข้อความที่ไม่มีความหมาย (เช่น `wees`, `bce`, `umn`) ไม่สามารถดึงวันที่หรือเลขบัญชีได้
+
+**แก้ไข:**
+- เปลี่ยนจาก NuGet wrapper → **เรียก Tesseract CLI ผ่าน `Process.Start`** แทน เพราะ CLI ถูก compile พร้อมกับ native library ที่ตรง version กัน ไม่มีปัญหา P/Invoke อีก
+- ปรับ Dockerfile ให้ติดตั้ง `tesseract-ocr` + `tesseract-ocr-tha` (Thai language pack) แทน `libtesseract-dev`
+- เพิ่ม image preprocessing ด้วย `-normalize` เพื่อเพิ่ม contrast โดยไม่ทำลายรายละเอียดตัวเลข
+- เพิ่ม `NormalizeThaiText()` — ลบช่องว่างระหว่างตัวอักษรไทยที่ OCR ใส่ผิด เช่น `มี . ค .` → `มี.ค.`, `บ า ท` → `บาท`
+- **ข้อจำกัดที่เหลือ**: สลิปที่ถ่ายจากกล้องมือถือยังอ่านไม่ได้ แนะนำให้ลูกค้า Screenshot จากแอปธนาคารโดยตรง

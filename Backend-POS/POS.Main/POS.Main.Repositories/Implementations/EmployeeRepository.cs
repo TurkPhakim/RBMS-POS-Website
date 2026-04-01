@@ -59,7 +59,7 @@ public class EmployeeRepository : GenericRepository<TbEmployee>, IEmployeeReposi
         if (positionId.HasValue)
             query = query.Where(e => e.PositionId == positionId.Value);
 
-        return query.OrderBy(e => e.FirstNameThai).ThenBy(e => e.LastNameThai);
+        return query.OrderBy(e => e.EmployeeId);
     }
 
     public async Task<bool> IsNationalIdExistsAsync(string nationalId, int? excludeId = null, CancellationToken ct = default)
