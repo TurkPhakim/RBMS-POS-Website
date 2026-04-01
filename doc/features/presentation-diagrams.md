@@ -475,240 +475,186 @@ STYLE
 
 ```
 Create a professional technology stack overview image for a Restaurant POS system called "RBMS-POS".
-Show the ACTUAL official logos of each technology — accurate colors, shapes, and proportions.
-Minimal text. White background, 16:9 aspect ratio, presentation slide.
+White background, 16:9 aspect ratio, presentation slide quality.
 
 Title at top center: "RBMS-POS — Technology Stack"
 
 ═══════════════════════════════════════════════════
-LAYOUT — 6 horizontal rows. Each row has a colored label on the left side and technology logos arranged horizontally to the right.
+LAYOUT — 6 horizontal rows, each row has a colored label bar on the left and logo cards to the right.
 ═══════════════════════════════════════════════════
-IMPORTANT:
-- Every logo must appear EXACTLY ONCE — no duplicates
-- Use the OFFICIAL brand colors for each logo — do not recolor
-- Each logo sits inside a light gray (#F8FAFC) rounded-square card with a subtle border
-- Technology name in small text below each logo card
+
+STRICT RULES:
+- Exactly 35 items total across 6 rows — do NOT add, remove, or rename any item
+- NO hallucinated technologies — only render the items listed below
+- NO duplicates — each item appears exactly once
+- Technology name in small text below each card
+- Each card: light gray (#F8FAFC) rounded-square, same size, even spacing
 
 ═══════════════════════════════════════════════════
-ROW 1 — "Backend API" (left label bar: orange #F97316)
+ROW 1 — "Backend API" (label bar: orange #F97316) — exactly 7 cards
 ═══════════════════════════════════════════════════
-7 logos, left to right:
-
-1. ".NET 9" — The official .NET logo: a purple (#512BD4) square with white ".NET" text inside
-2. "ASP.NET Core" — Purple (#512BD4) rounded badge with white "ASP.NET" text
-3. "EF Core" — Purple diamond shape with white "EF" letters (Entity Framework)
-4. "SignalR" — Official SignalR logo: a light blue (#0088CE) circle with a white curved arrow forming the letter "R" inside — NOT a broadcast/signal icon, NOT green
-5. "JWT" — The official JWT logo: a pink/magenta (#FB015B) circle with "JWT" in white, black dot in center
-6. "Swagger" — The official Swagger logo: bright green (#85EA2D) background with a black Swagger pet icon (curly bracket cat)
-7. "MailKit" — A simple purple envelope icon with "MailKit" text
+1. ".NET 9" — purple (#512BD4) square, white ".NET" text
+2. "ASP.NET Core" — purple badge, white "ASP.NET" text
+3. "EF Core" — purple diamond, white "EF" letters
+4. "SignalR" — light blue (#0088CE) circle, white curved arrow forming letter "R" inside
+5. "JWT" — pink/magenta (#FB015B) circle, white "JWT" text
+6. "Swagger" — bright green (#85EA2D) square, black pet icon inside
+7. "MailKit" — purple envelope icon
 
 ═══════════════════════════════════════════════════
-ROW 2 — "Frontend" (left label bar: blue #3B82F6)
+ROW 2 — "Frontend" (label bar: blue #3B82F6) — exactly 8 cards
 ═══════════════════════════════════════════════════
-8 logos, left to right:
-
-1. "Angular 19" — The official Angular logo: a red (#DD0031) shield with white "A" letterform
-2. "TypeScript" — Official TypeScript logo: a blue (#3178C6) rounded square with white "TS" letters
-3. "Tailwind CSS" — Official Tailwind logo: a cyan/sky-blue (#06B6D4) abstract wind shape (two curved lines)
-4. "PrimeNG" — Official PrimeNG logo: a golden/orange LION face icon (the PrimeTek lion mascot) with "PRIME" text — NOT a blue diamond, NOT a "P" letter
-5. "RxJS" — Official RxJS logo: a deep magenta/purple (#B7178C) diamond shape with white "Rx" text
-6. "Chart.js" — Official Chart.js logo: a pink/coral (#FF6384) pie chart icon
-7. "pdfmake" — A red/dark-red PDF document icon with "pdfmake" text below — used for generating PDF receipts
-8. "NgRx" — Official NgRx logo: purple (#BA2BD2) shield-like shape with white angular symbol
+1. "Angular 19" — red (#DD0031) shield, white "A"
+2. "TypeScript" — blue (#3178C6) rounded square, white "TS"
+3. "Tailwind CSS" — cyan (#06B6D4) abstract wind shape (two curved lines)
+4. "PrimeNG" — golden/orange LION face (PrimeTek lion mascot), "PRIME" text
+5. "RxJS" — magenta (#B7178C) diamond, white "Rx"
+6. "Chart.js" — a simple LINE CHART icon with 3 colored lines (red, blue, yellow) going upward — NOT a pie chart
+7. "pdfmake" — red PDF document icon
+8. "NgRx" — purple (#BA2BD2) shield, white angular symbol
 
 ═══════════════════════════════════════════════════
-ROW 3 — "Database & Storage" (left label bar: green #10B981)
+ROW 3 — "Database & Storage" (label bar: green #10B981) — exactly 2 cards
 ═══════════════════════════════════════════════════
-2 logos, left to right:
-
-1. "SQL Server 2022" — Official Microsoft SQL Server logo: red/orange cylinder database icon with the SQL Server wordmark
-2. "MinIO" — Official MinIO logo: a red (#C72C48) flamingo bird on dark background, with "MinIO" text
+1. "SQL Server" — red/orange cylinder database icon, "Microsoft SQL Server" wordmark
+2. "MinIO" — red (#C72C48) flamingo bird, "MinIO" text
 
 ═══════════════════════════════════════════════════
-ROW 4 — "DevOps & Infrastructure" (left label bar: dark gray #334155)
+ROW 4 — "DevOps & Infrastructure" (label bar: dark gray #334155) — exactly 4 cards
 ═══════════════════════════════════════════════════
-4 logos, left to right:
-
-1. "Docker" — Official Docker logo: a light blue (#2496ED) whale carrying white containers on its back
-2. "Docker Compose" — Same Docker whale but with multiple layered containers, label "Compose"
-3. "Nginx" — Official Nginx logo: bright green (#009639) block letters "NGINX" or the green "N" icon
-4. "Let's Encrypt" — Official Let's Encrypt logo: a blue lock icon with "Let's Encrypt" text
+1. "Docker" — light blue (#2496ED) whale carrying containers
+2. "Docker Compose" — Docker whale with layered containers, label "Compose"
+3. "Nginx" — bright green (#009639) "NGINX" text
+4. "Let's Encrypt" — blue lock icon, "Let's Encrypt" text
 
 ═══════════════════════════════════════════════════
-ROW 5 — "Architecture & Patterns" (left label bar: rose #E11D48)
+ROW 5 — "Architecture & Patterns" (label bar: rose #E11D48) — exactly 6 cards
 ═══════════════════════════════════════════════════
-Show as illustrated concept icons (NOT brand logos). Each icon represents an architectural concept.
-6 icons, left to right:
-
-1. "Modular System" — Multiple colored puzzle pieces fitting together, representing 8 independent business modules (blue tint)
-2. "N-Tier Layered" — 4 horizontal stacked layers with arrows pointing down: Controller → Service → Repository → Database (orange tint)
-3. "RBAC Permissions" — A shield with a key and checkmark grid, representing Position-based Role Access Control (purple tint)
-4. "Code-First Migration" — A code file transforming into a database cylinder with an arrow, representing EF Core migrations (green tint)
-5. "Auto API Client Gen" — A Swagger document with an arrow pointing to TypeScript code, representing ng-openapi-gen auto-generation (teal tint)
-6. "Soft Delete + Audit" — A trash icon with an undo arrow and a clock, representing soft delete and automatic audit trail (gray tint)
+Illustrated concept icons (NOT brand logos):
+1. "Modular System" — colored puzzle pieces fitting together (blue tint)
+2. "N-Tier Layered" — 4 stacked layers: Controller → Service → Repository → Database (orange tint)
+3. "RBAC Permissions" — shield with key and checkmark grid (purple tint)
+4. "Code-First Migration" — code file → arrow → database cylinder (green tint)
+5. "Auto API Client Gen" — Swagger doc → arrow → TypeScript code (teal tint)
+6. "Soft Delete + Audit" — trash icon with undo arrow and clock (gray tint)
 
 ═══════════════════════════════════════════════════
-ROW 6 — "Key Features" (left label bar: purple #7C3AED)
+ROW 6 — "Key Features" (label bar: purple #7C3AED) — exactly 8 cards
 ═══════════════════════════════════════════════════
-Show as illustrated icons (NOT brand logos). Each icon should be colorful and clearly represent the feature.
-8 icons, left to right:
-
-1. "QR Ordering" — A smartphone scanning a QR code on a restaurant table (green tint)
-2. "Real-time OrderHub" — A lightning bolt with circular broadcast waves, representing WebSocket live updates (orange tint)
-3. "Kitchen Display" — A large monitor screen showing order tickets in a grid layout (red tint)
-4. "Slip OCR Verify" — A bank transfer slip being scanned by a magnifying glass with a checkmark, representing automatic slip verification (teal tint)
-5. "PDF Receipt" — A PDF document with a receipt/bill layout and download arrow (blue tint)
-6. "Mobile Web" — A smartphone showing a food ordering interface (green tint)
-7. "Real-time Notification" — A bell icon with a red badge number, representing push notifications (yellow/amber tint)
-8. "reCAPTCHA v3" — The official Google reCAPTCHA logo: blue circle with white checkmark and "reCAPTCHA" text
+Illustrated icons (NOT brand logos):
+1. "QR Ordering" — smartphone scanning QR code (green tint)
+2. "Real-time OrderHub" — lightning bolt with broadcast waves (orange tint)
+3. "Kitchen Display" — monitor showing order tickets (red tint)
+4. "Slip OCR Verify" — bank slip + magnifying glass + checkmark (teal tint)
+5. "PDF Receipt" — PDF document with download arrow (blue tint)
+6. "Mobile Web" — smartphone showing food ordering UI (green tint)
+7. "Real-time Notification" — bell with red badge number (amber tint)
+8. "reCAPTCHA v3" — Google reCAPTCHA logo: blue circle, white checkmark
 
 ═══════════════════════════════════════════════════
-STYLE REQUIREMENTS (CRITICAL — follow exactly)
+STYLE
 ═══════════════════════════════════════════════════
-- ACCURACY: Use the real, official brand logos with correct colors. Do NOT invent or approximate logos.
-- NO DUPLICATES: Each technology appears exactly once. Do not repeat any icon.
-- Each row: colored vertical label bar (40px wide) on the left → row of logo cards to the right
-- Logo cards: light gray (#F8FAFC) rounded squares (border-radius 12px), all same size, even spacing
-- Technology name below each card in clean sans-serif font, 11pt
-- Row label text: white text on colored bar, rotated 90° or horizontal
-- White (#FFFFFF) background
-- Flat design — no 3D, no heavy shadows (subtle shadow on cards OK)
-- Font: Inter, Segoe UI, or similar clean sans-serif
-- 16:9 aspect ratio
-- All text in English
-- Total items: ~34 across 6 rows
-- Professional quality suitable for a university project presentation
+- Use OFFICIAL brand logos with correct colors for rows 1-4
+- Rows 5-6 use illustrated concept icons
+- Colored vertical label bar (40px) on left of each row, white text
+- Flat design, no 3D, subtle card shadow OK
+- Clean sans-serif font (Inter / Segoe UI)
+- Professional university presentation quality
 ```
 
 ### Prompt 7: Project Overview Infographic (ตัวเลขภาพรวมโปรเจค)
 
 ```
 Create a professional infographic-style overview image for a Restaurant POS project called "RBMS-POS".
-This image shows KEY STATISTICS of the entire project — how big it is, what it contains.
-Use LARGE NUMBERS as the hero element with small descriptive icons. Minimal text. White background, 16:9, presentation slide.
+Show KEY STATISTICS only — big numbers, small icons, minimal text.
+White background, 16:9 aspect ratio, presentation slide.
 
 Title at top center: "RBMS-POS — Project Overview"
 
 ═══════════════════════════════════════════════════
-LAYOUT — Grid of statistic cards arranged in 3 rows
+LAYOUT — exactly 8 cards in 2 rows (4 per row) + 1 bottom strip
 ═══════════════════════════════════════════════════
-Each card is a rounded rectangle with:
-- A large colorful ICON at the top (40-50% of card height)
-- A very LARGE bold number in the center
-- A short label (1-3 words) below the number
+
+STRICT RULES:
+- Exactly 8 cards + 1 bottom strip — do NOT add extra cards
+- Numbers are the HERO element — very large, bold, colored
+- Each card: white background, colored left border (4px), subtle shadow
 
 ═══════════════════════════════════════════════════
-ROW 1 — Core Project Scale (4 large cards, equal width)
+ROW 1 — Project Scale (4 cards)
 ═══════════════════════════════════════════════════
 
 CARD 1 (blue #3B82F6):
-- Icon: A grid of 8 connected puzzle pieces or module blocks
+- Icon: puzzle pieces / module blocks
 - Number: "13"
 - Label: "Modules"
-- Tiny subtitle: "8 Backend + 11 Client + 5 Mobile"
+- Subtitle: "8 Backend + 11 Client + 5 Mobile"
 
 CARD 2 (orange #F97316):
-- Icon: A checklist with checkmarks, or a feature list with stars
-- Number: "160"
+- Icon: checklist with checkmarks
+- Number: "162"
 - Label: "Features"
-- Tiny subtitle: "All tested ✓"
+- Subtitle: "All tested ✓"
 
 CARD 3 (green #10B981):
-- Icon: A network of connected API endpoint nodes, or a server sending arrows
+- Icon: API network nodes
 - Number: "215"
 - Label: "API Endpoints"
-- Tiny subtitle: "24 Controllers"
+- Subtitle: "24 Controllers"
 
 CARD 4 (purple #7C3AED):
-- Icon: A database cylinder with table rows inside
+- Icon: database cylinder
 - Number: "37"
 - Label: "Database Tables"
-- Tiny subtitle: "6 Domain Groups"
+- Subtitle: "6 Domain Groups"
 
 ═══════════════════════════════════════════════════
-ROW 2 — Users & Interface (4 medium cards)
+ROW 2 — Architecture (4 cards)
 ═══════════════════════════════════════════════════
 
 CARD 5 (teal #14B8A6):
-- Icon: Two illustrated people side by side — left: a waiter with apron holding a tablet (Staff), right: a customer holding a smartphone (Customer)
+- Icon: two people (staff + customer)
 - Number: "2"
 - Label: "User Roles"
-- Tiny subtitle: "Staff (Desktop) + Customer (Mobile)"
+- Subtitle: "Staff (Desktop) + Customer (Mobile)"
 
-CARD 6 (blue #3B82F6):
-- Icon: A desktop monitor and a mobile phone side by side, both showing UI screens
-- Number: "44"
-- Label: "Pages"
-- Tiny subtitle: "33 Client + 11 Mobile"
-
-CARD 7 (amber #F59E0B):
-- Icon: A dialog/modal window popping up from a screen
-- Number: "26"
-- Label: "Dialogs"
-- Tiny subtitle: "Dynamic Dialog"
-
-CARD 8 (red #EF4444):
-- Icon: A lightning bolt with broadcast waves (real-time signal icon)
+CARD 6 (red #EF4444):
+- Icon: lightning bolt with broadcast waves
 - Number: "2"
 - Label: "SignalR Hubs"
-- Tiny subtitle: "9 Event Types"
+- Subtitle: "Real-time, 9 Event Types"
 
-═══════════════════════════════════════════════════
-ROW 3 — Architecture & Patterns (4 medium cards)
-═══════════════════════════════════════════════════
-
-CARD 9 (rose #E11D48):
-- Icon: Multiple colored puzzle pieces clicking together into a complete picture — representing 8 independent business modules
+CARD 7 (rose #E11D48):
+- Icon: colored puzzle pieces
 - Number: "8"
 - Label: "Business Modules"
-- Tiny subtitle: "Modular System"
+- Subtitle: "Modular System"
 
-CARD 10 (indigo #4F46E5):
-- Icon: 4 horizontal stacked layers with downward arrows between them: [Controller] → [Service] → [Repository] → [Database] — a clean layered diagram
+CARD 8 (indigo #4F46E5):
+- Icon: 4 stacked layers (Controller → Service → Repository → Database)
 - Number: "4"
 - Label: "Architecture Layers"
-- Tiny subtitle: "N-Tier (Clean Architecture)"
-
-CARD 11 (emerald #059669):
-- Icon: A Swagger document with a gear and an arrow pointing to a TypeScript file — auto-generation concept
-- Number: "Auto"
-- Label: "API Client Gen"
-- Tiny subtitle: "Swagger → TypeScript"
-
-CARD 12 (slate #475569):
-- Icon: A shield with a key and permission checkboxes grid
-- Number: "16+"
-- Label: "Permission Modules"
-- Tiny subtitle: "Position-based RBAC"
+- Subtitle: "N-Tier Layered"
 
 ═══════════════════════════════════════════════════
-ROW 4 — Bottom highlight strip (horizontal bar with 5 mini-stats)
+BOTTOM STRIP — Key Features (horizontal bar, 5 mini icons)
 ═══════════════════════════════════════════════════
-A single wide horizontal bar with a subtle gradient background (light gray to white).
-Inside, show 5 small icon+number pairs evenly spaced:
 
-1. QR code icon → "QR Ordering" (label: "Self-Service")
-2. Magnifying glass + slip icon → "Slip OCR" (label: "Auto-Verify")
-3. Receipt/document icon → "PDF Receipt" (label: "Auto-Generate")
-4. Bell icon → "Notifications" (label: "9 Types, 4 Groups")
-5. Trash with undo arrow icon → "Soft Delete + Audit Trail" (label: "Auto-Tracking")
+1. QR icon → "QR Ordering" / "Self-Service"
+2. Magnifying glass + slip → "Slip OCR" / "Auto-Verify"
+3. PDF document → "PDF Receipt" / "Auto-Generate"
+4. Bell with badge → "Notifications" / "9 Types, 4 Groups"
+5. Trash + undo arrow → "Soft Delete + Audit Trail" / "Auto-Tracking"
 
 ═══════════════════════════════════════════════════
-STYLE REQUIREMENTS
+STYLE
 ═══════════════════════════════════════════════════
-- NUMBERS are the hero: each number should be very large (48-72pt equivalent), bold, in the card's accent color
-- Icons should be clean, flat, colorful illustrations — not photos, not 3D
-- Cards have white background with colored left border (4px) or colored top accent bar
-- Subtle rounded shadow on each card
-- Labels in dark gray (#1E293B), small but readable
-- Tiny subtitles in lighter gray (#64748B), very small
-- Overall white (#FFFFFF) background
-- Generous spacing between cards
-- Clean sans-serif font (Inter, Segoe UI)
-- 16:9 aspect ratio
-- All text in English
-- Professional, clean, data-driven visual suitable for a university presentation
-- The image should feel like "look how much we built" — impressive scale at a glance
+- Numbers: very large (48-72pt), bold, in card's accent color
+- Icons: clean flat illustrations, not photos, not 3D
+- Labels: dark gray (#1E293B), subtitles: lighter gray (#64748B)
+- White (#FFFFFF) background, clean sans-serif font
+- Professional university presentation quality
+- The image should feel like "look how much we built"
 ```
 
 ---
@@ -897,3 +843,70 @@ STYLE REQUIREMENTS
 
 **ปิด:**
 "สิ่งสำคัญคือด้านล่างที่เขียนว่า สิทธิ์ของพนักงานเป็นแบบ Dynamic ผ่าน Position-based RBAC คือไม่ได้กำหนดตายตัวว่าตำแหน่งไหนทำอะไรได้ แต่ Admin สามารถกำหนดสิทธิ์แต่ละตำแหน่งได้เองทุกเมื่อ"
+
+---
+
+### บทพูด Prompt 6: Technology Stack
+
+> ไล่ทีละแถว เน้นว่าแต่ละตัวใช้ทำอะไรในโปรเจค (~1.5-2 นาที)
+
+---
+
+**เปิด:**
+"ภาพนี้แสดงเทคโนโลยีทั้งหมดที่ใช้ในโปรเจค RBMS-POS แบ่งเป็น 6 กลุ่ม"
+
+---
+
+**Row 1 — Backend API:**
+"ฝั่ง Backend สร้างด้วย .NET 9 และ ASP.NET Core เป็น Framework หลัก ใช้ EF Core จัดการฐานข้อมูลแบบ Code-First คือเขียนโค้ดแล้ว Generate ตารางให้อัตโนมัติ SignalR ทำให้ระบบส่งข้อมูลแบบ Real-time ได้ เช่น สั่งอาหารปุ๊บครัวเห็นทันที JWT ใช้ยืนยันตัวตนผู้ใช้ Swagger สร้างเอกสาร API อัตโนมัติ และ MailKit ใช้ส่งอีเมล OTP ตอนลืมรหัสผ่าน"
+
+---
+
+**Row 2 — Frontend:**
+"ฝั่ง Frontend ใช้ Angular 19 เขียนด้วย TypeScript จัดหน้าตาด้วย Tailwind CSS และ PrimeNG ซึ่งเป็น UI Component Library ที่มี Table, Dialog, Dropdown พร้อมใช้ RxJS จัดการ Asynchronous Data Chart.js ทำกราฟใน Dashboard pdfmake สร้างใบเสร็จเป็น PDF ให้ดาวน์โหลดได้ และ NgRx จัดการ State ของแอป"
+
+---
+
+**Row 3+4 — Database & DevOps:**
+"ข้อมูลเก็บใน SQL Server 37 ตาราง ไฟล์ต่างๆ เช่น รูปเมนู สลิปโอนเงิน เก็บใน MinIO ซึ่งเป็น Object Storage เหมือน AWS S3 แต่โฮสต์เองได้ ทั้งหมดรันใน Docker Container สั่ง docker compose up ครั้งเดียวได้ทั้งระบบ Nginx เป็น Reverse Proxy จัดการ routing และ Let's Encrypt ออกใบรับรอง SSL อัตโนมัติ"
+
+---
+
+**Row 5 — Architecture & Patterns:**
+"ระบบออกแบบเป็น Modular System แบ่ง 8 Business Modules อิสระจากกัน ใช้สถาปัตยกรรม N-Tier Layered 4 ชั้น คือ Controller รับ request, Service ประมวลผล, Repository จัดการข้อมูล, Database เก็บข้อมูล มีระบบ RBAC กำหนดสิทธิ์ตามตำแหน่ง Code-First Migration จัดการ Database Schema ผ่านโค้ด Auto API Client Gen คือ Frontend ไม่ต้องเขียน API Service เอง generate จาก Swagger อัตโนมัติ และทุกตารางมี Soft Delete กับ Audit Trail ติดตามว่าใครทำอะไรเมื่อไหร่"
+
+---
+
+**Row 6 — Key Features:**
+"ฟีเจอร์เด่นของระบบ — ลูกค้าสแกน QR สั่งอาหารเอง ระบบส่งออเดอร์ไปครัวแบบ Real-time มีหน้าจอครัวแยกต่างหาก ตรวจสลิปอัตโนมัติด้วย OCR สร้างใบเสร็จ PDF ลูกค้าใช้ผ่าน Mobile Web บนมือถือ มีแจ้งเตือนแบบ Real-time 9 ประเภท และ reCAPTCHA v3 ป้องกัน Bot"
+
+---
+
+**ปิด:**
+"ทั้งหมดนี้คือเทคโนโลยี 35 ตัวที่ทำงานร่วมกันเป็นระบบ POS ครบวงจร"
+
+---
+
+### บทพูด Prompt 7: Project Overview
+
+> พูดไล่ทีละแถว สรุปภาพรวมขนาดโปรเจค (~1 นาที)
+
+---
+
+**เปิด:**
+"ภาพนี้สรุปภาพรวมทั้งหมดของโปรเจค RBMS-POS ว่าเราพัฒนาอะไรไปบ้าง"
+
+---
+
+**Row 1 — ขนาดโปรเจค:**
+"ระบบทั้งหมดมี 13 Modules แบ่งเป็น 8 โมดูล Backend, 11 โมดูลฝั่ง Client Web, และ 5 โมดูลฝั่ง Mobile Web รวมทั้งหมด 162 ฟีเจอร์ที่ผ่านการทดสอบครบแล้ว Backend มี 215 API Endpoints ใน 24 Controllers และฐานข้อมูล 37 ตาราง แบ่งเป็น 6 กลุ่มตามหน้าที่"
+
+---
+
+**Row 2 — สถาปัตยกรรม:**
+"ผู้ใช้มี 2 กลุ่ม คือพนักงานใช้ผ่านคอมพิวเตอร์ กับลูกค้าใช้ผ่านมือถือ มี SignalR Hub 2 ตัวที่ทำให้ข้อมูลอัพเดตแบบ Real-time ได้ เช่น ลูกค้าสั่งอาหารปุ๊บครัวเห็นทันที ระบบออกแบบเป็น 8 Business Modules อิสระจากกัน และใช้สถาปัตยกรรม 4 ชั้น แยก Controller, Service, Repository, Database ชัดเจน"
+
+---
+
+**Bottom Strip:**
+"แถวล่างสุดคือฟีเจอร์เด่น — QR Ordering ลูกค้าสแกนสั่งเอง, Slip OCR ตรวจสลิปอัตโนมัติ, ใบเสร็จ PDF, แจ้งเตือน Real-time 9 ประเภทแยก 4 กลุ่มผู้รับ และทุกตารางมี Soft Delete กับ Audit Trail ติดตามการเปลี่ยนแปลงอัตโนมัติ"
