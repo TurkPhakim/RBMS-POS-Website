@@ -69,7 +69,7 @@ public class CustomerController : BaseController
     [HttpGet("{qrToken}/bill/{orderBillId}/status")]
     [ProducesResponseType(typeof(BaseResponseModel<string>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPaymentStatus(string qrToken, int orderBillId, CancellationToken ct = default)
-        => Success(await _customerService.GetPaymentStatusAsync(qrToken, orderBillId, ct));
+        => Success<string>(await _customerService.GetPaymentStatusAsync(qrToken, orderBillId, ct));
 
     private int GetCustomerSessionId()
         => (int)HttpContext.Items["CustomerSessionId"]!;
