@@ -114,8 +114,11 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
   }
 
   private checkStatus(): void {
-    const qrToken = this.customerAuth.getQrToken();
-    if (!qrToken || !this.orderBillId) return;
+    if (!this.orderBillId) return;
+
+    // ใช้ qrToken จาก localStorage หรือ '-' เป็น fallback
+    // Backend ไม่ validate QR token สำหรับ endpoint นี้แล้ว (ใช้แค่ orderBillId)
+    const qrToken = this.customerAuth.getQrToken() ?? '-';
 
     this.customerService
       .customerGetPaymentStatusGet({

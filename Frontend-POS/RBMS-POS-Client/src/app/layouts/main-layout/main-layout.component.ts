@@ -12,6 +12,7 @@ const TOAST_ICONS: Record<string, { icon: string; color: string }> = {
   REQUEST_SPLIT_BILL: { icon: 'bill-splitting', color: 'text-info' },
   ORDER_CANCELLED: { icon: 'cancel', color: 'text-danger' },
   SLIP_UPLOADED: { icon: 'receipt', color: 'text-info' },
+  REQUEST_CASH_PAYMENT: { icon: 'bill-rastaurant', color: 'text-success' },
   PAYMENT_COMPLETED: { icon: 'payment-complete', color: 'text-success' },
   RESERVATION_REMINDER: { icon: 'reservation', color: 'text-warning-dark' },
 };
@@ -26,6 +27,7 @@ const TOAST_NAV_MAP: Record<string, (data: Record<string, unknown>) => { route: 
   REQUEST_SPLIT_BILL: (d) => ({ route: ['/payment/checkout', String(d['orderId'])] }),
   ORDER_CANCELLED: (d) => ({ route: ['/order/list', String(d['orderId'])] }),
   SLIP_UPLOADED: (d) => ({ route: ['/payment/checkout', String(d['orderId'])], extras: { queryParams: { openSlip: true } } }),
+  REQUEST_CASH_PAYMENT: (d) => ({ route: ['/payment/checkout', String(d['orderId'])] }),
   PAYMENT_COMPLETED: () => ({ route: ['/order/overview'] }),
   RESERVATION_REMINDER: () => ({ route: ['/table/reservations'] }),
 };
