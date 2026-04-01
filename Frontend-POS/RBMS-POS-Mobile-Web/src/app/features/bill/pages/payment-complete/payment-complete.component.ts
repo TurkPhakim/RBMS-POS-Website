@@ -70,11 +70,18 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.checkStatus();
     this.startPolling();
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', this.blockBack);
   }
 
   ngOnDestroy(): void {
     this.stopPolling();
+    window.removeEventListener('popstate', this.blockBack);
   }
+
+  private blockBack = (): void => {
+    history.pushState(null, '', location.href);
+  };
 
   private startPolling(): void {
     this.pollTimer = setInterval(() => {

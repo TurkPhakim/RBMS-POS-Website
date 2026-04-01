@@ -29,7 +29,7 @@
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-surface-sub">โซน - โต๊ะ</span>
-            <span class="font-medium">{{ receipt()!.tableName }}</span>
+            <span class="font-medium">โซน{{ receipt()!.zoneName }} - โต๊ะ{{ receipt()!.tableName }}</span>
           </div>
           @if (receipt()!.billType === 'ByAmount') {
             <div class="flex justify-between text-sm">
