@@ -274,10 +274,11 @@ public class CustomerService : ICustomerService
 
     public async Task<string> GetPaymentStatusAsync(string qrToken, int orderBillId, CancellationToken ct = default)
     {
-        var table = await ValidateQrTokenAsync(qrToken, ct);
-
+        // ใช้ orderBillId โดยตรง — ไม่ต้องผ่าน QR validation
+        // เพราะหลัง payment confirm แล้ว table อาจถูก clear (QR token หายไป)
+        // endpoint นี้เป็น [AllowAnonymous] และ return แค่ status string (ไม่มีข้อมูล sensitive)
         var bill = await _unitOfWork.OrderBills.QueryNoTracking()
-            .FirstOrDefaultAsync(b => b.OrderBillId == orderBillId && b.Order.TableId == table.TableId, ct)
+            .FirstOrDefaultAsync(b => b.OrderBillId == orderBillId, ct)
             ?? throw new EntityNotFoundException("OrderBill", orderBillId);
 
         return bill.Status.ToString();

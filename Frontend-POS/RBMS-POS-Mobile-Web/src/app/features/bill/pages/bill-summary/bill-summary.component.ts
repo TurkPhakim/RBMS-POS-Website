@@ -144,6 +144,11 @@ export class BillSummaryComponent implements OnInit, OnDestroy {
           this.loadBill();
           if (paymentMethod === 'Transfer') {
             this.router.navigate(['/bill/upload'], { queryParams: { billId: orderBillId } });
+          } else if (paymentMethod === 'Cash') {
+            this.router.navigate(['/bill/complete'], {
+              queryParams: { billId: orderBillId, method: 'Cash' },
+              replaceUrl: true,
+            });
           }
         },
       });

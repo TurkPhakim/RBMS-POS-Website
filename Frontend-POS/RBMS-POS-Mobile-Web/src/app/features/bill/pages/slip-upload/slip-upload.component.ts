@@ -95,7 +95,7 @@ export class SlipUploadComponent implements OnDestroy {
 
   goToCounter(): void {
     this.router.navigate(['/bill/complete'], {
-      queryParams: { billId: this.orderBillId },
+      queryParams: { billId: this.orderBillId, method: 'Transfer' },
       replaceUrl: true,
     });
   }
@@ -124,7 +124,7 @@ export class SlipUploadComponent implements OnDestroy {
           });
           ref.onClose.subscribe(() => {
             this.router.navigate(['/bill/complete'], {
-              queryParams: { billId: this.orderBillId },
+              queryParams: { billId: this.orderBillId, method: 'Transfer' },
               replaceUrl: true,
             });
           });

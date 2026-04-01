@@ -93,6 +93,10 @@
       ></ng-lottie>
     </div>
     <p class="text-2xl font-semibold">รอการยืนยันชำระเงิน</p>
-    <p class="text-surface-sub text-lg mt-1">พนักงานกำลังตรวจสอบสลิป</p>
+    @if (paymentMethod === 'Cash') {
+      <p class="text-surface-sub text-lg mt-1">กรุณาชำระเงินที่เคาน์เตอร์</p>
+    } @else {
+      <p class="text-surface-sub text-lg mt-1">พนักงานกำลังตรวจสอบสลิป</p>
+    }
   </div>
 }

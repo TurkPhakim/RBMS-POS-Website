@@ -31,6 +31,8 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
     path: 'animations/success.json',
   };
 
+  paymentMethod = '';
+
   private orderBillId: number;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -44,6 +46,7 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
     private destroyRef: DestroyRef,
   ) {
     this.orderBillId = Number(this.route.snapshot.queryParamMap.get('billId'));
+    this.paymentMethod = this.route.snapshot.queryParamMap.get('method') ?? '';
     this.shopName = this.customerAuth.getSession()?.shopNameThai ?? '';
 
     // Mark billId as seen เพื่อป้องกัน bill-summary redirect วนลูป
@@ -124,8 +127,12 @@ export class PaymentCompleteComponent implements OnInit, OnDestroy {
         next: (res) => {
           if (res.result === 'Paid') {
             this.isCompleted.set(true);
+            this.stopPolling();
             this.loadReceiptData();
           }
+        },
+        error: () => {
+          // ไม่ต้องทำอะไร — ให้ poll ครั้งถัดไปลองใหม่
         },
       });
   }
