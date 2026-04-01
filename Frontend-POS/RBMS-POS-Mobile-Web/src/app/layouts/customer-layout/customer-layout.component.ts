@@ -25,6 +25,7 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
   nickname = signal('');
   waiterCooldown = signal(0);
   hasServedItems = signal(false);
+  isBilling = signal(false);
   isBillPage = signal(false);
   isCartPage = signal(false);
   isPaymentCompletePage = signal(false);
@@ -80,6 +81,8 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
         next: (res) => {
           const items = res.result?.items ?? [];
           this.hasServedItems.set(items.some(i => i.status === 'Served'));
+          const status = res.result?.orderStatus;
+          this.isBilling.set(status === 'Billing' || status === 'Completed');
         },
       });
   }

@@ -88,7 +88,7 @@
     @if (hasContactInfo && !isCartPage()) {
       <footer
         class="bg-gradient-to-br from-primary to-primary-badge"
-        style="padding-bottom: 78px"
+        [style.padding-bottom]="isPaymentCompletePage() ? '0' : '78px'"
       >
         <div
           class="bg-black/15 px-3 xs:px-5 py-2 xs:py-3 mb-1 flex items-center gap-2 xs:gap-3"
@@ -208,78 +208,80 @@
           }
         </div>
       </footer>
-    } @else {
+    } @else if (!isPaymentCompletePage()) {
       <div style="padding-bottom: 78px"></div>
     }
   </main>
 
   <!-- Bottom Navigation -->
-  <nav
-    class="fixed bottom-0 left-0 right-0 bg-white border-t border-surface-border z-20"
-  >
-    <div class="flex items-center justify-around h-[74px] max-w-lg mx-auto">
-      @if (!isPaymentCompletePage()) {
+  @if (!isPaymentCompletePage()) {
+    <nav
+      class="fixed bottom-0 left-0 right-0 bg-white border-t border-surface-border z-20"
+    >
+      <div class="flex items-center justify-around h-[74px] max-w-lg mx-auto">
+        @if (!isBilling()) {
+          <a
+            routerLink="/menu"
+            routerLinkActive
+            #menuLink="routerLinkActive"
+            class="flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors"
+            [class]="
+              menuLink.isActive
+                ? 'text-primary bg-primary-subtle'
+                : 'text-surface-sub'
+            "
+          >
+            <app-generic-icon
+              name="menu-list"
+              svgClass="w-8 h-8"
+            ></app-generic-icon>
+            <span class="text-sm font-semibold">เมนู</span>
+          </a>
+          <a
+            routerLink="/cart"
+            routerLinkActive
+            #cartLink="routerLinkActive"
+            class="flex-1 flex flex-col items-center justify-center h-full transition-colors relative"
+            [class]="
+              cartLink.isActive
+                ? 'text-primary bg-primary-subtle'
+                : 'text-surface-sub'
+            "
+          >
+            <span class="relative">
+              <app-generic-icon
+                name="basket-shopping"
+                svgClass="w-8 h-8"
+              ></app-generic-icon>
+              @if (cartService.itemCount() > 0) {
+                <span
+                  class="absolute -top-1.5 -right-2.5 bg-danger text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1"
+                >
+                  {{ cartService.itemCount() }}
+                </span>
+              }
+            </span>
+            <span class="text-sm font-semibold">ตะกร้า</span>
+          </a>
+        }
         <a
-          routerLink="/menu"
+          routerLink="/orders"
           routerLinkActive
-          #menuLink="routerLinkActive"
+          #ordersLink="routerLinkActive"
           class="flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors"
           [class]="
-            menuLink.isActive
+            ordersLink.isActive
               ? 'text-primary bg-primary-subtle'
               : 'text-surface-sub'
           "
         >
           <app-generic-icon
-            name="menu-list"
+            name="order-dinner"
             svgClass="w-8 h-8"
           ></app-generic-icon>
-          <span class="text-sm font-semibold">เมนู</span>
+          <span class="text-sm font-semibold">ออเดอร์</span>
         </a>
-        <a
-          routerLink="/cart"
-          routerLinkActive
-          #cartLink="routerLinkActive"
-          class="flex-1 flex flex-col items-center justify-center h-full transition-colors relative"
-          [class]="
-            cartLink.isActive
-              ? 'text-primary bg-primary-subtle'
-              : 'text-surface-sub'
-          "
-        >
-          <span class="relative">
-            <app-generic-icon
-              name="basket-shopping"
-              svgClass="w-8 h-8"
-            ></app-generic-icon>
-            @if (cartService.itemCount() > 0) {
-              <span
-                class="absolute -top-1.5 -right-2.5 bg-danger text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1"
-              >
-                {{ cartService.itemCount() }}
-              </span>
-            }
-          </span>
-          <span class="text-sm font-semibold">ตะกร้า</span>
-        </a>
-      }
-      <a
-        routerLink="/orders"
-        routerLinkActive
-        #ordersLink="routerLinkActive"
-        class="flex-1 flex flex-col items-center justify-center gap-0.5 h-full transition-colors"
-        [class]="
-          ordersLink.isActive
-            ? 'text-primary bg-primary-subtle'
-            : 'text-surface-sub'
-        "
-      >
-        <app-generic-icon
-          name="order-dinner"
-          svgClass="w-8 h-8"
-        ></app-generic-icon>
-        <span class="text-sm font-semibold">ออเดอร์</span>
-      </a>
-    </div>
-  </nav>
+      </div>
+    </nav>
+  }
 </div>
