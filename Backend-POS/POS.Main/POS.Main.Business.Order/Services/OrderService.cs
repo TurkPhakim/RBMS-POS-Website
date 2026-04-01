@@ -639,6 +639,7 @@ public class OrderService : IOrderService
 
         await _notificationService.NotifyOrderUpdatedAsync(orderId, "Open", ct);
         await _notificationService.NotifyTableStatusChangedAsync(table.TableId, ETableStatus.Occupied.ToString(), ct);
+        await _notificationService.NotifyBillVoidedAsync(table.TableId, ct);
         if (linkedTableIds != null)
         {
             foreach (var ltId in linkedTableIds.Where(id => id != table.TableId))

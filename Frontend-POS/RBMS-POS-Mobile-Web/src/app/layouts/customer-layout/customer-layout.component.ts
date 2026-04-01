@@ -60,6 +60,19 @@ export class CustomerLayoutComponent implements OnInit, OnDestroy {
       this.signalR.refreshOrders();
       this.checkServedItems();
     });
+    effect(() => {
+      const count = this.signalR.billVoided();
+      if (count > 0) {
+        this.isBilling.set(false);
+        this.modalService.info({
+          title: 'ยกเลิกบิลแล้ว',
+          message: 'พนักงานยกเลิกบิลแล้ว สามารถสั่งเมนูเพิ่มได้',
+          confirmButtonLabel: 'ตกลง',
+        }).onClose.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+          this.router.navigate(['/orders'], { replaceUrl: true });
+        });
+      }
+    });
   }
 
   ngOnInit(): void {

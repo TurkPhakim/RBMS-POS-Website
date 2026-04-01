@@ -7,9 +7,13 @@ import { CustomerAuthService } from './customer-auth.service';
 export class SignalRService {
   private connection: signalR.HubConnection | null = null;
   private currentGroup: string | null = null;
+  private visibilityHandler: (() => void) | null = null;
 
   /** Emits whenever the server tells this table to refresh order data */
   refreshOrders = signal(0);
+
+  /** Emits when staff voids the bill */
+  billVoided = signal(0);
 
   constructor(private customerAuth: CustomerAuthService) {}
 
@@ -22,8 +26,11 @@ export class SignalRService {
     this.connection = new signalR.HubConnectionBuilder()
       .withUrl(`${environment.apiUrl}/hubs/order`, {
         accessTokenFactory: () => token,
+        transport: signalR.HttpTransportType.WebSockets
+          | signalR.HttpTransportType.ServerSentEvents
+          | signalR.HttpTransportType.LongPolling,
       })
-      .withAutomaticReconnect()
+      .withAutomaticReconnect([0, 1000, 3000, 5000, 10000, 15000, 30000])
       .build();
 
     // Listen for events that should trigger a refresh
@@ -63,6 +70,11 @@ export class SignalRService {
       this.refreshOrders.update((v) => v + 1);
     });
 
+    this.connection.on('BillVoided', () => {
+      this.billVoided.update((v) => v + 1);
+      this.refreshOrders.update((v) => v + 1);
+    });
+
     // Rejoin group หลัง reconnect (SignalR ไม่ auto-rejoin groups)
     this.connection.onreconnected(async () => {
       console.log('[SignalR] Reconnected, rejoining group...');
@@ -76,12 +88,26 @@ export class SignalRService {
       }
     });
 
+    this.connection.onreconnecting(() => {
+      console.warn('[SignalR] Reconnecting...');
+    });
+
     // Reset state เมื่อ connection ตายถาวร (reconnect ล้มเหลวทั้งหมด)
     this.connection.onclose(() => {
       console.warn('[SignalR] Connection closed');
       this.connection = null;
       this.currentGroup = null;
     });
+
+    // iOS Safari: reconnect เมื่อกลับมา active (WebSocket อาจถูก suspend)
+    this.visibilityHandler = () => {
+      if (document.visibilityState === 'visible' && this.connection?.state === signalR.HubConnectionState.Disconnected) {
+        console.log('[SignalR] Page visible again, reconnecting...');
+        this.connection = null;
+        this.connect();
+      }
+    };
+    document.addEventListener('visibilitychange', this.visibilityHandler);
 
     try {
       await this.connection.start();
@@ -101,6 +127,11 @@ export class SignalRService {
   }
 
   async disconnect(): Promise<void> {
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
+
     if (!this.connection) return;
 
     if (this.currentGroup) {

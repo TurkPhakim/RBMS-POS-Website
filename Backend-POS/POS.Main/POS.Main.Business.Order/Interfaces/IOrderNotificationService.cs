@@ -12,4 +12,5 @@ public interface IOrderNotificationService
     Task NotifyPaymentCompletedAsync(int tableId, int orderBillId, CancellationToken ct = default);
     Task NotifyBillClaimedAsync(int tableId, int orderBillId, CancellationToken ct = default);
     Task NotifyBillReleasedAsync(int tableId, int orderBillId, CancellationToken ct = default);
+    Task NotifyBillVoidedAsync(int tableId, CancellationToken ct = default);
 }

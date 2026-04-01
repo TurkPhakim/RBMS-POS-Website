@@ -72,4 +72,10 @@ public class OrderNotificationService : IOrderNotificationService
         await _hubContext.Clients.Group($"table_{tableId}")
             .SendAsync("BillReleased", new { tableId, orderBillId }, ct);
     }
+
+    public async Task NotifyBillVoidedAsync(int tableId, CancellationToken ct = default)
+    {
+        await _hubContext.Clients.Group($"table_{tableId}")
+            .SendAsync("BillVoided", new { tableId }, ct);
+    }
 }
