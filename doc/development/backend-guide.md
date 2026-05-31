@@ -48,10 +48,14 @@ Backend-POS/POS.Main/
 ├── RBMS.POS.WebAPI/
 │   └── Controllers/{Name}Controller.cs
 │
-├── POS.Main.Business.Admin/          ← Auth, ServiceCharge, ShopSettings, File, S3, JWT
-├── POS.Main.Business.Authorization/  ← Position, Permission (RBAC)
-├── POS.Main.Business.Menu/           ← Menu management
+├── POS.Main.Business.Admin/          ← Auth, JWT, S3, File, ServiceCharge, ShopSettings, User, Cashier, Dashboard
+├── POS.Main.Business.Authorization/  ← Position, Permission (RBAC + Permission Matrix)
 ├── POS.Main.Business.HumanResource/  ← Employee + sub-entities (Address, Education, WorkHistory)
+├── POS.Main.Business.Menu/           ← Menu, Category, Option Group
+├── POS.Main.Business.Notification/   ← Notification + SignalR Delivery
+├── POS.Main.Business.Order/          ← Order, Bill, Kitchen, Customer/Self-Order, QR Redirect
+├── POS.Main.Business.Payment/        ← Payment, Receipt, Slip OCR
+├── POS.Main.Business.Table/          ← Zone, Table, FloorObject, Reservation, TableLink
 │   └── {SubFolder}/
 │       ├── Interfaces/
 │       │   └── I{Name}Service.cs

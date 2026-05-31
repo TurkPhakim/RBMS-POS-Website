@@ -1,6 +1,6 @@
 # RBMS-POS — โครงสร้างโปรเจคจริง
 
-> อ้างอิงจากไฟล์ที่มีในโปรเจคจริง — อัปเดตล่าสุด 2026-03-16
+> อ้างอิงจากไฟล์ที่มีในโปรเจคจริง — อัปเดตล่าสุด 2026-05-30
 
 ---
 
@@ -8,12 +8,15 @@
 
 ```
 RBMS-POS/
-├── README.md                     ← Project overview + documentation index
-├── CLAUDE.md                     ← Claude Code instructions
-├── swagger-spec.json             ← OpenAPI snapshot (backup)
-├── Backend-POS/
+├── README.md                         ← Project overview + documentation index
+├── CLAUDE.md                         ← Claude Code instructions
+├── docker-compose.yml                ← Full-stack deployment (Backend + Frontend + SQL Server + MinIO + Nginx)
+├── swagger-spec.json                 ← OpenAPI snapshot
+├── Backend-POS/                      ← Backend (.NET 9)
 ├── Frontend-POS/
-└── doc/
+│   ├── RBMS-POS-Client/              ← Admin/Staff (Angular 19)
+│   └── RBMS-POS-Mobile-Web/          ← Self-Order Mobile Web (Angular 19)
+└── doc/                              ← Documentation (ทุกเอกสาร)
 ```
 
 ---
@@ -25,20 +28,23 @@ RBMS-POS/
 ```
 Backend-POS/
 ├── RBMS.POS.sln
-├── SETUP_DATABASE.bat            ← รัน EF migration ครั้งแรก
+├── SETUP_DATABASE.bat                ← script run EF migration ครั้งแรก
 └── POS.Main/
-    ├── RBMS.POS.WebAPI/              ← Entry point (Controllers, Filters, Hubs, Program.cs)
-    ├── POS.Main.Business.Admin/      ← Service: Auth, ServiceCharge, ShopSettings, File, S3, JWT, ReCaptcha, Email
-    ├── POS.Main.Business.Authorization/ ← Service: Position, Permission
-    ├── POS.Main.Business.HumanResource/ ← Service: Employee + sub-entities (Address, Education, WorkHistory)
-    ├── POS.Main.Business.Menu/       ← Service: Menu
+    ├── RBMS.POS.WebAPI/              ← Entry point (Controllers, Hubs, Filters, Program.cs)
+    ├── POS.Main.Business.Admin/         ← Auth, JWT, S3, File, ServiceCharge, ShopSettings, User, Cashier, Dashboard, Email, ReCaptcha
+    ├── POS.Main.Business.Authorization/ ← Position, Permission
+    ├── POS.Main.Business.HumanResource/ ← Employee + Address/Education/WorkHistory
+    ├── POS.Main.Business.Menu/          ← Menu, Category, Option Group
+    ├── POS.Main.Business.Notification/  ← Notification + SignalR Delivery
+    ├── POS.Main.Business.Order/         ← Order, OrderBill, Kitchen, Customer/SelfOrder, QrRedirect
+    ├── POS.Main.Business.Payment/       ← Payment, Receipt, Slip OCR
+    ├── POS.Main.Business.Table/         ← Zone, Table, FloorObject, Reservation, TableLink
     ├── POS.Main.Repositories/        ← Repository + UnitOfWork
-    ├── POS.Main.Dal/                 ← DbContext + Entities + Migrations
-    └── POS.Main.Core/                ← Enums + Exceptions + Helpers + Models + Constants + Settings
+    ├── POS.Main.Dal/                 ← DbContext + Entities + Migrations + Configurations
+    └── POS.Main.Core/                ← Enums + Exceptions + Helpers + Models + Settings + Constants
 ```
 
-> **หมายเหตุ**: Business Layer ถูก split เป็น 4 projects แยกตาม domain
-> ไม่ใช่ project เดียว — เพิ่ม project ใหม่เมื่อสร้าง domain ใหม่
+> **หมายเหตุ**: Business Layer แบ่งเป็น 8 projects ตาม Domain — เพิ่ม project ใหม่เมื่อสร้าง domain ใหม่ (ไม่ผูก service กับ project ผิด domain)
 
 ---
 
@@ -46,143 +52,318 @@ Backend-POS/
 
 ```
 RBMS.POS.WebAPI/
-├── Program.cs
+├── Program.cs                        ← DI registration, Swagger, JWT, CORS, SignalR
 ├── appsettings.json
 ├── appsettings.Development.json
-├── Controllers/
-│   ├── BaseController.cs              ← abstract base: Success<T>(), Success(), ListSuccess<T>(), PagedSuccess<T>(), GetIpAddress(), GetUserId()
-│   ├── AuthController.cs             api/admin/auth — login, logout, refresh-token, forgot-password, verify-otp, reset-password
-│   ├── FileController.cs             api/admin/file — download file
-│   ├── HumanResourceController.cs    api/humanresource — GET/POST/PUT/DELETE + search + filter + my-profile
-│   ├── MenusController.cs            api/menu — GET/POST/PUT/DELETE + category + available + search
-│   ├── ServiceChargesController.cs   api/admin/servicecharges — GET/POST/PUT/DELETE + dropdown
-│   ├── ShopSettingsController.cs     api/admin/shop-settings — GET/PUT + branding + welcome-info
-│   └── PositionsController.cs        api/admin/positions — GET/POST/PUT/DELETE + dropdown + permissions
+│
+├── Controllers/                      ← 23 controllers + BaseController
+│   ├── BaseController.cs                       ← Helper: Success<T>(), ListSuccess<T>(), PagedSuccess<T>(), ToActionResult(), GetUserId(), GetIpAddress()
+│   ├── AuthController.cs                       ← api/admin/auth (login, logout, refresh, forgot, OTP, reset, change, verify, PIN)
+│   ├── UsersController.cs                      ← api/admin/users (list, update, reset-login-attempts)
+│   ├── PositionsController.cs                  ← api/admin/positions (CRUD + permissions + module tree)
+│   ├── ServiceChargesController.cs             ← api/admin/servicecharges (CRUD + dropdown)
+│   ├── ShopSettingsController.cs               ← api/admin/shop-settings (GET/PUT + branding + welcome + current-period)
+│   ├── FileController.cs                       ← api/admin/file (download)
+│   ├── HumanResourceController.cs              ← api/humanresource (Employee CRUD + sub-entities + create-user + me/profile)
+│   ├── MenuItemsController.cs                  ← api/menu/items (Menu CRUD)
+│   ├── MenuCategoriesController.cs             ← api/menu/categories (Sub Category CRUD + sort-order)
+│   ├── MenuOptionsController.cs                ← api/menu/options (Option Group CRUD)
+│   ├── TablesController.cs                     ← api/table/tables (CRUD + open/close/clean/move/link/unlink)
+│   ├── ZonesController.cs                      ← api/table/zones (CRUD + sort-order)
+│   ├── FloorObjectsController.cs               ← api/table/floor-objects (CRUD + positions)
+│   ├── ReservationsController.cs               ← api/table/reservations (CRUD + confirm/check-in/cancel/no-show)
+│   ├── OrdersController.cs                     ← api/order/orders (CRUD + send-kitchen + serve + split-bill + void + update-charges)
+│   ├── KitchenController.cs                    ← api/kitchen (orders + prepare/ready)
+│   ├── PaymentsController.cs                   ← api/payment/payments (cash + QR + slip + receipt + history)
+│   ├── CashierSessionsController.cs            ← api/cashier/sessions (open/close + cash-in/out + history)
+│   ├── DashboardController.cs                  ← api/dashboard (overview + top-selling + peak-hours + sales-report)
+│   ├── NotificationsController.cs              ← api/notifications (list + unread-count + read + clear)
+│   ├── CustomerController.cs                   ← api/customer (bill + claim/release + upload-slip + status)
+│   ├── SelfOrderController.cs                  ← api/customer (auth + menu + cart + orders + actions)
+│   └── QrRedirectController.cs                 ← q/{code} (redirect QR short code)
+│
 ├── Filters/
-│   ├── GlobalExceptionFilter.cs           ← Exception → HTTP status mapping อัตโนมัติ
-│   ├── PermissionAuthorizeAttribute.cs    ← Permission-based authorization
-│   └── CustomOperationIdFilter.cs         ← Auto-generate Swagger operationId ({Controller}_{Action}_{Method})
+│   ├── GlobalExceptionFilter.cs                ← Exception → HTTP status mapping
+│   ├── PermissionAuthorizeAttribute.cs         ← [PermissionAuthorize("xxx.read")]
+│   ├── CustomerAuthorizeAttribute.cs           ← ตรวจ CustomerSession token (Self-Order)
+│   └── CustomOperationIdFilter.cs              ← Auto-generate Swagger operationId ({Controller}_{Action}_{Method})
+│
 └── Hubs/
-    └── OrderHub.cs                        ← SignalR Hub (stub — รอ Order Module)
+    ├── OrderHub.cs                             ← SignalR Hub — Order/Table/Kitchen real-time
+    └── NotificationHub.cs                      ← SignalR Hub — Notification real-time
 ```
 
 ---
 
-### POS.Main.Business.Admin
+### Business Modules
+
+#### POS.Main.Business.Admin
+
+ครอบคลุม Auth + Master Data ของผู้ดูแลระบบ + Cashier Session + Dashboard
 
 ```
 POS.Main.Business.Admin/
 ├── Interfaces/
-│   ├── IAuthService.cs
-│   ├── IJwtTokenService.cs
-│   ├── IS3StorageService.cs
-│   ├── IFileService.cs
-│   ├── IServiceChargeService.cs
-│   ├── IShopSettingsService.cs
-│   └── IReCaptchaService.cs
+│   ├── IAuthService.cs                    ← Login, Logout, Refresh, Forgot/Reset/Change Password, PIN
+│   ├── IJwtTokenService.cs                ← Generate + Validate JWT
+│   ├── IReCaptchaService.cs               ← Verify Google ReCaptcha
+│   ├── IS3StorageService.cs               ← S3/MinIO operations
+│   ├── IFileService.cs                    ← TbFile CRUD + S3
+│   ├── IServiceChargeService.cs           ← ServiceCharge CRUD
+│   ├── IShopSettingsService.cs            ← ShopSettings + OperatingHours
+│   ├── IUserService.cs                    ← User Management (list, reset attempts)
+│   ├── ICashierSessionService.cs          ← เปิด/ปิดกะ + เงินสดเข้า-ออก
+│   └── IDashboardService.cs               ← Overview, Top Selling, Peak Hours, Sales Report
+│
 ├── Services/
-│   ├── AuthService.cs
-│   ├── JwtTokenService.cs
-│   ├── S3StorageService.cs
-│   ├── FileService.cs
-│   ├── ServiceChargeService.cs
-│   ├── ShopSettingsService.cs
-│   └── ReCaptchaService.cs
+│   └── (implementation ทั้งหมดของ interface ด้านบน)
+│
 └── Models/
-    ├── AdminSettings/
-    │   ├── CreateServiceChargeRequestModel.cs
-    │   ├── UpdateServiceChargeRequestModel.cs
-    │   ├── ServiceChargeResponseModel.cs
-    │   ├── ServiceChargeDropdownModel.cs
-    │   └── ServiceChargeMapper.cs          ← Manual Mapper (static class)
-    ├── Auth/
-    │   ├── LoginRequestModel.cs
-    │   ├── LoginResponseModel.cs
-    │   ├── RefreshTokenRequestModel.cs
-    │   ├── TokenResponseModel.cs
-    │   ├── UserModel.cs
-    │   ├── ForgotPasswordRequestModel.cs
-    │   ├── ForgotPasswordResponseModel.cs
-    │   ├── VerifyOtpRequestModel.cs
-    │   ├── VerifyOtpResponseModel.cs
-    │   ├── ResetPasswordRequestModel.cs
-    │   ├── VerifyPasswordRequestModel.cs
-    │   └── AuthMapper.cs                  ← Manual Mapper (static class)
-    ├── Files/
-    │   ├── FileResponseModel.cs
-    │   ├── FileDownloadResult.cs
-    │   └── FileMapper.cs                  ← Manual Mapper (static class)
-    └── ShopSettings/
-        ├── UpdateShopSettingsRequestModel.cs
-        ├── ShopSettingsResponseModel.cs
-        ├── ShopBrandingResponseModel.cs
-        ├── WelcomeShopInfoResponseModel.cs
-        ├── OperatingHourModel.cs
-        └── ShopSettingsMapper.cs          ← Manual Mapper (static class)
+    ├── Auth/                              ← Login, Refresh, Forgot, ResetPassword, ChangePassword, PIN
+    ├── AdminSettings/                     ← ServiceCharge models
+    ├── ShopSettings/                      ← ShopSettings, Branding, Welcome, OperatingHour
+    ├── User/                              ← User list/detail/update models
+    ├── Files/                             ← FileResponse, FileDownloadResult
+    ├── CashierSession/                    ← Open/Close/CashIn/CashOut models
+    └── Dashboard/                         ← Overview, TopSelling, PeakHour, SalesReport models
 ```
 
----
-
-### POS.Main.Business.Authorization
+#### POS.Main.Business.Authorization
 
 ```
 POS.Main.Business.Authorization/
 ├── Interfaces/
-│   ├── IPositionService.cs
-│   └── IPermissionService.cs
+│   ├── IPositionService.cs                ← Position CRUD + dropdown
+│   └── IPermissionService.cs              ← Module tree + Permission Matrix CRUD + GetUserPermissions
 ├── Services/
-│   ├── PositionService.cs
-│   └── PermissionService.cs
 └── Models/
     ├── Position/
-    │   ├── CreatePositionRequestModel.cs
-    │   ├── UpdatePositionRequestModel.cs
-    │   ├── PositionResponseModel.cs
-    │   ├── PositionDropdownModel.cs
-    │   └── PositionMapper.cs              ← Manual Mapper (static class)
     └── Permission/
-        ├── ModuleTreeResponseModel.cs
-        ├── PermissionMatrixResponseModel.cs
-        └── UpdatePermissionsRequestModel.cs
 ```
 
----
-
-### POS.Main.Business.HumanResource
+#### POS.Main.Business.HumanResource
 
 ```
 POS.Main.Business.HumanResource/
 ├── Interfaces/
-│   └── IEmployeeService.cs
+│   └── IEmployeeService.cs                ← Employee CRUD + Addresses/Educations/WorkHistories + Create User + My Profile
 ├── Services/
-│   └── EmployeeService.cs
 └── Models/
+    ├── Address/
+    ├── Education/
+    ├── WorkHistory/
     ├── CreateEmployeeRequestModel.cs
     ├── UpdateEmployeeRequestModel.cs
     ├── EmployeeResponseModel.cs
     ├── MyProfileResponseModel.cs
-    ├── EmployeeMapper.cs                  ← Manual Mapper (static class)
     ├── CreateUserAccountResponseModel.cs
-    ├── Address/                            ← Address sub-entity models
-    ├── Education/                          ← Education sub-entity models
-    └── WorkHistory/                        ← WorkHistory sub-entity models
+    └── EmployeeMapper.cs
 ```
 
----
-
-### POS.Main.Business.Menu
+#### POS.Main.Business.Menu
 
 ```
 POS.Main.Business.Menu/
 ├── Interfaces/
-│   └── IMenuService.cs
+│   ├── IMenuService.cs                    ← Menu CRUD (filter by category type: food/beverage/dessert)
+│   ├── IMenuCategoryService.cs            ← Sub Category CRUD + sort-order
+│   └── IMenuOptionService.cs              ← Option Group + Option Items CRUD
 ├── Services/
-│   └── MenuService.cs
 └── Models/
-    ├── CreateMenuRequestModel.cs
-    ├── UpdateMenuRequestModel.cs
-    ├── MenuResponseModel.cs
-    └── MenuMapper.cs                      ← Manual Mapper (static class)
+    ├── Menu/
+    ├── Category/
+    └── Option/
+```
+
+#### POS.Main.Business.Notification
+
+```
+POS.Main.Business.Notification/
+├── Interfaces/
+│   ├── INotificationService.cs            ← CRUD + Mark Read + Clear
+│   └── INotificationDeliveryService.cs    ← SignalR broadcast helper
+├── Services/
+└── Models/
+```
+
+#### POS.Main.Business.Order
+
+ครอบคลุม Order + Bill + Kitchen + Self-Order (Customer)
+
+```
+POS.Main.Business.Order/
+├── Interfaces/
+│   ├── IOrderService.cs                   ← Order CRUD + items + send-kitchen + serve + void
+│   ├── IOrderBillService.cs               ← Request bill + Split (by-item/by-amount) + Unsplit + Update charges
+│   ├── IOrderSignalRService.cs            ← Broadcast helpers
+│   ├── IKitchenService.cs                 ← Kitchen queue + prepare/ready
+│   ├── ICustomerService.cs                ← Self-Order: bill, claim/release, upload slip
+│   ├── ISelfOrderService.cs               ← Self-Order: auth, menu, cart, orders, actions
+│   └── IQrRedirectService.cs              ← Short URL → Long URL
+├── Services/
+└── Models/
+    ├── Order/
+    ├── OrderItem/
+    ├── OrderBill/
+    ├── Kitchen/
+    ├── Customer/                          ← Self-Order Customer (Mobile)
+    └── SelfOrder/
+```
+
+#### POS.Main.Business.Payment
+
+```
+POS.Main.Business.Payment/
+├── Interfaces/
+│   ├── IPaymentService.cs                 ← Cash + QR confirm + Upload Slip + Get by Order + History
+│   ├── IReceiptService.cs                 ← Generate receipt + consolidated receipt
+│   └── ISlipOcrService.cs                 ← OCR สลิป → ตรวจยอด + วันที่ + บัญชีปลายทาง
+├── Services/
+└── Models/
+```
+
+#### POS.Main.Business.Table
+
+```
+POS.Main.Business.Table/
+├── Interfaces/
+│   ├── ITableService.cs                   ← Table CRUD + positions + operations (open/close/clean/move/set-available)
+│   ├── IZoneService.cs                    ← Zone CRUD + active + sort-order
+│   ├── IFloorObjectService.cs             ← FloorObject CRUD + positions
+│   ├── IReservationService.cs             ← Reservation CRUD + confirm/check-in/cancel/no-show + today
+│   └── ITableLinkService.cs               ← Link tables + Unlink + Group code
+├── Services/
+└── Models/
+    ├── Table/
+    ├── Zone/
+    ├── FloorObject/
+    ├── Reservation/
+    └── TableLink/
+```
+
+---
+
+### POS.Main.Repositories
+
+```
+POS.Main.Repositories/
+├── Interfaces/                            ← 35 interfaces (1 ต่อ entity)
+│   ├── IGenericRepository.cs              ← Base CRUD
+│   ├── IUserRepository.cs                 ← Specific queries (GetByUsername, GetByEmail)
+│   ├── IRefreshTokenRepository.cs
+│   ├── IPasswordResetTokenRepository.cs
+│   ├── IPasswordHistoryRepository.cs
+│   ├── IServiceChargeRepository.cs
+│   ├── IShopSettingsRepository.cs
+│   ├── IFileRepository.cs
+│   ├── IMenuRepository.cs
+│   ├── IMenuSubCategoryRepository.cs
+│   ├── IOptionGroupRepository.cs
+│   ├── IMenuOptionGroupRepository.cs
+│   ├── IEmployeeRepository.cs
+│   ├── IEmployeeAddressRepository.cs
+│   ├── IEmployeeEducationRepository.cs
+│   ├── IEmployeeWorkHistoryRepository.cs
+│   ├── IPositionRepository.cs
+│   ├── IModuleRepository.cs
+│   ├── IAuthorizeMatrixRepository.cs
+│   ├── IAuthorizeMatrixPositionRepository.cs
+│   ├── IZoneRepository.cs
+│   ├── ITableRepository.cs
+│   ├── ITableLinkRepository.cs
+│   ├── IFloorObjectRepository.cs
+│   ├── IReservationRepository.cs
+│   ├── IOrderRepository.cs
+│   ├── IOrderItemRepository.cs
+│   ├── IOrderItemOptionRepository.cs
+│   ├── IOrderBillRepository.cs
+│   ├── IPaymentRepository.cs
+│   ├── ICashierSessionRepository.cs
+│   ├── ICashDrawerTransactionRepository.cs
+│   ├── INotificationRepository.cs
+│   ├── INotificationReadRepository.cs
+│   └── ICustomerSessionRepository.cs
+│
+├── Implementations/                       ← 35 implementations (mirror interface)
+│
+└── UnitOfWork/
+    ├── IUnitOfWork.cs                     ← Lazy-init repository properties + CommitAsync()
+    └── UnitOfWork.cs                      ← Lazy initialization pattern
+```
+
+---
+
+### POS.Main.Dal
+
+```
+POS.Main.Dal/
+├── POSMainContext.cs                      ← DbContext: ~37 DbSets, SaveChanges override (audit), Global Query Filter (DeleteFlag)
+│
+├── Entities/                              ← จัดกลุ่มตาม Domain (11 folders, 37 entities)
+│   ├── BaseEntity.cs                      ← abstract: CreatedAt/By, UpdatedAt/By, DeleteFlag/At/By + Navigation
+│   │
+│   ├── Auth/
+│   │   ├── TbUser.cs                      ← UserId(Guid), Username, Email, PasswordHash, IsActive, FailedLoginAttempts, LockoutCount, LockedUntil, PinCodeHash, IsLockedByAdmin
+│   │   ├── TbRefreshToken.cs              ← lifecycle เฉพาะ (ไม่ inherit BaseEntity)
+│   │   ├── TbPasswordResetToken.cs        ← OTP lifecycle
+│   │   └── TbPasswordHistory.cs           ← Password log (append-only)
+│   │
+│   ├── Authorization/
+│   │   ├── TbmPosition.cs                 ← Master Data
+│   │   ├── TbmPermission.cs               ← Master Data (read/create/update/delete)
+│   │   ├── TbmModule.cs                   ← Tree structure (self-ref ParentModuleId)
+│   │   ├── TbmAuthorizeMatrix.cs          ← Module + Permission → PermissionPath
+│   │   └── TbAuthorizeMatrixPosition.cs   ← Position + Matrix (M:M)
+│   │
+│   ├── Admin/
+│   │   ├── TbServiceCharge.cs             ← Name, PercentageRate, IsActive, StartDate?, EndDate?
+│   │   ├── TbShopSettings.cs              ← Singleton: ShopName(TH/EN), TaxId, FoodType, Logo, QR, Bank, WiFi, PromptPay
+│   │   └── TbShopOperatingHour.cs         ← 7 records (จันทร์-อาทิตย์) — OpenTime1/2 + CloseTime1/2
+│   │
+│   ├── Common/
+│   │   └── TbFile.cs                      ← Metadata ไฟล์: FileName, MimeType, FileExtension, FileSize, S3Key
+│   │
+│   ├── HumanResource/
+│   │   ├── TbEmployee.cs                  ← Names, Title, Gender, PositionId, ImageFileId, UserId, IsFullTime, Salary, HourlyRate
+│   │   ├── TbEmployeeAddress.cs           ← AddressType, HouseNumber, Province, ...
+│   │   ├── TbEmployeeEducation.cs         ← Level, Major, Institution, Gpa
+│   │   └── TbEmployeeWorkHistory.cs       ← Workplace, Position, StartDate, EndDate
+│   │
+│   ├── Menu/
+│   │   ├── TbMenu.cs                      ← NameThai/English, Price, CostPrice, CategoryType (food/beverage/dessert), SubCategoryId, ImageFileId, Tags, PeriodStart, PeriodEnd
+│   │   ├── TbMenuSubCategory.cs           ← CategoryType + Name + SortOrder
+│   │   ├── TbOptionGroup.cs               ← OptionGroupName + CategoryType
+│   │   ├── TbOptionItem.cs                ← OptionGroupId + ItemName + PriceAdjustment + CostPrice
+│   │   └── TbMenuOptionGroup.cs           ← M:M (Menu + OptionGroup)
+│   │
+│   ├── Table/
+│   │   ├── TbZone.cs                      ← ZoneName + SortOrder
+│   │   ├── TbTable.cs                     ← TableName + ZoneId + TableSize + TableStatus + PositionX/Y + QrToken + QrShortCode + ActiveOrderId
+│   │   ├── TbTableLink.cs                 ← GroupCode (รวมโต๊ะหลายตัว)
+│   │   ├── TbFloorObject.cs               ← ObjectType (Pillar/Divider/Walkway/Counter/Decoration), Label, ZoneId?, PositionX/Y (double)
+│   │   └── TbReservation.cs               ← CustomerName, Phone, TableId, ReservationDate, GuestCount, Status, Note
+│   │
+│   ├── Order/
+│   │   ├── TbOrder.cs                     ← TableId, OrderNumber, Status (EOrderStatus: Open/Billing/Completed), GuestCount, SubTotal, Note
+│   │   ├── TbOrderItem.cs                 ← OrderId, MenuId, MenuNameThai/English, CategoryType, Quantity, UnitPrice, OptionsTotalPrice, TotalPrice, Status (Pending/Sent/Preparing/Ready/Served/Voided/Cancelled), OrderedBy (string), CostPrice, OrderBillId?, SourceTableId?, CancelledBy?, CancelReason?
+│   │   ├── TbOrderItemOption.cs           ← OrderItemId, OptionGroupId, OptionItemId, OptionGroupName, OptionItemName, AdditionalPrice, CostPrice (ไม่ inherit BaseEntity)
+│   │   └── TbOrderBill.cs                 ← OrderId, BillNumber, BillType, SubTotal, NetAmount, ServiceChargeRate/Amount, VatRate/Amount, GrandTotal, SplitCount/Index, Status, ClaimedBySessionId (int), CustomerSlipFileId, CustomerSlipOcrAmount/Date/AccountNumber, CustomerSlipVerificationStatus
+│   │
+│   ├── Payment/
+│   │   ├── TbPayment.cs                   ← OrderBillId, CashierSessionId, PaymentMethod (Cash/QR), Amount, AmountTendered, ChangeAmount, ProcessedAt, ReceivedByEmployeeId
+│   │   ├── TbCashierSession.cs            ← OpenedByEmployeeId, OpeningBalance, ClosingBalance, ExpectedBalance, Difference, ShiftPeriod, Status, OpenedAt, ClosedAt
+│   │   └── TbCashDrawerTransaction.cs     ← CashierSessionId, TransactionType (CashIn/CashOut), Amount, Reason, RecordedAt
+│   │
+│   ├── Notification/
+│   │   ├── TbNotification.cs              ← NotificationType, Title, Body, RelatedEntityType, RelatedEntityId, TargetGroups, CreatedAt
+│   │   └── TbNotificationRead.cs          ← NotificationId + UserId + ReadAt
+│   │
+│   └── Customer/
+│       └── TbCustomerSession.cs           ← TableId, SessionToken, QrTokenNonce, Nickname, DeviceFingerprint, IsActive, ExpiresAt
+│
+├── EntityConfigurations/                  ← Fluent API (1 ต่อ entity)
+│
+└── Migrations/                            ← 53 migrations (ดู project-status.md สำหรับ timeline)
 ```
 
 ---
@@ -192,172 +373,66 @@ POS.Main.Business.Menu/
 ```
 POS.Main.Core/
 ├── Constants/
-│   ├── constResultType.cs          "success" / "fail"
-│   └── Permissions.cs              Nested static classes (permission codes)
-├── Enums/
-│   ├── EGender.cs                  Male, Female, NotSpecified
-│   ├── ETitle.cs                   นาย, นาง, นางสาว ฯลฯ
-│   ├── EEmploymentStatus.cs        Active, Resigned, Terminated, Suspended
-│   ├── EMenuCategory.cs            หมวดหมู่เมนูอาหาร
-│   ├── EDayOfWeek.cs               วันในสัปดาห์
-│   ├── EAddressType.cs             ประเภทที่อยู่
-│   ├── ENationality.cs             สัญชาติ
-│   └── EReligion.cs                ศาสนา
+│   ├── constResultType.cs                 ← "success" / "fail"
+│   └── Permissions.cs                     ← Nested static class (Permission codes ทุกโมดูล)
+│
+├── Enums/                                 ← 22 enums
+│   ├── EAddressType.cs                    ← House, Office, Other
+│   ├── EBillStatus.cs                     ← Pending, Paid, Cancelled, Voided
+│   ├── EBillType.cs                       ← Full, SplitByItem, SplitByAmount
+│   ├── ECashDrawerTransactionType.cs      ← CashIn, CashOut
+│   ├── ECashierSessionStatus.cs           ← Open, Closed
+│   ├── EDayOfWeek.cs                      ← Monday-Sunday
+│   ├── EEmploymentStatus.cs               ← Active, Resigned, Terminated, Suspended
+│   ├── EFloorObjectType.cs                ← Pillar, Divider, Walkway, Counter, Decoration
+│   ├── EGender.cs                         ← Male, Female, NotSpecified
+│   ├── EGuestType.cs                      ← (สำหรับ reservation)
+│   ├── EMenuCategory.cs                   ← Food, Beverage, Dessert
+│   ├── EMenuTag.cs                        ← Spicy, Cold, Hot, Recommended, ฯลฯ
+│   ├── ENationality.cs                    ← ไทย, อื่นๆ
+│   ├── EOrderItemStatus.cs                ← Pending, Sent, Preparing, Ready, Served, Cancelled, Voided
+│   ├── EOrderStatus.cs                    ← Open, Billing, Completed, Cancelled
+│   ├── EPaymentMethod.cs                  ← Cash, QrPromptPay, QrBank
+│   ├── EReligion.cs                       ← Buddhism, Christianity, Islam, ฯลฯ
+│   ├── EReservationStatus.cs              ← Pending, Confirmed, CheckedIn, Cancelled, NoShow
+│   ├── ESlipVerificationStatus.cs         ← Pending, Verified, Rejected
+│   ├── ETableSize.cs                      ← Small, Medium, Large, ExtraLarge
+│   ├── ETableStatus.cs                    ← Available, Occupied, Reserved, Cleaning, Unavailable
+│   └── ETitle.cs                          ← นาย, นาง, นางสาว, ด.ช., ด.ญ.
+│
 ├── Exceptions/
-│   ├── AuthenticationException.cs         ← base auth exception
-│   ├── AccountLockedException.cs          ← 423 (บัญชีถูกล็อค)
-│   ├── AccountDisabledException.cs        ← 403 (บัญชีถูกปิด)
-│   ├── InvalidCredentialsException.cs     ← 401 (รหัสผ่านผิด)
-│   ├── InvalidRefreshTokenException.cs    ← 401 (token ไม่ถูกต้อง)
-│   ├── ValidationException.cs             ← 400 (input ผิด)
-│   ├── EntityNotFoundException.cs         ← 404 (ไม่พบข้อมูล)
-│   └── BusinessException.cs              ← 422 (business rule violated)
+│   ├── AuthenticationException.cs         ← base
+│   ├── AccountLockedException.cs          ← HTTP 423
+│   ├── AccountDisabledException.cs        ← HTTP 403
+│   ├── InvalidCredentialsException.cs     ← HTTP 401
+│   ├── InvalidRefreshTokenException.cs    ← HTTP 401
+│   ├── ValidationException.cs             ← HTTP 400
+│   ├── EntityNotFoundException.cs         ← HTTP 404
+│   └── BusinessException.cs               ← HTTP 422
+│
 ├── Helpers/
 │   ├── IPasswordHasher.cs
-│   └── PasswordHasher.cs           BCrypt implementation
+│   └── PasswordHasher.cs                  ← BCrypt
+│
 ├── Interfaces/
-│   └── IEmailService.cs            ← Email service interface (implement ใน Business.Admin)
+│   └── IEmailService.cs                   ← Interface (impl ใน Business.Admin)
+│
 ├── Settings/
-│   ├── JwtSettings.cs              ← JWT configuration
-│   ├── S3Settings.cs               ← S3 storage configuration
-│   └── ReCaptchaSettings.cs        ← Google ReCaptcha configuration
+│   ├── JwtSettings.cs                     ← Issuer, Audience, SecretKey, AccessTokenExpiry, RefreshTokenExpiry
+│   ├── S3Settings.cs                      ← Endpoint, AccessKey, SecretKey, Bucket
+│   ├── ReCaptchaSettings.cs               ← SiteKey, SecretKey, MinimumScore
+│   └── SmtpSettings.cs                    ← Host, Port, Username, Password, FromEmail
+│
 └── Models/
-    ├── BaseResponseModel.cs         ← BaseResponseModel<T> { Status, Result, Message, Code, Errors }
-    ├── PaginationModel.cs           ← รับ params: Search, Page, ItemPerPage
-    ├── PaginationResult.cs          ← PaginationResult<T> { Results, Page, Total, ItemPerPage }
-    ├── ListResponseModel.cs         ← ListResponseModel<T> { Results, TotalItems }
-    └── SmtpSettings.cs              ← SMTP email configuration
+    ├── BaseResponseModel.cs               ← BaseResponseModel<T> { Status, Result, Message, Code, Errors }
+    ├── PaginationModel.cs                 ← Search, Page, ItemPerPage
+    ├── PaginationResult.cs                ← PaginationResult<T> { Results, Page, Total, ItemPerPage }
+    └── ListResponseModel.cs               ← { Results, TotalItems }
 ```
 
 ---
 
-### POS.Main.Dal
-
-```
-POS.Main.Dal/
-├── POSMainContext.cs              ← DbContext: 19 DbSets, SaveChanges override (auto-stamp audit), Global Query Filter
-├── Entities/
-│   ├── BaseEntity.cs              ← abstract: CreatedAt/By, UpdatedAt/By, DeleteFlag/At/By + Navigation
-│   ├── Auth/
-│   │   ├── TbUser.cs              ← UserId(Guid), Username, Email, PasswordHash, IsActive, FailedLoginAttempts, LockoutCount, LockedUntil
-│   │   ├── TbRefreshToken.cs      ← ไม่ inherit BaseEntity (lifecycle เฉพาะ)
-│   │   ├── TbLoginHistory.cs      ← ไม่ inherit BaseEntity (log entity)
-│   │   ├── TbPasswordResetToken.cs ← ไม่ inherit BaseEntity (OTP lifecycle)
-│   │   └── TbPasswordHistory.cs   ← ไม่ inherit BaseEntity (password log)
-│   ├── Admin/
-│   │   ├── TbServiceCharge.cs     ← ServiceChargeId(int), Name, PercentageRate, IsActive, StartDate?, EndDate?
-│   │   ├── TbShopSettings.cs      ← ShopSettingsId(int), ShopNameThai/English, TaxId, FoodType, LogoFileId?, PaymentQrCodeFileId?
-│   │   └── TbShopOperatingHour.cs ← ShopOperatingHourId(int), ShopSettingsId FK, EDayOfWeek, IsOpen, OpenTime/CloseTime
-│   ├── Common/
-│   │   └── TbFile.cs              ← FileId(int), FileName, MimeType, FileExtension, FileSize, S3Key
-│   ├── Menu/
-│   │   └── TbMenu.cs              ← MenuId(int), NameThai, NameEnglish, Price, EMenuCategory, ImageFileId?
-│   ├── HumanResource/
-│   │   ├── TbEmployee.cs          ← EmployeeId(int), Names, ETitle?, EGender, PositionId?, ImageFileId?, UserId?, IsFullTime, Salary?, HourlyRate?
-│   │   ├── TbEmployeeAddress.cs   ← EmployeeAddressId(int), EmployeeId FK, EAddressType, HouseNumber, Province ฯลฯ
-│   │   ├── TbEmployeeEducation.cs ← EmployeeEducationId(int), EmployeeId FK, EducationLevel, Major?, Institution, Gpa?
-│   │   └── TbEmployeeWorkHistory.cs ← EmployeeWorkHistoryId(int), EmployeeId FK, Workplace, Position?, StartDate, EndDate?
-│   └── Authorization/
-│       ├── TbmPosition.cs         ← PositionId(int), PositionName, Description?, IsActive
-│       ├── TbmPermission.cs       ← PermissionId(int), PermissionName, PermissionCode, SortOrder
-│       ├── TbmModule.cs           ← ModuleId(int), ModuleName, ModuleCode, ParentModuleId? (self-ref), SortOrder, IsActive
-│       ├── TbmAuthorizeMatrix.cs  ← AuthorizeMatrixId(int), ModuleId FK, PermissionId FK, PermissionPath
-│       └── TbAuthorizeMatrixPosition.cs ← AuthorizeMatrixPositionId(int), AuthorizeMatrixId FK, PositionId FK
-├── EntityConfigurations/          ← Fluent API (1 ไฟล์ต่อ 1 Entity — 19 ไฟล์)
-│   ├── TbUserConfiguration.cs
-│   ├── TbRefreshTokenConfiguration.cs
-│   ├── TbLoginHistoryConfiguration.cs
-│   ├── TbPasswordResetTokenConfiguration.cs
-│   ├── TbPasswordHistoryConfiguration.cs
-│   ├── TbServiceChargeConfiguration.cs
-│   ├── TbShopSettingsConfiguration.cs
-│   ├── TbShopOperatingHourConfiguration.cs
-│   ├── TbFileConfiguration.cs
-│   ├── TbMenuConfiguration.cs
-│   ├── TbEmployeeConfiguration.cs
-│   ├── TbEmployeeAddressConfiguration.cs
-│   ├── TbEmployeeEducationConfiguration.cs
-│   ├── TbEmployeeWorkHistoryConfiguration.cs
-│   ├── TbmPositionConfiguration.cs
-│   ├── TbmPermissionConfiguration.cs
-│   ├── TbmModuleConfiguration.cs
-│   ├── TbmAuthorizeMatrixConfiguration.cs
-│   └── TbAuthorizeMatrixPositionConfiguration.cs
-└── Migrations/                    ← 20 migrations
-    ├── InitialAuthMigration                  ← Users, RefreshTokens, LoginHistory
-    ├── RemovePasswordResetTokens             ← ตัด PasswordResetTokens ออก
-    ├── AddServiceChargeTable                 ← ServiceCharges
-    ├── AddMenuTable                          ← Menus
-    ├── UpdateMenuImageUrlToMax               ← ขยาย ImageUrl
-    ├── AddEmployeeTable                      ← Employees
-    ├── StandardizeEntitySchema               ← เพิ่ม Audit FK + Navigation properties
-    ├── StandardizeNamingConvention            ← เปลี่ยนชื่อ columns ตามมาตรฐาน
-    ├── AddFileManagementSystem               ← TbFiles table + ImageUrl → ImageFileId
-    ├── AddPositionBasedRbac                  ← TbmPosition, TbmPermission, TbmModule, TbmAuthorizeMatrix, TbAuthorizeMatrixPosition
-    ├── ChangeTitleToEnum                     ← Title เปลี่ยนเป็น ETitle enum
-    ├── AddShopSettingsTables                 ← TbShopSettings, TbShopOperatingHour
-    ├── ExpandEmployeeModule                  ← TbEmployeeAddress, TbEmployeeEducation, TbEmployeeWorkHistory
-    ├── RemoveEthnicityAndUpdateEnums         ← ลบ Ethnicity + อัพเดต enums
-    ├── AddLockoutCountToUser                 ← เพิ่ม LockoutCount ใน TbUser
-    ├── RemoveSeedUsers                       ← ลบ seed users
-    ├── AddFullTimeAndHourlyRate              ← เพิ่ม IsFullTime, HourlyRate ใน TbEmployee
-    ├── AddDateRangeToServiceCharge           ← เพิ่ม StartDate, EndDate ใน TbServiceCharge
-    ├── AddForgotPasswordTables               ← TbPasswordResetToken, TbPasswordHistory
-    └── AddShopEmailToShopSettings            ← เพิ่ม ShopEmail ใน TbShopSettings
-```
-
----
-
-### POS.Main.Repositories
-
-```
-POS.Main.Repositories/
-├── Interfaces/
-│   ├── IGenericRepository.cs             ← base: GetAll, GetById(int/Guid), Add, Update, Delete ฯลฯ
-│   ├── IUserRepository.cs
-│   ├── IRefreshTokenRepository.cs
-│   ├── ILoginHistoryRepository.cs
-│   ├── IPasswordResetTokenRepository.cs
-│   ├── IPasswordHistoryRepository.cs
-│   ├── IServiceChargeRepository.cs
-│   ├── IFileRepository.cs
-│   ├── IMenuRepository.cs
-│   ├── IEmployeeRepository.cs
-│   ├── IEmployeeAddressRepository.cs
-│   ├── IEmployeeEducationRepository.cs
-│   ├── IEmployeeWorkHistoryRepository.cs
-│   ├── IPositionRepository.cs
-│   ├── IModuleRepository.cs
-│   ├── IAuthorizeMatrixRepository.cs
-│   ├── IAuthorizeMatrixPositionRepository.cs
-│   └── IShopSettingsRepository.cs
-├── Implementations/
-│   ├── GenericRepository.cs
-│   ├── UserRepository.cs
-│   ├── RefreshTokenRepository.cs
-│   ├── LoginHistoryRepository.cs
-│   ├── PasswordResetTokenRepository.cs
-│   ├── PasswordHistoryRepository.cs
-│   ├── ServiceChargeRepository.cs
-│   ├── FileRepository.cs
-│   ├── MenuRepository.cs
-│   ├── EmployeeRepository.cs
-│   ├── EmployeeAddressRepository.cs
-│   ├── EmployeeEducationRepository.cs
-│   ├── EmployeeWorkHistoryRepository.cs
-│   ├── PositionRepository.cs
-│   ├── ModuleRepository.cs
-│   ├── AuthorizeMatrixRepository.cs
-│   ├── AuthorizeMatrixPositionRepository.cs
-│   └── ShopSettingsRepository.cs
-└── UnitOfWork/
-    ├── IUnitOfWork.cs       ← 17 repository properties + CommitAsync()
-    └── UnitOfWork.cs        ← Lazy initialization pattern
-```
-
----
-
-## Frontend
+## Frontend Admin Client (RBMS-POS-Client)
 
 ### Config Files (root)
 
@@ -367,9 +442,12 @@ RBMS-POS-Client/
 ├── package.json
 ├── tsconfig.json
 ├── tailwind.config.js
-├── ng-openapi-gen.json       ← config สำหรับ generate API client
-├── swagger.json              ← OpenAPI spec snapshot (input ของ gen-api)
-└── fix-api-exports.js        ← script แก้ export type หลัง gen-api
+├── ng-openapi-gen.json           ← Config สำหรับ generate API client
+├── swagger.json                  ← OpenAPI spec snapshot
+├── fix-api-exports.js            ← Script patch generated code (multipart/form-data nested objects)
+└── public/
+    ├── icons/                    ← SVG icons (สำหรับ <app-generic-icon>)
+    └── images/                   ← Logo + รูปภาพประกอบ
 ```
 
 ---
@@ -378,101 +456,129 @@ RBMS-POS-Client/
 
 ```
 src/app/
-├── app.module.ts             ← root module: BrowserModule, NgRx StoreModule.forRoot, HttpClientModule, SharedModule, PrimeNG config
-├── app-routing.module.ts     ← main routing: '' → LayoutsModule
+├── app.module.ts                         ← root module (BrowserModule, NgRx Store, HttpClient, SharedModule, PrimeNG)
+├── app-routing.module.ts                 ← redirect → LayoutsModule
 ├── app.component.ts
 │
-├── store/
-│   └── layout/               ← NgRx: layoutReducer, layout.actions, layout.selectors (sidebar, notification, buttons)
+├── store/                                ← NgRx
+│   └── layout/                           ← layoutReducer, actions, selectors (sidebar, notification, buttons)
 │
-├── core/                     ← singleton services ใช้ทั่วทั้ง app
-│   ├── api/                  ← AUTO-GENERATED จาก swagger (ห้ามแก้ด้วยมือ)
+├── core/                                 ← Singleton services
+│   ├── api/                              ← AUTO-GENERATED จาก swagger (ห้ามแก้ด้วยมือ)
 │   │   ├── api-configuration.ts
-│   │   ├── models/           ← TypeScript interfaces (generated)
-│   │   ├── services/         ← 7 API services: auth, human-resource, menus, service-charges, positions, shop-settings, file
-│   │   └── fn/               ← function-based API calls (ใช้โดย services)
-│   ├── providers/            ← Manual providers (ไม่ถูก gen-api overwrite)
-│   │   └── api-config.provider.ts  ← กำหนด rootUrl จาก environment
+│   │   ├── models/                       ← TypeScript interfaces
+│   │   ├── services/                     ← 23 API services (1 ต่อ controller)
+│   │   └── fn/                           ← Function-based API calls
+│   ├── providers/
+│   │   └── api-config.provider.ts        ← rootUrl + token จาก environment
 │   ├── guards/
-│   │   ├── auth.guard.ts         ← redirect ไป login ถ้าไม่มี token
-│   │   ├── guest.guard.ts        ← redirect ไป dashboard ถ้ามี token แล้ว
-│   │   └── permission.guard.ts   ← block ถ้าไม่มี permission ที่ต้องการ
+│   │   ├── auth.guard.ts                 ← Redirect ไป login ถ้าไม่มี token
+│   │   ├── guest.guard.ts                ← Redirect ออกจาก login ถ้ามี token แล้ว
+│   │   └── permission.guard.ts           ← Block ถ้าไม่มี permission ที่ระบุ
 │   ├── interceptors/
-│   │   ├── auth.interceptor.ts      ← inject Bearer token, handle 401 → refresh
-│   │   └── loading.interceptor.ts   ← global loading state
-│   ├── models/
-│   │   └── auth.models.ts    ← LoginRequest, LoginResponse, User interfaces
+│   │   ├── auth.interceptor.ts           ← Inject Bearer + refresh on 401 (bypass สำหรับ /verify-password, /pin/verify, /change-password)
+│   │   └── loading.interceptor.ts        ← Global loading state
+│   ├── models/                           ← Custom models (auth, notification, signalr-events)
 │   └── services/
-│       ├── auth.service.ts            ← เก็บ token/user state, login/logout
-│       ├── breadcrumb.service.ts      ← จัดการ breadcrumb items + action buttons
-│       ├── modal.service.ts           ← Programmatic dialogs (info, cancel, commonSuccess)
-│       ├── loading.service.ts         ← Global loading state
-│       ├── session-timeout.service.ts ← จัดการ session timeout
-│       ├── shop-branding.service.ts   ← โหลด shop logo/branding
-│       ├── header.service.ts          ← Header state management
-│       └── sidebar.service.ts         ← Sidebar state management
+│       ├── auth.service.ts               ← Token + user + login/logout
+│       ├── breadcrumb.service.ts         ← Breadcrumb + Action buttons
+│       ├── header.service.ts             ← Header state
+│       ├── sidebar.service.ts            ← Sidebar state
+│       ├── modal.service.ts              ← Programmatic dialogs (info, cancel, commonSuccess)
+│       ├── loading.service.ts            ← Global loading
+│       ├── session-timeout.service.ts    ← Idle detection + warning dialog
+│       ├── shop-branding.service.ts      ← Logo + ชื่อร้าน (cache)
+│       ├── notification.service.ts       ← Notification list + unread count
+│       ├── signalr.service.ts            ← OrderHub + NotificationHub connection
+│       └── permission.service.ts         ← hasPermission(...) helper
 │
 ├── layouts/
 │   ├── layouts.module.ts
 │   ├── layout-routing.module.ts
 │   ├── main-layout/
-│   │   └── main-layout.component.ts  ← Header + Sidebar + Router outlet
+│   │   └── main-layout.component.ts      ← Header + Sidebar + Breadcrumb + Router outlet
 │   └── auth-layout/
-│       └── auth-layout.component.ts   ← Login/Reset password layout
+│       └── auth-layout.component.ts      ← Login/Reset password layout
 │
 ├── shared/
-│   ├── shared.module.ts               ← PrimeNG modules, common declarations
-│   ├── component-interfaces.ts        ← CurrentUser, MenuItem, BreadcrumbItem, Pbutton, BreadcrumbButton, SelectOption ฯลฯ
+│   ├── shared.module.ts                  ← PrimeNG modules + common declarations
+│   ├── component-interfaces.ts           ← CurrentUser, MenuItem, BreadcrumbItem, SelectOption ฯลฯ
+│   │
 │   ├── components/
-│   │   ├── generic-icon/              ← SVG icon component (currentColor + cache)
-│   │   ├── header/                    ← top bar: toggle, profile, logout
-│   │   ├── side-bar/                  ← navigation menu ทุก module
-│   │   ├── top-breadcrumb/            ← breadcrumb แสดงตำแหน่งปัจจุบัน + action buttons
-│   │   ├── global-loading/            ← Global loading spinner
-│   │   └── notification-panel/        ← Notification panel
+│   │   ├── generic-icon/                 ← SVG icon (currentColor + cache)
+│   │   ├── header/                       ← Top bar: toggle + profile + notification bell
+│   │   ├── side-bar/                     ← Navigation (เห็นเฉพาะ menu ที่มี permission)
+│   │   ├── top-breadcrumb/               ← Breadcrumb + action buttons
+│   │   ├── global-loading/               ← Lottie loading overlay
+│   │   └── notification-panel/           ← Drawer แสดงรายการ notification
+│   │
 │   ├── cards/
-│   │   ├── card-template/             ← Card layout มาตรฐาน (headerLabel, ng-content, p-footer)
-│   │   ├── section-card/              ← Section grouping card
-│   │   ├── empty-view/                ← Empty state placeholder
-│   │   ├── image-upload-card/         ← Image upload card (S3)
-│   │   ├── field-error/               ← Validation error display (dirty-only)
-│   │   └── audit-footer/              ← แสดง CreatedBy/At, UpdatedBy/At
+│   │   ├── card-template/                ← มาตรฐาน Card (headerLabel + ng-content + p-footer)
+│   │   ├── section-card/                 ← Section card สำหรับ group form
+│   │   ├── empty-view/                   ← Empty state placeholder
+│   │   ├── image-upload-card/            ← Image upload + preview (S3)
+│   │   ├── field-error/                  ← Validation error (dirty-only)
+│   │   └── audit-footer/                 ← CreatedBy/At + UpdatedBy/At
+│   │
 │   ├── dialogs/
-│   │   ├── address-dialog/            ← Dialog เพิ่ม/แก้ไขที่อยู่
-│   │   ├── education-dialog/          ← Dialog เพิ่ม/แก้ไขประวัติการศึกษา
-│   │   ├── work-history-dialog/       ← Dialog เพิ่ม/แก้ไขประวัติการทำงาน
-│   │   ├── session-timeout/           ← Session timeout warning dialog
-│   │   └── verify-password-dialog/    ← Dialog ยืนยันรหัสผ่าน
+│   │   ├── address-dialog/
+│   │   ├── education-dialog/
+│   │   ├── work-history-dialog/
+│   │   ├── session-timeout/              ← Idle timeout warning
+│   │   └── verify-password-dialog/       ← ยืนยันรหัสผ่านก่อน sensitive action
+│   │
 │   ├── modals/
-│   │   ├── info-modal/                ← Confirm dialog (ModalService.info)
-│   │   ├── cancel-modal/              ← Error dialog (ModalService.cancel)
-│   │   └── success-modal/             ← Success feedback auto-close (ModalService.commonSuccess)
-│   ├── dropdowns/
-│   │   ├── dropdown-base.component.ts ← ControlValueAccessor base class
-│   │   ├── active-status/             ← Dropdown สถานะ Active/Inactive
-│   │   ├── gender/                    ← Dropdown เพศ
-│   │   ├── title/                     ← Dropdown คำนำหน้า
-│   │   ├── nationality/               ← Dropdown สัญชาติ
-│   │   ├── religion/                  ← Dropdown ศาสนา
-│   │   ├── address-type/              ← Dropdown ประเภทที่อยู่
-│   │   ├── position/                  ← Dropdown ตำแหน่งงาน (API)
-│   │   ├── menu-category/             ← Dropdown หมวดหมู่เมนู
-│   │   └── service-charge/            ← Dropdown ค่าบริการ (API)
+│   │   ├── info-modal/                   ← Confirm (ModalService.info)
+│   │   ├── cancel-modal/                 ← Error (ModalService.cancel)
+│   │   └── success-modal/                ← Success auto-close (ModalService.commonSuccess)
+│   │
+│   ├── dropdowns/                        ← 25+ shared dropdowns extends DropdownBaseComponent
+│   │   ├── dropdown-base.component.ts    ← ControlValueAccessor base
+│   │   ├── active-status-dropdown/
+│   │   ├── address-type-dropdown/
+│   │   ├── availability-status-dropdown/
+│   │   ├── available-table-dropdown/
+│   │   ├── floor-object-type-dropdown/
+│   │   ├── gender-dropdown/
+│   │   ├── menu-category-dropdown/
+│   │   ├── nationality-dropdown/
+│   │   ├── notification-table-dropdown/
+│   │   ├── order-status-dropdown/
+│   │   ├── period-dropdown/
+│   │   ├── position-dropdown/            ← Load จาก API
+│   │   ├── religion-dropdown/
+│   │   ├── reservation-available-dropdown/
+│   │   ├── reservation-status-dropdown/
+│   │   ├── service-charge-dropdown/      ← Load จาก API
+│   │   ├── shift-period-dropdown/
+│   │   ├── source-table-dropdown/
+│   │   ├── sub-category-dropdown/        ← Load จาก API
+│   │   ├── table-dropdown/               ← Load จาก API
+│   │   ├── table-size-dropdown/
+│   │   ├── table-status-dropdown/
+│   │   ├── title-dropdown/
+│   │   ├── user-status-dropdown/
+│   │   └── zone-dropdown/                ← Load จาก API
+│   │
 │   ├── pipes/
-│   │   ├── date-format.pipe.ts        ← แปลงวันที่เป็นรูปแบบไทย
-│   │   ├── mask-phone.pipe.ts         ← ซ่อนเลขโทรศัพท์
-│   │   └── national-id-mask.pipe.ts   ← ซ่อนเลขบัตรประชาชน
+│   │   ├── date-format.pipe.ts
+│   │   ├── mask-phone.pipe.ts
+│   │   └── national-id-mask.pipe.ts
+│   │
 │   ├── pages/
-│   │   ├── welcome/                   ← หน้าแรกหลัง login
-│   │   └── access-denied/             ← หน้าไม่มีสิทธิ์เข้าถึง
+│   │   ├── welcome/                      ← หน้าแรกหลัง login (banner ของร้าน)
+│   │   └── access-denied/                ← หน้า 403
+│   │
 │   ├── directives/
-│   │   └── datepicker-icon.directive.ts ← Custom icon สำหรับ PrimeNG DatePicker
+│   │   └── datepicker-icon.directive.ts  ← Icon สำหรับ PrimeNG DatePicker
+│   │
 │   └── utils/
-│       ├── form-utils.ts              ← markFormDirty(), linkDateRange()
-│       └── index.ts                   ← barrel export
+│       ├── form-utils.ts                 ← markFormDirty(), linkDateRange()
+│       └── index.ts
 │
-└── features/                 ← Lazy-loaded modules (10 modules)
-    ├── auths/                route: /auth/login, /auth/reset-password      ← PUBLIC
+└── features/                             ← Lazy-loaded (10 modules)
+    │
+    ├── auths/                            ← /auth/*  (PUBLIC)
     │   ├── auths.module.ts
     │   ├── auths-routing.module.ts
     │   ├── pages/
@@ -481,127 +587,134 @@ src/app/
     │   └── dialogs/
     │       ├── forgot-password-dialog/
     │       └── verify-otp-dialog/
-    ├── admin/                route: /admin-setting
+    │
+    ├── admin/                            ← /admin-setting/*
     │   ├── admin.module.ts
     │   ├── admin-routing.module.ts
-    │   └── pages/
-    │       ├── service-charge-list/
-    │       ├── service-charge-manage/
-    │       ├── position-list/
-    │       ├── position-manage/
-    │       └── shop-settings/
-    ├── human-resource/       route: /human-resource
-    │   ├── human-resource.module.ts
-    │   ├── human-resource-routing.module.ts
+    │   ├── pages/
+    │   │   ├── user-list/
+    │   │   ├── user-manage/
+    │   │   ├── position-list/
+    │   │   ├── position-manage/          ← + Permission Matrix
+    │   │   ├── service-charge-list/
+    │   │   └── shop-settings/            ← Tabs: ข้อมูลร้าน / เวลาทำการ / ธนาคาร+WiFi+PromptPay / Branding
+    │   └── dialogs/
+    │       └── service-charge-manage-dialog/
+    │
+    ├── human-resource/                   ← /human-resource/*
     │   ├── pages/
     │   │   ├── employee-list/
-    │   │   └── employee-manage/
+    │   │   └── employee-manage/          ← Tabs: ข้อมูล / ที่อยู่ / การศึกษา / ประวัติงาน / Account
     │   └── dialogs/
     │       ├── create-user-dialog/
     │       └── credentials-dialog/
-    ├── menu/                 route: /menu
-    │   ├── menu.module.ts
-    │   ├── menu-routing.module.ts
+    │
+    ├── menu/                             ← /menu/*
+    │   ├── pages/
+    │   │   ├── menu-list/                ← reusable (food / beverage / dessert)
+    │   │   ├── menu-manage/
+    │   │   ├── sub-category-list/        ← + Drag & Drop sort
+    │   │   ├── sub-category-manage/
+    │   │   ├── option-group-list/
+    │   │   └── option-group-manage/
+    │   └── dialogs/
+    │       └── sub-category-create-dialog/
+    │
+    ├── dashboard/                        ← /dashboard/*
     │   └── pages/
-    │       ├── menu-list/
-    │       └── menu-manage/
-    ├── dashboard/            route: /dashboard
+    │       ├── dashboard-overview/       ← KPI cards + charts
+    │       └── sales-report/             ← Date range + comparison chart
+    │
+    ├── table/                            ← /table/*
+    │   ├── pages/
+    │   │   ├── floor-plan/               ← Drag & Drop ผังร้าน
+    │   │   ├── zone-table-list/          ← Tabs: Zone + Tables
+    │   │   └── reservation-list/         ← Calendar View
+    │   └── dialogs/
+    │       ├── zone-dialog/
+    │       ├── table-dialog/
+    │       ├── floor-object-dialog/
+    │       ├── reservation-dialog/
+    │       └── table-action-dialog/
+    │
+    ├── order/                            ← /order/*
+    │   ├── pages/
+    │   │   ├── order-overview/           ← ภาพรวมร้าน (8 สถานะ — real-time)
+    │   │   ├── order-list/
+    │   │   ├── order-detail/
+    │   │   └── staff-order/              ← Staff สั่งอาหารแทนลูกค้า
+    │   └── dialogs/
+    │       ├── send-bill-dialog/
+    │       ├── split-bill-dialog/
+    │       ├── void-bill-dialog/
+    │       ├── cancel-reason-dialog/
+    │       ├── menu-item-dialog/
+    │       └── open-table-dialog/
+    │
+    ├── kitchen-display/                  ← /kitchen-display/*
     │   └── pages/
-    │       └── dashboard/
-    ├── order/                route: /order           ⚠️ stub
-    ├── table/                route: /table           ⚠️ stub
-    ├── payment/              route: /payment         ⚠️ stub
-    ├── kitchen-display/      route: /kitchen-display ⚠️ stub
-    └── profile/              route: /profile         ⚠️ stub
+    │       └── kitchen-display/          ← reusable (food / beverage / dessert)
+    │
+    ├── payment/                          ← /payment/*
+    │   ├── pages/
+    │   │   ├── payment/                  ← รอบการขายปัจจุบัน
+    │   │   ├── checkout/                 ← หน้าชำระเงิน (cash / QR)
+    │   │   ├── session-history/
+    │   │   ├── session-detail/
+    │   │   └── payment-history/
+    │   └── dialogs/
+    │       ├── qr-payment-dialog/        ← QR + Upload slip
+    │       ├── cash-payment-dialog/
+    │       ├── cash-drawer-dialog/       ← เงินเข้า/ออก
+    │       └── close-session-dialog/
+    │
+    └── profile/                          ← /profile
+        └── pages/
+            └── profile/                  ← แก้ข้อมูล + เปลี่ยนรหัสผ่าน + PIN
 ```
 
 ---
 
-### Feature Module Structure (pattern)
-
-แต่ละ feature module ใช้โครงสร้างนี้:
+## Frontend Mobile Web (RBMS-POS-Mobile-Web)
 
 ```
-features/[module-name]/
-├── [module].module.ts          NgModule declaration
-├── [module]-routing.module.ts  Routes ภายใน module
-├── pages/
-│   ├── [entity]-list/
-│   │   └── [entity]-list.component.ts
-│   └── [entity]-manage/
-│       └── [entity]-manage.component.ts
-└── dialogs/                    (ถ้ามี)
-    └── [dialog-name]/
-        └── [dialog-name].component.ts
+RBMS-POS-Mobile-Web/
+├── angular.json
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+├── ng-openapi-gen.json                   ← เฉพาะ Customer/SelfOrder/ShopSettings/QrRedirect APIs
+├── swagger.json
+└── src/app/
+    ├── app.module.ts
+    ├── app-routing.module.ts
+    │
+    ├── core/
+    │   ├── api/                          ← Generated (เฉพาะ APIs ที่ใช้ฝั่งลูกค้า)
+    │   ├── guards/
+    │   │   └── customer-auth.guard.ts    ← ตรวจ CustomerSession token
+    │   ├── interceptors/
+    │   │   └── customer-token.interceptor.ts ← แนบ qrToken/customerToken
+    │   ├── services/
+    │   │   ├── customer-auth.service.ts  ← QR token + nickname state
+    │   │   ├── cart.service.ts           ← Cart state (Signal)
+    │   │   ├── shop-status.service.ts    ← เช็คร้านเปิด/ปิด
+    │   │   └── customer-signalr.service.ts ← Subscribe OrderHub group: customer-{qrToken}
+    │   └── models/
+    │
+    ├── layouts/
+    │   └── customer-layout/              ← Header (โต๊ะ + nickname) + Footer Nav + Outlet
+    │
+    ├── shared/                           ← Component library (button, card, dialog, etc.)
+    │
+    └── features/                         ← 5 lazy-loaded modules
+        ├── auths/                        ← /auth (QR token verify + ตั้ง nickname)
+        ├── menu/                         ← /menu (browse), /menu/:menuId (detail + options)
+        ├── cart/                         ← /cart (ตะกร้า + ยืนยันสั่ง)
+        ├── orders/                       ← /orders (real-time tracking)
+        ├── bill/                         ← /bill/waiting, /summary, /upload, /complete
+        └── actions/                      ← Shared actions (call-waiter, request-bill, request-cash)
 ```
-
----
-
-## Entity Summary
-
-### Entity ที่ inherit BaseEntity (มี audit + soft delete)
-
-| Entity | PK | Domain | Fields สำคัญ |
-|--------|----|--------|-------------|
-| `TbUser` | `UserId` (Guid) | Auth | Username, Email, PasswordHash, IsActive, FailedLoginAttempts, LockoutCount, LockedUntil |
-| `TbServiceCharge` | `ServiceChargeId` (int) | Admin | Name, PercentageRate, IsActive, StartDate?, EndDate? |
-| `TbShopSettings` | `ShopSettingsId` (int) | Admin | ShopNameThai/English, TaxId, FoodType, LogoFileId?, PaymentQrCodeFileId? |
-| `TbShopOperatingHour` | `ShopOperatingHourId` (int) | Admin | ShopSettingsId FK, EDayOfWeek, IsOpen, OpenTime1/CloseTime1/OpenTime2/CloseTime2 |
-| `TbFile` | `FileId` (int) | Common | FileName, MimeType, FileExtension, FileSize, S3Key |
-| `TbMenu` | `MenuId` (int) | Menu | NameThai, NameEnglish, Price, EMenuCategory, ImageFileId? |
-| `TbEmployee` | `EmployeeId` (int) | HR | Names, ETitle?, EGender, PositionId?, ImageFileId?, UserId?, IsFullTime, Salary?, HourlyRate? |
-| `TbEmployeeAddress` | `EmployeeAddressId` (int) | HR | EmployeeId FK, EAddressType, HouseNumber, Province ฯลฯ |
-| `TbEmployeeEducation` | `EmployeeEducationId` (int) | HR | EmployeeId FK, EducationLevel, Major?, Institution, Gpa? |
-| `TbEmployeeWorkHistory` | `EmployeeWorkHistoryId` (int) | HR | EmployeeId FK, Workplace, Position?, StartDate, EndDate? |
-| `TbmPosition` | `PositionId` (int) | Authorization | PositionName, Description?, IsActive |
-| `TbmPermission` | `PermissionId` (int) | Authorization | PermissionName, PermissionCode, SortOrder |
-| `TbmModule` | `ModuleId` (int) | Authorization | ModuleName, ModuleCode, ParentModuleId? (self-ref), SortOrder, IsActive |
-| `TbmAuthorizeMatrix` | `AuthorizeMatrixId` (int) | Authorization | ModuleId FK, PermissionId FK, PermissionPath |
-| `TbAuthorizeMatrixPosition` | `AuthorizeMatrixPositionId` (int) | Authorization | AuthorizeMatrixId FK, PositionId FK |
-
-### Entity ที่ไม่ inherit BaseEntity (lifecycle เฉพาะ)
-
-| Entity | PK | Domain | เหตุผล |
-|--------|----|--------|--------|
-| `TbRefreshToken` | `RefreshTokenId` (Guid) | Auth | มี expiry, revoke — ไม่ต้อง soft delete |
-| `TbLoginHistory` | `LoginHistoryId` (Guid) | Auth | Log entity — ไม่ต้อง audit/delete |
-| `TbPasswordResetToken` | `PasswordResetTokenId` (Guid) | Auth | OTP lifecycle — มี expiry, attempts |
-| `TbPasswordHistory` | `PasswordHistoryId` (int) | Auth | Password log — append only |
-
-### BaseEntity Fields (ทุก Entity ที่ inherit)
-
-```
-CreatedAt (DateTime)             — auto-stamp เมื่อ Add
-CreatedBy (int?, FK→TbEmployee)  — auto-stamp จาก JWT
-UpdatedAt (DateTime?)            — auto-stamp เมื่อ Modified
-UpdatedBy (int?, FK→TbEmployee)  — auto-stamp จาก JWT
-DeleteFlag (bool)                — soft delete flag
-DeletedAt (DateTime?)            — auto-stamp เมื่อ DeleteFlag = true
-DeletedBy (int?)                 — auto-stamp จาก JWT
-CreatedByEmployee (nav)          — Navigation → TbEmployee
-UpdatedByEmployee (nav)          — Navigation → TbEmployee
-```
-
----
-
-## Services Summary
-
-### Backend Services (12)
-
-| Module | Service | หน้าที่ |
-|--------|---------|---------|
-| Business.Admin | `IAuthService` | Login, Logout, Refresh Token, Forgot/Reset Password |
-| Business.Admin | `IJwtTokenService` | สร้าง/ตรวจสอบ JWT Token |
-| Business.Admin | `IS3StorageService` | Upload/Download ไฟล์จาก S3 |
-| Business.Admin | `IFileService` | จัดการ TbFile records + S3 |
-| Business.Admin | `IServiceChargeService` | CRUD ค่าบริการ |
-| Business.Admin | `IShopSettingsService` | จัดการตั้งค่าร้าน + เวลาเปิด-ปิด |
-| Business.Admin | `IReCaptchaService` | ตรวจสอบ Google ReCaptcha |
-| Core | `IEmailService` | ส่งอีเมล (SMTP) |
-| Business.Menu | `IMenuService` | CRUD เมนูอาหาร |
-| Business.HumanResource | `IEmployeeService` | CRUD พนักงาน + sub-entities + user account |
-| Business.Authorization | `IPositionService` | CRUD ตำแหน่งงาน |
-| Business.Authorization | `IPermissionService` | จัดการ Permission Matrix |
 
 ---
 
@@ -613,43 +726,166 @@ doc/
 │   ├── system-analyst.md              ← SA Agent spec
 │   ├── backend-expert.md              ← Backend Agent spec
 │   ├── frontend-expert.md             ← Frontend Agent spec (+ UX/UI)
-│   └── code-reviewer.md              ← Code Review Agent spec
+│   └── code-reviewer.md               ← Code Review Agent spec
+│
 ├── architecture/
 │   ├── project-structure.md           ← ไฟล์นี้
-│   ├── system-overview.md             ← N-Tier pattern, Data flow
-│   ├── design-system.md              ← Color tokens, Typography
-│   ├── icon-system.md                ← ระบบ Icon (GenericIcon + PrimeIcons)
-│   ├── file-management.md            ← สถาปัตยกรรมการจัดการไฟล์ (TbFile + S3)
-│   ├── https-security.md             ← HTTPS + Security configuration
-│   └── database-api-reference.md     ← อ้างอิงตาราง, API, ความสัมพันธ์
+│   ├── system-overview.md             ← N-Tier + Data Flow + Tech Stack
+│   ├── database-api-reference.md      ← Schema + Endpoints ครบทั้งหมด
+│   ├── design-system.md               ← Color tokens + Typography
+│   ├── icon-system.md                 ← GenericIcon + PrimeIcons
+│   ├── file-management.md             ← TbFile + S3/MinIO architecture
+│   ├── https-security.md              ← HTTPS + Security
+│   └── auto-cleanup.md                ← Background cleanup jobs
+│
+├── deployment/
+│   ├── DEPLOYMENT-GUIDE.md            ← Production deployment guide
+│   └── SERVER-INFO-CHECKLIST.md       ← Server info template
+│
 ├── development/
-│   ├── quick-start.md                ← รันโปรเจคครั้งแรก
+│   ├── quick-start.md                 ← Setup + รันโปรเจคครั้งแรก
 │   ├── module-development-workflow.md ← End-to-End 16 ขั้นตอน
-│   ├── backend-guide.md              ← 10-Step Workflow + Database Conventions
-│   ├── backend-coding-standards.md   ← DO/DON'T ทุก layer
-│   ├── frontend-guidelines.md        ← Frontend patterns
-│   ├── frontend-coding-standards.md  ← DO/DON'T Frontend
-│   └── ai-prompting-guide.md         ← คู่มือ AI Agents + prompt templates
+│   ├── backend-guide.md               ← Backend 10-step + Conventions
+│   ├── backend-coding-standards.md    ← DO/DON'T ทุก layer
+│   ├── frontend-guidelines.md         ← Frontend patterns
+│   ├── frontend-coding-standards.md   ← DO/DON'T Frontend
+│   └── ai-prompting-guide.md          ← AI Agents + prompt templates
+│
 ├── features/
-│   └── project-status.md             ← สถานะปัจจุบัน, Endpoints, next steps
-├── requirements/
-│   └── (ว่าง)
-└── tasks/
-    ├── README.md                      ← รูปแบบ Task tracking
-    ├── TASK-ui-redesign.md            ← Task: UI Redesign
-    ├── TASK-icon-system.md            ← Task: Icon System
-    └── TASK-api-naming.md             ← Task: API Naming Pattern
+│   └── project-status.md              ← สถานะระบบ + Workflow ทุกโมดูล
+│
+├── requirements/                      ← Business requirements (REQ-*)
+│   ├── REQ-menu-system.md
+│   ├── REQ-kitchen-system.md
+│   ├── REQ-payment-system.md
+│   ├── REQ-self-order-system.md
+│   ├── REQ-noti-system.md
+│   ├── REQ-table-system.md
+│   ├── REQ-order-system.md
+│   └── REQ-dashboard-system.md
+│
+└── tasks/                             ← Task tracking (เก็บเฉพาะระบบหลัก)
+    ├── README.md
+    ├── TASK-development-roadmap.md
+    ├── TASK-backend-patterns.md
+    ├── TASK-file-management.md
+    ├── TASK-forgot-password.md
+    ├── TASK-menu-system.md
+    ├── TASK-shop-settings.md
+    ├── TASK-table-system.md
+    ├── TASK-order-system.md
+    ├── TASK-kitchen-system.md
+    ├── TASK-payment-system.md
+    ├── TASK-notification-system.md
+    ├── TASK-self-order-system.md
+    ├── TASK-dashboard.md
+    ├── TASK-employee-enhancement.md
+    └── TASK-production-deployment.md
 ```
+
+---
+
+## Entity Summary
+
+### Entity ที่ inherit BaseEntity (มี audit + soft delete) — 31 ตัว
+
+| Domain | Entity | PK | PK Type |
+|--------|--------|----|---------|
+| Auth | TbUser | UserId | Guid |
+| Authorization | TbmPosition | PositionId | int |
+| Authorization | TbmPermission | PermissionId | int |
+| Authorization | TbmModule | ModuleId | int |
+| Authorization | TbmAuthorizeMatrix | AuthorizeMatrixId | int |
+| Authorization | TbAuthorizeMatrixPosition | AuthMatrixPositionId | int |
+| Admin | TbServiceCharge | ServiceChargeId | int |
+| Admin | TbShopSettings | ShopSettingsId | int |
+| Admin | TbShopOperatingHour | ShopOperatingHourId | int |
+| Common | TbFile | FileId | int |
+| HumanResource | TbEmployee | EmployeeId | int |
+| HumanResource | TbEmployeeAddress | EmployeeAddressId | int |
+| HumanResource | TbEmployeeEducation | EmployeeEducationId | int |
+| HumanResource | TbEmployeeWorkHistory | EmployeeWorkHistoryId | int |
+| Menu | TbMenu | MenuId | int |
+| Menu | TbMenuSubCategory | SubCategoryId | int |
+| Menu | TbOptionGroup | OptionGroupId | int (hard delete) |
+| Menu | TbOptionItem | OptionItemId | int (hard delete) |
+| Menu | TbMenuOptionGroup | MenuOptionGroupId | int (hard delete) |
+| Table | TbZone | ZoneId | int |
+| Table | TbTable | TableId | int |
+| Table | TbTableLink | TableLinkId | int (hard delete) |
+| Table | TbFloorObject | FloorObjectId | int |
+| Table | TbReservation | ReservationId | int |
+| Order | TbOrder | OrderId | int |
+| Order | TbOrderItem | OrderItemId | int |
+| Order | TbOrderBill | OrderBillId | int |
+| Payment | TbPayment | PaymentId | int |
+| Payment | TbCashierSession | CashierSessionId | int |
+| Payment | TbCashDrawerTransaction | CashDrawerTransactionId | int |
+
+### Entity ที่ไม่ inherit BaseEntity (lifecycle เฉพาะ) — 7 ตัว
+
+| Domain | Entity | PK | เหตุผล |
+|--------|--------|----|--------|
+| Auth | TbRefreshToken | RefreshTokenId (Guid) | มี expiry, revoke |
+| Auth | TbPasswordResetToken | PasswordResetTokenId (Guid) | OTP/Reset Token lifecycle |
+| Auth | TbPasswordHistory | PasswordHistoryId (int) | Append-only log |
+| Notification | TbNotification | NotificationId (int) | Hard delete (ข้อมูลชั่วคราว) |
+| Notification | TbNotificationRead | NotificationReadId (int) | Hard delete |
+| Customer | TbCustomerSession | CustomerSessionId (int) | มี expiry สำหรับ QR session |
+| Order | TbOrderItemOption | OrderItemOptionId (int) | M:M snapshot table (Order item × Option) |
+
+---
+
+## Services Summary
+
+### Backend Services (~25)
+
+| Module | Service | หน้าที่ |
+|--------|---------|---------|
+| Business.Admin | AuthService | Login, Logout, Refresh, Forgot/Reset/Change Password, PIN setup/verify/change/reset |
+| Business.Admin | JwtTokenService | Generate + Validate JWT |
+| Business.Admin | ReCaptchaService | Verify Google ReCaptcha v3 |
+| Business.Admin | S3StorageService | Upload/Download/Delete จาก MinIO/S3 |
+| Business.Admin | FileService | TbFile CRUD + S3 integration |
+| Business.Admin | ServiceChargeService | Service Charge CRUD + dropdown |
+| Business.Admin | ShopSettingsService | Shop Settings + Operating Hours + Branding |
+| Business.Admin | UserService | User list, reset login attempts, update |
+| Business.Admin | CashierSessionService | เปิด-ปิดกะ + cash in/out + history |
+| Business.Admin | DashboardService | Overview, Top Selling, Peak Hours, Sales Report |
+| Business.Admin | EmailService (impl) | ส่งอีเมล SMTP |
+| Business.Authorization | PositionService | Position CRUD + dropdown |
+| Business.Authorization | PermissionService | Module tree + Permission Matrix + GetUserPermissions |
+| Business.HumanResource | EmployeeService | Employee CRUD + sub-entities + create-user + my-profile |
+| Business.Menu | MenuService | Menu CRUD (food/beverage/dessert) |
+| Business.Menu | MenuCategoryService | Sub Category CRUD + sort-order |
+| Business.Menu | MenuOptionService | Option Group + Option Items CRUD |
+| Business.Notification | NotificationService | CRUD + Mark Read + Clear |
+| Business.Notification | NotificationDeliveryService | SignalR broadcast helpers (ส่ง notification ไปกลุ่ม) |
+| Business.Order | OrderService | Order CRUD + items + send-kitchen + serve + void + cancel |
+| Business.Order | OrderBillService | Request bill + Split + Unsplit + Update charges |
+| Business.Order | OrderSignalRService | Broadcast OrderUpdated, TableStatusChanged ฯลฯ |
+| Business.Order | KitchenService | Kitchen queue + prepare/ready |
+| Business.Order | CustomerService | Self-Order: bill, claim/release, upload slip |
+| Business.Order | SelfOrderService | Self-Order: auth, menu, cart, orders, actions |
+| Business.Order | QrRedirectService | Short URL → Long URL |
+| Business.Payment | PaymentService | Cash + QR confirm + Upload Slip + Get + History |
+| Business.Payment | ReceiptService | Generate receipt + consolidated receipt |
+| Business.Payment | SlipOcrService | OCR สลิป |
+| Business.Table | TableService | Table CRUD + operations |
+| Business.Table | ZoneService | Zone CRUD + active + sort-order |
+| Business.Table | FloorObjectService | FloorObject CRUD + positions |
+| Business.Table | ReservationService | Reservation CRUD + status transitions |
+| Business.Table | TableLinkService | Link/Unlink tables |
 
 ---
 
 ## Related Docs
 
-- [project-status.md](../features/project-status.md) — สิ่งที่ทำงานได้จริง vs ยังขาด
-- [system-overview.md](system-overview.md) — N-Tier architecture + data flow
-- [backend-guide.md](../development/backend-guide.md) — คู่มือพัฒนา Backend + 10-Step Workflow
-- [frontend-guidelines.md](../development/frontend-guidelines.md) — Frontend patterns + DO/DON'T
-- [file-management.md](file-management.md) — สถาปัตยกรรมการจัดการไฟล์
-- [database-api-reference.md](database-api-reference.md) — อ้างอิงตาราง, API, ความสัมพันธ์
-- [design-system.md](design-system.md) — Color tokens, Typography
-- [icon-system.md](icon-system.md) — ระบบ Icon (GenericIcon + PrimeIcons)
+- [project-status.md](../features/project-status.md) — สถานะ + Workflow ทุกระบบ
+- [system-overview.md](system-overview.md) — N-Tier + Data Flow + Tech Stack
+- [database-api-reference.md](database-api-reference.md) — Schema + Endpoints
+- [backend-guide.md](../development/backend-guide.md) — คู่มือ Backend
+- [frontend-guidelines.md](../development/frontend-guidelines.md) — คู่มือ Frontend
+- [file-management.md](file-management.md) — File/S3 Architecture
+- [design-system.md](design-system.md) — Design Tokens
+- [icon-system.md](icon-system.md) — Icon System

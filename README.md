@@ -158,12 +158,12 @@ WebAPI → Business Services → Repositories → Dal (EF Core) → Core
 - **Repository** จัดการ database query → ผ่าน UnitOfWork
 - **Global Exception Filter** จัดการ errors ทั้งระบบอัตโนมัติ
 
-**Real-time — SignalR:**
+**Real-time — SignalR (2 Hubs):**
 
-- Order Hub — broadcast เมื่อมีออเดอร์ใหม่ / เปลี่ยนสถานะ
-- Kitchen Hub — ครัวเห็นออเดอร์ทันทีพร้อม Timer
-- Table Hub — สถานะโต๊ะอัพเดตทุกหน้าจอ
-- Notification Hub — แจ้งเตือน Toast + Drawer แบบ Real-time
+- **OrderHub** (`/hubs/order`) — broadcast event ของ Order / Table / Kitchen / Customer Order Tracking
+  - Group: `order-manage`, `payment-manage`, `kitchen-food/beverage/dessert`, `floor-plan`, `table-manage`, `customer-{qrToken}`
+- **NotificationHub** (`/hubs/notification`) — Toast + Drawer แจ้งเตือนตาม permission ของ user
+  - Group: `Kitchen`, `Floor`, `Cashier`, `Manager`
 
 ---
 
@@ -225,25 +225,32 @@ Mobile Web: `http://localhost:4400`
 ```
 RBMS-POS/
 ├── Backend-POS/POS.Main/
-│   ├── RBMS.POS.WebAPI/                 # Controllers, Hubs, Filters, Program.cs
-│   ├── POS.Main.Business.Admin/         # Auth, ServiceCharge, ShopSettings, File
-│   ├── POS.Main.Business.Menu/          # Menu, Category, Options
-│   ├── POS.Main.Business.HumanResource/ # Employee
-│   ├── POS.Main.Business.Authorization/ # Position-Based RBAC
-│   ├── POS.Main.Repositories/           # Repository + UnitOfWork
-│   ├── POS.Main.Dal/                    # Entities, DbContext, Migrations
-│   └── POS.Main.Core/                   # Enums, Exceptions, Helpers
+│   ├── RBMS.POS.WebAPI/                 # 23 Controllers + 2 SignalR Hubs + Filters + Program.cs
+│   ├── POS.Main.Business.Admin/         # Auth, JWT, S3, File, ServiceCharge, ShopSettings, User, Cashier, Dashboard
+│   ├── POS.Main.Business.Authorization/ # Position-Based RBAC + Permission Matrix
+│   ├── POS.Main.Business.HumanResource/ # Employee + sub-entities
+│   ├── POS.Main.Business.Menu/          # Menu, Category, Option Group
+│   ├── POS.Main.Business.Notification/  # Notification + SignalR Delivery
+│   ├── POS.Main.Business.Order/         # Order, Bill, Kitchen, Customer/Self-Order
+│   ├── POS.Main.Business.Payment/       # Payment, Receipt, Slip OCR
+│   ├── POS.Main.Business.Table/         # Zone, Table, FloorObject, Reservation, TableLink
+│   ├── POS.Main.Repositories/           # Repository + UnitOfWork (lazy-init)
+│   ├── POS.Main.Dal/                    # 37 Entities + 53 Migrations + DbContext
+│   └── POS.Main.Core/                   # Enums + Exceptions + Helpers + Settings + Models
 │
 ├── Frontend-POS/
-│   ├── RBMS-POS-Client/                 # Admin/Staff Client (Angular)
-│   └── RBMS-POS-Mobile-Web/             # Customer Mobile Web (Angular)
+│   ├── RBMS-POS-Client/                 # Admin/Staff Client (Angular 19, 10 features)
+│   └── RBMS-POS-Mobile-Web/             # Self-Order Mobile Web (Angular 19, 5 features)
 │
 ├── doc/                                 # Documentation
-│   ├── architecture/                    # System design, Database reference
+│   ├── architecture/                    # System design, Database/API reference
 │   ├── development/                     # Developer guides, Coding standards
-│   ├── requirements/                    # Business requirements (8 modules)
+│   ├── deployment/                      # Production deployment guide
+│   ├── features/                        # Project status + workflow
+│   ├── requirements/                    # Business requirements (REQ-*)
 │   ├── agents/                          # AI Agent specs (SA, BE, FE, Review)
-│   └── tasks/                           # Task tracking
+│   ├── references/                      # Thesis writing references (บทที่ 1-5 + คู่มือ + style guide)
+│   └── tasks/                           # Task tracking (ระบบหลัก + roadmap)
 │
 └── docker-compose.yml                   # Full-stack deployment
 ```
@@ -254,14 +261,23 @@ RBMS-POS/
 
 | หมวด                         | เอกสาร                                                                           |
 | ---------------------------- | -------------------------------------------------------------------------------- |
+| **Project Status + Workflow** | [project-status.md](doc/features/project-status.md) — สถานะระบบ + Workflow ทุกโมดูล + Migrations timeline |
 | **Quick Start**              | [quick-start.md](doc/development/quick-start.md)                                 |
-| **System Overview**          | [system-overview.md](doc/architecture/system-overview.md)                        |
-| **Database & API Reference** | [database-api-reference.md](doc/architecture/database-api-reference.md)          |
+| **System Overview**          | [system-overview.md](doc/architecture/system-overview.md) — N-Tier + Data Flow + SignalR + Auth |
+| **Project Structure**        | [project-structure.md](doc/architecture/project-structure.md) — โครงสร้างไฟล์ทั้ง Backend + Frontend |
+| **Database & API Reference** | [database-api-reference.md](doc/architecture/database-api-reference.md) — Schema 37 ตาราง + ~215 endpoints |
 | **Backend Guide**            | [backend-guide.md](doc/development/backend-guide.md)                             |
-| **Frontend Guide**           | [frontend-guidelines.md](doc/development/frontend-guidelines.md)                 |
+| **Backend Coding Standards** | [backend-coding-standards.md](doc/development/backend-coding-standards.md)       |
+| **Frontend Guidelines**      | [frontend-guidelines.md](doc/development/frontend-guidelines.md)                 |
+| **Frontend Coding Standards**| [frontend-coding-standards.md](doc/development/frontend-coding-standards.md)     |
 | **Design System**            | [design-system.md](doc/architecture/design-system.md)                            |
-| **Development Workflow**     | [module-development-workflow.md](doc/development/module-development-workflow.md) |
-| **Project Status**           | [project-status.md](doc/features/project-status.md)                              |
+| **Icon System**              | [icon-system.md](doc/architecture/icon-system.md)                                |
+| **File Management (S3)**     | [file-management.md](doc/architecture/file-management.md)                        |
+| **HTTPS & Security**         | [https-security.md](doc/architecture/https-security.md)                          |
+| **Module Development Flow**  | [module-development-workflow.md](doc/development/module-development-workflow.md) |
+| **Deployment Guide**         | [DEPLOYMENT-GUIDE.md](doc/deployment/DEPLOYMENT-GUIDE.md)                        |
+| **Development Roadmap**      | [TASK-development-roadmap.md](doc/tasks/TASK-development-roadmap.md)             |
+| **Thesis References**        | [doc/references/README.md](doc/references/README.md) — แม่แบบเขียนปริญญานิพนธ์ (บทที่ 1-5 + คู่มือ + Writing Style) |
 
 ---
 
@@ -282,7 +298,7 @@ docker compose up -d
 | SQL Server    | 1433 (internal) |
 | MinIO         | 9000 (internal) |
 
-> รายละเอียด: [doc/development/DEPLOYMENT-GUIDE.md](doc/development/DEPLOYMENT-GUIDE.md)
+> รายละเอียด: [doc/deployment/DEPLOYMENT-GUIDE.md](doc/deployment/DEPLOYMENT-GUIDE.md)
 
 ---
 

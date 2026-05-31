@@ -1,6 +1,6 @@
 # อ้างอิงฐานข้อมูลและ API — RBMS-POS
 
-> อัพเดตล่าสุด: 2026-03-24
+> อัพเดตล่าสุด: 2026-05-30
 
 > **กฎบังคับ**: เอกสารนี้ต้องอัพเดตทุกครั้งที่มีการสร้าง Entity ใหม่, เพิ่ม API เส้นใหม่, หรือเปลี่ยนแปลงความสัมพันธ์ของตาราง
 > ดู [กฎการอัพเดต](#กฎการอัพเดตเอกสารนี้) ด้านล่าง
@@ -48,8 +48,17 @@
 | `TbPayments`                 | การชำระเงิน (เงินสด/QR ต่อบิล)                        | `PaymentId`            | int (Identity) | ✅                 | Soft |
 | `TbNotifications`            | การแจ้งเตือน real-time สำหรับ staff (ข้อมูลชั่วคราว)    | `NotificationId`       | int (Identity) | ❌                 | **Hard** |
 | `TbNotificationReads`        | สถานะอ่าน/เคลียร์ per-user ของ notification            | `NotificationReadId`   | int (Identity) | ❌                 | **Hard** |
+| `TbOrders`                   | ออเดอร์ของโต๊ะ (สถานะ Open/Billing/Completed/Cancelled) | `OrderId`              | int (Identity) | ✅                 | Soft |
+| `TbOrderItems`               | รายการอาหารในออเดอร์ (snapshot ราคา + สถานะ Pending/Sent/Preparing/Ready/Served/Cancelled/Voided) | `OrderItemId` | int (Identity) | ✅ | Soft |
+| `TbOrderItemOptions`         | ตัวเลือกของรายการ (M:M Snapshot — เก็บ AdditionalPrice + CostPrice ขณะสั่ง) | `OrderItemOptionId` | int (Identity) | ❌ | **Hard** |
+| `TbOrderBills`               | บิล (รองรับ Split — Full / SplitByItem / SplitByAmount + Customer Slip OCR + Claim) | `OrderBillId` | int (Identity) | ✅ | Soft |
+| `TbFloorObjects`             | วัตถุประดับผังโต๊ะ (เสา, ฉากกั้น, ทางเดิน, เคาน์เตอร์)   | `FloorObjectId`        | int (Identity) | ✅                 | Soft |
+| `TbCustomerSessions`         | เซสชั่นลูกค้า QR (Nickname + DeviceFingerprint + Expiry) | `CustomerSessionId`    | int (Identity) | ❌                 | **Hard** |
+| `TbPasswordResetTokens`      | OTP สำหรับ Forgot Password (มี expiry)                 | `PasswordResetTokenId` | Guid           | ❌                 | **Hard** |
+| `TbPasswordHistories`        | ประวัติรหัสผ่าน (ป้องกันใช้ซ้ำ — append-only)          | `PasswordHistoryId`    | int            | ❌                 | **Hard** |
 
-> **Hard Delete**: `TbOptionGroups`, `TbOptionItems`, `TbMenuOptionGroups`, `TbTableLinks`, `TbNotifications`, `TbNotificationReads` ใช้ hard delete — ไม่มี global query filter สำหรับ DeleteFlag
+> **Hard Delete**: `TbOptionGroups`, `TbOptionItems`, `TbMenuOptionGroups`, `TbTableLinks`, `TbOrderItemOptions`, `TbNotifications`, `TbNotificationReads`, `TbCustomerSessions`, `TbPasswordResetTokens`, `TbPasswordHistories` ใช้ hard delete — ไม่มี global query filter สำหรับ DeleteFlag
+> **รวมทั้งหมด: 37 ตาราง** (30 ตารางที่ inherit BaseEntity + 7 ตารางที่มี lifecycle เฉพาะ — TbRefreshToken, TbPasswordResetToken, TbPasswordHistory, TbNotification, TbNotificationRead, TbCustomerSession, TbOrderItemOption)
 
 ---
 
@@ -614,6 +623,182 @@ Track สถานะอ่าน + clear ต่อ user — **ไม่ inherit
 
 ---
 
+#### TbOrders — ออเดอร์
+
+ออเดอร์หลักของโต๊ะ — 1 ออเดอร์ต่อ 1 รอบของลูกค้า
+
+| คอลัมน์          | ชนิด          | จำเป็น | รายละเอียด                                                  |
+| ---------------- | ------------- | ------ | ----------------------------------------------------------- |
+| `OrderId`        | int           | ✅ PK  | Identity                                                    |
+| `OrderNumber`    | nvarchar      | ✅     | เลขออเดอร์ (running number ต่อวัน เช่น `20260530-001`)      |
+| `TableId`        | int           | ✅     | FK → TbTables                                               |
+| `Status`         | int           | ✅     | Enum `EOrderStatus` (Open=0 / Billing=1 / Completed=2)      |
+| `GuestCount`     | int           | ✅     | จำนวนลูกค้า                                                 |
+| `SubTotal`       | decimal(18,2) | ✅     | ยอดรวมก่อนค่าบริการ                                          |
+| `Note`           | nvarchar      | ❌     | หมายเหตุของออเดอร์                                          |
+| + Audit fields   |               |        | จาก BaseEntity (CreatedAt = เปิดโต๊ะ, UpdatedAt = อัพเดตล่าสุด) |
+
+> ไม่มี Cancelled status — การยกเลิกทั้งออเดอร์ทำผ่าน void-bill (Billing → Open) แล้วยกเลิกทุก OrderItem
+> ไม่มี OrderedByEmployeeId ที่ระดับ Order — เก็บที่ระดับ OrderItem (`OrderedBy` string) แทน
+
+---
+
+#### TbOrderItems — รายการอาหารในออเดอร์
+
+แต่ละรายการอาหารที่ลูกค้า/พนักงานสั่ง — เก็บ snapshot ราคาขณะสั่ง
+
+| คอลัมน์              | ชนิด           | จำเป็น | รายละเอียด                                                                        |
+| -------------------- | -------------- | ------ | ---------------------------------------------------------------------------------- |
+| `OrderItemId`        | int            | ✅ PK  | Identity                                                                           |
+| `OrderId`            | int            | ✅     | FK → TbOrders                                                                      |
+| `MenuId`             | int            | ✅     | FK → TbMenus                                                                       |
+| `MenuNameThai`       | nvarchar       | ✅     | ชื่อเมนูภาษาไทย (snapshot ตอนสั่ง)                                                 |
+| `MenuNameEnglish`    | nvarchar       | ✅     | ชื่อเมนูภาษาอังกฤษ (snapshot ตอนสั่ง)                                              |
+| `CategoryType`       | int            | ✅     | ประเภทเมนู (1=Food, 2=Beverage, 3=Dessert) — snapshot สำหรับ KDS                  |
+| `Quantity`           | int            | ✅     | จำนวน                                                                              |
+| `UnitPrice`          | decimal(18,2)  | ✅     | ราคา/หน่วยตอนสั่ง (snapshot)                                                       |
+| `OptionsTotalPrice`  | decimal(18,2)  | ✅     | ผลรวมราคา option ทั้งหมด                                                            |
+| `TotalPrice`         | decimal(18,2)  | ✅     | ยอดรวม (UnitPrice + OptionsTotalPrice) × Quantity                                  |
+| `Status`             | int            | ✅     | Enum `EOrderItemStatus` (Pending / Sent / Preparing / Ready / Served / Voided / Cancelled) |
+| `Note`               | nvarchar       | ❌     | หมายเหตุ                                                                            |
+| `OrderedBy`          | nvarchar       | ✅     | ชื่อผู้สั่ง (พนักงาน = nickname, ลูกค้า = nickname จาก CustomerSession)             |
+| `SentToKitchenAt`    | datetime       | ❌     | ส่งครัวตอนไหน                                                                       |
+| `CookingStartedAt`   | datetime       | ❌     | เริ่มทำตอนไหน                                                                       |
+| `ReadyAt`            | datetime       | ❌     | พร้อมเสิร์ฟตอนไหน                                                                   |
+| `ServedAt`           | datetime       | ❌     | เสิร์ฟตอนไหน                                                                        |
+| `CancelledBy`        | int            | ❌     | FK → TbEmployees (ผู้ยกเลิก — เฉพาะ Status = Cancelled)                            |
+| `CancelReason`       | nvarchar       | ❌     | เหตุผลยกเลิก                                                                        |
+| `CostPrice`          | decimal(18,2)  | ❌     | ต้นทุนหน่วยตอนสั่ง (snapshot สำหรับคำนวณกำไรขั้นต้น)                                |
+| `OrderBillId`        | int            | ❌     | FK → TbOrderBills (NULL ถ้ายังไม่ split)                                            |
+| `SourceTableId`      | int            | ❌     | FK → TbTables (โต๊ะต้นทาง — ใช้ตอน link → unlink)                                  |
+| + Audit fields       |                |        | จาก BaseEntity                                                                      |
+
+---
+
+#### TbOrderItemOptions — ตัวเลือกของรายการ
+
+ตัวเลือกที่ลูกค้าเลือกในแต่ละ item — snapshot จาก `TbOptionGroup` + `TbOptionItem` ตอนสั่ง
+**ไม่ inherit `BaseEntity`** (M:M snapshot table)
+
+| คอลัมน์              | ชนิด           | จำเป็น | รายละเอียด                                  |
+| -------------------- | -------------- | ------ | ------------------------------------------- |
+| `OrderItemOptionId`  | int            | ✅ PK  | Identity                                    |
+| `OrderItemId`        | int            | ✅     | FK → TbOrderItems                           |
+| `OptionGroupId`      | int            | ✅     | FK → TbOptionGroups                         |
+| `OptionItemId`       | int            | ✅     | FK → TbOptionItems                          |
+| `OptionGroupName`    | nvarchar       | ✅     | ชื่อกลุ่ม (snapshot)                         |
+| `OptionItemName`     | nvarchar       | ✅     | ชื่อตัวเลือก (snapshot)                      |
+| `AdditionalPrice`    | decimal(18,2)  | ✅     | ราคาเพิ่ม/ลดตอนสั่ง                          |
+| `CostPrice`          | decimal(18,2)  | ❌     | ต้นทุนของตัวเลือกตอนสั่ง (snapshot)         |
+
+---
+
+#### TbOrderBills — บิล
+
+รองรับ Split Bill (1 ออเดอร์ → หลายบิล) + Customer Slip OCR + Bill Claim (Multi-device)
+
+| คอลัมน์                              | ชนิด          | จำเป็น | รายละเอียด                                                                |
+| ------------------------------------ | ------------- | ------ | ------------------------------------------------------------------------- |
+| `OrderBillId`                        | int           | ✅ PK  | Identity                                                                  |
+| `OrderId`                            | int           | ✅     | FK → TbOrders                                                             |
+| `BillNumber`                         | nvarchar      | ✅     | เลขบิล (รวม split suffix)                                                  |
+| `BillType`                           | int           | ✅     | Enum `EBillType` (Full / SplitByItem / SplitByAmount)                     |
+| `SubTotal`                           | decimal(18,2) | ✅     | ยอดก่อนหักลด                                                              |
+| `TotalDiscountAmount`                | decimal(18,2) | ✅     | ยอดส่วนลดทั้งหมด                                                          |
+| `NetAmount`                          | decimal(18,2) | ✅     | SubTotal - TotalDiscountAmount                                            |
+| `ServiceChargeId`                    | int           | ❌     | FK → TbServiceCharges                                                     |
+| `ServiceChargeRate`                  | decimal(18,2) | ✅     | อัตรา % ที่ใช้ตอนออกบิล (snapshot)                                       |
+| `ServiceChargeAmount`                | decimal(18,2) | ✅     | ยอดค่าบริการ                                                              |
+| `VatRate`                            | decimal(18,2) | ✅     | อัตรา VAT (snapshot)                                                      |
+| `VatAmount`                          | decimal(18,2) | ✅     | ยอด VAT                                                                   |
+| `GrandTotal`                         | decimal(18,2) | ✅     | ยอดสุทธิ (NetAmount + ServiceChargeAmount + VatAmount)                    |
+| `SplitCount`                         | int           | ✅     | จำนวนบิลทั้งหมดของออเดอร์ (Full = 1, Split = N)                          |
+| `SplitIndex`                         | int           | ✅     | ลำดับบิล (1..N)                                                           |
+| `Status`                             | int           | ✅     | Enum `EBillStatus` (Pending / Paid / Cancelled / Voided)                  |
+| `PaidAt`                             | datetime      | ❌     | ชำระสำเร็จตอนไหน                                                          |
+| `ClaimedBySessionId`                 | int           | ❌     | FK → TbCustomerSessions (ลูกค้าจองบิล — int! ไม่ใช่ Guid)                |
+| `ClaimedAt`                          | datetime      | ❌     | จองตอนไหน                                                                  |
+| `ClaimPaymentMethod`                 | nvarchar      | ❌     | วิธีชำระที่ลูกค้าเลือก (Cash / Transfer)                                  |
+| `CustomerSlipFileId`                 | int           | ❌     | FK → TbFiles (สลิปจากลูกค้า)                                              |
+| `CustomerSlipOcrAmount`              | decimal(18,2) | ❌     | ยอดที่ OCR อ่านได้                                                         |
+| `CustomerSlipOcrTransferDate`        | datetime      | ❌     | วันที่ที่ OCR อ่านได้                                                      |
+| `CustomerSlipOcrAccountNumber`       | nvarchar      | ❌     | เลขบัญชีปลายทางที่ OCR อ่านได้                                            |
+| `CustomerSlipVerificationStatus`     | nvarchar      | ❌     | Enum `ESlipVerificationStatus` (Pending / Verified / Rejected)            |
+| `CustomerSlipIsAccountMatched`       | bit           | ❌     | ตรงกับเลขบัญชีร้านหรือไม่                                                 |
+| `CustomerSlipIsDateToday`            | bit           | ❌     | วันที่โอนเป็นวันนี้หรือไม่                                                 |
+| + Audit fields                       |               |        | จาก BaseEntity                                                            |
+
+---
+
+#### TbFloorObjects — วัตถุประดับผัง
+
+วัตถุที่ไม่ใช่โต๊ะใน Floor Plan (เสา, ฉากกั้น, ทางเดิน, เคาน์เตอร์)
+
+| คอลัมน์            | ชนิด          | จำเป็น | รายละเอียด                                                          |
+| ------------------ | ------------- | ------ | ------------------------------------------------------------------- |
+| `FloorObjectId`    | int           | ✅ PK  | Identity                                                            |
+| `ZoneId`           | int           | ❌     | FK → TbZones (อยู่ในโซนไหน — nullable)                              |
+| `ObjectType`       | int           | ✅     | Enum `EFloorObjectType` (Pillar / Divider / Walkway / Counter / Decoration) |
+| `Label`            | nvarchar      | ✅     | ป้ายชื่อ (เช่น "เสา 1", "ฉากกั้นห้อง VIP")                          |
+| `PositionX`        | double        | ✅     | ตำแหน่ง X ในผัง                                                      |
+| `PositionY`        | double        | ✅     | ตำแหน่ง Y ในผัง                                                      |
+| + Audit fields     |               |        | จาก BaseEntity                                                       |
+
+> ขนาด (Width/Height) และการหมุน (Rotation) ถูกกำหนดผ่าน `ObjectType` ที่ Frontend (preset ตามชนิด) — ไม่เก็บใน DB
+
+---
+
+#### TbCustomerSessions — เซสชั่นลูกค้า Self-Order
+
+แต่ละ device ของลูกค้าที่สแกน QR แล้ว auth สำเร็จ — มี session แยกกัน
+**ไม่ inherit `BaseEntity`** (hard delete หลังหมดอายุ)
+
+| คอลัมน์              | ชนิด           | จำเป็น | รายละเอียด                                          |
+| -------------------- | -------------- | ------ | --------------------------------------------------- |
+| `CustomerSessionId`  | int            | ✅ PK  | Identity                                            |
+| `TableId`            | int            | ✅     | FK → TbTables                                       |
+| `SessionToken`       | nvarchar       | ✅     | Token ที่ออกหลัง auth สำเร็จ (ใช้กับ CustomerAuthorize) |
+| `Nickname`           | nvarchar       | ❌     | ชื่อเล่นลูกค้า                                       |
+| `DeviceFingerprint`  | nvarchar       | ❌     | Fingerprint ของ device (สำหรับแยก session)          |
+| `QrTokenNonce`       | nvarchar       | ✅     | Nonce ของ QR Token ตอนสร้าง session                  |
+| `IsActive`           | bit            | ✅     | true = ยัง active                                   |
+| `CreatedAt`          | datetime       | ✅     | สร้างตอนไหน                                          |
+| `ExpiresAt`          | datetime       | ✅     | หมดอายุตอนไหน (12 ชม.)                              |
+
+---
+
+#### TbPasswordResetTokens — OTP สำหรับ Forgot Password
+
+แบ่งเป็น 2 เฟส: OTP Phase และ Reset Token Phase
+
+| คอลัมน์                    | ชนิด           | จำเป็น | รายละเอียด                                          |
+| -------------------------- | -------------- | ------ | --------------------------------------------------- |
+| `PasswordResetTokenId`     | Guid           | ✅ PK  | Default NEWID()                                     |
+| `UserId`                   | Guid           | ✅     | FK → TbUsers                                        |
+| `OtpCode`                  | nvarchar       | ✅     | OTP 6 หลัก                                          |
+| `OtpExpiresAt`             | datetime       | ✅     | หมดอายุ OTP (15 นาที)                              |
+| `OtpVerified`              | bit            | ✅     | OTP ยืนยันแล้วหรือยัง                                |
+| `OtpAttempts`              | int            | ✅     | จำนวนครั้งที่ใส่ OTP ผิด (สูงสุด 5)                  |
+| `ResetToken`               | nvarchar       | ❌     | Token ที่ออกหลัง verify OTP (สำหรับ reset password) |
+| `ResetTokenExpiresAt`      | datetime       | ❌     | หมดอายุ Reset Token (30 นาที)                       |
+| `IsUsed`                   | bit            | ✅     | reset password สำเร็จแล้วหรือยัง                     |
+| `CreatedAt`                | datetime       | ✅     | สร้างตอนไหน                                          |
+
+---
+
+#### TbPasswordHistories — ประวัติรหัสผ่าน
+
+ป้องกันใช้รหัสผ่านเดิม 5 ครั้งล่าสุด — append-only
+
+| คอลัมน์              | ชนิด          | จำเป็น | รายละเอียด                          |
+| -------------------- | ------------- | ------ | ----------------------------------- |
+| `PasswordHistoryId`  | int           | ✅ PK  | Identity                            |
+| `UserId`             | Guid          | ✅     | FK → TbUsers                        |
+| `PasswordHash`       | varchar(255)  | ✅     | รหัสผ่านที่ Hash แล้ว                |
+| `CreatedAt`          | datetime      | ✅     | เปลี่ยนรหัสผ่านตอนไหน                |
+
+---
+
 ## ความสัมพันธ์ของตาราง
 
 ### แผนภาพความสัมพันธ์
@@ -702,25 +887,29 @@ BaseEntity (CreatedBy/UpdatedBy) ── (0..1) TbEmployees (ทุกตาร�
 | Controller     | Route Prefix               | จำนวน Endpoints | Auth    | Permission                 |
 | -------------- | -------------------------- | --------------- | ------- | -------------------------- |
 | Auth           | `api/admin/auth`           | 11              | บางเส้น | —                          |
-| Positions      | `api/admin/positions`      | 10              | ทุกเส้น | `position.*`               |
-| MenuCategories | `api/menu/categories`      | 6               | ทุกเส้น | `menu-category.*`          |
-| MenuItems      | `api/menu/items`           | 5               | ทุกเส้น | `menu-food.*` / `menu-beverage.*` / `menu-dessert.*` (dynamic ตาม categoryType) |
-| MenuOptions    | `api/menu/options`         | 6               | ทุกเส้น | `menu-option.*`            |
-| HumanResource  | `api/humanresource`        | 12              | ทุกเส้น | `employee.*` / Profile ไม่ต้อง |
-| ServiceCharges | `api/admin/servicecharges` | 6               | ทุกเส้น | `service-charge.*`         |
-| ShopSettings   | `api/admin/shop-settings`  | 4               | ทุกเส้น | `shop-settings.*` / บางเส้นไม่ต้อง |
 | Users          | `api/admin/users`          | 4               | ทุกเส้น | `user-management.*`        |
+| Positions      | `api/admin/positions`      | 11              | ทุกเส้น | `position.*`               |
+| ShopSettings   | `api/admin/shop-settings`  | 5               | ทุกเส้น | `shop-settings.*` / บางเส้นไม่ต้อง |
+| ServiceCharges | `api/admin/servicecharges` | 6               | ทุกเส้น | `service-charge.*`         |
 | File           | `api/admin/file`           | 1               | ทุกเส้น | —                          |
+| HumanResource  | `api/humanresource`        | 20              | ทุกเส้น | `employee.*` / Profile ไม่ต้อง |
+| MenuCategories | `api/menu/categories`      | 6               | ทุกเส้น | `menu-category.*`          |
+| MenuItems      | `api/menu/items`           | 5               | ทุกเส้น | `menu-food.*` / `menu-beverage.*` / `menu-dessert.*` (dynamic) |
+| MenuOptions    | `api/menu/options`         | 6               | ทุกเส้น | `menu-option.*`            |
 | Zones          | `api/table/zones`          | 7               | ทุกเส้น | `table.*`                  |
 | Tables         | `api/table/tables`         | 15              | ทุกเส้น | `table.*`                  |
 | Reservations   | `api/table/reservations`   | 9               | ทุกเส้น | `reservation.*`            |
+| FloorObjects   | `api/table/floor-objects`  | 6               | ทุกเส้น | `floor-plan.*`             |
+| Orders         | `api/order/orders`         | 20              | ทุกเส้น | `order-manage.*` / `payment-manage.*` |
 | Kitchen        | `api/kitchen`              | 3               | ทุกเส้น | `kitchen-food.*` / `kitchen-beverage.*` / `kitchen-dessert.*` (dynamic) |
-| CashierSessions| `api/cashier/sessions`     | 7               | ทุกเส้น | `cashier-session.*`        |
-| Payments       | `api/payment/payments`     | 7               | ทุกเส้น | `payment-manage.*`         |
-| Customer       | `api/customer`             | 3               | ไม่ต้อง | — (AllowAnonymous)         |
-| Notifications  | `api/Notifications`        | 5               | ทุกเส้น | — (Authorize only)         |
+| Payments       | `api/payment/payments`     | 8               | ทุกเส้น | `payment-manage.*`         |
+| CashierSessions| `api/cashier/sessions`     | 9               | ทุกเส้น | `cashier-session.*`        |
 | Dashboard      | `api/dashboard`            | 4               | ทุกเส้น | `dashboard.view.read`      |
-| **รวม**        |                            | **124**         |         |                            |
+| Notifications  | `api/Notifications`        | 5               | ทุกเส้น | — (Authorize only)         |
+| Customer       | `api/customer`             | 5               | บางเส้น | CustomerAuthorize / AllowAnonymous |
+| SelfOrder      | `api/customer`             | 14              | บางเส้น | CustomerAuthorize          |
+| QrRedirect     | `q/{code}`                 | 1               | ไม่ต้อง | — (AllowAnonymous)         |
+| **รวม**        | **23 controllers**         | **~215**        |         |                            |
 
 ---
 
@@ -1110,6 +1299,154 @@ Route prefix: `api/customer` — **AllowAnonymous** (ไม่ต้องมี
 > - Release Bill: ตรวจ session เป็นผู้จอง → clear claim fields → broadcast SignalR "BillReleased"
 > - Upload Slip: ตรวจ bill status=Pending → อัปโหลดไฟล์ → OCR → broadcast SignalR "SlipUploaded"
 > - Payment Status: return สถานะ bill เป็น string (Pending/Paid/Cancelled)
+
+### Orders — ออเดอร์ + Bill + Operations
+
+Route prefix: `api/order/orders`
+
+| Method | Endpoint                                  | วัตถุประสงค์                                  | Permission              | Request                                       | Response                                       |
+| ------ | ----------------------------------------- | --------------------------------------------- | ----------------------- | --------------------------------------------- | ---------------------------------------------- |
+| GET    | `/`                                       | ดึงรายการออเดอร์ (filter ครบ + แบ่งหน้า)       | `order-manage.read`     | Query: status?, zoneId?, tableId?, dateFrom?, dateTo? + `PaginationModel` | `PaginationResult<OrderResponseModel>` |
+| POST   | `/`                                       | สร้างออเดอร์ใหม่ (เปิดโต๊ะ)                    | `order-manage.create`   | JSON: `CreateOrderRequestModel`               | `BaseResponseModel<OrderResponseModel>`        |
+| GET    | `/{orderId}`                              | ดูรายละเอียดออเดอร์ + items + bills           | `order-manage.read`     | URL param                                     | `BaseResponseModel<OrderDetailResponseModel>`  |
+| GET    | `/table/{tableId}`                        | ดูออเดอร์ที่ Active ของโต๊ะ                    | `order-manage.read`     | URL param                                     | `BaseResponseModel<OrderResponseModel>`        |
+| POST   | `/{orderId}/items`                        | เพิ่มรายการอาหารในออเดอร์                     | `order-manage.create`   | JSON: `AddOrderItemsRequestModel`             | `BaseResponseModel<OrderResponseModel>`        |
+| POST   | `/{orderId}/send-kitchen`                 | ส่งทุก Pending items ของออเดอร์ไปครัว         | `order-manage.update`   | URL param                                     | `BaseResponseModel<object>`                    |
+| POST   | `/items/{orderItemId}/send-kitchen`       | ส่ง item เดียวไปครัว                          | `order-manage.update`   | URL param                                     | `BaseResponseModel<object>`                    |
+| POST   | `/{orderId}/request-bill`                 | ลูกค้า/Staff ขอบิล (Open → Billing)            | `order-manage.update`   | JSON: `RequestBillRequestModel`               | `BaseResponseModel<OrderResponseModel>`        |
+| POST   | `/{orderId}/send-bill`                    | ส่งบิลให้ลูกค้า (สร้าง TbOrderBill)             | `order-manage.update`   | JSON: `SendBillRequestModel`                  | `BaseResponseModel<OrderBillResponseModel>`    |
+| POST   | `/{orderId}/void-bill`                    | ยกเลิกบิล (Billing → Open, ลบ pending bills)   | `order-manage.update`   | JSON: `VoidBillRequestModel`                  | `BaseResponseModel<object>`                    |
+| PUT    | `/items/{orderItemId}/void`               | Void item (Pending → Voided, ไม่ต้องเหตุผล)    | `order-manage.update`   | URL param                                     | `BaseResponseModel<object>`                    |
+| PUT    | `/items/{orderItemId}/cancel`             | Cancel item (Sent+ → Cancelled พร้อมเหตุผล)    | `order-manage.delete`   | JSON: `CancelOrderItemRequestModel`           | `BaseResponseModel<object>`                    |
+| PUT    | `/items/{orderItemId}/serve`              | Serve item (Ready → Served)                   | `order-manage.update`   | URL param                                     | `BaseResponseModel<object>`                    |
+| PUT    | `/{orderId}/serve-all-ready`              | Serve ทุก Ready items พร้อมกัน                 | `order-manage.update`   | URL param                                     | `BaseResponseModel<object>`                    |
+| POST   | `/{orderId}/split/by-item`                | แยกบิลตามรายการที่เลือก                        | `order-manage.update`   | JSON: `SplitByItemRequestModel`               | `ListResponseModel<OrderBillResponseModel>`    |
+| POST   | `/{orderId}/split/by-amount`              | แยกบิลตามจำนวนเงิน                            | `order-manage.update`   | JSON: `SplitByAmountRequestModel`             | `ListResponseModel<OrderBillResponseModel>`    |
+| POST   | `/{orderId}/unsplit-bill`                 | รวมบิลที่แยกออก                               | `order-manage.update`   | URL param                                     | `BaseResponseModel<object>`                    |
+| GET    | `/{orderId}/bills`                        | ดูบิลทั้งหมดของออเดอร์                         | `order-manage.read`     | URL param                                     | `ListResponseModel<OrderBillResponseModel>`    |
+| PUT    | `/bills/{orderBillId}/update-charges`     | แก้ไข ServiceCharge / Discount ในบิล           | `payment-manage.create` | JSON: `UpdateBillChargesRequestModel`         | `BaseResponseModel<OrderBillResponseModel>`    |
+| PUT    | `/{orderId}/update-guest-count`           | แก้ไขจำนวนลูกค้าในออเดอร์                     | `order-manage.update`   | JSON: `UpdateGuestCountRequestModel`          | `BaseResponseModel<OrderResponseModel>`        |
+
+> **Order Status Transition:**
+> - `Open` → `Billing` (request-bill) → `Completed` (payment success) | `Open` (void-bill)
+> - `Open` → `Cancelled` (cancel-order)
+>
+> **OrderItem Status Transition:**
+> - `Pending` (สร้างเข้า cart) → `Sent` (send-kitchen) → `Preparing` → `Ready` → `Served`
+> - `Pending` → `Voided` (ก่อนส่งครัว ไม่ต้องระบุเหตุผล)
+> - `Sent`/`Preparing`/`Ready`/`Served` → `Cancelled` (พร้อมเหตุผล)
+>
+> **Bill Type:**
+> - `Full`: 1 ออเดอร์ = 1 บิล (default)
+> - `SplitByItem`: เลือก items ใส่ในบิลย่อย → หลายบิล
+> - `SplitByAmount`: แบ่งจำนวนเงินเท่าๆ กัน → หลายบิล
+>
+> **SignalR Broadcast (OrderHub):**
+> - OrderCreated, OrderUpdated, OrderItemUpdated, OrderBillUpdated
+> - TableStatusChanged (เมื่อโต๊ะเปลี่ยนสถานะตาม order lifecycle)
+
+---
+
+### FloorObjects — วัตถุประดับผังโต๊ะ
+
+Route prefix: `api/table/floor-objects`
+
+| Method | Endpoint              | วัตถุประสงค์                          | Permission           | Request                                | Response                                       |
+| ------ | --------------------- | ------------------------------------- | -------------------- | -------------------------------------- | ---------------------------------------------- |
+| GET    | `/`                   | ดึงรายการ Floor Object ทั้งหมด        | `floor-plan.read`    | Query: zoneId?                         | `ListResponseModel<FloorObjectResponseModel>`  |
+| GET    | `/{floorObjectId}`    | ดู Floor Object ตาม ID                | `floor-plan.read`    | URL param                              | `BaseResponseModel<FloorObjectResponseModel>`  |
+| POST   | `/`                   | สร้าง Floor Object ใหม่               | `floor-plan.create`  | JSON: `CreateFloorObjectRequestModel`  | `BaseResponseModel<FloorObjectResponseModel>`  |
+| PUT    | `/{floorObjectId}`    | แก้ไข Floor Object                    | `floor-plan.update`  | JSON: `UpdateFloorObjectRequestModel`  | `BaseResponseModel<FloorObjectResponseModel>`  |
+| DELETE | `/{floorObjectId}`    | ลบ Floor Object (Soft)                | `floor-plan.delete`  | URL param                              | `BaseResponseModel<object>`                    |
+| PUT    | `/positions`          | อัพเดต X,Y หลาย Floor Object พร้อมกัน | `floor-plan.update`  | JSON: `UpdatePositionsRequestModel`    | `BaseResponseModel<object>`                    |
+
+> **Floor Object Types** (EFloorObjectType): Pillar (เสา), Divider (ฉากกั้น), Walkway (ทางเดิน), Counter (เคาน์เตอร์), Decoration (อื่นๆ)
+> **Position Format**: เก็บ `PositionX`, `PositionY`, `Width`, `Height` (หน่วยเป็น pixel ในผัง)
+
+---
+
+### SelfOrder — Self-Order Mobile (ลูกค้าสแกน QR)
+
+Route prefix: `api/customer` — ใช้ร่วมกับ Customer endpoints (แต่อยู่ใน SelfOrderController)
+
+| Method | Endpoint                       | วัตถุประสงค์                                | Auth                | Request                                       | Response                                       |
+| ------ | ------------------------------ | ------------------------------------------- | ------------------- | --------------------------------------------- | ---------------------------------------------- |
+| GET    | `/shop-status`                 | เช็คร้านเปิด/ปิด ตามเวลาทำการ              | CustomerAuthorize   | —                                             | `BaseResponseModel<ShopStatusResponseModel>`   |
+| POST   | `/auth`                        | ยืนยัน QR Token + สร้าง Customer Session    | ❌ (AllowAnonymous) | JSON: `CustomerAuthRequestModel { qrToken }`  | `BaseResponseModel<CustomerAuthResponseModel>` |
+| POST   | `/nickname`                    | ตั้งชื่อเล่นลูกค้า                          | CustomerAuthorize   | JSON: `SetNicknameRequestModel`               | `BaseResponseModel<object>`                    |
+| GET    | `/menu/categories`             | ดึงหมวดหมู่เมนู (filter period ปัจจุบัน)    | CustomerAuthorize   | —                                             | `ListResponseModel<MenuCategoryResponseModel>` |
+| GET    | `/menu/items`                  | ดึงเมนู (filter period + active + categoryType) | CustomerAuthorize | Query: categoryType?, subCategoryId?         | `ListResponseModel<MenuResponseModel>`         |
+| GET    | `/menu/items/{menuId}`         | ดูรายละเอียดเมนู (รวม option groups)       | CustomerAuthorize   | URL param                                     | `BaseResponseModel<MenuResponseModel>`         |
+| POST   | `/orders`                      | ส่งออเดอร์ (สร้าง OrderItems เป็น Pending) | CustomerAuthorize   | JSON: `CustomerSubmitOrderRequestModel`       | `BaseResponseModel<OrderResponseModel>`        |
+| GET    | `/orders`                      | ดูสถานะออเดอร์ของโต๊ะ (real-time tracking)  | CustomerAuthorize   | —                                             | `BaseResponseModel<OrderResponseModel>`        |
+| POST   | `/call-waiter`                 | เรียกพนักงาน → SignalR Notification         | CustomerAuthorize   | JSON: `CallWaiterRequestModel`                | `BaseResponseModel<object>`                    |
+| POST   | `/request-bill`                | ขอบิล (Open → Billing)                      | CustomerAuthorize   | —                                             | `BaseResponseModel<object>`                    |
+| POST   | `/request-cash`                | ขอชำระเงินสด → แจ้ง Cashier                | CustomerAuthorize   | —                                             | `BaseResponseModel<object>`                    |
+| POST   | `/request-split-bill`          | ขอแยกบิล → แจ้ง Staff                       | CustomerAuthorize   | JSON: `RequestSplitBillRequestModel`          | `BaseResponseModel<object>`                    |
+
+> **CustomerAuthorize**:
+> - เป็น custom attribute ตรวจ JWT-like token ที่ออกหลัง `/auth`
+> - Token claims: `qrToken`, `tableId`, `customerSessionId`, `nickname`, `exp` (12 ชม.)
+> - แนบไว้ใน HTTP Header `Authorization: Customer {token}`
+>
+> **Period Filter**: API menu/categories และ menu/items จะ filter เฉพาะที่อยู่ในช่วงเวลาเปิดร้านปัจจุบัน (PeriodStart ≤ now ≤ PeriodEnd)
+
+---
+
+### QrRedirect — QR Short Code Redirect
+
+Route prefix: `q/{code}` — **AllowAnonymous**
+
+| Method | Endpoint   | วัตถุประสงค์                                       | Request   | Response                          |
+| ------ | ---------- | -------------------------------------------------- | --------- | --------------------------------- |
+| GET    | `/{code}`  | Redirect QR Short Code → URL เต็มของ Self-Order   | URL param | HTTP 302 Redirect (Location header) |
+
+> **Use Case**:
+> - QR Code บนโต๊ะมี URL สั้น เช่น `https://shop.example.com/q/abc123`
+> - Backend ค้นหา `TbTable.QrShortCode = "abc123"` → redirect ไป `https://mobile.example.com/auth?token={qrToken}`
+> - ผลลัพธ์: ลูกค้าสแกน QR แล้วเข้า Mobile Web อัตโนมัติ
+> - Short code ระบบ generate ตอนสร้างโต๊ะ (เก็บใน `TbTable.QrShortCode` พร้อม `QrToken`)
+
+---
+
+### OrderHub — SignalR real-time (Order + Table + Customer)
+
+| Hub Path        | วัตถุประสงค์                                                                              |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| `/hubs/order`   | Broadcast event ของ Order/Table real-time ไปกลุ่มที่ Client ขอ join                       |
+
+**Client Methods (Client → Server):**
+
+| Method                  | Payload   | รายละเอียด                                       |
+| ----------------------- | --------- | ------------------------------------------------ |
+| `JoinGroup(groupName)`  | `string`  | Client ขอเข้าร่วม group                          |
+| `LeaveGroup(groupName)` | `string`  | Client ออกจาก group                              |
+
+**Groups ที่ใช้:**
+
+| Group              | ผู้ join                                  | คำอธิบาย                                                |
+| ------------------ | ----------------------------------------- | ------------------------------------------------------- |
+| `kitchen`          | KDS ทุกสถานี (food/beverage/dessert)      | ฝั่ง Client filter เอง by `CategoryType`               |
+| `floor`            | พนักงานหน้าร้าน + แคชเชียร์ + ผู้จัดการ    | รับทุก event ของ Order/Table/Payment                   |
+| `table_{tableId}`  | Mobile Web ลูกค้า (1 group ต่อ 1 โต๊ะ)      | รับเฉพาะ event ของโต๊ะตัวเอง                          |
+
+**Events ที่ broadcast (Server → Client) — จาก `OrderNotificationService`:**
+
+| Event              | Target Groups                                | Payload                                              | เมื่อไหร่                                                  |
+| ------------------ | -------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
+| `NewOrderItems`    | `kitchen`, `floor`, `table_{tableId}`        | `{ orderId, tableId }`                               | มีรายการอาหารถูกส่งครัว                                    |
+| `ItemStatusChanged`| `kitchen`, `floor`, `table_{tableId}`        | `{ orderId, orderItemId, status }`                   | item เปลี่ยน status (Preparing/Ready/Served)              |
+| `ItemCancelled`    | `kitchen`, `floor`                           | `{ orderId, orderItemId }`                           | item ถูก cancel                                            |
+| `OrderUpdated`     | `floor`                                      | `{ orderId, status }`                                | สถานะออเดอร์เปลี่ยน (Open / Billing / Completed)          |
+| `TableStatusChanged`| `floor`                                     | `{ tableId, status }`                                | สถานะโต๊ะเปลี่ยน                                          |
+| `RefreshOrders`    | `table_{tableId}`                            | `{ tableId }`                                        | สั่ง Mobile Web ดึงข้อมูลใหม่                              |
+| `SlipUploaded`     | `floor`, `table_{tableId}`                   | `{ tableId, orderBillId }`                           | ลูกค้าอัพโหลดสลิป                                          |
+| `PaymentCompleted` | `floor`, `table_{tableId}`                   | `{ tableId, orderBillId }`                           | ชำระเงินสำเร็จ                                             |
+| `BillClaimed`      | `table_{tableId}`                            | `{ tableId, orderBillId }`                           | ลูกค้าจองบิล (multi-device protection)                     |
+| `BillReleased`     | `table_{tableId}`                            | `{ tableId, orderBillId }`                           | ลูกค้าปล่อยบิล                                             |
+| `BillVoided`       | `table_{tableId}`                            | `{ tableId }`                                        | บิลถูก void                                                |
+
+---
 
 ### Notifications — การแจ้งเตือน
 

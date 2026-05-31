@@ -16,10 +16,14 @@ Last Updated: 2026-03-16
 
 ```
 RBMS.POS.WebAPI                    → Controllers, Filters, Hubs, Program.cs
-POS.Main.Business.Admin            → Auth, ServiceCharge, ShopSettings, File, S3, JWT, ReCaptcha, Email
-POS.Main.Business.Authorization    → Position, Permission (RBAC)
-POS.Main.Business.Menu             → Menu (Services, DTOs, Mappers)
+POS.Main.Business.Admin            → Auth, JWT, S3, File, ServiceCharge, ShopSettings, User, Cashier, Dashboard, Email, ReCaptcha
+POS.Main.Business.Authorization    → Position, Permission (RBAC + Permission Matrix)
 POS.Main.Business.HumanResource    → Employee + sub-entities (Address, Education, WorkHistory)
+POS.Main.Business.Menu             → Menu, Category, Option Group
+POS.Main.Business.Notification     → Notification + SignalR Delivery
+POS.Main.Business.Order            → Order, Bill, Kitchen, Customer/Self-Order, QR Redirect
+POS.Main.Business.Payment          → Payment, Receipt, Slip OCR
+POS.Main.Business.Table            → Zone, Table, FloorObject, Reservation, TableLink
 POS.Main.Repositories             → Repository interfaces + implementations, UnitOfWork
 POS.Main.Dal                      → Entities, DbContext, Migrations, Entity Configurations
 POS.Main.Core                     → Enums, Constants, Custom Exceptions, Helpers
