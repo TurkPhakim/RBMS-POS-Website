@@ -1,0 +1,61 @@
+// =============================================
+// รูปที่ 3.X.8 — ระบบชำระเงินและแคชเชียร์ (Payment & Cashier)
+// 3 ตาราง + Reference: รอบแคชเชียร์ + ลิ้นชักเงินสด + การชำระเงิน
+// =============================================
+// หมายเหตุ: ตัด Audit Fields เพื่อความกระชับ
+// =============================================
+
+// --- Reference Tables (จากรูปอื่น) ---
+table TB_USERS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.1'] {
+  userId uniqueidentifier [pk]
+}
+
+table TB_ORDER_BILLS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.7'] {
+  orderBillId int [pk]
+  billNumber nvarchar
+}
+
+table TB_FILES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.9'] {
+  fileId int [pk]
+}
+
+// --- ตารางหลัก ---
+table TB_CASHIER_SESSIONS [headercolor: #BE185D, note: 'รอบการทำงานแคชเชียร์'] {
+  cashierSessionId int [pk, increment]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null]
+  status nvarchar [not null, note: 'Open/Closed']
+  openedAt datetime [not null]
+  closedAt datetime
+  openingCash decimal [not null, note: 'เงินสดตั้งต้น']
+  expectedCash decimal [not null, note: 'เงินที่ควรมี']
+  actualCash decimal [note: 'เงินจริงที่นับได้']
+  variance decimal [note: 'ส่วนต่าง']
+  totalCashSales decimal [not null]
+  totalQrSales decimal [not null]
+  billCount int [not null]
+  shiftPeriod int [note: '1=เช้า, 2=บ่าย']
+}
+
+table TB_CASH_DRAWER_TRANSACTIONS [headercolor: #DB2777, note: 'ธุรกรรมลิ้นชักเงินสด (เงินเข้า/ออก)'] {
+  cashDrawerTransactionId int [pk, increment]
+  cashierSessionId int [ref: > TB_CASHIER_SESSIONS.cashierSessionId, not null]
+  transactionType nvarchar [not null, note: 'In / Out']
+  amount decimal [not null]
+  reason nvarchar [not null]
+}
+
+table TB_PAYMENTS [headercolor: #DB2777, note: 'การชำระเงิน'] {
+  paymentId int [pk, increment]
+  orderBillId int [ref: > TB_ORDER_BILLS.orderBillId, not null]
+  cashierSessionId int [ref: > TB_CASHIER_SESSIONS.cashierSessionId, not null]
+  slipImageFileId int [ref: > TB_FILES.fileId, note: 'รูปสลิปการโอน']
+  paymentMethod nvarchar [not null, note: 'Cash / QrPayment']
+  amountDue decimal [not null]
+  amountReceived decimal [not null]
+  changeAmount decimal [not null, note: 'เงินทอน']
+  slipOcrAmount decimal [note: 'OCR อ่านได้']
+  slipVerificationStatus nvarchar [not null, note: 'None/Processing/Verified/Failed']
+  paymentReference nvarchar [note: 'เลขอ้างอิงจากธนาคาร']
+  paidAt datetime [not null]
+  note nvarchar
+}

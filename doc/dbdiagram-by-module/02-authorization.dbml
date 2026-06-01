@@ -1,0 +1,44 @@
+// =============================================
+// รูปที่ 3.X.2 — ระบบจัดการสิทธิ์ (Authorization / RBAC)
+// 5 ตาราง: ตำแหน่ง + โมดูล + สิทธิ์ + เมทริกซ์สิทธิ์ + กำหนดสิทธิ์ให้ตำแหน่ง
+// =============================================
+// หมายเหตุ: ตัด Audit Fields เพื่อความกระชับ
+// =============================================
+
+table TBM_POSITIONS [headercolor: #7C3AED, note: 'ตำแหน่งงาน (Master)'] {
+  positionId int [pk, increment]
+  positionName nvarchar [not null]
+  description nvarchar
+  isActive bit [default: true]
+}
+
+table TBM_MODULES [headercolor: #7C3AED, note: 'โมดูลในระบบ (Master, Hierarchy)'] {
+  moduleId int [pk, increment]
+  moduleName nvarchar [not null]
+  moduleCode nvarchar [not null]
+  parentModuleId int [ref: > TBM_MODULES.moduleId, note: 'โมดูลแม่ (Self-reference)']
+  sortOrder int [default: 0]
+  isActive bit [default: true]
+}
+
+table TBM_PERMISSIONS [headercolor: #7C3AED, note: 'ประเภทสิทธิ์ (Master): Read/Create/Update/Delete'] {
+  permissionId int [pk, increment]
+  permissionName nvarchar [not null]
+  permissionCode nvarchar [not null]
+  sortOrder int [default: 0]
+}
+
+table TBM_AUTHORIZE_MATRICES [headercolor: #9333EA, note: 'เมทริกซ์สิทธิ์ — เชื่อม Module + Permission + Path API'] {
+  authorizeMatrixId int [pk, increment]
+  moduleId int [ref: > TBM_MODULES.moduleId, not null]
+  permissionId int [ref: > TBM_PERMISSIONS.permissionId, not null]
+  permissionPath nvarchar [not null, note: 'เส้นทาง API ที่ควบคุมสิทธิ์']
+}
+
+table TB_AUTHORIZE_MATRIX_POSITIONS [headercolor: #A855F7, note: 'กำหนดสิทธิ์ให้ตำแหน่ง (M:M Transaction)'] {
+  authMatrixPositionId int [pk, increment]
+  authorizeMatrixId int [ref: > TBM_AUTHORIZE_MATRICES.authorizeMatrixId, not null]
+  positionId int [ref: > TBM_POSITIONS.positionId, not null]
+}
+
+// หมายเหตุ: TBM_POSITIONS ถูกอ้างอิงจาก TB_EMPLOYEES (ดูในรูปที่ 3.X.3 ระบบทรัพยากรบุคคล)

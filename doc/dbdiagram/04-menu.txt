@@ -1,0 +1,100 @@
+// =============================================
+// RBMS-POS — ER Diagram (ส่วนที่ 4/7)
+// MENU MANAGEMENT
+// ใช้ประกอบรูปที่ 3.14 แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Menu Management
+// หมายเหตุ: TB_MENUS.imageFileId อ้างถึง TB_FILES (ดูคำนิยามใน 03-admin-file.txt)
+// =============================================
+
+table TB_MENU_SUB_CATEGORIES [note: 'หมวดหมู่ย่อยเมนูอาหาร'] {
+  subCategoryId int [pk, increment, note: 'รหัสหมวดหมู่ย่อย']
+  categoryType int [not null, note: 'หมวดหมู่หลัก (Enum: Appetizer/MainCourse/Beverage/Dessert/...)']
+  name nvarchar [not null, note: 'ชื่อหมวดหมู่ย่อย']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_MENUS [note: 'รายการเมนูอาหาร'] {
+  menuId int [pk, increment, note: 'รหัสเมนู']
+  nameThai nvarchar [not null, note: 'ชื่อเมนู (ไทย)']
+  nameEnglish nvarchar [not null, note: 'ชื่อเมนู (อังกฤษ)']
+  description nvarchar [note: 'รายละเอียด']
+  imageFileId int [note: 'รูปเมนู (อ้าง TB_FILES ในส่วนที่ 3)']
+  subCategoryId int [ref: > TB_MENU_SUB_CATEGORIES.subCategoryId, not null, note: 'รหัสหมวดหมู่ย่อย']
+  price decimal [not null, note: 'ราคาขาย']
+  costPrice decimal [note: 'ราคาทุน']
+  isAvailable bit [default: true, note: 'พร้อมขาย']
+  isAvailablePeriod1 bit [default: true, note: 'ขายช่วงที่ 1']
+  isAvailablePeriod2 bit [default: true, note: 'ขายช่วงที่ 2']
+  tags int [note: 'แท็กเมนู เก็บเป็น Bit flags เช่น มังสวิรัติ/วีแกน/ไม่มีกลูเตน/เผ็ด']
+  allergens nvarchar [note: 'สารก่อภูมิแพ้']
+  caloriesPerServing decimal [note: 'แคลอรี่ต่อจาน']
+  isPinned bit [default: false, note: 'ปักหมุดเมนูยอดนิยม']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_OPTION_GROUPS [note: 'กลุ่มตัวเลือกเมนู (เช่น ระดับความเผ็ด, เครื่องเคียง)'] {
+  optionGroupId int [pk, increment, note: 'รหัสกลุ่มตัวเลือก']
+  name nvarchar [not null, note: 'ชื่อกลุ่ม']
+  categoryType int [not null, note: 'หมวดหมู่เมนูที่ใช้']
+  isRequired bit [not null, note: 'บังคับเลือก']
+  minSelect int [default: 0, note: 'เลือกขั้นต่ำ']
+  maxSelect int [note: 'เลือกสูงสุด']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_OPTION_ITEMS [note: 'รายการตัวเลือก (เช่น เผ็ดน้อย, ไข่ดาว)'] {
+  optionItemId int [pk, increment, note: 'รหัสตัวเลือก']
+  optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null, note: 'รหัสกลุ่มตัวเลือก']
+  name nvarchar [not null, note: 'ชื่อตัวเลือก']
+  additionalPrice decimal [default: 0, note: 'ราคาเพิ่ม']
+  costPrice decimal [note: 'ราคาทุน']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_MENU_OPTION_GROUPS [note: 'เชื่อมเมนู ↔ กลุ่มตัวเลือก (Many-to-Many)'] {
+  menuOptionGroupId int [pk, increment, note: 'รหัส']
+  menuId int [ref: > TB_MENUS.menuId, not null, note: 'รหัสเมนู']
+  optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null, note: 'รหัสกลุ่มตัวเลือก']
+  sortOrder int [note: 'ลำดับ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}

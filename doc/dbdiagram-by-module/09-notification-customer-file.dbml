@@ -1,0 +1,77 @@
+// =============================================
+// รูปที่ 3.X.9 — ระบบแจ้งเตือน, ลูกค้าสั่งเอง และไฟล์ (Notification + Customer + File)
+// 4 ตาราง + Reference: การแจ้งเตือน + การอ่าน + Session ลูกค้า + ไฟล์
+// =============================================
+// หมายเหตุ: ตัด Audit Fields เพื่อความกระชับ
+//           TB_NOTIFICATIONS, TB_NOTIFICATION_READS, TB_CUSTOMER_SESSIONS เป็น Hard-delete + ไม่มี Audit
+// =============================================
+
+// --- Reference Tables (จากรูปอื่น) ---
+table TB_TABLES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.6'] {
+  tableId int [pk]
+}
+
+table TB_ORDERS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.7'] {
+  orderId int [pk]
+}
+
+table TB_RESERVATIONS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.6'] {
+  reservationId int [pk]
+}
+
+table TB_USERS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.1'] {
+  userId uniqueidentifier [pk]
+}
+
+// --- การแจ้งเตือนแบบ Real-time (SignalR NotificationHub) ---
+table TB_NOTIFICATIONS [headercolor: #4F46E5, note: 'การแจ้งเตือน Real-time (ไม่มี Audit Fields)'] {
+  notificationId int [pk, increment]
+  tableId int [ref: > TB_TABLES.tableId]
+  orderId int [ref: > TB_ORDERS.orderId]
+  reservationId int [ref: > TB_RESERVATIONS.reservationId]
+  eventType nvarchar [not null, note: 'OrderReady/TableAvailable/...']
+  title nvarchar [not null]
+  message nvarchar [not null]
+  targetGroup nvarchar [not null, note: 'Kitchen/Cashier/Customer']
+  payload nvarchar [note: 'JSON เพิ่มเติม']
+  createdAt datetime [not null]
+}
+
+table TB_NOTIFICATION_READS [headercolor: #6366F1, note: 'สถานะการอ่านแจ้งเตือน (ไม่มี Audit)'] {
+  notificationReadId int [pk, increment]
+  notificationId int [ref: > TB_NOTIFICATIONS.notificationId, not null]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null]
+  readAt datetime
+  clearedAt datetime
+}
+
+// --- Customer Self-Order (Mobile Web) ---
+table TB_CUSTOMER_SESSIONS [headercolor: #7C3AED, note: 'Session ลูกค้าจาก Mobile Web (สแกน QR, ไม่มี Audit)'] {
+  customerSessionId int [pk, increment]
+  tableId int [ref: > TB_TABLES.tableId, not null]
+  sessionToken nvarchar [unique, not null]
+  nickname nvarchar
+  deviceFingerprint nvarchar [note: 'Multi-Device Protection']
+  qrTokenNonce nvarchar [not null, note: 'ต้องตรงกับ QR ของโต๊ะ']
+  isActive bit [default: true]
+  createdAt datetime [not null]
+  expiresAt datetime [not null]
+}
+
+// --- File Management (ใช้ร่วมทั้งระบบ) ---
+table TB_FILES [headercolor: #6B7280, note: 'จัดเก็บไฟล์ (S3/MinIO)'] {
+  fileId int [pk, increment]
+  fileName nvarchar [not null]
+  mimeType nvarchar [not null]
+  fileExtension nvarchar [not null]
+  fileSize bigint [not null, note: 'bytes']
+  s3Key nvarchar [not null, note: 'ตำแหน่งบน S3/MinIO']
+}
+
+// หมายเหตุ: TB_FILES ถูกอ้างอิงจากหลายโมดูล:
+//   - TB_EMPLOYEES.imageFileId (รูปที่ 3.X.3)
+//   - TB_SHOP_SETTINGS.logoFileId, paymentQrCodeFileId (รูปที่ 3.X.4)
+//   - TB_MENUS.imageFileId (รูปที่ 3.X.5)
+//   - TB_ORDER_BILLS.customerSlipFileId (รูปที่ 3.X.7)
+//   - TB_PAYMENTS.slipImageFileId (รูปที่ 3.X.8)
+// TB_CUSTOMER_SESSIONS ถูกอ้างอิงจาก TB_ORDER_BILLS.claimedBySessionId (รูปที่ 3.X.7)

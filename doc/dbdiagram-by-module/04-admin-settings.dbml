@@ -1,0 +1,64 @@
+// =============================================
+// รูปที่ 3.X.4 — ระบบตั้งค่าร้านค้า (Admin Settings)
+// 3 ตาราง + 1 ตาราง Reference: ตั้งค่าร้าน + เวลาทำการ + ค่าบริการ
+// =============================================
+// หมายเหตุ: ตัด Audit Fields เพื่อความกระชับ
+// =============================================
+
+// --- Reference Tables (จากรูปอื่น) ---
+table TB_FILES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.9'] {
+  fileId int [pk]
+}
+
+// --- ตารางหลัก ---
+table TB_SHOP_SETTINGS [headercolor: #D97706, note: 'ตั้งค่าร้านค้า (Singleton)'] {
+  shopSettingsId int [pk, increment]
+  shopNameThai nvarchar [not null]
+  shopNameEnglish nvarchar [not null]
+  companyNameThai nvarchar
+  companyNameEnglish nvarchar
+  taxId nvarchar [not null]
+  foodType nvarchar [not null]
+  description nvarchar
+  logoFileId int [ref: > TB_FILES.fileId, note: 'โลโก้ร้าน']
+  hasTwoPeriods bit [note: 'เปิดสองช่วง']
+  address nvarchar [not null]
+  phoneNumber nvarchar [not null]
+  facebook nvarchar
+  instagram nvarchar
+  shopEmail nvarchar
+  website nvarchar
+  lineId nvarchar
+  paymentQrCodeFileId int [ref: > TB_FILES.fileId, note: 'QR Code รับเงิน']
+  bankName nvarchar
+  accountNumber nvarchar
+  accountName nvarchar
+  promptPayNumber nvarchar
+  wifiSsid nvarchar
+  wifiPassword nvarchar
+  receiptHeaderText nvarchar
+  receiptFooterText nvarchar
+}
+
+table TB_SHOP_OPERATING_HOURS [headercolor: #F59E0B, note: 'เวลาเปิด-ปิดร้าน รายวัน (7 records)'] {
+  shopOperatingHourId int [pk, increment]
+  shopSettingsId int [ref: > TB_SHOP_SETTINGS.shopSettingsId, not null]
+  dayOfWeek nvarchar [not null, note: 'Mon-Sun']
+  isOpen bit [not null]
+  openTime1 time
+  closeTime1 time
+  openTime2 time
+  closeTime2 time
+}
+
+table TB_SERVICE_CHARGES [headercolor: #F59E0B, note: 'ค่าบริการ (Service Charge)'] {
+  serviceChargeId int [pk, increment]
+  percentageRate decimal [not null, note: 'อัตรา (%)']
+  name nvarchar [not null]
+  description nvarchar
+  isActive bit [default: true]
+  startDate datetime
+  endDate datetime
+}
+
+// หมายเหตุ: TB_SERVICE_CHARGES ถูกอ้างอิงจาก TB_ORDER_BILLS (ดูในรูปที่ 3.X.7)

@@ -1,0 +1,116 @@
+// =============================================
+// RBMS-POS — ER Diagram (ส่วนที่ 5/7)
+// TABLE MANAGEMENT & CUSTOMER SELF-ORDER
+// ใช้ประกอบรูปที่ 3.15 แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Table Management และ Customer
+// หมายเหตุ: TB_TABLES.activeOrderId อ้างถึง TB_ORDERS (ดูคำนิยามใน 06-order-payment.txt)
+// =============================================
+
+table TB_ZONES [note: 'โซนพื้นที่ร้าน (เช่น ชั้น 1, ดาดฟ้า)'] {
+  zoneId int [pk, increment, note: 'รหัสโซน']
+  zoneName nvarchar [not null, note: 'ชื่อโซน']
+  color nvarchar [not null, note: 'สีแสดงผล (เช่น #FF5733)']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_TABLES [note: 'โต๊ะในร้าน'] {
+  tableId int [pk, increment, note: 'รหัสโต๊ะ']
+  tableName nvarchar(50) [unique, not null, note: 'ชื่อโต๊ะ (เช่น A1, 5)']
+  zoneId int [ref: > TB_ZONES.zoneId, not null, note: 'รหัสโซน']
+  capacity int [not null, note: 'จำนวนที่นั่ง']
+  positionX float [default: 0, note: 'ตำแหน่ง X บน Canvas']
+  positionY float [default: 0, note: 'ตำแหน่ง Y บน Canvas']
+  size nvarchar [not null, note: 'ขนาด (Small/Medium/Large)']
+  status nvarchar [not null, note: 'สถานะ (Available/Occupied/Billing/Reserved/Cleaning/Unavailable)']
+  currentGuests int [note: 'จำนวนลูกค้าปัจจุบัน']
+  guestType nvarchar [note: 'ประเภทลูกค้า (DineIn/Delivery/Takeaway)']
+  openedAt datetime [note: 'เวลาเปิดโต๊ะ']
+  note nvarchar(500) [note: 'หมายเหตุ']
+  qrToken nvarchar(2000) [note: 'JWT Token ที่ฝังใน QR Code ของโต๊ะ']
+  qrTokenExpiresAt datetime [note: 'วันหมดอายุ QR Token']
+  qrTokenNonce nvarchar(50) [note: 'รหัสยืนยัน QR ป้องกันการใช้ซ้ำ']
+  qrShortCode nvarchar(10) [unique, note: 'รหัสย่อสำหรับลูกค้าเข้าผ่าน Mobile Web']
+  activeOrderId int [note: 'ออเดอร์ที่กำลังใช้งานอยู่บนโต๊ะนี้ (อ้าง TB_ORDERS ในส่วนที่ 6)']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_TABLE_LINKS [note: 'เชื่อมโต๊ะ (รวมโต๊ะ / Link Tables)'] {
+  tableLinkId int [pk, increment, note: 'รหัส']
+  groupCode nvarchar [not null, note: 'รหัสกลุ่มโต๊ะ']
+  isPrimary bit [not null, note: 'โต๊ะหลักของกลุ่ม']
+  tableId int [ref: > TB_TABLES.tableId, not null, note: 'รหัสโต๊ะ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_FLOOR_OBJECTS [note: 'วัตถุบนผัง (กำแพง, ประตู, เสา, เคาน์เตอร์)'] {
+  floorObjectId int [pk, increment, note: 'รหัส']
+  zoneId int [ref: > TB_ZONES.zoneId, note: 'รหัสโซน']
+  objectType nvarchar [not null, note: 'ประเภท (Wall/Door/Pillar/Counter/Decoration/...)']
+  label nvarchar [not null, note: 'ชื่อแสดงผล']
+  positionX float [not null, note: 'ตำแหน่ง X']
+  positionY float [not null, note: 'ตำแหน่ง Y']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_RESERVATIONS [note: 'การจองโต๊ะ'] {
+  reservationId int [pk, increment, note: 'รหัสการจอง']
+  customerName nvarchar [not null, note: 'ชื่อลูกค้า']
+  customerPhone nvarchar [not null, note: 'เบอร์โทรลูกค้า']
+  reservationDate date [not null, note: 'วันที่จอง']
+  reservationTime time [not null, note: 'เวลาจอง']
+  guestCount int [not null, note: 'จำนวนผู้เข้าร่วม']
+  tableId int [ref: > TB_TABLES.tableId, note: 'รหัสโต๊ะ']
+  note nvarchar(500) [note: 'หมายเหตุ']
+  status nvarchar [not null, note: 'สถานะ (Pending/Confirmed/Completed/Cancelled)']
+  reminderSent bit [default: false, note: 'ส่งแจ้งเตือนแล้ว']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_CUSTOMER_SESSIONS [note: 'Session ลูกค้าสั่งอาหารผ่าน Mobile Web (สแกน QR)'] {
+  customerSessionId int [pk, increment, note: 'รหัส Session']
+  tableId int [ref: > TB_TABLES.tableId, not null, note: 'รหัสโต๊ะ']
+  sessionToken nvarchar [unique, not null, note: 'Token ระบุตัวตน']
+  nickname nvarchar [note: 'ชื่อเล่นลูกค้า']
+  deviceFingerprint nvarchar [note: 'ข้อมูลระบุอุปกรณ์ (Device Fingerprint)']
+  qrTokenNonce nvarchar [not null, note: 'รหัสยืนยันที่ต้องตรงกับ QR Code ของโต๊ะ']
+  isActive bit [default: true, note: 'Session ยังใช้งานอยู่']
+  createdAt datetime [not null, note: 'เวลาสร้าง']
+  expiresAt datetime [not null, note: 'หมดอายุ']
+  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
+}

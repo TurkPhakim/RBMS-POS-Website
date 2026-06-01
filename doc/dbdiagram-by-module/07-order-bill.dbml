@@ -1,0 +1,121 @@
+// =============================================
+// รูปที่ 3.X.7 — ระบบออเดอร์และบิล (Order & Bill)
+// 4 ตาราง + Reference: ออเดอร์ + รายการในออเดอร์ + ตัวเลือก (Snapshot) + บิล
+// =============================================
+// หมายเหตุ: ตัด Audit Fields เพื่อความกระชับ
+//           TB_ORDER_ITEM_OPTIONS เป็น Hard-delete และไม่มี Audit Fields
+// =============================================
+
+// --- Reference Tables (จากรูปอื่น) ---
+table TB_TABLES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.6'] {
+  tableId int [pk]
+  tableName nvarchar
+}
+
+table TB_MENUS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.5'] {
+  menuId int [pk]
+}
+
+table TB_OPTION_GROUPS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.5'] {
+  optionGroupId int [pk]
+}
+
+table TB_OPTION_ITEMS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.5'] {
+  optionItemId int [pk]
+}
+
+table TB_EMPLOYEES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.3'] {
+  employeeId int [pk]
+}
+
+table TB_SERVICE_CHARGES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.4'] {
+  serviceChargeId int [pk]
+}
+
+table TB_CUSTOMER_SESSIONS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.9'] {
+  customerSessionId int [pk]
+}
+
+table TB_FILES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.9'] {
+  fileId int [pk]
+}
+
+// --- ตารางหลัก ---
+table TB_ORDERS [headercolor: #B45309, note: 'ออเดอร์'] {
+  orderId int [pk, increment]
+  tableId int [ref: > TB_TABLES.tableId, not null]
+  orderNumber nvarchar(20) [unique, not null, note: 'เช่น ORD-20240101-001']
+  status nvarchar [not null, note: 'Open/Billing/Completed']
+  guestCount int [not null]
+  subTotal decimal(12,2) [default: 0]
+  note nvarchar(500)
+}
+
+table TB_ORDER_ITEMS [headercolor: #D97706, note: 'รายการในออเดอร์ (Snapshot ราคา + ชื่อ ณ ตอนสั่ง)'] {
+  orderItemId int [pk, increment]
+  orderId int [ref: > TB_ORDERS.orderId, not null]
+  menuId int [ref: > TB_MENUS.menuId, not null]
+  orderBillId int [ref: > TB_ORDER_BILLS.orderBillId, note: 'บิลที่จัดเข้า (null = ยังไม่ออกบิล)']
+  sourceTableId int [ref: > TB_TABLES.tableId, note: 'โต๊ะต้นทาง กรณีย้ายรายการ']
+  cancelledBy int [ref: > TB_EMPLOYEES.employeeId]
+  menuNameThai nvarchar(200) [not null]
+  menuNameEnglish nvarchar(200) [not null]
+  categoryType int [not null]
+  quantity int [not null]
+  unitPrice decimal(10,2) [not null]
+  optionsTotalPrice decimal(10,2) [default: 0]
+  totalPrice decimal(12,2) [not null]
+  costPrice decimal(10,2)
+  status nvarchar [not null, note: 'Pending/Sent/Preparing/Ready/Served/Voided/Cancelled (7 สถานะ)']
+  note nvarchar(500)
+  orderedBy nvarchar(100) [not null]
+  sentToKitchenAt datetime
+  cookingStartedAt datetime
+  readyAt datetime
+  servedAt datetime
+  cancelReason nvarchar(500)
+}
+
+table TB_ORDER_ITEM_OPTIONS [headercolor: #F59E0B, note: 'ตัวเลือกในรายการ (Snapshot, Hard-delete)'] {
+  orderItemOptionId int [pk, increment]
+  orderItemId int [ref: > TB_ORDER_ITEMS.orderItemId, not null]
+  optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null]
+  optionItemId int [ref: > TB_OPTION_ITEMS.optionItemId, not null]
+  optionGroupName nvarchar [not null, note: 'Snapshot ณ ตอนสั่ง']
+  optionItemName nvarchar [not null, note: 'Snapshot ณ ตอนสั่ง']
+  additionalPrice decimal [not null]
+  costPrice decimal
+}
+
+table TB_ORDER_BILLS [headercolor: #B45309, note: 'บิล / ใบเสร็จ (รองรับ Split + Customer Slip)'] {
+  orderBillId int [pk, increment]
+  orderId int [ref: > TB_ORDERS.orderId, not null]
+  serviceChargeId int [ref: > TB_SERVICE_CHARGES.serviceChargeId]
+  claimedBySessionId int [ref: > TB_CUSTOMER_SESSIONS.customerSessionId, note: 'Session ลูกค้าที่ Claim บิล']
+  customerSlipFileId int [ref: > TB_FILES.fileId, note: 'สลิปที่ลูกค้าอัพโหลด']
+  billNumber nvarchar [not null, note: 'เช่น BILL-20240101-001']
+  billType nvarchar [not null, note: 'Full / Split']
+  subTotal decimal(12,2) [not null]
+  totalDiscountAmount decimal(12,2) [not null]
+  netAmount decimal(12,2) [not null]
+  serviceChargeRate decimal [not null]
+  serviceChargeAmount decimal(12,2) [not null]
+  vatRate decimal [not null]
+  vatAmount decimal(12,2) [not null]
+  grandTotal decimal [not null]
+  splitCount int [not null, note: '1 = ไม่แยก']
+  splitIndex int [not null]
+  status nvarchar [not null, note: 'Pending/Paid']
+  paidAt datetime
+  // Customer Slip & Claim
+  claimedAt datetime
+  claimPaymentMethod nvarchar [note: 'cash / qr']
+  customerSlipOcrAmount decimal [note: 'ยอดที่ OCR อ่านได้']
+  customerSlipVerificationStatus nvarchar
+  customerSlipOcrTransferDate datetime
+  customerSlipOcrAccountNumber nvarchar
+  customerSlipIsAccountMatched bit
+  customerSlipIsDateToday bit
+}
+
+// หมายเหตุ: TB_ORDER_BILLS ถูกอ้างอิงจาก TB_PAYMENTS (ดูในรูปที่ 3.X.8)

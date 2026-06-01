@@ -1,0 +1,67 @@
+// =============================================
+// รูปที่ 3.X.6 — ระบบจัดการโต๊ะและการจอง (Table & Reservation)
+// 5 ตาราง: โซน + โต๊ะ + เชื่อมโต๊ะ + วัตถุบนผัง + การจอง
+// =============================================
+// หมายเหตุ: ตัด Audit Fields เพื่อความกระชับ
+//           TB_TABLE_LINKS เป็น Hard-delete
+// =============================================
+
+table TB_ZONES [headercolor: #0891B2, note: 'โซนพื้นที่ร้าน'] {
+  zoneId int [pk, increment]
+  zoneName nvarchar [not null]
+  color nvarchar [not null, note: 'สีแสดงผล (เช่น #FF5733)']
+  sortOrder int [default: 0]
+  isActive bit [default: true]
+}
+
+table TB_TABLES [headercolor: #06B6D4, note: 'โต๊ะในร้าน'] {
+  tableId int [pk, increment]
+  zoneId int [ref: > TB_ZONES.zoneId, not null]
+  tableName nvarchar(50) [unique, not null]
+  capacity int [not null]
+  positionX float [default: 0]
+  positionY float [default: 0]
+  size nvarchar [not null, note: 'Small/Medium/Large']
+  status nvarchar [not null, note: 'Available/Occupied/Billing/Reserved/Cleaning/Unavailable']
+  currentGuests int
+  guestType nvarchar [note: 'DineIn/Delivery/Takeaway']
+  openedAt datetime
+  note nvarchar(500)
+  qrToken nvarchar(2000) [note: 'JWT ของ QR Code']
+  qrTokenExpiresAt datetime
+  qrTokenNonce nvarchar(50)
+  qrShortCode nvarchar(10) [unique]
+  activeOrderId int [note: 'อ้างอิง TB_ORDERS.orderId (ดูรูป 3.X.7)']
+}
+
+table TB_TABLE_LINKS [headercolor: #22D3EE, note: 'เชื่อมโต๊ะ / รวมโต๊ะ (Hard-delete)'] {
+  tableLinkId int [pk, increment]
+  tableId int [ref: > TB_TABLES.tableId, not null]
+  groupCode nvarchar [not null]
+  isPrimary bit [not null, note: 'โต๊ะหลักของกลุ่ม']
+}
+
+table TB_FLOOR_OBJECTS [headercolor: #22D3EE, note: 'วัตถุบนผัง (กำแพง/ประตู/เสา/เคาน์เตอร์)'] {
+  floorObjectId int [pk, increment]
+  zoneId int [ref: > TB_ZONES.zoneId]
+  objectType nvarchar [not null, note: 'Wall/Door/Pillar/Counter/Decoration']
+  label nvarchar [not null]
+  positionX float [not null]
+  positionY float [not null]
+}
+
+table TB_RESERVATIONS [headercolor: #22D3EE, note: 'การจองโต๊ะ'] {
+  reservationId int [pk, increment]
+  tableId int [ref: > TB_TABLES.tableId]
+  customerName nvarchar [not null]
+  customerPhone nvarchar [not null]
+  reservationDate date [not null]
+  reservationTime time [not null]
+  guestCount int [not null]
+  note nvarchar(500)
+  status nvarchar [not null, note: 'Pending/Confirmed/Completed/Cancelled']
+  reminderSent bit [default: false]
+}
+
+// หมายเหตุ: TB_TABLES ถูกอ้างอิงจาก TB_ORDERS, TB_ORDER_ITEMS.sourceTableId,
+//           TB_NOTIFICATIONS, TB_CUSTOMER_SESSIONS (ดูในรูปที่ 3.X.7 และ 3.X.9)

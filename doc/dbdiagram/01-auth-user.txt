@@ -1,0 +1,61 @@
+// =============================================
+// RBMS-POS — ER Diagram (ส่วนที่ 1/7)
+// AUTHENTICATION & USER ACCOUNT
+// ใช้ประกอบรูปที่ 3.11 แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Authentication และ User Account
+// =============================================
+
+table TB_USERS [note: 'ผู้ใช้งานระบบ'] {
+  userId uniqueidentifier [pk, note: 'รหัสผู้ใช้ (GUID)']
+  username nvarchar(50) [unique, not null, note: 'ชื่อผู้ใช้']
+  email nvarchar(255) [unique, not null, note: 'อีเมล']
+  passwordHash nvarchar(255) [not null, note: 'รหัสผ่าน (Hash)']
+  isActive bit [not null, default: true, note: 'สถานะใช้งาน']
+  failedLoginAttempts int [default: 0, note: 'จำนวนครั้งที่ login ผิด']
+  lockoutCount int [default: 0, note: 'จำนวนครั้งที่ถูก lock']
+  lockedUntil datetime [note: 'ล็อคจนถึงวันเวลานี้']
+  lastLoginDate datetime [note: 'เข้าสู่ระบบล่าสุด']
+  lastPasswordChangedDate datetime [note: 'เปลี่ยนรหัสผ่านล่าสุด']
+  isLockedByAdmin bit [default: false, note: 'ถูก Admin ล็อค']
+  autoUnlockDate datetime [note: 'วันที่ปลดล็อคอัตโนมัติ']
+  pinCodeHash nvarchar(256) [note: 'PIN สำหรับ POS (Hash)']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_REFRESH_TOKENS [note: 'Refresh Token สำหรับ JWT'] {
+  refreshTokenId uniqueidentifier [pk, note: 'รหัส Token']
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null, note: 'รหัสผู้ใช้']
+  token nvarchar [not null, note: 'ค่า Refresh Token']
+  expiresAt datetime [not null, note: 'หมดอายุ']
+  isRevoked bit [default: false, note: 'ถูกยกเลิก']
+  revokedAt datetime [note: 'เวลายกเลิก']
+  revokedByIp nvarchar [note: 'IP ของผู้ที่ยกเลิก Token']
+  createdByIp nvarchar [note: 'IP ของผู้ที่สร้าง Token']
+  createdAt datetime [not null]
+}
+
+table TB_PASSWORD_HISTORIES [note: 'ประวัติรหัสผ่าน (ป้องกันใช้ซ้ำ)'] {
+  passwordHistoryId int [pk, increment]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null, note: 'รหัสผู้ใช้']
+  passwordHash nvarchar [not null, note: 'รหัสผ่านเก่า (Hash)']
+  createdAt datetime [not null]
+}
+
+table TB_PASSWORD_RESET_TOKENS [note: 'Token รีเซ็ตรหัสผ่าน (OTP)'] {
+  passwordResetTokenId uniqueidentifier [pk]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null, note: 'รหัสผู้ใช้']
+  otpCode nvarchar [not null, note: 'รหัส OTP']
+  otpExpiresAt datetime [not null, note: 'วันหมดอายุ OTP']
+  otpVerified bit [default: false, note: 'ยืนยัน OTP แล้ว']
+  otpAttempts int [default: 0, note: 'จำนวนครั้งที่ลอง OTP']
+  resetToken nvarchar [note: 'Token สำหรับเปลี่ยนรหัส (หลังยืนยัน OTP)']
+  resetTokenExpiresAt datetime [note: 'วันหมดอายุ Reset Token']
+  isUsed bit [default: false, note: 'ใช้งานแล้ว']
+  createdAt datetime [not null]
+}

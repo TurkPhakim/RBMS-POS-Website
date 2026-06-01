@@ -1,0 +1,33 @@
+// =============================================
+// RBMS-POS — ER Diagram (ส่วนที่ 7/7)
+// NOTIFICATION
+// ใช้ประกอบรูปที่ 3.17 แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Notification
+// หมายเหตุ Cross-module:
+//   - TB_NOTIFICATIONS.tableId อ้าง TB_TABLES (ดูใน 05-table-customer.txt)
+//   - TB_NOTIFICATIONS.orderId อ้าง TB_ORDERS (ดูใน 06-order-payment.txt)
+//   - TB_NOTIFICATIONS.reservationId อ้าง TB_RESERVATIONS (ดูใน 05-table-customer.txt)
+//   - TB_NOTIFICATION_READS.userId อ้าง TB_USERS (ดูใน 01-auth-user.txt)
+// =============================================
+
+table TB_NOTIFICATIONS [note: 'การแจ้งเตือน'] {
+  notificationId int [pk, increment, note: 'รหัสแจ้งเตือน']
+  eventType nvarchar [not null, note: 'ประเภทเหตุการณ์ (OrderReady/TableAvailable/...)']
+  title nvarchar [not null, note: 'หัวข้อ']
+  message nvarchar [not null, note: 'ข้อความ']
+  tableId int [note: 'รหัสโต๊ะ (อ้าง TB_TABLES ในส่วนที่ 5)']
+  orderId int [note: 'รหัสออเดอร์ (อ้าง TB_ORDERS ในส่วนที่ 6)']
+  reservationId int [note: 'รหัสการจอง (อ้าง TB_RESERVATIONS ในส่วนที่ 5)']
+  targetGroup nvarchar [not null, note: 'กลุ่มเป้าหมาย (Kitchen/Cashier/Customer)']
+  payload nvarchar [note: 'ข้อมูลเพิ่มเติมแบบ JSON']
+  createdAt datetime [not null, note: 'เวลาสร้าง']
+  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
+}
+
+table TB_NOTIFICATION_READS [note: 'สถานะการอ่านแจ้งเตือน'] {
+  notificationReadId int [pk, increment, note: 'รหัส']
+  notificationId int [ref: > TB_NOTIFICATIONS.notificationId, not null, note: 'รหัสแจ้งเตือน']
+  userId uniqueidentifier [not null, note: 'รหัสผู้ใช้ (อ้าง TB_USERS ในส่วนที่ 1)']
+  readAt datetime [note: 'เวลาอ่าน']
+  clearedAt datetime [note: 'เวลาเคลียร์']
+  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
+}

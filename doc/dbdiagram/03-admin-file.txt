@@ -1,0 +1,96 @@
+// =============================================
+// RBMS-POS — ER Diagram (ส่วนที่ 3/7)
+// ADMIN SETTINGS & FILE MANAGEMENT
+// ใช้ประกอบรูปที่ 3.13 แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Admin Settings และ File
+// =============================================
+
+table TB_SHOP_SETTINGS [note: 'ตั้งค่าร้านค้า'] {
+  shopSettingsId int [pk, increment, note: 'รหัสตั้งค่า']
+  shopNameThai nvarchar [not null, note: 'ชื่อร้าน (ไทย)']
+  shopNameEnglish nvarchar [not null, note: 'ชื่อร้าน (อังกฤษ)']
+  companyNameThai nvarchar [note: 'ชื่อบริษัท (ไทย)']
+  companyNameEnglish nvarchar [note: 'ชื่อบริษัท (อังกฤษ)']
+  taxId nvarchar [not null, note: 'เลขประจำตัวผู้เสียภาษี']
+  foodType nvarchar [not null, note: 'ประเภทอาหาร']
+  description nvarchar [note: 'รายละเอียดร้าน']
+  logoFileId int [ref: > TB_FILES.fileId, note: 'โลโก้ร้าน']
+  hasTwoPeriods bit [note: 'มีเวลาเปิด 2 ช่วง']
+  address nvarchar [not null, note: 'ที่อยู่ร้าน']
+  phoneNumber nvarchar [not null, note: 'เบอร์โทร']
+  facebook nvarchar [note: 'Facebook']
+  instagram nvarchar [note: 'Instagram']
+  shopEmail nvarchar [note: 'อีเมลร้าน']
+  website nvarchar [note: 'เว็บไซต์']
+  lineId nvarchar [note: 'LINE ID']
+  paymentQrCodeFileId int [ref: > TB_FILES.fileId, note: 'QR Code สำหรับรับเงิน']
+  bankName nvarchar [note: 'ชื่อธนาคาร']
+  accountNumber nvarchar [note: 'เลขบัญชี']
+  accountName nvarchar [note: 'ชื่อบัญชี']
+  promptPayNumber nvarchar [note: 'เลขพร้อมเพย์']
+  wifiSsid nvarchar [note: 'ชื่อ WiFi']
+  wifiPassword nvarchar [note: 'รหัส WiFi']
+  receiptHeaderText nvarchar [note: 'ข้อความหัวใบเสร็จ']
+  receiptFooterText nvarchar [note: 'ข้อความท้ายใบเสร็จ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_SHOP_OPERATING_HOURS [note: 'เวลาเปิด-ปิดร้าน รายวัน'] {
+  shopOperatingHourId int [pk, increment, note: 'รหัส']
+  shopSettingsId int [ref: > TB_SHOP_SETTINGS.shopSettingsId, not null, note: 'รหัสตั้งค่าร้าน']
+  dayOfWeek nvarchar [not null, note: 'วันในสัปดาห์ (Mon-Sun)']
+  isOpen bit [not null, note: 'เปิดให้บริการ']
+  openTime1 time [note: 'เปิดช่วงที่ 1']
+  closeTime1 time [note: 'ปิดช่วงที่ 1']
+  openTime2 time [note: 'เปิดช่วงที่ 2']
+  closeTime2 time [note: 'ปิดช่วงที่ 2']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_SERVICE_CHARGES [note: 'ค่าบริการ (Service Charge)'] {
+  serviceChargeId int [pk, increment, note: 'รหัสค่าบริการ']
+  percentageRate decimal [not null, note: 'อัตราค่าบริการ (%)']
+  name nvarchar [not null, note: 'ชื่อ (เช่น Service 10%)']
+  description nvarchar [note: 'รายละเอียด']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  startDate datetime [note: 'วันที่เริ่มใช้']
+  endDate datetime [note: 'วันที่สิ้นสุด']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_FILES [note: 'จัดเก็บไฟล์ (S3/MinIO) — Master Reference สำหรับทุกหมวด'] {
+  fileId int [pk, increment, note: 'รหัสไฟล์']
+  fileName nvarchar [not null, note: 'ชื่อไฟล์ต้นฉบับ']
+  mimeType nvarchar [not null, note: 'ชนิดไฟล์ (เช่น image/png)']
+  fileExtension nvarchar [not null, note: 'นามสกุลไฟล์ (เช่น .png)']
+  fileSize bigint [not null, note: 'ขนาดไฟล์ (bytes)']
+  s3Key nvarchar [not null, note: 'ตำแหน่งไฟล์บน S3/MinIO']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}

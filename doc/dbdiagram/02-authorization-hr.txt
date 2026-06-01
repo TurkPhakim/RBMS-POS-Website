@@ -1,0 +1,183 @@
+// =============================================
+// RBMS-POS — ER Diagram (ส่วนที่ 2/7)
+// AUTHORIZATION & HUMAN RESOURCE
+// ใช้ประกอบรูปที่ 3.12 แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Authorization และ Human Resource
+// หมายเหตุ: TB_EMPLOYEES.imageFileId อ้างถึง TB_FILES (ดูคำนิยามใน 03-admin-file.txt)
+// =============================================
+
+// ----- AUTHORIZATION -----
+
+table TBM_POSITIONS [note: 'ตำแหน่งงาน (Master Data)'] {
+  positionId int [pk, increment, note: 'รหัสตำแหน่ง']
+  positionName nvarchar [not null, note: 'ชื่อตำแหน่ง']
+  description nvarchar [note: 'รายละเอียด']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TBM_MODULES [note: 'โมดูลในระบบ (Master Data)'] {
+  moduleId int [pk, increment, note: 'รหัสโมดูล']
+  moduleName nvarchar [not null, note: 'ชื่อโมดูล']
+  moduleCode nvarchar [not null, note: 'รหัสโมดูล (Code)']
+  parentModuleId int [ref: > TBM_MODULES.moduleId, note: 'โมดูลแม่ (Self-reference)']
+  sortOrder int [default: 0, note: 'ลำดับการแสดงผล']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TBM_PERMISSIONS [note: 'สิทธิ์การใช้งาน (Master Data)'] {
+  permissionId int [pk, increment, note: 'รหัสสิทธิ์']
+  permissionName nvarchar [not null, note: 'ชื่อสิทธิ์']
+  permissionCode nvarchar [not null, note: 'รหัสสิทธิ์ (Code)']
+  sortOrder int [default: 0, note: 'ลำดับ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TBM_AUTHORIZE_MATRICES [note: 'เมทริกซ์สิทธิ์ — เชื่อมโมดูล + สิทธิ์ + API Path'] {
+  authorizeMatrixId int [pk, increment, note: 'รหัสเมทริกซ์']
+  moduleId int [ref: > TBM_MODULES.moduleId, not null, note: 'รหัสโมดูล']
+  permissionId int [ref: > TBM_PERMISSIONS.permissionId, not null, note: 'รหัสสิทธิ์']
+  permissionPath nvarchar [not null, note: 'เส้นทาง API endpoint ที่ควบคุมสิทธิ์']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_AUTHORIZE_MATRIX_POSITIONS [note: 'กำหนดสิทธิ์ให้ตำแหน่ง — เชื่อมเมทริกซ์สิทธิ์ + ตำแหน่ง'] {
+  authMatrixPositionId int [pk, increment, note: 'รหัส']
+  authorizeMatrixId int [ref: > TBM_AUTHORIZE_MATRICES.authorizeMatrixId, not null, note: 'รหัสเมทริกซ์สิทธิ์']
+  positionId int [ref: > TBM_POSITIONS.positionId, not null, note: 'รหัสตำแหน่ง']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// ----- HUMAN RESOURCE -----
+
+table TB_EMPLOYEES [note: 'ข้อมูลพนักงาน'] {
+  employeeId int [pk, increment, note: 'รหัสพนักงาน']
+  userId uniqueidentifier [note: 'รหัสผู้ใช้ (1:1 — อ้าง TB_USERS ในส่วนที่ 1)']
+  title nvarchar(20) [note: 'คำนำหน้า (Mr/Mrs/Ms)']
+  firstNameThai nvarchar(100) [not null, note: 'ชื่อ (ไทย)']
+  lastNameThai nvarchar(100) [not null, note: 'นามสกุล (ไทย)']
+  firstNameEnglish nvarchar(100) [not null, note: 'ชื่อ (อังกฤษ)']
+  lastNameEnglish nvarchar(100) [not null, note: 'นามสกุล (อังกฤษ)']
+  nickname nvarchar(50) [note: 'ชื่อเล่น']
+  gender nvarchar(20) [not null, note: 'เพศ (Male/Female)']
+  dateOfBirth datetime [note: 'วันเกิด']
+  startDate datetime [not null, note: 'วันเริ่มงาน']
+  endDate datetime [note: 'วันสิ้นสุดงาน']
+  nationalId nvarchar(13) [note: 'เลขบัตรประชาชน']
+  bankAccountNumber nvarchar(20) [note: 'เลขบัญชีธนาคาร']
+  bankName nvarchar(100) [note: 'ชื่อธนาคาร']
+  nationality nvarchar(30) [note: 'สัญชาติ']
+  religion nvarchar(30) [note: 'ศาสนา']
+  lineId nvarchar(50) [note: 'LINE ID']
+  positionId int [ref: > TBM_POSITIONS.positionId, note: 'รหัสตำแหน่ง']
+  phone nvarchar(20) [note: 'เบอร์โทร']
+  email nvarchar(100) [note: 'อีเมล']
+  isFullTime bit [default: true, note: 'พนักงานประจำ']
+  salary decimal(12,2) [note: 'เงินเดือน']
+  hourlyRate decimal(12,2) [note: 'ค่าจ้างรายชั่วโมง']
+  imageFileId int [note: 'รูปโปรไฟล์ (อ้าง TB_FILES ในส่วนที่ 3)']
+  isActive bit [default: true, note: 'สถานะใช้งาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_EMPLOYEE_ADDRESSES [note: 'ที่อยู่พนักงาน'] {
+  addressId int [pk, increment, note: 'รหัสที่อยู่']
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null, note: 'รหัสพนักงาน']
+  addressType nvarchar [not null, note: 'ประเภทที่อยู่ (Home/Work)']
+  houseNumber nvarchar [note: 'บ้านเลขที่']
+  building nvarchar [note: 'อาคาร/หมู่บ้าน']
+  moo nvarchar [note: 'หมู่']
+  soi nvarchar [note: 'ซอย']
+  yaek nvarchar [note: 'แยก']
+  road nvarchar [note: 'ถนน']
+  subDistrict nvarchar [note: 'ตำบล/แขวง']
+  district nvarchar [note: 'อำเภอ/เขต']
+  province nvarchar [note: 'จังหวัด']
+  postalCode nvarchar [note: 'รหัสไปรษณีย์']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_EMPLOYEE_EDUCATIONS [note: 'ประวัติการศึกษาพนักงาน'] {
+  educationId int [pk, increment, note: 'รหัสการศึกษา']
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null, note: 'รหัสพนักงาน']
+  educationLevel nvarchar [not null, note: 'ระดับการศึกษา']
+  major nvarchar [note: 'สาขาวิชา']
+  institution nvarchar [not null, note: 'สถาบัน']
+  gpa decimal [note: 'เกรดเฉลี่ย']
+  graduationYear int [note: 'ปีที่จบ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_EMPLOYEE_WORK_HISTORIES [note: 'ประวัติการทำงานพนักงาน'] {
+  workHistoryId int [pk, increment, note: 'รหัสประวัติงาน']
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null, note: 'รหัสพนักงาน']
+  workplace nvarchar [not null, note: 'สถานที่ทำงาน']
+  workPhone nvarchar [note: 'เบอร์โทรที่ทำงาน']
+  position nvarchar [note: 'ตำแหน่ง']
+  startDate datetime [not null, note: 'วันเริ่มงาน']
+  endDate datetime [note: 'วันสิ้นสุดงาน']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}

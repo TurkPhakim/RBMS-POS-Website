@@ -1,0 +1,55 @@
+// =============================================
+// รูปที่ 3.X.1 — ระบบยืนยันตัวตน (Authentication)
+// 4 ตาราง: ผู้ใช้ + Refresh Token + ประวัติรหัสผ่าน + OTP รีเซ็ตรหัสผ่าน
+// =============================================
+// หมายเหตุ: ตัด Audit Fields (createdAt/createdBy/updatedAt/...) เพื่อให้ Diagram กระชับ
+//           ดูคอลัมน์เต็มใน doc/architecture/database-api-reference.md
+// =============================================
+
+table TB_USERS [headercolor: #1E40AF, note: 'ผู้ใช้งานระบบ'] {
+  userId uniqueidentifier [pk, note: 'รหัสผู้ใช้ (GUID)']
+  username nvarchar(50) [unique, not null]
+  email nvarchar(255) [unique, not null]
+  passwordHash nvarchar(255) [not null]
+  pinCodeHash nvarchar(256) [note: 'PIN สำหรับ POS']
+  isActive bit [not null, default: true]
+  failedLoginAttempts int [default: 0]
+  lockoutCount int [default: 0]
+  lockedUntil datetime [note: 'ล็อคจนถึงเวลานี้ (Auto-lock)']
+  isLockedByAdmin bit [default: false]
+  autoUnlockDate datetime
+  lastLoginDate datetime
+  lastPasswordChangedDate datetime
+}
+
+table TB_REFRESH_TOKENS [headercolor: #2563EB, note: 'Refresh Token สำหรับ JWT'] {
+  refreshTokenId uniqueidentifier [pk]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null]
+  token nvarchar [not null]
+  expiresAt datetime [not null]
+  isRevoked bit [default: false]
+  revokedAt datetime
+  revokedByIp nvarchar
+  createdByIp nvarchar
+  createdAt datetime [not null]
+}
+
+table TB_PASSWORD_HISTORIES [headercolor: #2563EB, note: 'ประวัติรหัสผ่าน (ป้องกันใช้ซ้ำ)'] {
+  passwordHistoryId int [pk, increment]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null]
+  passwordHash nvarchar [not null]
+  createdAt datetime [not null]
+}
+
+table TB_PASSWORD_RESET_TOKENS [headercolor: #2563EB, note: 'Token รีเซ็ตรหัสผ่าน (OTP 2-Step)'] {
+  passwordResetTokenId uniqueidentifier [pk]
+  userId uniqueidentifier [ref: > TB_USERS.userId, not null]
+  otpCode nvarchar [not null]
+  otpExpiresAt datetime [not null]
+  otpVerified bit [default: false]
+  otpAttempts int [default: 0]
+  resetToken nvarchar [note: 'Token หลังยืนยัน OTP']
+  resetTokenExpiresAt datetime
+  isUsed bit [default: false]
+  createdAt datetime [not null]
+}

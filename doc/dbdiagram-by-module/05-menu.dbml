@@ -1,0 +1,70 @@
+// =============================================
+// รูปที่ 3.X.5 — ระบบจัดการเมนู (Menu Management)
+// 5 ตาราง + 1 ตาราง Reference: หมวดหมู่ย่อย + เมนู + กลุ่มตัวเลือก + รายการตัวเลือก + M:M
+// =============================================
+// หมายเหตุ: ตัด Audit Fields เพื่อความกระชับ
+//           TB_OPTION_GROUPS, TB_OPTION_ITEMS, TB_MENU_OPTION_GROUPS เป็น Hard-delete
+// =============================================
+
+// --- Reference Tables ---
+table TB_FILES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.9'] {
+  fileId int [pk]
+}
+
+// --- ตารางหลัก ---
+table TB_MENU_SUB_CATEGORIES [headercolor: #DC2626, note: 'หมวดหมู่ย่อยเมนู'] {
+  subCategoryId int [pk, increment]
+  categoryType int [not null, note: 'Enum: Appetizer/MainCourse/Beverage/Dessert/...']
+  name nvarchar [not null]
+  sortOrder int [default: 0]
+  isActive bit [default: true]
+}
+
+table TB_MENUS [headercolor: #EF4444, note: 'รายการเมนูอาหาร'] {
+  menuId int [pk, increment]
+  subCategoryId int [ref: > TB_MENU_SUB_CATEGORIES.subCategoryId, not null]
+  imageFileId int [ref: > TB_FILES.fileId, note: 'รูปเมนู']
+  nameThai nvarchar [not null]
+  nameEnglish nvarchar [not null]
+  description nvarchar
+  price decimal [not null]
+  costPrice decimal
+  isAvailable bit [default: true]
+  isAvailablePeriod1 bit [default: true]
+  isAvailablePeriod2 bit [default: true]
+  tags int [note: 'Bit flags: มังสวิรัติ/วีแกน/Gluten-free/เผ็ด']
+  allergens nvarchar
+  caloriesPerServing decimal
+  isPinned bit [default: false]
+}
+
+table TB_OPTION_GROUPS [headercolor: #F87171, note: 'กลุ่มตัวเลือกเมนู (Hard-delete)'] {
+  optionGroupId int [pk, increment]
+  name nvarchar [not null]
+  categoryType int [not null, note: 'หมวดหมู่เมนูที่ใช้']
+  isRequired bit [not null]
+  minSelect int [default: 0]
+  maxSelect int
+  sortOrder int [default: 0]
+  isActive bit [default: true]
+}
+
+table TB_OPTION_ITEMS [headercolor: #F87171, note: 'รายการตัวเลือก (Hard-delete)'] {
+  optionItemId int [pk, increment]
+  optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null]
+  name nvarchar [not null]
+  additionalPrice decimal [default: 0]
+  costPrice decimal
+  sortOrder int [default: 0]
+  isActive bit [default: true]
+}
+
+table TB_MENU_OPTION_GROUPS [headercolor: #FCA5A5, note: 'เมนู ↔ กลุ่มตัวเลือก (M:M, Hard-delete)'] {
+  menuOptionGroupId int [pk, increment]
+  menuId int [ref: > TB_MENUS.menuId, not null]
+  optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null]
+  sortOrder int
+}
+
+// หมายเหตุ: TB_MENUS, TB_OPTION_GROUPS, TB_OPTION_ITEMS ถูกอ้างอิงจาก TB_ORDER_ITEMS / TB_ORDER_ITEM_OPTIONS
+//           (ดูในรูปที่ 3.X.7 ระบบออเดอร์และบิล)

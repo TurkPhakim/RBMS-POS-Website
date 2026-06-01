@@ -1,0 +1,87 @@
+// =============================================
+// รูปที่ 3.X.3 — ระบบทรัพยากรบุคคล (Human Resource)
+// 4 ตาราง + 1 ตาราง Reference: ข้อมูลพนักงาน + ที่อยู่ + การศึกษา + ประวัติการทำงาน
+// =============================================
+// หมายเหตุ: ตัด Audit Fields เพื่อความกระชับ
+//           TBM_POSITIONS, TB_USERS, TB_FILES แสดงเฉพาะคอลัมน์ PK (รายละเอียดเต็มในรูปอื่น)
+// =============================================
+
+// --- Reference Tables (จากรูปอื่น) ---
+table TBM_POSITIONS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.2'] {
+  positionId int [pk]
+  positionName nvarchar
+}
+
+table TB_USERS [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.1'] {
+  userId uniqueidentifier [pk]
+}
+
+table TB_FILES [headercolor: #94A3B8, note: 'อ้างอิงจากรูปที่ 3.X.9'] {
+  fileId int [pk]
+}
+
+// --- ตารางหลักของระบบ HR ---
+table TB_EMPLOYEES [headercolor: #059669, note: 'ข้อมูลพนักงาน'] {
+  employeeId int [pk, increment]
+  userId uniqueidentifier [ref: - TB_USERS.userId, note: 'ผูกบัญชีผู้ใช้ (1:1)']
+  positionId int [ref: > TBM_POSITIONS.positionId, note: 'ตำแหน่งงาน']
+  imageFileId int [ref: > TB_FILES.fileId, note: 'รูปโปรไฟล์']
+  title nvarchar(20)
+  firstNameThai nvarchar(100) [not null]
+  lastNameThai nvarchar(100) [not null]
+  firstNameEnglish nvarchar(100) [not null]
+  lastNameEnglish nvarchar(100) [not null]
+  nickname nvarchar(50)
+  gender nvarchar(20) [not null]
+  dateOfBirth datetime
+  nationalId nvarchar(13)
+  nationality nvarchar(30)
+  religion nvarchar(30)
+  phone nvarchar(20)
+  email nvarchar(100)
+  lineId nvarchar(50)
+  bankAccountNumber nvarchar(20)
+  bankName nvarchar(100)
+  startDate datetime [not null]
+  endDate datetime
+  isFullTime bit [default: true]
+  salary decimal(12,2)
+  hourlyRate decimal(12,2)
+  isActive bit [default: true]
+}
+
+table TB_EMPLOYEE_ADDRESSES [headercolor: #10B981, note: 'ที่อยู่พนักงาน'] {
+  addressId int [pk, increment]
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null]
+  addressType nvarchar [not null, note: 'Home / Work']
+  houseNumber nvarchar
+  building nvarchar
+  moo nvarchar
+  soi nvarchar
+  yaek nvarchar
+  road nvarchar
+  subDistrict nvarchar
+  district nvarchar
+  province nvarchar
+  postalCode nvarchar
+}
+
+table TB_EMPLOYEE_EDUCATIONS [headercolor: #10B981, note: 'ประวัติการศึกษา'] {
+  educationId int [pk, increment]
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null]
+  educationLevel nvarchar [not null]
+  major nvarchar
+  institution nvarchar [not null]
+  gpa decimal
+  graduationYear int
+}
+
+table TB_EMPLOYEE_WORK_HISTORIES [headercolor: #10B981, note: 'ประวัติการทำงาน'] {
+  workHistoryId int [pk, increment]
+  employeeId int [ref: > TB_EMPLOYEES.employeeId, not null]
+  workplace nvarchar [not null]
+  workPhone nvarchar
+  position nvarchar
+  startDate datetime [not null]
+  endDate datetime
+}

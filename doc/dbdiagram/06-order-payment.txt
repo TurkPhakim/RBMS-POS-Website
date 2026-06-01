@@ -1,0 +1,184 @@
+// =============================================
+// RBMS-POS — ER Diagram (ส่วนที่ 6/7)
+// ORDER & PAYMENT (รวม Cashier Session)
+// ใช้ประกอบรูปที่ 3.16 แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Order และ Payment
+// หมายเหตุ Cross-module:
+//   - TB_ORDERS.tableId อ้าง TB_TABLES (ดูใน 05-table-customer.txt)
+//   - TB_ORDER_ITEMS.menuId อ้าง TB_MENUS (ดูใน 04-menu.txt)
+//   - TB_ORDER_ITEMS.cancelledBy อ้าง TB_EMPLOYEES (ดูใน 02-authorization-hr.txt)
+//   - TB_ORDER_BILLS.claimedBySessionId อ้าง TB_CUSTOMER_SESSIONS (ดูใน 05-table-customer.txt)
+//   - TB_ORDER_BILLS.serviceChargeId อ้าง TB_SERVICE_CHARGES (ดูใน 03-admin-file.txt)
+//   - TB_ORDER_BILLS.customerSlipFileId / TB_PAYMENTS.slipImageFileId อ้าง TB_FILES (ดูใน 03-admin-file.txt)
+//   - TB_CASHIER_SESSIONS.userId อ้าง TB_USERS (ดูใน 01-auth-user.txt)
+// =============================================
+
+// ----- ORDER -----
+
+table TB_ORDERS [note: 'ออเดอร์ (คำสั่งซื้อ)'] {
+  orderId int [pk, increment, note: 'รหัสออเดอร์']
+  tableId int [not null, note: 'รหัสโต๊ะ (อ้าง TB_TABLES ในส่วนที่ 5)']
+  orderNumber nvarchar(20) [unique, not null, note: 'เลขออเดอร์ (เช่น ORD-20240101-001)']
+  status nvarchar [not null, note: 'สถานะ (Open/Billing/Completed)']
+  guestCount int [not null, note: 'จำนวนลูกค้า']
+  subTotal decimal(12,2) [default: 0, note: 'ยอดรวมก่อนส่วนลด']
+  note nvarchar(500) [note: 'หมายเหตุ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_ORDER_ITEMS [note: 'รายการในออเดอร์'] {
+  orderItemId int [pk, increment, note: 'รหัสรายการ']
+  orderId int [ref: > TB_ORDERS.orderId, not null, note: 'รหัสออเดอร์']
+  menuId int [not null, note: 'รหัสเมนู (อ้าง TB_MENUS ในส่วนที่ 4)']
+  menuNameThai nvarchar(200) [not null, note: 'ชื่อเมนูไทย ณ ตอนสั่ง']
+  menuNameEnglish nvarchar(200) [not null, note: 'ชื่อเมนูอังกฤษ ณ ตอนสั่ง']
+  categoryType int [not null, note: 'หมวดหมู่เมนู']
+  quantity int [not null, note: 'จำนวน']
+  unitPrice decimal(10,2) [not null, note: 'ราคาต่อหน่วย']
+  optionsTotalPrice decimal(10,2) [default: 0, note: 'ราคาตัวเลือกรวม']
+  totalPrice decimal(12,2) [not null, note: 'ราคารวม']
+  status nvarchar [not null, note: 'สถานะ (Pending/Sent/Preparing/Ready/Served/Voided/Cancelled)']
+  note nvarchar(500) [note: 'หมายเหตุ']
+  orderedBy nvarchar(100) [not null, note: 'ชื่อพนักงานที่สั่ง']
+  sentToKitchenAt datetime [note: 'ส่งเข้าครัว']
+  cookingStartedAt datetime [note: 'เริ่มทำ']
+  readyAt datetime [note: 'ทำเสร็จ']
+  servedAt datetime [note: 'เสิร์ฟแล้ว']
+  cancelledBy int [note: 'ยกเลิกโดย (อ้าง TB_EMPLOYEES ในส่วนที่ 2)']
+  cancelReason nvarchar(500) [note: 'เหตุผลยกเลิก']
+  costPrice decimal(10,2) [note: 'ราคาทุน']
+  orderBillId int [ref: > TB_ORDER_BILLS.orderBillId, note: 'บิลที่รายการนี้ถูกจัดเข้า (null = ยังไม่ออกบิล)']
+  sourceTableId int [note: 'โต๊ะต้นทาง กรณีย้ายรายการข้ามโต๊ะ (อ้าง TB_TABLES ในส่วนที่ 5)']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_ORDER_ITEM_OPTIONS [note: 'ตัวเลือกที่เลือกในรายการออเดอร์ (Snapshot)'] {
+  orderItemOptionId int [pk, increment, note: 'รหัส']
+  orderItemId int [ref: > TB_ORDER_ITEMS.orderItemId, not null, note: 'รหัสรายการ']
+  optionGroupId int [not null, note: 'รหัสกลุ่มตัวเลือก (อ้าง TB_OPTION_GROUPS ในส่วนที่ 4)']
+  optionItemId int [not null, note: 'รหัสตัวเลือก (อ้าง TB_OPTION_ITEMS ในส่วนที่ 4)']
+  optionGroupName nvarchar [not null, note: 'ชื่อกลุ่มตัวเลือก ณ ตอนสั่ง']
+  optionItemName nvarchar [not null, note: 'ชื่อตัวเลือก ณ ตอนสั่ง']
+  additionalPrice decimal [not null, note: 'ราคาเพิ่ม ณ ตอนสั่ง']
+  costPrice decimal [note: 'ราคาทุน']
+  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
+}
+
+table TB_ORDER_BILLS [note: 'บิล / ใบเสร็จ'] {
+  orderBillId int [pk, increment, note: 'รหัสบิล']
+  orderId int [ref: > TB_ORDERS.orderId, not null, note: 'รหัสออเดอร์']
+  billNumber nvarchar [not null, note: 'เลขบิล (เช่น BILL-20240101-001)']
+  billType nvarchar [not null, note: 'ประเภท (Full/Split)']
+  subTotal decimal(12,2) [not null, note: 'ยอดก่อนส่วนลด']
+  totalDiscountAmount decimal(12,2) [not null, note: 'ส่วนลดรวม']
+  netAmount decimal(12,2) [not null, note: 'ยอดหลังส่วนลด']
+  serviceChargeId int [note: 'รหัสค่าบริการ (อ้าง TB_SERVICE_CHARGES ในส่วนที่ 3)']
+  serviceChargeRate decimal [not null, note: 'อัตราค่าบริการ (%)']
+  serviceChargeAmount decimal(12,2) [not null, note: 'ค่าบริการ']
+  vatRate decimal [not null, note: 'อัตรา VAT (%)']
+  vatAmount decimal(12,2) [not null, note: 'ภาษี VAT']
+  grandTotal decimal [not null, note: 'ยอดรวมสุทธิ']
+  splitCount int [not null, note: 'แยกเป็นกี่บิล (1 = ไม่แยก)']
+  splitIndex int [not null, note: 'บิลนี้เป็นลำดับที่เท่าไหร่ (0 = บิลเต็มหรือบิลแรก)']
+  status nvarchar [not null, note: 'สถานะ (Pending/Paid)']
+  paidAt datetime [note: 'ชำระเมื่อ']
+  // --- Claim (ลูกค้าจอง/ชำระผ่าน Mobile Web) ---
+  claimedBySessionId int [note: 'Session ลูกค้าที่ขอชำระบิลนี้ (อ้าง TB_CUSTOMER_SESSIONS ในส่วนที่ 5)']
+  claimedAt datetime [note: 'เวลาที่ลูกค้าขอชำระบิล']
+  claimPaymentMethod nvarchar [note: 'วิธีชำระที่ลูกค้าเลือก (cash/qr)']
+  // --- Customer Slip (อัพโหลดจาก Mobile Web) ---
+  customerSlipFileId int [note: 'รูปสลิปที่ลูกค้าอัพโหลด (อ้าง TB_FILES ในส่วนที่ 3)']
+  customerSlipOcrAmount decimal [note: 'ยอดเงินที่อ่านได้จากสลิป (OCR)']
+  customerSlipVerificationStatus nvarchar [note: 'สถานะการตรวจสอบสลิป']
+  customerSlipOcrTransferDate datetime [note: 'วันที่โอนเงินที่อ่านได้จากสลิป (OCR)']
+  customerSlipOcrAccountNumber nvarchar [note: 'เลขบัญชีปลายทางที่อ่านได้จากสลิป (OCR)']
+  customerSlipIsAccountMatched bit [note: 'เลขบัญชีในสลิปตรงกับบัญชีร้านหรือไม่']
+  customerSlipIsDateToday bit [note: 'วันที่โอนในสลิปตรงกับวันปัจจุบันหรือไม่']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+// ----- PAYMENT & CASHIER -----
+
+table TB_CASHIER_SESSIONS [note: 'รอบการทำงานแคชเชียร์'] {
+  cashierSessionId int [pk, increment, note: 'รหัสรอบ']
+  userId uniqueidentifier [not null, note: 'รหัสผู้ใช้ แคชเชียร์ (อ้าง TB_USERS ในส่วนที่ 1)']
+  status nvarchar [not null, note: 'สถานะ (Open/Closed)']
+  openedAt datetime [not null, note: 'เวลาเปิดรอบ']
+  closedAt datetime [note: 'เวลาปิดรอบ']
+  openingCash decimal [not null, note: 'เงินสดตั้งต้น']
+  expectedCash decimal [not null, note: 'เงินสดที่ควรมี (ตั้งต้น + ขายเงินสด + เงินเข้า - เงินออก)']
+  actualCash decimal [note: 'เงินสดจริงที่นับได้ตอนปิดรอบ']
+  variance decimal [note: 'ส่วนต่าง (เงินจริง - เงินที่ควรมี)']
+  totalCashSales decimal [not null, note: 'ยอดขายเงินสด']
+  totalQrSales decimal [not null, note: 'ยอดขาย QR']
+  billCount int [not null, note: 'จำนวนบิล']
+  shiftPeriod int [note: 'รอบกะการทำงาน (เช่น 1=เช้า, 2=บ่าย)']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_CASH_DRAWER_TRANSACTIONS [note: 'ธุรกรรมลิ้นชักเงินสด (นำเงินเข้า/ออก)'] {
+  cashDrawerTransactionId int [pk, increment, note: 'รหัส']
+  cashierSessionId int [ref: > TB_CASHIER_SESSIONS.cashierSessionId, not null, note: 'รหัสรอบแคชเชียร์']
+  transactionType nvarchar [not null, note: 'ประเภท (In/Out)']
+  amount decimal [not null, note: 'จำนวนเงิน']
+  reason nvarchar [not null, note: 'เหตุผล']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
+
+table TB_PAYMENTS [note: 'การชำระเงิน'] {
+  paymentId int [pk, increment, note: 'รหัสการชำระ']
+  orderBillId int [ref: > TB_ORDER_BILLS.orderBillId, not null, note: 'รหัสบิล']
+  cashierSessionId int [ref: > TB_CASHIER_SESSIONS.cashierSessionId, not null, note: 'รหัสรอบแคชเชียร์']
+  paymentMethod nvarchar [not null, note: 'วิธีชำระ (Cash/QrPayment)']
+  amountDue decimal [not null, note: 'ยอดที่ต้องชำระ']
+  amountReceived decimal [not null, note: 'ยอดที่ได้รับ']
+  changeAmount decimal [not null, note: 'เงินทอน']
+  slipImageFileId int [note: 'รูปสลิปการโอนเงิน (อ้าง TB_FILES ในส่วนที่ 3)']
+  slipOcrAmount decimal [note: 'ยอดเงินที่อ่านได้จากสลิป (OCR)']
+  slipVerificationStatus nvarchar [not null, note: 'สถานะตรวจสลิป (None/Processing/Verified/Failed)']
+  paymentReference nvarchar [note: 'เลขอ้างอิงธุรกรรมจากธนาคาร']
+  paidAt datetime [not null, note: 'เวลาชำระ']
+  note nvarchar [note: 'หมายเหตุ']
+  // --- Audit Fields (BaseEntity) ---
+  createdAt datetime [not null]
+  createdBy int
+  updatedAt datetime
+  updatedBy int
+  deleteFlag bit [not null, default: false]
+  deletedAt datetime
+  deletedBy int
+}
