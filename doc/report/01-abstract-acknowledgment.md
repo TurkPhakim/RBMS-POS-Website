@@ -42,13 +42,13 @@
 | Program in | Computer Engineering |
 | Academic Year | [Year] |
 
-Contemporary restaurant businesses still face several operational challenges, including delays in order taking, paper-based order tickets often illegible or lost in transit to the kitchen, slow and error-prone manual slip verification, and complex bill-splitting calculations — resulting in inefficient service.
+Contemporary restaurant businesses still face several operational challenges, including delays in order taking, handwritten paper order tickets that are often illegible to the kitchen and prone to missed items, slow and error-prone manual slip verification, and complex bill-splitting calculations — resulting in inefficient service.
 
 The project team has therefore developed the "Restaurant Business Web Management System with POS (RBMS-POS)" as an open-source web application covering eight business modules, divided into an Admin Client for staff and a Mobile Web for customers. The system is implemented using ASP.NET Core 9.0, Angular 19.1, SignalR, SQL Server, and MinIO. Key innovations include QR Code Self-Ordering, real-time communication between front-of-house, kitchen, and customers, automatic payment slip verification using Optical Character Recognition (OCR), and Role-Based Access Control (RBAC) through a configurable Permission Matrix that restaurant owners can adjust without modifying source code.
 
-Testing results show that the system can deliver order data between front-of-house and kitchen in real time, automatically read and compare slip amounts with the bill total while supporting manual verification when images are unclear, and flexibly adjust access permissions to each restaurant's organizational structure. The system supports various restaurant types, including à la carte restaurants, Japanese and Korean buffets, Shabu and Sukiyaki restaurants, and coffee shops and cafés, enabling owners to manage operations more systematically while significantly reducing miscommunication between front-of-house and kitchen.
+Testing results show that the system can deliver order data between front-of-house and kitchen in real time, automatically read and compare slip amounts with the bill total while supporting manual verification when images are unclear, and flexibly adjust access permissions to match the staff positions of each restaurant. The system supports various restaurant types, including à la carte restaurants, Japanese and Korean buffets, Shabu and Sukiyaki restaurants, and coffee shops and cafés, enabling owners to manage operations more systematically while significantly reducing miscommunication between front-of-house and kitchen.
 
-**Keywords**: Restaurant Management System, Point of Sale, QR Code Self-Ordering, SignalR, Real-time Communication, Role-Based Access Control, OCR Slip Verification
+**Keywords**: Restaurant Management System, Point of Sale, QR Code Self-Ordering, Real-time Communication, Optical Character Recognition, Role-Based Access Control
 
 ---
 
