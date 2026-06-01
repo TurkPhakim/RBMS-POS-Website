@@ -20,13 +20,15 @@
 
 ## บทคัดย่อ
 
-ธุรกิจร้านอาหารในปัจจุบันยังประสบปัญหาด้านการบริหารงานหน้าร้าน ทั้งการรับออเดอร์ที่ล่าช้า การจดรายการผ่านกระดาษที่ครัวอ่านยากและตกหล่น การตรวจสอบสลิปโอนเงินด้วยตาเปล่าที่ใช้เวลามากและผิดพลาดง่าย ตลอดจนการแยกบิลที่มีการคำนวณซับซ้อน ส่งผลให้การบริการเป็นไปอย่างไม่ราบรื่น
+ธุรกิจร้านอาหารในปัจจุบันยังประสบปัญหาด้านการบริหารงานหน้าร้าน ทั้งการรับออร์เดอร์ที่ล่าช้า การจดรายการผ่านกระดาษที่อ่านยากและตกหล่น การตรวจสอบสลิปโอนเงินด้วยตาเปล่าที่ใช้เวลามากและผิดพลาดง่าย ตลอดจนการแยกบิลที่มีการคำนวณซับซ้อน ส่งผลให้การบริการเป็นไปอย่างไม่ราบรื่น
 
-คณะผู้จัดทำจึงได้พัฒนา "ระบบบริหารธุรกิจร้านอาหารผ่านเว็บพร้อมระบบ POS (Restaurant Business Web Management System with POS)" ในรูปแบบเว็บแอปพลิเคชันแบบโอเพนซอร์ส (Open Source) ครอบคลุม 8 โมดูลธุรกิจ แบ่งเป็นส่วนสำหรับพนักงาน (Admin Client) และส่วนสำหรับลูกค้าผ่านมือถือ (Mobile Web) พัฒนาด้วย ASP.NET Core 9.0, Angular 19.1, SignalR, SQL Server และ MinIO มีจุดเด่นคือ การสั่งอาหารด้วยตนเองผ่านคิวอาร์โค้ด (QR Code Self-Ordering) การสื่อสารแบบเวลาจริง (Real-time) ระหว่างหน้าร้าน ครัว และลูกค้า การตรวจสอบสลิปอัตโนมัติด้วยการรู้จำตัวอักษรด้วยภาพ (Optical Character Recognition: OCR) และการควบคุมการเข้าถึงตามบทบาท (Role-Based Access Control: RBAC) ผ่านเมทริกซ์สิทธิ์ที่เจ้าของร้านปรับแต่งได้โดยไม่ต้องแก้รหัสคำสั่ง
+คณะผู้จัดทำจึงได้พัฒนา "ระบบบริหารธุรกิจร้านอาหารผ่านเว็บพร้อมระบบ POS (Restaurant Business Web Management System with POS)" ในรูปแบบเว็บแอปพลิเคชันแบบโอเพนซอร์ส (Open Source) ครอบคลุม 8 โมดูลธุรกิจ แบ่งเป็นส่วนสำหรับพนักงาน (Admin Client) และส่วนสำหรับลูกค้าผ่านมือถือ (Mobile Web) พัฒนาด้วย ASP.NET Core 9.0, Angular 19.1, SignalR, SQL Server และ MinIO
 
-ผลการทดสอบพบว่าระบบสามารถส่งข้อมูลออเดอร์แบบเวลาจริงระหว่างหน้าร้านและครัว อ่านยอดเงินจากสลิปและเปรียบเทียบกับยอดบิลได้โดยอัตโนมัติพร้อมรองรับการตรวจสอบด้วยตนเองเมื่อภาพไม่ชัด และปรับสิทธิ์การเข้าถึงตามตำแหน่งงานของแต่ละร้านได้อย่างยืดหยุ่น โดยรองรับร้านอาหารหลากหลายประเภท ทั้งร้านอาหารตามสั่ง ร้านบุฟเฟ่ต์ญี่ปุ่นและเกาหลี ร้านชาบูและสุกี้ และร้านกาแฟและคาเฟ่ ช่วยให้เจ้าของร้านบริหารงานได้อย่างเป็นระบบ และลดความผิดพลาดของการสื่อสารระหว่างหน้าร้านและครัวลงอย่างมีนัยสำคัญ
+มีจุดเด่นคือ การสั่งอาหารด้วยตนเองผ่านคิวอาร์โค้ด (QR Code Self-Ordering) การสื่อสารแบบเวลาจริง (Real-time) ระหว่างหน้าร้าน ครัว และลูกค้า การตรวจสอบสลิปอัตโนมัติด้วยการรู้และจำตัวอักษรด้วยภาพ (Optical Character Recognition: OCR) และการควบคุมการเข้าถึงตามบทบาท (Role-Based Access Control: RBAC) ผ่านเมทริกซ์สิทธิ์ที่เจ้าของร้านปรับแต่งได้โดยไม่ต้องแก้รหัสคำสั่ง
 
-**คำสำคัญ**: ระบบบริหารจัดการร้านอาหาร, ระบบขายหน้าร้าน, การสั่งอาหารด้วยตนเองผ่านคิวอาร์โค้ด, การสื่อสารแบบเวลาจริง, การรู้จำตัวอักษรด้วยภาพ, ระบบควบคุมการเข้าถึงตามบทบาท
+ผลการทดสอบพบว่าระบบสามารถส่งข้อมูลออร์เดอร์แบบเวลาจริงระหว่างหน้าร้านและครัว อ่านยอดเงินจากสลิปและเปรียบเทียบกับยอดบิลได้โดยอัตโนมัติพร้อมรองรับการตรวจสอบด้วยตนเองเมื่อภาพไม่ชัด และปรับสิทธิ์การเข้าถึงตามตำแหน่งงานของแต่ละร้านได้อย่างยืดหยุ่น โดยรองรับร้านอาหารหลากหลายประเภท ทั้งร้านอาหารตามสั่ง ร้านบุฟเฟ่ต์ ร้านกาแฟและคาเฟ่ ช่วยให้เจ้าของร้านบริหารงานได้อย่างเป็นระบบ และลดความผิดพลาดของการสื่อสารระหว่างหน้าร้านและครัวลงอย่างมีนัยสำคัญ
+
+**คำสำคัญ**: ระบบบริหารจัดการร้านอาหาร, ระบบขายหน้าร้าน, การสั่งอาหารด้วยตนเองผ่านคิวอาร์โค้ด, การสื่อสารแบบเวลาจริง, การรู้และจำตัวอักษรด้วยภาพ, ระบบควบคุมการเข้าถึงตามบทบาท
 
 ---
 
@@ -42,11 +44,13 @@
 | Program in | Computer Engineering |
 | Academic Year | [Year] |
 
-Contemporary restaurant businesses still face several operational challenges, including delays in order taking, handwritten paper order tickets that are often illegible to the kitchen and prone to missed items, slow and error-prone manual slip verification, and complex bill-splitting calculations — resulting in inefficient service.
+Contemporary restaurant businesses still face several front-of-house management challenges, including delays in order taking, handwritten paper order tickets that are often illegible and prone to missed items, slow and error-prone manual payment slip verification, and complex bill-splitting calculations — all of which result in inefficient service.
 
-The project team has therefore developed the "Restaurant Business Web Management System with POS (RBMS-POS)" as an open-source web application covering eight business modules, divided into an Admin Client for staff and a Mobile Web for customers. The system is implemented using ASP.NET Core 9.0, Angular 19.1, SignalR, SQL Server, and MinIO. Key innovations include QR Code Self-Ordering, real-time communication between front-of-house, kitchen, and customers, automatic payment slip verification using Optical Character Recognition (OCR), and Role-Based Access Control (RBAC) through a configurable Permission Matrix that restaurant owners can adjust without modifying source code.
+The project team has therefore developed the "Restaurant Business Web Management System with POS" as an open-source web application covering eight business modules, divided into an Admin Client for staff and a Mobile Web for customers. The system is implemented using ASP.NET Core 9.0, Angular 19.1, SignalR, SQL Server, and MinIO.
 
-Testing results show that the system can deliver order data between front-of-house and kitchen in real time, automatically read and compare slip amounts with the bill total while supporting manual verification when images are unclear, and flexibly adjust access permissions to match the staff positions of each restaurant. The system supports various restaurant types, including à la carte restaurants, Japanese and Korean buffets, Shabu and Sukiyaki restaurants, and coffee shops and cafés, enabling owners to manage operations more systematically while significantly reducing miscommunication between front-of-house and kitchen.
+Key features of the system include QR Code Self-Ordering, real-time communication between the front-of-house, kitchen, and customers, automatic payment slip verification using Optical Character Recognition (OCR), and Role-Based Access Control (RBAC) through a configurable Permission Matrix that restaurant owners can adjust without modifying source code.
+
+Testing results show that the system can transmit order data between the front-of-house and the kitchen in real time, automatically read slip amounts and compare them with the bill total while supporting manual verification when images are unclear, and flexibly adjust access permissions according to the staff positions of each restaurant. The system supports a variety of restaurant types, including à la carte restaurants, buffet restaurants, and coffee shops and cafés, enabling owners to manage their operations more systematically and significantly reducing miscommunication between the front-of-house and the kitchen.
 
 **Keywords**: Restaurant Management System, Point of Sale, QR Code Self-Ordering, Real-time Communication, Optical Character Recognition, Role-Based Access Control
 

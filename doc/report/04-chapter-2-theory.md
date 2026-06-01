@@ -7,7 +7,7 @@
 
 ---
 
-ในบทนี้จะกล่าวถึงทฤษฎี แนวคิด และเทคโนโลยีที่เกี่ยวข้องกับการพัฒนาระบบบริหารธุรกิจร้านอาหารผ่านเว็บพร้อมระบบ POS โดยแบ่งเนื้อหาออกเป็นสองส่วนหลัก ส่วนแรกอธิบายบริบทของธุรกิจร้านอาหาร แนวคิดของระบบจุดขาย ระบบจุดขายในตลาดที่นำมาใช้อ้างอิง รวมถึงทฤษฎีหลักที่ใช้ในการออกแบบระบบ ได้แก่ กลไกการเปลี่ยนสถานะ การสื่อสารแบบเวลาจริง การควบคุมการเข้าถึงตามบทบาท และการรู้จำตัวอักษรด้วยภาพ ส่วนที่สองอธิบายเครื่องมือและเทคโนโลยีที่ใช้ในการพัฒนาทั้งฝั่งเซิร์ฟเวอร์และฝั่งผู้ใช้งาน ประกอบด้วย โปรแกรม Visual Studio และ Visual Studio Code, ภาษา C#, เฟรมเวิร์ก ASP.NET Core, เครื่องมือ Entity Framework Core, ระบบฐานข้อมูล SQL Server, ไลบรารี SignalR, มาตรฐาน JSON Web Token, ภาษา TypeScript, เฟรมเวิร์ก Angular, ไลบรารี PrimeNG, เฟรมเวิร์ก Tailwind CSS, ระบบจัดเก็บไฟล์ MinIO, แพลตฟอร์ม Docker และเครื่องมือ Swagger / OpenAPI
+ในบทนี้จะกล่าวถึงทฤษฎี แนวคิด และเทคโนโลยีที่เกี่ยวข้องกับการพัฒนาระบบบริหารธุรกิจร้านอาหารผ่านเว็บพร้อมระบบ POS ประกอบด้วยทฤษฎีและแนวคิดที่ใช้ในการออกแบบ ตลอดจนเครื่องมือและเทคโนโลยีที่ใช้ในการพัฒนา ซึ่งมีรายละเอียดดังนี้
 
 ---
 
@@ -354,102 +354,102 @@ Swagger / OpenAPI [24] คือมาตรฐานเปิดสำหรั
 
 > รูปแบบ Thai APA + [N] — เรียงตามลำดับการปรากฏในบท
 
-[1] กรมพัฒนาธุรกิจการค้า กระทรวงพาณิชย์. (ม.ป.ป.). บทวิเคราะห์ธุรกิจร้านอาหาร. เข้าถึงเมื่อ 3 เมษายน 2569.
+[1] กรมพัฒนาธุรกิจการค้า กระทรวงพาณิชย์. (ม.ป.ป.). **บทวิเคราะห์ธุรกิจร้านอาหาร**. เข้าถึงเมื่อ 3 เมษายน 2569.
 
     เข้าถึงได้จาก https://www.dbd.go.th/
 
-[2] LINE MAN Wongnai. (ม.ป.ป.). ปัจจัยและความท้าทายในการทำธุรกิจร้านอาหาร. เข้าถึงเมื่อ 5 เมษายน 2569.
+[2] LINE MAN Wongnai. (ม.ป.ป.). **ปัจจัยและความท้าทายในการทำธุรกิจร้านอาหาร**. เข้าถึงเมื่อ 5 เมษายน 2569.
 
     เข้าถึงได้จาก https://restaurant.lineman.co.th/blog/
 
-[3] National Restaurant Association. (ม.ป.ป.). What is a Point of Sale (POS) System?. เข้าถึงเมื่อ 7 เมษายน 2569.
+[3] National Restaurant Association. (ม.ป.ป.). **What is a Point of Sale (POS) System?**. เข้าถึงเมื่อ 7 เมษายน 2569.
 
     เข้าถึงได้จาก https://restaurant.org/
 
-[4] FoodStory. (ม.ป.ป.). FoodStory POS — ระบบจัดการร้านอาหารและคาเฟ่. เข้าถึงเมื่อ 8 เมษายน 2569.
+[4] FoodStory. (ม.ป.ป.). **FoodStory POS — ระบบจัดการร้านอาหารและคาเฟ่**. เข้าถึงเมื่อ 8 เมษายน 2569.
 
     เข้าถึงได้จาก https://foodstory.co/
 
-[5] LINE MAN Wongnai. (ม.ป.ป.). Wongnai POS / LINE MAN POS — ระบบจัดการร้านอาหารครบวงจร. เข้าถึงเมื่อ 8 เมษายน 2569.
+[5] LINE MAN Wongnai. (ม.ป.ป.). **Wongnai POS / LINE MAN POS — ระบบจัดการร้านอาหารครบวงจร**. เข้าถึงเมื่อ 8 เมษายน 2569.
 
     เข้าถึงได้จาก https://wongnai.com/business/pos
 
-[6] Margaret Rouse. (ม.ป.ป.). Finite State Machine (FSM). เข้าถึงเมื่อ 10 เมษายน 2569.
+[6] Margaret Rouse. (ม.ป.ป.). **Finite State Machine (FSM)**. เข้าถึงเมื่อ 10 เมษายน 2569.
 
     เข้าถึงได้จาก https://www.techtarget.com/whatis/definition/finite-state-machine
 
-[7] Mozilla Developer Network. (ม.ป.ป.). WebSockets API — Real-time Communication. เข้าถึงเมื่อ 11 เมษายน 2569.
+[7] Mozilla Developer Network. (ม.ป.ป.). **WebSockets API — Real-time Communication**. เข้าถึงเมื่อ 11 เมษายน 2569.
 
     เข้าถึงได้จาก https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API
 
-[8] National Institute of Standards and Technology. (2538). Role-Based Access Control (RBAC). เข้าถึงเมื่อ 12 เมษายน 2569.
+[8] National Institute of Standards and Technology. (2538). **Role-Based Access Control (RBAC)**. เข้าถึงเมื่อ 12 เมษายน 2569.
 
     เข้าถึงได้จาก https://csrc.nist.gov/projects/role-based-access-control
 
-[9] IBM. (ม.ป.ป.). What is Optical Character Recognition (OCR)?. เข้าถึงเมื่อ 14 เมษายน 2569.
+[9] IBM. (ม.ป.ป.). **What is Optical Character Recognition (OCR)?**. เข้าถึงเมื่อ 14 เมษายน 2569.
 
     เข้าถึงได้จาก https://www.ibm.com/topics/optical-character-recognition
 
-[10] Microsoft. (ม.ป.ป.). Visual Studio Code Documentation. เข้าถึงเมื่อ 15 เมษายน 2569.
+[10] Microsoft. (ม.ป.ป.). **Visual Studio Code Documentation**. เข้าถึงเมื่อ 15 เมษายน 2569.
 
     เข้าถึงได้จาก https://code.visualstudio.com/docs
 
-[11] Microsoft. (ม.ป.ป.). C# documentation. เข้าถึงเมื่อ 15 เมษายน 2569.
+[11] Microsoft. (ม.ป.ป.). **C# documentation**. เข้าถึงเมื่อ 15 เมษายน 2569.
 
     เข้าถึงได้จาก https://learn.microsoft.com/en-us/dotnet/csharp/
 
-[12] Microsoft. (ม.ป.ป.). ASP.NET Core documentation. เข้าถึงเมื่อ 17 เมษายน 2569.
+[12] Microsoft. (ม.ป.ป.). **ASP.NET Core documentation**. เข้าถึงเมื่อ 17 เมษายน 2569.
 
     เข้าถึงได้จาก https://learn.microsoft.com/en-us/aspnet/core/
 
-[13] Microsoft. (ม.ป.ป.). Entity Framework Core. เข้าถึงเมื่อ 18 เมษายน 2569.
+[13] Microsoft. (ม.ป.ป.). **Entity Framework Core**. เข้าถึงเมื่อ 18 เมษายน 2569.
 
     เข้าถึงได้จาก https://learn.microsoft.com/en-us/ef/core/
 
-[14] Microsoft. (ม.ป.ป.). SQL Server documentation. เข้าถึงเมื่อ 19 เมษายน 2569.
+[14] Microsoft. (ม.ป.ป.). **SQL Server documentation**. เข้าถึงเมื่อ 19 เมษายน 2569.
 
     เข้าถึงได้จาก https://learn.microsoft.com/en-us/sql/sql-server/
 
-[15] Microsoft. (ม.ป.ป.). ASP.NET Core SignalR documentation. เข้าถึงเมื่อ 20 เมษายน 2569.
+[15] Microsoft. (ม.ป.ป.). **ASP.NET Core SignalR documentation**. เข้าถึงเมื่อ 20 เมษายน 2569.
 
     เข้าถึงได้จาก https://learn.microsoft.com/en-us/aspnet/core/signalr/
 
-[16] M. Jones, J. Bradley, and N. Sakimura. (2558). JSON Web Token (JWT) — RFC 7519. เข้าถึงเมื่อ 21 เมษายน 2569.
+[16] M. Jones, J. Bradley, and N. Sakimura. (2558). **JSON Web Token (JWT) — RFC 7519**. เข้าถึงเมื่อ 21 เมษายน 2569.
 
     เข้าถึงได้จาก https://datatracker.ietf.org/doc/html/rfc7519
 
-[17] N. Provos and D. Mazières. (2542). A Future-Adaptable Password Scheme. เข้าถึงเมื่อ 21 เมษายน 2569.
+[17] N. Provos and D. Mazières. (2542). **A Future-Adaptable Password Scheme**. เข้าถึงเมื่อ 21 เมษายน 2569.
 
     เข้าถึงได้จาก https://www.usenix.org/legacy/events/usenix99/provos/provos_html/
 
-[18] Microsoft. (ม.ป.ป.). TypeScript Documentation. เข้าถึงเมื่อ 22 เมษายน 2569.
+[18] Microsoft. (ม.ป.ป.). **TypeScript Documentation**. เข้าถึงเมื่อ 22 เมษายน 2569.
 
     เข้าถึงได้จาก https://www.typescriptlang.org/docs/
 
-[19] Google. (ม.ป.ป.). Angular Documentation. เข้าถึงเมื่อ 23 เมษายน 2569.
+[19] Google. (ม.ป.ป.). **Angular Documentation**. เข้าถึงเมื่อ 23 เมษายน 2569.
 
     เข้าถึงได้จาก https://angular.dev
 
-[20] PrimeTek Informatics. (ม.ป.ป.). PrimeNG — UI Components for Angular. เข้าถึงเมื่อ 24 เมษายน 2569.
+[20] PrimeTek Informatics. (ม.ป.ป.). **PrimeNG — UI Components for Angular**. เข้าถึงเมื่อ 24 เมษายน 2569.
 
     เข้าถึงได้จาก https://primeng.org
 
-[21] Tailwind Labs. (ม.ป.ป.). Tailwind CSS Documentation. เข้าถึงเมื่อ 25 เมษายน 2569.
+[21] Tailwind Labs. (ม.ป.ป.). **Tailwind CSS Documentation**. เข้าถึงเมื่อ 25 เมษายน 2569.
 
     เข้าถึงได้จาก https://tailwindcss.com/docs
 
-[22] MinIO Inc. (ม.ป.ป.). MinIO High Performance Object Storage Documentation. เข้าถึงเมื่อ 26 เมษายน 2569.
+[22] MinIO Inc. (ม.ป.ป.). **MinIO High Performance Object Storage Documentation**. เข้าถึงเมื่อ 26 เมษายน 2569.
 
     เข้าถึงได้จาก https://min.io/docs/minio/linux/index.html
 
-[23] Docker Inc. (ม.ป.ป.). Docker Documentation. เข้าถึงเมื่อ 27 เมษายน 2569.
+[23] Docker Inc. (ม.ป.ป.). **Docker Documentation**. เข้าถึงเมื่อ 27 เมษายน 2569.
 
     เข้าถึงได้จาก https://docs.docker.com
 
-[24] SmartBear Software. (ม.ป.ป.). OpenAPI Specification. เข้าถึงเมื่อ 28 เมษายน 2569.
+[24] SmartBear Software. (ม.ป.ป.). **OpenAPI Specification**. เข้าถึงเมื่อ 28 เมษายน 2569.
 
     เข้าถึงได้จาก https://swagger.io/specification/
 
-[25] cyclosproject. (ม.ป.ป.). ng-openapi-gen — OpenAPI 3 code generator for Angular. เข้าถึงเมื่อ 28 เมษายน 2569.
+[25] cyclosproject. (ม.ป.ป.). **ng-openapi-gen — OpenAPI 3 code generator for Angular**. เข้าถึงเมื่อ 28 เมษายน 2569.
 
     เข้าถึงได้จาก https://github.com/cyclosproject/ng-openapi-gen
