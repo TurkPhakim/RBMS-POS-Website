@@ -20,7 +20,6 @@ table TB_NOTIFICATIONS [note: 'การแจ้งเตือน'] {
   targetGroup nvarchar [not null, note: 'กลุ่มเป้าหมาย (Kitchen/Cashier/Customer)']
   payload nvarchar [note: 'ข้อมูลเพิ่มเติมแบบ JSON']
   createdAt datetime [not null, note: 'เวลาสร้าง']
-  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
 }
 
 table TB_NOTIFICATION_READS [note: 'สถานะการอ่านแจ้งเตือน'] {
@@ -29,5 +28,4 @@ table TB_NOTIFICATION_READS [note: 'สถานะการอ่านแจ�
   userId uniqueidentifier [not null, note: 'รหัสผู้ใช้ (อ้าง TB_USERS ในส่วนที่ 1)']
   readAt datetime [note: 'เวลาอ่าน']
   clearedAt datetime [note: 'เวลาเคลียร์']
-  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
 }

@@ -31,14 +31,6 @@ table TB_SHOP_SETTINGS [note: 'ตั้งค่าร้านค้า'] {
   wifiPassword nvarchar [note: 'รหัส WiFi']
   receiptHeaderText nvarchar [note: 'ข้อความหัวใบเสร็จ']
   receiptFooterText nvarchar [note: 'ข้อความท้ายใบเสร็จ']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_SHOP_OPERATING_HOURS [note: 'เวลาเปิด-ปิดร้าน รายวัน'] {
@@ -50,14 +42,6 @@ table TB_SHOP_OPERATING_HOURS [note: 'เวลาเปิด-ปิดร้�
   closeTime1 time [note: 'ปิดช่วงที่ 1']
   openTime2 time [note: 'เปิดช่วงที่ 2']
   closeTime2 time [note: 'ปิดช่วงที่ 2']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_SERVICE_CHARGES [note: 'ค่าบริการ (Service Charge)'] {
@@ -68,14 +52,6 @@ table TB_SERVICE_CHARGES [note: 'ค่าบริการ (Service Charge)'] 
   isActive bit [default: true, note: 'สถานะใช้งาน']
   startDate datetime [note: 'วันที่เริ่มใช้']
   endDate datetime [note: 'วันที่สิ้นสุด']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_FILES [note: 'จัดเก็บไฟล์ (S3/MinIO) — Master Reference สำหรับทุกหมวด'] {
@@ -85,12 +61,4 @@ table TB_FILES [note: 'จัดเก็บไฟล์ (S3/MinIO) — Master R
   fileExtension nvarchar [not null, note: 'นามสกุลไฟล์ (เช่น .png)']
   fileSize bigint [not null, note: 'ขนาดไฟล์ (bytes)']
   s3Key nvarchar [not null, note: 'ตำแหน่งไฟล์บน S3/MinIO']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }

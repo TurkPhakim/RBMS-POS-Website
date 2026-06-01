@@ -11,14 +11,6 @@ table TB_ZONES [note: 'โซนพื้นที่ร้าน (เช่น 
   color nvarchar [not null, note: 'สีแสดงผล (เช่น #FF5733)']
   sortOrder int [default: 0, note: 'ลำดับ']
   isActive bit [default: true, note: 'สถานะใช้งาน']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_TABLES [note: 'โต๊ะในร้าน'] {
@@ -39,14 +31,6 @@ table TB_TABLES [note: 'โต๊ะในร้าน'] {
   qrTokenNonce nvarchar(50) [note: 'รหัสยืนยัน QR ป้องกันการใช้ซ้ำ']
   qrShortCode nvarchar(10) [unique, note: 'รหัสย่อสำหรับลูกค้าเข้าผ่าน Mobile Web']
   activeOrderId int [note: 'ออเดอร์ที่กำลังใช้งานอยู่บนโต๊ะนี้ (อ้าง TB_ORDERS ในส่วนที่ 6)']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_TABLE_LINKS [note: 'เชื่อมโต๊ะ (รวมโต๊ะ / Link Tables)'] {
@@ -54,14 +38,6 @@ table TB_TABLE_LINKS [note: 'เชื่อมโต๊ะ (รวมโต๊�
   groupCode nvarchar [not null, note: 'รหัสกลุ่มโต๊ะ']
   isPrimary bit [not null, note: 'โต๊ะหลักของกลุ่ม']
   tableId int [ref: > TB_TABLES.tableId, not null, note: 'รหัสโต๊ะ']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_FLOOR_OBJECTS [note: 'วัตถุบนผัง (กำแพง, ประตู, เสา, เคาน์เตอร์)'] {
@@ -71,14 +47,6 @@ table TB_FLOOR_OBJECTS [note: 'วัตถุบนผัง (กำแพง, 
   label nvarchar [not null, note: 'ชื่อแสดงผล']
   positionX float [not null, note: 'ตำแหน่ง X']
   positionY float [not null, note: 'ตำแหน่ง Y']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_RESERVATIONS [note: 'การจองโต๊ะ'] {
@@ -92,14 +60,6 @@ table TB_RESERVATIONS [note: 'การจองโต๊ะ'] {
   note nvarchar(500) [note: 'หมายเหตุ']
   status nvarchar [not null, note: 'สถานะ (Pending/Confirmed/Completed/Cancelled)']
   reminderSent bit [default: false, note: 'ส่งแจ้งเตือนแล้ว']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_CUSTOMER_SESSIONS [note: 'Session ลูกค้าสั่งอาหารผ่าน Mobile Web (สแกน QR)'] {
@@ -112,5 +72,4 @@ table TB_CUSTOMER_SESSIONS [note: 'Session ลูกค้าสั่งอา�
   isActive bit [default: true, note: 'Session ยังใช้งานอยู่']
   createdAt datetime [not null, note: 'เวลาสร้าง']
   expiresAt datetime [not null, note: 'หมดอายุ']
-  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
 }

@@ -22,14 +22,6 @@ table TB_ORDERS [note: 'ออเดอร์ (คำสั่งซื้อ)']
   guestCount int [not null, note: 'จำนวนลูกค้า']
   subTotal decimal(12,2) [default: 0, note: 'ยอดรวมก่อนส่วนลด']
   note nvarchar(500) [note: 'หมายเหตุ']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_ORDER_ITEMS [note: 'รายการในออเดอร์'] {
@@ -55,14 +47,6 @@ table TB_ORDER_ITEMS [note: 'รายการในออเดอร์'] {
   costPrice decimal(10,2) [note: 'ราคาทุน']
   orderBillId int [ref: > TB_ORDER_BILLS.orderBillId, note: 'บิลที่รายการนี้ถูกจัดเข้า (null = ยังไม่ออกบิล)']
   sourceTableId int [note: 'โต๊ะต้นทาง กรณีย้ายรายการข้ามโต๊ะ (อ้าง TB_TABLES ในส่วนที่ 5)']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_ORDER_ITEM_OPTIONS [note: 'ตัวเลือกที่เลือกในรายการออเดอร์ (Snapshot)'] {
@@ -74,7 +58,6 @@ table TB_ORDER_ITEM_OPTIONS [note: 'ตัวเลือกที่เลื�
   optionItemName nvarchar [not null, note: 'ชื่อตัวเลือก ณ ตอนสั่ง']
   additionalPrice decimal [not null, note: 'ราคาเพิ่ม ณ ตอนสั่ง']
   costPrice decimal [note: 'ราคาทุน']
-  // ไม่มี Audit Fields (ไม่ inherit BaseEntity)
 }
 
 table TB_ORDER_BILLS [note: 'บิล / ใบเสร็จ'] {
@@ -107,14 +90,6 @@ table TB_ORDER_BILLS [note: 'บิล / ใบเสร็จ'] {
   customerSlipOcrAccountNumber nvarchar [note: 'เลขบัญชีปลายทางที่อ่านได้จากสลิป (OCR)']
   customerSlipIsAccountMatched bit [note: 'เลขบัญชีในสลิปตรงกับบัญชีร้านหรือไม่']
   customerSlipIsDateToday bit [note: 'วันที่โอนในสลิปตรงกับวันปัจจุบันหรือไม่']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 // ----- PAYMENT & CASHIER -----
@@ -133,14 +108,6 @@ table TB_CASHIER_SESSIONS [note: 'รอบการทำงานแคชเ�
   totalQrSales decimal [not null, note: 'ยอดขาย QR']
   billCount int [not null, note: 'จำนวนบิล']
   shiftPeriod int [note: 'รอบกะการทำงาน (เช่น 1=เช้า, 2=บ่าย)']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_CASH_DRAWER_TRANSACTIONS [note: 'ธุรกรรมลิ้นชักเงินสด (นำเงินเข้า/ออก)'] {
@@ -149,14 +116,6 @@ table TB_CASH_DRAWER_TRANSACTIONS [note: 'ธุรกรรมลิ้นช�
   transactionType nvarchar [not null, note: 'ประเภท (In/Out)']
   amount decimal [not null, note: 'จำนวนเงิน']
   reason nvarchar [not null, note: 'เหตุผล']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_PAYMENTS [note: 'การชำระเงิน'] {
@@ -173,12 +132,4 @@ table TB_PAYMENTS [note: 'การชำระเงิน'] {
   paymentReference nvarchar [note: 'เลขอ้างอิงธุรกรรมจากธนาคาร']
   paidAt datetime [not null, note: 'เวลาชำระ']
   note nvarchar [note: 'หมายเหตุ']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }

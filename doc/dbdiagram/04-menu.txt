@@ -11,14 +11,6 @@ table TB_MENU_SUB_CATEGORIES [note: 'หมวดหมู่ย่อยเม�
   name nvarchar [not null, note: 'ชื่อหมวดหมู่ย่อย']
   sortOrder int [default: 0, note: 'ลำดับ']
   isActive bit [default: true, note: 'สถานะใช้งาน']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_MENUS [note: 'รายการเมนูอาหาร'] {
@@ -37,14 +29,6 @@ table TB_MENUS [note: 'รายการเมนูอาหาร'] {
   allergens nvarchar [note: 'สารก่อภูมิแพ้']
   caloriesPerServing decimal [note: 'แคลอรี่ต่อจาน']
   isPinned bit [default: false, note: 'ปักหมุดเมนูยอดนิยม']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_OPTION_GROUPS [note: 'กลุ่มตัวเลือกเมนู (เช่น ระดับความเผ็ด, เครื่องเคียง)'] {
@@ -56,14 +40,6 @@ table TB_OPTION_GROUPS [note: 'กลุ่มตัวเลือกเมน�
   maxSelect int [note: 'เลือกสูงสุด']
   sortOrder int [default: 0, note: 'ลำดับ']
   isActive bit [default: true, note: 'สถานะใช้งาน']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_OPTION_ITEMS [note: 'รายการตัวเลือก (เช่น เผ็ดน้อย, ไข่ดาว)'] {
@@ -74,14 +50,6 @@ table TB_OPTION_ITEMS [note: 'รายการตัวเลือก (เช
   costPrice decimal [note: 'ราคาทุน']
   sortOrder int [default: 0, note: 'ลำดับ']
   isActive bit [default: true, note: 'สถานะใช้งาน']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_MENU_OPTION_GROUPS [note: 'เชื่อมเมนู ↔ กลุ่มตัวเลือก (Many-to-Many)'] {
@@ -89,12 +57,4 @@ table TB_MENU_OPTION_GROUPS [note: 'เชื่อมเมนู ↔ กลุ
   menuId int [ref: > TB_MENUS.menuId, not null, note: 'รหัสเมนู']
   optionGroupId int [ref: > TB_OPTION_GROUPS.optionGroupId, not null, note: 'รหัสกลุ่มตัวเลือก']
   sortOrder int [note: 'ลำดับ']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }

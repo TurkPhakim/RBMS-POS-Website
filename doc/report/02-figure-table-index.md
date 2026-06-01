@@ -60,13 +60,13 @@
 | 3.8 | แผนภาพการทำงานส่วนการจัดการสถานะโต๊ะ | - |
 | 3.9 | แผนภาพการทำงานส่วน Permission Matrix | - |
 | 3.10 | แผนภาพการทำงานส่วนแจ้งเตือน Real-time ผ่าน SignalR | - |
-| 3.11 | แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Authentication และ User Account | - |
-| 3.12 | แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Authorization และ Human Resource | - |
-| 3.13 | แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Admin Settings และ File | - |
-| 3.14 | แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Menu Management | - |
-| 3.15 | แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Table Management และ Customer | - |
-| 3.16 | แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Order และ Payment | - |
-| 3.17 | แผนภาพความสัมพันธ์ของเอนทิตี ส่วน Notification | - |
+| 3.11 | แผนผัง ER Diagram ส่วน Authentication และ User Account | - |
+| 3.12 | แผนผัง ER Diagram ส่วน Authorization และ Human Resource | - |
+| 3.13 | แผนผัง ER Diagram ส่วน Admin Settings และ File | - |
+| 3.14 | แผนผัง ER Diagram ส่วน Menu Management | - |
+| 3.15 | แผนผัง ER Diagram ส่วน Table Management และ Customer | - |
+| 3.16 | แผนผัง ER Diagram ส่วน Order และ Payment | - |
+| 3.17 | แผนผัง ER Diagram ส่วน Notification | - |
 
 ### บทที่ 4 ผลการทดลอง
 

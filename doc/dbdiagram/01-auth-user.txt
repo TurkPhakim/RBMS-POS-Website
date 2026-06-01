@@ -18,14 +18,6 @@ table TB_USERS [note: 'ผู้ใช้งานระบบ'] {
   isLockedByAdmin bit [default: false, note: 'ถูก Admin ล็อค']
   autoUnlockDate datetime [note: 'วันที่ปลดล็อคอัตโนมัติ']
   pinCodeHash nvarchar(256) [note: 'PIN สำหรับ POS (Hash)']
-  // --- Audit Fields (BaseEntity) ---
-  createdAt datetime [not null]
-  createdBy int
-  updatedAt datetime
-  updatedBy int
-  deleteFlag bit [not null, default: false]
-  deletedAt datetime
-  deletedBy int
 }
 
 table TB_REFRESH_TOKENS [note: 'Refresh Token สำหรับ JWT'] {
