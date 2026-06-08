@@ -15,7 +15,7 @@
 | 03 | [chapter-1-introduction.md](03-chapter-1-introduction.md) | บทที่ 1 บทนำ (1.1-1.5) |
 | 04 | [chapter-2-theory.md](04-chapter-2-theory.md) | บทที่ 2 ทฤษฎี (14 หัวข้อ) + รายการเอกสารอ้างอิง IEEE |
 | 05 | [chapter-3-design.md](05-chapter-3-design.md) | บทที่ 3 การออกแบบ (Req + Flowchart + DB + ER) |
-| 06 | [chapter-4-results.md](06-chapter-4-results.md) | บทที่ 4 ผลการทดลอง (10 การทดลอง) |
+| 06 | [chapter-4-results.md](06-chapter-4-results.md) | บทที่ 4 ผลการทดลอง (24 การทดลอง / 6 กลุ่ม ตรงกับ Flowchart 3.5.1–3.5.24) |
 | 07 | [chapter-5-conclusion.md](07-chapter-5-conclusion.md) | บทที่ 5 บทสรุปผล (5.1-5.4) |
 | 08 | [user-manual.md](08-user-manual.md) | คู่มือการใช้งานระบบ (5 บทบาท) |
 

@@ -8,7 +8,7 @@
 table TB_ZONES [note: 'โซนพื้นที่ร้าน (เช่น ชั้น 1, ดาดฟ้า)'] {
   zoneId int [pk, increment, note: 'รหัสโซน']
   zoneName nvarchar [not null, note: 'ชื่อโซน']
-  color nvarchar [not null, note: 'สีแสดงผล (เช่น #FF5733)']
+  color nvarchar [not null, note: 'สีแสดงผล']
   sortOrder int [default: 0, note: 'ลำดับ']
   isActive bit [default: true, note: 'สถานะใช้งาน']
 }
