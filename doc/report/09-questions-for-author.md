@@ -389,19 +389,13 @@
 
 ## ⚠️ Open Questions — ยังไม่ตอบ / รอรายละเอียดเพิ่ม
 
-### O.1 รายละเอียดวิธีแก้ปัญหา iOS SignalR (จาก F.1 ข้อ 2)
+### O.1 รายละเอียดวิธีแก้ปัญหา iOS SignalR (จาก F.1 ข้อ 2) ✅ ตอบแล้ว 2026-06-12
 
-**สถานะ**: แก้แล้ว แต่ยังไม่ได้ระบุวิธีแก้
+**สถานะ**: ✅ ตอบแล้ว — เพิ่ม Reconnect logic ใน Client + Polyfill สำหรับ iOS Safari
 
-**ตัวเลือก**:
-- A: เปลี่ยน Transport เป็น Long Polling fallback
-- B: ปรับ CORS / WebSocket headers
-- C: เพิ่ม Reconnect logic ใน Client
-- D: อื่น ๆ
+**คำตอบของผู้จัดทำ**: ตัวเลือก C — เพิ่มกลไกการเชื่อมต่อใหม่ (Reconnect Logic) ใน SignalR Client พร้อม Polyfill สำหรับ iOS Safari เพื่อให้รองรับ WebSocket API ได้อย่างครบถ้วน โดยปรับกลยุทธ์ของช่องทางการสื่อสาร (Transport Strategy) ให้สอดคล้องกับข้อจำกัดของระบบปฏิบัติการ iOS
 
 **ใช้ในไฟล์**: [07-chapter-5-conclusion.md](07-chapter-5-conclusion.md) (5.3 ข้อ 2)
-
-✍️ **รอคำตอบ**:
 
 ### O.2 Screenshot และภาษา UI (Bonus)
 
@@ -434,7 +428,7 @@
 | [04-chapter-2-theory.md](04-chapter-2-theory.md) | ✅ ครบ | H.1 |
 | [05-chapter-3-design.md](05-chapter-3-design.md) | ✅ ครบ | C, D.3 |
 | [06-chapter-4-results.md](06-chapter-4-results.md) | ✅ ครบ | E.1, E.3 |
-| [07-chapter-5-conclusion.md](07-chapter-5-conclusion.md) | ⚠️ รอ O.1 | F, G, I |
+| [07-chapter-5-conclusion.md](07-chapter-5-conclusion.md) | ✅ ครบ | F, G, I |
 | [08-user-manual.md](08-user-manual.md) | ✅ ครบ | C.1 |
 
 ---
